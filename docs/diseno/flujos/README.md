@@ -1,5 +1,7 @@
 # Cureando — Diagramas de flujo para diseño
 
+> Referencia histórica: el acceso por invitación como única credencial y el almacenamiento solo en memoria fueron sustituidos. Cuenta por alias, solicitudes de seguimiento y datos locales persistentes son las decisiones vigentes; consultar el plan actualizado en docs/07-plan-mockup-y-codex.md y ADR 0003. Los diagramas y su generador deben actualizarse antes de usarlos como especificación de implementación.
+
 Estado: propuesta. Estos diagramas describen pantallas y navegación, no estructura de carpetas.
 
 [Abrir versión visual](index.html). Hay imágenes PNG para compartir y SVG para escalar sin perder calidad.

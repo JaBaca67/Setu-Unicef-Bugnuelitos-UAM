@@ -56,4 +56,4 @@ No interpretar compilación o pruebas de widgets como instalación verificada en
 
 Material 3 y tema claro provisional. La interacción local usa `setState`; `ChangeNotifier` está aprobado para controladores cuando sean necesarios. La ruta `/` usa `go_router`. No se han creado controladores, contratos o carpetas vacías de funcionalidades por anticipado.
 
-M1 necesita aprobación independiente. Los archivos de identidad gráfica y referencias añadidos por el usuario siguen disponibles, pero no se afirma haber aplicado su contenido al tema provisional.
+La dirección del siguiente desarrollo está aprobada: cuenta por alias, solicitudes de seguimiento y datos locales persistentes; ver [ADR 0003](../../docs/decisiones/0003-cuenta-alias-y-persistencia-local.md). Todavía no están implementados. Archivos, credenciales y paquetes del bloque concreto necesitan propuesta previa. La identidad gráfica del manual todavía no se ha aplicado al tema provisional.

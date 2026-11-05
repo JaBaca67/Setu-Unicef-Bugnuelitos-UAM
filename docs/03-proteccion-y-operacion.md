@@ -26,13 +26,15 @@ La interfaz debe indicar que no es un servicio de emergencias y ofrecer vías lo
 | Represalias o identificación | Minimización, acceso restringido, notificaciones discretas | Revisar contenido y experiencia con especialistas |
 | Filtración entre centros | RLS, privilegios y validación de referencias | Probar lectura/escritura cruzada con dos centros |
 | Personal abusivo o implicado | Asignación limitada, auditoría y vía alternativa | Simular conflicto de interés |
-| Dispositivo compartido o perdido | Cierre de sesión, sin relatos persistidos, sesión protegida | Revisar almacenamiento y pantalla de recientes |
+| Dispositivo compartido o perdido | Cuenta por alias, cierre de sesión, persistencia local protegida y aislamiento de casos | Revisar cifrado, credenciales, autorización y pantalla de recientes; todavía pendiente de implementar |
 | Suplantación o spam | Ingreso controlado, cuotas en servidor y revisión humana | Probar revocación, abuso y errores sin bloquear ayuda arbitrariamente |
 | Expectativa de respuesta inmediata | Horarios y estado claros; responsable suplente | Validar comprensión y simulacro de ausencia |
 | Datos en logs o soporte | Telemetría mínima, sin cuerpos ni secretos | Inspeccionar errores, logs y exportaciones |
 | Contactos desactualizados | Responsable editorial, verificación y retiro al vencer | Comprobar procedencia y fecha antes de publicar |
 
 ## Datos y retención
+
+Para el desarrollo local se aprobó conservar datos funcionales ficticios después de cerrar la app (ADR 0003). Esto reemplaza la propuesta anterior de almacenamiento exclusivamente en memoria; no autoriza datos reales ni recepción institucional. Borradores descartados siguen siendo temporales, credenciales nunca en texto plano y datos del teléfono fuera de Git. Cifrado, paquetes, borrado y recuperación deben concretarse antes de implementar. Desinstalación o borrado de datos pueden eliminar los casos.
 
 No solicitar fecha de nacimiento completa, cédula, dirección, GPS o contactos por defecto. El relato libre puede contener datos sensibles incluso sin campos de identidad; advertir con lenguaje amable y permitir revisión antes del envío.
 

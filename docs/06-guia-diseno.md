@@ -1,6 +1,8 @@
 # Cureando — Guía de pantallas para diseño
 
-**Diagrama visual vigente:** [flujos clásicos con decisiones y retornos](diseno/flujos/index.html), disponibles como [imágenes PNG y fuentes Mermaid](diseno/flujos/README.md). Reemplazan el mapa inicial de tarjetas como entrega principal del flujo. Las fichas siguientes siguen siendo la referencia de contenido.
+**Actualización vigente (2026-11-05):** cuenta estudiantil por alias, solicitudes de seguimiento y persistencia protegida local aprobadas en [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md). Los diagramas e inventario antiguos no incluyen todavía el nuevo registro; son referencias históricas hasta actualizarse. El plan vigente está en docs/07. No implementar un acceso basado únicamente en invitación ni descartar casos guardados al cerrar la app.
+
+**Diagramas históricos:** [flujos clásicos](diseno/flujos/index.html), disponibles como [imágenes y fuentes](diseno/flujos/README.md). Conservan la versión anterior y necesitan actualizarse con ADR 0003 antes de implementar.
 
 **Entrega simplificada para compartir:** [pantallas explicadas una por una](diseno/pantallas-explicadas.html), con [fuente Markdown](diseno/pantallas-explicadas.md). Esta entrega es independiente de Figma y desarrolla el inventario de esta guía. No hace falta completar el widget de FigJam para comenzar.
 
@@ -14,23 +16,65 @@ P0/P1 indican orden de diseño. La ayuda local verificada y la ruta alternativa 
 
 Abrir [el mapa visual en el navegador](diseno/flujo-pantallas.html) o importar [el SVG](diseno/flujo-pantallas.svg) a Figma como referencia visual. El SVG no incluye conexiones de prototipo. [Fuente Mermaid](diseno/flujo-pantallas.mmd) para mantener el diagrama. El FigJam editable requiere completar la selección de equipo en el widget de Figma.
 
-## Referencia de Andrea y adaptación
+## Referencia de Andrea, contexto de Nicaragua y adaptación
 
-El [funcionamiento público de Andrea](https://www.soyandrea.es/por-que-andrea/), consultado el 2026-11-04, describe acceso mediante código de centro, alertas de víctimas/testigos y comunicación con profesionales educativos. Es referencia del recorrido general, no una inspección de su aplicación autenticada ni una copia de su navegación o diseño.
+El [funcionamiento público de Andrea](https://www.soyandrea.es/por-que-andrea/) y el [texto de investigación aportado](referencia-investigacion-gemini.md) aportan elementos para evaluar en Cureando; no sustituyen verificación primaria ni decisiones de producto:
+- **Enfoque de Testigo Solidario (*Bystander Intervention*):** Desestigmatizar pedir ayuda mostrando que reportar una agresión hacia otro es ser un compañero solidario, no un "soplón".
+- **Reporte guiado con chips (`E04`):** Ofrecer etiquetas seleccionables de tipo de situación y lugar aproximado para reducir la fricción de la hoja en blanco, más detección preventiva local de palabras de riesgo vital que sugiere al instante la **Línea 133 del MIFAM (24/7)**.
+- **Acceso (`E02`) y continuidad:** cuenta por alias como acceso principal, invitación para vincular centro y QR simulado como propuesta auxiliar. Código de Caso + PIN sería complementario y limitado a un caso con solicitudes de seguimiento, con detalles pendientes. La consulta desde otra tableta requerirá backend; no está disponible con almacenamiento exclusivamente local.
+- **Articulación local (`E08`/`E09`) y Triage Pedagógico:** Botón voluntario en `E08` para *"Solicitar cita discreta en el colegio"*, respuestas preconfiguradas de *Triage Pedagógico* para el orientador en el Modo Demo Jurado, y directorio `E09` articulado con **CCE-MINED, Línea 133 MIFAM, CAPS-MINSA y clínicas psicológicas universitarias (UAM/UNAN)**.
 
-Para Cureando proponemos entrada a un centro, reporte privado y seguimiento con personal autorizado. Cambios propios: respuesta asíncrona, revisión antes de enviar, estados explícitos de envío y ayuda accesible sin reportar. No trasladar promesas de anonimato absoluto o chat en vivo. El mecanismo de acceso al centro sigue pendiente: diseñar el campo como invitación provisional, no como decisión técnica aprobada.
+---
+
+## Sistema de Diseño Visual y Tokens para Flutter (`CureandoTheme`)
+
+Basado en el archivo `ManualDeIdentidad gráfica_cureando.pdf` y evolucionado para cumplir con el puntaje máximo de **Inclusión y Accesibilidad (10 pts de la Rúbrica UAM - UNICEF 2026)** y contraste **WCAG AA/AAA** en pantallas móviles para adolescentes de 12 a 17 años:
+
+### 1. Paleta cromática oficial (Extraída del Manual + Superficies Accesibles UI)
+
+Los colores vibrantes del manual se utilizan como **acentos de identidad, botones primarios, insignias e ilustraciones geométricas**, nunca como fondos masivos que fatiguen la lectura durante un reporte sensible:
+
+| Token en Flutter | Hexadecimal | Origen / Uso en la interfaz |
+| --- | --- | --- |
+| `brandBlue` (Primary) | `#0D61EB` | **Azul Cureando (Manual PDF):** Isotipo, botón principal (*Pedir apoyo*, *Enviar*), encabezados clave y estado `En revisión`. |
+| `brandBlueSoft` | `#EEF4FF` | Superficie suave para tarjetas destacadas de inicio, chips seleccionados y burbujas informativas del centro. |
+| `brandPink` (Urgent/Help) | `#FF0091` | **Rosa/Magenta (Manual PDF):** Acento de atención inmediata, acceso rápido a `E09 Buscar ayuda` / Línea 133 y alertas de protección. |
+| `brandPinkSoft` | `#FFF0F8` | Fondo suave para el bloque de emergencia / riesgo vital y tarjeta de ayuda sin sesión (con texto oscuro `#831843`). |
+| `brandYellow` (Warmth) | `#FFE100` | **Amarillo Sol (Manual PDF):** Acento cálido para ornamentos (flores/espirales), avisos de horario y estado `Recibido`. |
+| `brandYellowSoft` | `#FFFBEB` | Fondo cálido legible para bloques de privacidad, recordatorios antes de enviar (`E05`) e insignia `Recibido` (con texto `#92400E`). |
+| `brandGreen` (Support) | `#00C642` | **Verde Esperanza (Manual PDF):** Confirmación de recepción (`E06`), estado `En acompañamiento`, cápsulas `Cuidarme` (`E10`–`E11`) y sello de *Testigo Solidario*. |
+| `brandGreenSoft` | `#ECFDF5` | Fondo suave para confirmación de reporte enviado, tarjeta de *Compañero Solidario* y actividades de bienestar (con texto `#065F46`). |
+| `surfaceBackground` | `#F8FAFC` | Fondo general limpio de las pantallas para descanso visual y máxima legibilidad. |
+| `cardSurface` | `#FFFFFF` | Fondo de tarjetas, campos de texto y modales con borde sutil `#E2E8F0` y radio `16px`–`20px`. |
+| `textPrimary` | `#0F172A` | Texto principal oscuro (contraste > 14:1 sobre blanco y > 10:1 sobre superficies suaves). |
+| `textSecondary` | `#475569` | Subtítulos, ayudas de campo y marcas de tiempo. |
+
+### 2. Tipografía y jerarquía legible (Escalable)
+
+- **Fuente principal UI (`Poppins` — presente en el Manual PDF):**
+  - Títulos de pantalla (`Headline`): `Poppins Bold`, `22–24 sp`, `height: 1.25`.
+  - Subtítulos y títulos de tarjeta (`Title`): `Poppins SemiBold`, `16–18 sp`.
+  - Cuerpo de lectura y relatos (`Body`): `Poppins Regular` / `Medium`, `15–16 sp`, `height: 1.45` (nunca menor a `14 sp`).
+- **Acento de marca (`Clayful-Regular` — presente en el Manual PDF):** Reservado exclusivamente para el logotipo/encabezado de marca o numerales decorativos (`01`, `02`), nunca para párrafos largos ni formularios.
+- **Control de accesibilidad visible para el jurado:** Incluir un control rápido de tamaño de lectura (`Normal` / `Texto grande +20%`) en la barra superior o perfil de sesión para demostrar en vivo el criterio de accesibilidad de la rúbrica.
+
+### 3. Motivos gráficos del Manual integrados con sobriedad en Flutter
+
+1. **Isotipo Cureando (Cuadrado orgánico de pétalos curvos en `#0D61EB`):** Dibujado mediante `CustomPainter` o SVG vectorial en `E01` Bienvenida y el encabezado de `E03` Inicio.
+2. **Pieza de rompecabezas (*Conexión y apoyo mutuo*):** Usada como icono/ilustración sutil en la tarjeta de *Testigo Solidario* y en las etiquetas de sección.
+3. **Flor redondeada de 12 puntas y espiral:** Usadas como acento decorativo suave en las esquinas superiores de tarjetas de bienvenida (`E01`) y autocuidado (`E10`–`E11`), sin invadir el área de lectura del formulario.
 
 ## Inventario de pantallas
 
 | ID / prioridad | Pantalla y propósito | Contenido mínimo | Acción y destino |
 | --- | --- | --- | --- |
 | E01 · P0 | Bienvenida y privacidad: comprender el servicio | Qué permite hacer, quién recibe el reporte, límites de privacidad y atención; sin carrusel obligatorio | Continuar → E02; Buscar ayuda → E09 |
-| E02 · P0 | Acceso al centro: entrar al espacio correcto | Invitación provisional, centro encontrado antes de confirmar, explicación de cómo obtener acceso | Entrar → E03; No puedo acceder → E09 |
+| E02 · P0 | Registro/acceso con alias y vinculación al centro | Formularios de alias/credencial por concretar e invitación del centro; no pedir nombre civil | Acceso válido → E03; ayuda → E09 |
 | E03 · P0 | Inicio: encontrar rápidamente qué hacer | Centro activo, botón principal Pedir apoyo, acceso a Mis reportes, Ayuda y Cuidarme | E04 / E07 / E09 / E10 |
 | E04 · P0 | Contar lo ocurrido: redactar sin presión | Me pasa a mí / Lo presencié; relato; contexto y fecha aproximada opcionales; recordar no incluir datos innecesarios | Revisar → E05; volver con aviso si se perderá texto |
 | E05 · P0 | Revisar reporte: decidir antes del envío | Resumen editable, destinatario real del centro, límites y horario; no exigir identificar a personas | Editar → E04; Enviar → estado de carga y E06 solo tras confirmación |
 | E06 · P0 | Reporte recibido: confirmar recepción | Confirmación real, referencia del caso, siguiente paso, horario acordado y explicación de cómo volver a consultar | Ver seguimiento → E08; Inicio → E03 |
-| E07 · P0 | Mis reportes: recuperar seguimiento | Solo casos de la sesión actual, referencia discreta, fecha, estado y señal de respuesta nueva sin extractos sensibles | Abrir → E08; Pedir apoyo → E04 |
+| E07 · P0 | Mis reportes: recuperar seguimiento | Casos de la cuenta autorizada guardados localmente; referencia, estado y señal de respuesta nueva | Abrir → E08; Pedir apoyo → E04 |
 | E08 · P0 | Estado y conversación: recibir acompañamiento | Estado comprensible, relato propio, mensajes del personal, campo para seguimiento; sin indicador de atención en vivo | Enviar seguimiento → permanece; volver → E07 |
 | R01 · P0 | Acceso del personal: entrada independiente | Cuenta individual y estados de autenticación; acceso del personal discreto, fuera del camino estudiantil | Acceso válido → R02 |
 | R02 · P0 | Bandeja autorizada: revisar casos permitidos | Institución, referencia, fecha, estado, filtros mínimos; sin mostrar casos de otros centros | Abrir caso → R03 |
@@ -62,7 +106,7 @@ No todas las variantes necesitan un frame completo; usar variantes de componente
 - Navegación propuesta tras entrar: Inicio, Mis reportes, Ayuda y Cuidarme. Ayuda también accesible desde E01/E02 sin pertenencia escolar. Pedir apoyo es la acción principal de Inicio.
 - Tono cálido, directo y sin culpabilizar. Ejemplos: “Pedir apoyo”, “Cuéntanos qué pasó”, “Revisa antes de enviar”, “Tu reporte fue recibido”, “Todavía no hay una respuesta”. Son textos propuestos para validar con estudiantes.
 - No usar “100 % anónimo”, “nadie sabrá”, “resolveremos tu caso” ni un horario ficticio. En maqueta usar “[horario por confirmar]” y “[equipo responsable por confirmar]”.
-- No pedir nombre, foto, cédula, teléfono o ubicación para completar el flujo de demo. No diseñar recuperación de sesión hasta decidir el mecanismo.
+- No pedir nombre civil, foto, cédula, teléfono o ubicación para acceder. Diseñar cuenta por alias; no inventar recuperación de contraseña ni equivalencia con Código/PIN antes de aprobar sus reglas.
 - Errores junto al campo y texto comprensible; contraste suficiente, foco visible, objetivos táctiles cómodos y estados que no dependan solo del color.
 - No añadir adjuntos, rankings, muro público, chat entre alumnos, terapia con IA o gamificación del reporte.
 - Datos de muestra completamente ficticios y breves, sin relatos gráficos ni nombres que parezcan personas reales.

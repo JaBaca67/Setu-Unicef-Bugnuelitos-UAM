@@ -9,8 +9,8 @@ Consulta realizada el 2026-11-04. Son referencias de diseño, no validación de 
 | [Andrea: sitio oficial](https://www.soyandrea.es/) y [funcionamiento](https://www.soyandrea.es/por-que-andrea/) | Presenta reportes anónimos y comunicación con profesionales de centros inscritos | Inspiración funcional; no prueba de eficacia, acceso a su tecnología o equivalencia de privacidad |
 | [UNICEF Nicaragua: prevención y respuesta a la violencia](https://www.unicef.org/nicaragua/prevenci%C3%B3n-y-respuesta-la-violencia-abuso-y-explotaci%C3%B3n) | Describe trabajo de prevención y respuesta a la violencia contra la niñez | El acompañamiento humano y la articulación institucional importan; no implica aval al proyecto |
 | [Ley n.º 787 en OEA](https://www.oas.org/es/sla/ddi/docs/N3%20Ley%20de%20Proteccion%20de%20Datos%20Personales.pdf) | Texto de referencia sobre protección de datos personales | Requiere revisión local de aplicabilidad y vigencia; no concluir cumplimiento |
-| [Expo: introducción](https://docs.expo.dev/tutorial/introduction/) | Documenta aplicaciones Android, iOS y web | Candidato para base móvil compartida |
-| [Supabase: RLS](https://supabase.com/docs/guides/database/postgres/row-level-security) y [protección de datos](https://supabase.com/docs/guides/database/secure-data) | Controles de acceso a datos y relación con autenticación | Diseñar políticas y pruebas, no depender de configuración implícita |
+| [Flutter: documentación oficial](https://docs.flutter.dev/) | Framework multiplataforma en Dart con compilación nativa a APK en Android y sistema de diseño Material 3 integrado | Seleccionado para la app móvil por experiencia previa del desarrollador, rapidez visual y generación directa de APK |
+| [Supabase: RLS](https://supabase.com/docs/guides/database/postgres/row-level-security) y [protección de datos](https://supabase.com/docs/guides/database/secure-data) | Controles de acceso a datos y relación con autenticación (`supabase_flutter`) | Diseñar políticas y pruebas, no depender de configuración implícita |
 
 No se adoptan cifras de prevalencia como actuales sin identificar estudio, población y fecha. No se han verificado contactos de ayuda, costos, rúbrica de evaluación ni condiciones de tiendas móviles.
 
@@ -20,7 +20,7 @@ Lenguaje comprensible localmente; dispositivos y conectividad disponibles; confi
 
 ## Skills consultadas y disponibles
 
-Se consultó el catálogo curado de [openai/skills](https://github.com/openai/skills/tree/main/skills/.curated) mediante la skill-installer local. No se instalaron nuevas skills. El catálogo puede cambiar; no se identificó allí una skill específica para React Native/Expo.
+Se consultó el catálogo curado de [openai/skills](https://github.com/openai/skills/tree/main/skills/.curated) mediante la skill-installer local. No se instalaron nuevas skills. El catálogo puede cambiar; no se identificó allí una skill específica para Flutter/Dart.
 
 | Capacidad | Utilidad | Momento / límite |
 | --- | --- | --- |

@@ -1,39 +1,38 @@
 # Plan y decisiones pendientes
 
-## Fases sin fechas comprometidas
+## Fechas oficiales de evaluación (Jornada UAM - UNICEF 2026)
 
-| Fase | Resultado | Criterio de salida |
-| --- | --- | --- |
-| 0. Acordar bases | Alcance, equipo, población y rúbrica | Prioridades y stack confirmados |
-| 1. Diseñar recorrido | Pantallas y protocolo simulado | Se entiende privacidad, envío y seguimiento |
-| 2. Prototipo móvil | Reporte → bandeja → respuesta con datos ficticios | Recorrido funciona en dispositivo Android |
-| 3. Verificar | Permisos, red, accesibilidad y guion | Fallos críticos corregidos y evidencias registradas |
-| 4. Preparar evaluación | Demo reproducible y presentación | Requisitos de rúbrica trazables a evidencia |
-| 5. Evaluar piloto | Acuerdos y operación | Cumplimiento de docs/03-proteccion-y-operacion.md |
+| Hito oficial | Fecha | Peso en rúbrica | Formato / requisito clave |
+| --- | --- | --- | --- |
+| **Reporte Pautado** | **10 nov 2026** | **50 % (50 pts)** | Problema y evidencia (10), Población y derechos (10), Solución e innovación (12), Impacto e indicadores (8), Viabilidad y riesgos (6), Fuentes y transparencia (4) |
+| **Prototipo funcional** | **17 nov 2026** | **30 % (30 pts)** | **2 minutos de demo en vivo**: Coherencia y recorrido completo (10), Desarrollo y calidad tangible en APK (10), Adecuación a 12–17 años, inclusión y accesibilidad (10) |
+| **Elevator Pitch + Jurado** | **17 nov 2026** | **20 % (20 pts)** | **3 minutos de pitch + 1 min de preguntas**: Síntesis (5), Problema/solución (5), Valor y derechos (5), Comunicación y defensa (5) |
 
-No estimar fechas antes de conocer disponibilidad, habilidades y fecha límite. Evaluación del prototipo y piloto real son entregas distintas.
+Evaluación del prototipo académico (con datos ficticios) y un eventual piloto real en un centro educativo siguen siendo entregas distintas.
 
 ## Preguntas que cambian la solución
 
+**Decisiones nuevas confirmadas:** cuenta por alias, solicitudes de seguimiento y datos funcionales persistentes en el teléfono (ADR 0003). Credenciales, paquetes y esquema local aún necesitan propuesta técnica; la implementación actual sigue siendo M0.
+
 | Prioridad | Decisión | Estado |
 | --- | --- | --- |
-| Antes de código | Experiencia del equipo: JavaScript/TypeScript, Dart u otra | Pendiente |
-| Antes de código | Integrantes, disponibilidad, fecha y rúbrica oficial | Pendiente |
-| Antes de código | Android únicamente para demo o también iOS | Pendiente |
-| Antes de backend real | Presupuesto, hosting, titularidad de cuentas | Pendiente |
-| Antes de identidad | Edades, centros y mecanismo seguro de pertenencia | Pendiente |
+| Antes de código | Stack móvil y experiencia: **Flutter + Dart** (experiencia previa confirmada) | Confirmado (2026-11-05) |
+| Antes de código | Plataforma inicial: **Android mediante APK instalable** (`E01`–`E08` + Modo Demo Jurado) | Confirmado (2026-11-05) |
+| M0 | Base: `go_router`, controladores posteriores con `ChangeNotifier`, `FLAG_SECURE` global, APK debug e instalación USB | Aprobado (2026-11-05); análisis y 2 pruebas correctos, APK generado; instalación USB pendiente |
+| Antes de código | Fecha y rúbrica oficial: **Jornada UAM - UNICEF 2026 (10 nov Reporte / 17 nov Pitch y Prototipo)** | Confirmado (2026-11-05) |
+| Antes de código | Población destinataria: **Adolescentes de secundaria en Nicaragua (12–17 años, 7.º a 11.º grado, afectados y testigos)** | Confirmado (2026-11-05) |
+| Antes de backend real | Presupuesto, hosting, titularidad de cuentas en Supabase | Pendiente |
+| Antes de identidad | Centros y mecanismo seguro de pertenencia para piloto | Pendiente; edades del prototipo ya confirmadas |
 | Antes de piloto | Quién atiende, horarios, escalamiento y conflictos | Pendiente |
 | Antes de piloto | Revisión local, consentimiento/base jurídica y retención | Pendiente |
 | Antes de publicación | Contactos de Nicaragua y contenidos revisados | Pendiente |
 
 ## Primer backlog propuesto
 
-1. Confirmar decisiones de fase 0 y actualizar ADR 0001.
-2. Diseñar cinco vistas: bienvenida/privacidad, inicio, reporte, seguimiento y bandeja de responsable. Añadir ayuda y autocuidado simples.
-3. Crear estructura móvil y scripts reproducibles; documentar requisitos y arranque reales.
-4. Definir contrato de permisos y esquema con datos ficticios; implementar pruebas de aislamiento antes de ampliar funciones.
-5. Conectar el recorrido mínimo y simular red fallida, sesión perdida, ausencia de responsable y reapertura.
-6. Preparar guion de evaluación y límites conocidos; registrar resultados sin inventar impacto.
+1. Completar M0: base Flutter, análisis, pruebas, APK debug y validación USB; registrar evidencia real.
+2. Presentar y aprobar el siguiente bloque antes de implementar `CureandoGateway`, cuenta por alias y `LocalCureandoGateway` con persistencia protegida. El mock en memoria solo sirve a pruebas.
+3. Seguir M2–M4 para registro/acceso por alias, inicio, ayuda informativa, reporte guardado localmente y solicitudes de seguimiento. Los detalles de atención local y herramientas de presentación requieren propuesta; no son un servicio institucional conectado.
+4. Completar M5 y guion de evaluación. Autocuidado y backend real quedan fuera de M0.
 
 ## Definición de terminado para funcionalidades
 

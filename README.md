@@ -4,26 +4,37 @@ Nombre provisional de una aplicación móvil para estudiantes en Nicaragua: repo
 
 El equipo describe el proyecto como una propuesta que será evaluada en un contexto de UNICEF. No se ha acreditado patrocinio, aprobación institucional ni autorización para usar su marca.
 
-**Estado:** definición inicial, sin aplicación implementada. **Actualizado:** 2026-11-04.
+**Estado:** base Flutter de M0 implementada, análisis sin incidencias, 2 pruebas aprobadas y APK debug compilado. Instalación/prueba USB pendiente: ADB aún no detecta el teléfono. El recorrido de reportes todavía no está implementado. **Actualizado:** 2026-11-05.
 
 ## Documentación
 
-- **[Diagramas de flujo clásicos](docs/diseno/flujos/index.html)**: acceso, distribución de la app, reporte y atención, con decisiones y retornos; [fuentes Mermaid e imágenes](docs/diseno/flujos/README.md).
-- **[Empezar aquí para diseñar: pantallas explicadas](docs/diseno/pantallas-explicadas.html)**: documento compartible con cada texto, campo, botón y destino; [versión Markdown](docs/diseno/pantallas-explicadas.md).
+- [Diagramas de flujo históricos](docs/diseno/flujos/index.html): pendientes de actualizar para cuenta por alias y persistencia local; [fuentes e imágenes](docs/diseno/flujos/README.md).
+- [Fichas anteriores de pantallas](docs/diseno/pantallas-explicadas.html): referencia visual histórica; usar el plan vigente para registro y datos. [Versión Markdown](docs/diseno/pantallas-explicadas.md).
 - [Visión y alcance](docs/01-producto.md): problema, personas usuarias, MVP y exclusiones.
 - [Arquitectura propuesta](docs/02-arquitectura.md): stack, módulos, datos y permisos.
 - [Protección y operación](docs/03-proteccion-y-operacion.md): privacidad, atención humana y requisitos para un piloto.
 - [Plan y decisiones pendientes](docs/04-plan.md): fases, criterios de entrega y preguntas abiertas.
+- [Plan de app funcional local](docs/07-plan-mockup-y-codex.md): fases, contratos desacoplados, persistencia y aprobaciones.
 - [Investigación y skills](docs/05-investigacion-y-skills.md): referencias, límites de la evidencia y herramientas.
 - [Guía para diseño en Figma](docs/06-guia-diseno.md): pantallas prioritarias, contenido, estados y prototipo.
 - [Mapa visual de pantallas](docs/diseno/flujo-pantallas.html): archivo autónomo para abrir y compartir; [SVG](docs/diseno/flujo-pantallas.svg) para importar a Figma.
-- [Registro de decisiones](docs/decisiones/0001-base-propuesta.md).
+- [Registro de decisiones](docs/decisiones/0001-base-propuesta.md) y [ADR 0002 — Inicialización Android M0](docs/decisiones/0002-inicializacion-android.md).
+- [Decisiones de M0](docs/decisiones/0002-inicializacion-android.md): navegación, estado, identidad de la demo y protección de pantalla.
+- [Cuenta por alias y datos locales](docs/decisiones/0003-cuenta-alias-y-persistencia-local.md): decisiones aprobadas y límites actuales.
+- [Referencia de investigación aportada](docs/referencia-investigacion-gemini.md): contenido de Gemini sin metadatos de sesión; sus afirmaciones requieren verificación.
+- [Proyecto móvil e instrucciones](apps/mobile/README.md).
 - [Instrucciones para agentes](AGENTS.md): contexto y forma de trabajar en este repositorio.
 
 ## Punto de partida
 
-Propuesta pendiente de confirmar con el equipo: React Native + Expo + TypeScript para móvil y Supabase para autenticación y PostgreSQL. Prioridad inicial de validación en Android; iOS queda sujeto a recursos y requisitos. No hay presupuesto, cronograma, edades objetivo ni institución piloto confirmados.
+Stack técnico confirmado para el prototipo: **Flutter + Dart** para la aplicación móvil (con prioridad en Android y generación directa de `.apk`) y **Supabase (Auth + PostgreSQL con RLS)** para el backend futuro. Población del prototipo: secundaria, 12–17 años. El calendario de evaluación está registrado en docs/04-plan.md; presupuesto e institución piloto siguen pendientes.
 
-La primera entrega debe demostrar el recorrido completo con datos ficticios: estudiante envía un reporte, responsable autorizado lo revisa y estudiante consulta una respuesta. No recibir casos reales antes de definir responsables y validar protección de menores y datos.
+La siguiente entrega objetivo es una **app funcional local**: cuenta por alias, reportes y solicitudes de seguimiento guardados en el teléfono, incluso después de cerrar y abrir la app. El almacenamiento protegido está aprobado como dirección de desarrollo, pero todavía no está implementado; librerías, credenciales y esquema se concretarán en la propuesta del siguiente bloque. Supabase se conectará después mediante `CureandoGateway`. Guardar en el teléfono no equivale a enviar al centro ni permite consultar desde otro dispositivo. Solo datos ficticios hasta cumplir los requisitos de un piloto real.
 
-No hay comandos de instalación o pruebas todavía: se incorporarán cuando exista código y se haya confirmado el stack.
+M0 muestra una pantalla de comprobación con aviso de demo y un botón de prueba. Usa `go_router`, tema Material 3 y análisis Dart estricto. `ChangeNotifier` es la opción aprobada para futuros controladores; todavía no se necesitan en esta pantalla. No hay backend, relatos, sesión persistente ni formularios de reportes.
+
+Desde `apps/mobile/`: `flutter pub get`, `flutter analyze`, `flutter test` y `flutter build apk --debug`. Ver requisitos y rutas locales en [la guía móvil](apps/mobile/README.md). El siguiente bloque requiere propuesta concreta de archivos y dependencias antes de implementar.
+
+## Versiones y guardado incremental
+
+Cada avance coherente y verificado debe quedar en un commit pequeño y descriptivo. Separar cambios de código, documentación y referencias cuando sea útil; revisar lo incluido y registrar las comprobaciones. Sincronizar los commits con GitHub al cerrar cada bloque autorizado e informar sus hashes. No versionar APK, claves, bases de datos locales, cachés ni datos de estudiantes. Los commits no sustituyen la aprobación previa para implementar cada fase.
