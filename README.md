@@ -4,7 +4,7 @@ Nombre provisional de una aplicación móvil para estudiantes en Nicaragua: repo
 
 El equipo describe el proyecto como una propuesta que será evaluada en un contexto de UNICEF. No se ha acreditado patrocinio, aprobación institucional ni autorización para usar su marca.
 
-**Estado:** base Flutter de M0 implementada, análisis sin incidencias, 2 pruebas aprobadas y APK debug compilado. Instalación/prueba USB pendiente: ADB aún no detecta el teléfono. El recorrido de reportes todavía no está implementado. **Actualizado:** 2026-11-05.
+**Estado:** base Flutter de M0 implementada, análisis sin incidencias, 2 pruebas aprobadas y APK debug compilado. Instalación USB y apertura en teléfono verificadas; falta la confirmación manual del botón y de la protección de capturas. El recorrido de reportes todavía no está implementado. **Actualizado:** 2026-11-05.
 
 ## Documentación
 

@@ -48,7 +48,8 @@ Verificación del 2026-11-05:
 - `flutter build apk --debug`: correcta, salida `build/app/outputs/flutter-apk/app-debug.apk`, 155 254 011 bytes (aprox. 148 MiB). Es un APK debug con tres arquitecturas, no una entrega optimizada.
 - `aapt dump badging`: nombre, application ID, versión 0.1.0+1, mínimo API 24, target API 36 y arquitecturas verificados en el APK.
 - SHA-256 de este APK: `5602F7CF019E00D59E63CB23D1B45108050F1A1D74DF8DB386C838E31E0DF056`.
-- Teléfono: ADB todavía no detecta un dispositivo autorizado; instalación y prueba física pendientes.
+- Teléfono: autorización USB confirmada; `adb install -r` terminó con `Success` y `am start -W` con `Status: ok`. Proceso activo y actividad de Cureando en primer plano verificados. Versión instalada 0.1.0+1. No se guardan identificadores del dispositivo en el repositorio.
+- Pendiente de comprobación manual en teléfono: tocar el botón y confirmar el mensaje, y verificar el bloqueo de capturas/recientes. La apertura por ADB no sustituye estas comprobaciones visuales.
 
 No interpretar compilación o pruebas de widgets como instalación verificada en teléfono. `flutter doctor -v` detectó licencias Android pendientes y una advertencia de versiones XML de herramientas SDK; no bloquearon esta compilación. No se aceptaron licencias ni se actualizaron herramientas. `FLAG_SECURE` está implementado y compilado; su efecto físico sigue pendiente de comprobar.
 

@@ -37,7 +37,7 @@ Aplicar el logo original del manual de marca y Poppins para la interfaz. Colores
 
 ### M0 — Base Android, compilación e instalación
 
-Implementado: proyecto en `apps/mobile/`, pantalla de comprobación, `go_router`, tema provisional, Dart estricto y `FLAG_SECURE` global. Análisis sin incidencias, dos pruebas aprobadas y APK debug compilado. Instalación y prueba física todavía pendientes según el último registro de ADB. Ver [guía móvil](../apps/mobile/README.md) y [ADR 0002](decisiones/0002-inicializacion-android.md).
+Implementado: proyecto en `apps/mobile/`, pantalla de comprobación, `go_router`, tema provisional, Dart estricto y `FLAG_SECURE` global. Análisis sin incidencias, dos pruebas aprobadas y APK debug compilado. Instalación USB exitosa y apertura en primer plano verificadas mediante ADB el 2026-11-05. Queda pendiente confirmar manualmente el botón y el efecto de la protección de capturas. Ver [guía móvil](../apps/mobile/README.md) y [ADR 0002](decisiones/0002-inicializacion-android.md).
 
 Solicitado para una presentación: poder activar/desactivar la protección de pantalla. Su configuración concreta requiere aprobación antes de implementarse; el APK actual no tiene interruptor. No es necesario un modo demo como navegación principal.
 
