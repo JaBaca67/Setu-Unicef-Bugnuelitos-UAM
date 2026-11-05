@@ -1,5 +1,7 @@
 # Cureando: qué debe llevar cada pantalla
 
+Ver primero los [diagramas de flujo clásicos](flujos/index.html), con [imágenes y fuentes Mermaid](flujos/README.md). Esta guía detalla el contenido de cada pantalla del diagrama.
+
 Guía para comenzar el diseño móvil. Propuesta del MVP, pendiente de validar con el equipo. No es una aplicación funcionando. Los textos entre corchetes se completarán cuando se confirmen los datos.
 
 ## Cómo leer esta guía

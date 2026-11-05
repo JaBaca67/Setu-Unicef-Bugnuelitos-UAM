@@ -8,6 +8,7 @@ El equipo describe el proyecto como una propuesta que será evaluada en un conte
 
 ## Documentación
 
+- **[Diagramas de flujo clásicos](docs/diseno/flujos/index.html)**: acceso, distribución de la app, reporte y atención, con decisiones y retornos; [fuentes Mermaid e imágenes](docs/diseno/flujos/README.md).
 - **[Empezar aquí para diseñar: pantallas explicadas](docs/diseno/pantallas-explicadas.html)**: documento compartible con cada texto, campo, botón y destino; [versión Markdown](docs/diseno/pantallas-explicadas.md).
 - [Visión y alcance](docs/01-producto.md): problema, personas usuarias, MVP y exclusiones.
 - [Arquitectura propuesta](docs/02-arquitectura.md): stack, módulos, datos y permisos.

@@ -1,5 +1,7 @@
 # Cureando — Guía de pantallas para diseño
 
+**Diagrama visual vigente:** [flujos clásicos con decisiones y retornos](diseno/flujos/index.html), disponibles como [imágenes PNG y fuentes Mermaid](diseno/flujos/README.md). Reemplazan el mapa inicial de tarjetas como entrega principal del flujo. Las fichas siguientes siguen siendo la referencia de contenido.
+
 **Entrega simplificada para compartir:** [pantallas explicadas una por una](diseno/pantallas-explicadas.html), con [fuente Markdown](diseno/pantallas-explicadas.md). Esta entrega es independiente de Figma y desarrolla el inventario de esta guía. No hace falta completar el widget de FigJam para comenzar.
 
 Fecha: 2026-11-04. Estado: propuesta de experiencia para el MVP, no pantallas implementadas. Destinatario: persona encargada del diseño en Figma.
