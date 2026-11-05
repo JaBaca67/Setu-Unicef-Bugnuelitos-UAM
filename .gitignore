@@ -1,0 +1,22 @@
+# Secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and build artifacts
+node_modules/
+.expo/
+dist/
+build/
+coverage/
+__pycache__/
+*.pyc
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+~$*
