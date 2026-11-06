@@ -1,131 +1,282 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import 'shared/contracts/cureando_gateway.dart';
+import 'shared/local/local_cureando_gateway.dart';
+import 'shared/platform/screen_security_controller.dart';
 import 'shared/theme/app_theme.dart';
+import 'shared/widgets/setu_brand_mark.dart';
 
 class CureandoApp extends StatefulWidget {
-  const CureandoApp({super.key});
-
+  const CureandoApp({super.key, this.gateway, this.screenSecurity});
+  final CureandoGateway? gateway;
+  final ScreenSecurityController? screenSecurity;
   @override
   State<CureandoApp> createState() => _CureandoAppState();
 }
 
 class _CureandoAppState extends State<CureandoApp> {
+  late final ScreenSecurityController _security =
+      widget.screenSecurity ?? ScreenSecurityController();
   late final GoRouter _router = GoRouter(
     routes: <RouteBase>[
       GoRoute(
         path: '/',
         builder: (BuildContext context, GoRouterState state) =>
-            const _EnvironmentCheckScreen(),
+            ValueListenableBuilder<int>(
+              valueListenable: _revision,
+              builder: (BuildContext context, int value, Widget? child) =>
+                  _home(context),
+            ),
       ),
     ],
   );
+  final ValueNotifier<int> _revision = ValueNotifier<int>(0);
+  void _update(VoidCallback action) {
+    setState(action);
+    _revision.value++;
+  }
+
+  bool _large = false;
+  bool _verified = false;
+  bool _storageReady = false;
+  String? _storageError;
+
+  @override
+  void initState() {
+    super.initState();
+    _security.addListener(_refresh);
+    _security.initialize();
+    _open();
+  }
+
+  void _refresh() {
+    if (mounted) _update(() {});
+  }
+
+  Future<void> _open() async {
+    try {
+      final CureandoGateway gateway =
+          widget.gateway ?? await LocalCureandoGateway.onDevice();
+      await gateway.initialize();
+      if (mounted) {
+        _update(() {
+          _storageReady = true;
+          _storageError = null;
+        });
+      }
+    } on Object {
+      if (mounted) {
+        _update(
+          () => _storageError =
+              'No se pudo abrir el almacenamiento protegido. No se borraron los datos.',
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
+    _security.removeListener(_refresh);
+    if (widget.screenSecurity == null) _security.dispose();
     _router.dispose();
+    _revision.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Cureando Demo',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      routerConfig: _router,
-    );
+  Future<void> _setProtection(bool enabled) async {
+    if (!enabled) {
+      final bool confirm =
+          await showDialog<bool>(
+            context: _router.routerDelegate.navigatorKey.currentContext!,
+            builder: (BuildContext context) => AlertDialog(
+              title: const Text('Permitir capturas y proyección'),
+              content: const Text(
+                'La pantalla podrá aparecer en capturas y proyección. Usa únicamente datos ficticios. La protección vuelve al reiniciar la aplicación.',
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Permitir'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (!confirm || !mounted) return;
+    }
+    await _security.setSecureScreen(enabled);
   }
-}
 
-class _EnvironmentCheckScreen extends StatefulWidget {
-  const _EnvironmentCheckScreen();
-
-  @override
-  State<_EnvironmentCheckScreen> createState() =>
-      _EnvironmentCheckScreenState();
-}
-
-class _EnvironmentCheckScreenState extends State<_EnvironmentCheckScreen> {
-  bool _interactionVerified = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _section(BuildContext context, String title, List<Widget> children) =>
+      Card(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              ...children,
+            ],
+          ),
+        ),
+      );
+  Widget _home(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Cureando Demo')),
+      appBar: AppBar(title: const Text('SéTú')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
+              constraints: const BoxConstraints(maxWidth: 600),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const SizedBox(height: 24),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Icon(
-                      Icons.spa_outlined,
-                      size: 56,
-                      color: theme.colorScheme.primary,
-                      semanticLabel: 'Cureando',
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: CureandoTheme.blueSoft,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const SetuBrandMark(size: 72),
+                        const SizedBox(height: 20),
+                        Text(
+                          'SéTú',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: CureandoTheme.blue,
+                            fontSize: 32,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tu voz importa.',
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Pedir apoyo también es cuidar. Estamos construyendo un espacio para ti y para quienes quieren ser testigos solidarios.',
+                        ),
+                        const SizedBox(height: 20),
+                        const Wrap(
+                          spacing: 16,
+                          children: <Widget>[
+                            BrandDecoration(
+                              motif: BrandMotif.puzzle,
+                              color: CureandoTheme.blue,
+                            ),
+                            BrandDecoration(
+                              motif: BrandMotif.flower,
+                              color: CureandoTheme.pink,
+                            ),
+                            BrandDecoration(
+                              motif: BrandMotif.spiral,
+                              color: CureandoTheme.green,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Un primer paso para pedir apoyo',
-                    style: theme.textTheme.headlineMedium,
-                  ),
                   const SizedBox(height: 16),
-                  Text(
-                    'Estamos preparando un espacio para estudiantes que '
-                    'necesitan apoyo ante situaciones de acoso escolar.',
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 24),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Prototipo con datos ficticios',
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'No envía reportes reales. No hay conexión con '
-                            'un centro educativo ni un servicio de atención.',
-                          ),
-                        ],
+                  _section(context, 'Guardado protegido en este teléfono', <
+                    Widget
+                  >[
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        _storageError ??
+                            (_storageReady
+                                ? 'Almacenamiento local cifrado listo.'
+                                : 'Abriendo almacenamiento protegido…'),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Los datos guardados permanecerán al cerrar la app. Todavía no se envían a un centro ni se sincronizan con otros dispositivos.',
+                    ),
+                    if (_storageError != null)
+                      TextButton(
+                        onPressed: _open,
+                        child: const Text('Reintentar apertura'),
+                      ),
+                  ]),
+                  _section(context, 'Privacidad de pantalla', <Widget>[
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Proteger pantalla'),
+                      subtitle: Text(
+                        _security.enabled
+                            ? 'Capturas y proyección bloqueadas.'
+                            : 'Capturas y proyección permitidas · solo datos ficticios.',
+                      ),
+                      value: _security.enabled,
+                      onChanged: _security.busy ? null : _setProtection,
+                    ),
+                    if (_security.error != null)
+                      Text(
+                        _security.error!,
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
+                  ]),
+                  _section(context, 'Tamaño de lectura', <Widget>[
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        ChoiceChip(
+                          label: const Text('Normal'),
+                          selected: !_large,
+                          onSelected: (_) => _update(() => _large = false),
+                        ),
+                        ChoiceChip(
+                          label: const Text('Grande +20%'),
+                          selected: _large,
+                          onSelected: (_) => _update(() => _large = true),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'También respetamos el tamaño de texto que elegiste en Android.',
+                    ),
+                  ]),
+                  const SizedBox(height: 12),
                   FilledButton.icon(
-                    onPressed: () {
-                      setState(() => _interactionVerified = true);
-                    },
-                    icon: const Icon(Icons.touch_app_outlined),
+                    onPressed: _storageReady
+                        ? () => _update(() => _verified = true)
+                        : null,
+                    icon: const Icon(Icons.check_circle_outline),
                     label: const Text('Comprobar funcionamiento'),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Semantics(
                     liveRegion: true,
                     child: Text(
-                      _interactionVerified
+                      _verified
                           ? '¡Listo! La interfaz responde correctamente.'
-                          : 'Toca el botón para probar la interacción.',
+                          : 'Prueba la interfaz y los controles de esta base funcional.',
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'M0 · Verificación del entorno Android\n'
-                    'El recorrido de reportes se añadirá en las siguientes fases.',
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: CureandoTheme.yellowSoft,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Text(
+                      'M1 · Identidad y almacenamiento local. Los formularios de cuentas, reportes y seguimiento se integrarán en las próximas fases. Solo datos ficticios; no es un servicio de emergencias.',
+                    ),
                   ),
                 ],
               ),
@@ -135,4 +286,21 @@ class _EnvironmentCheckScreenState extends State<_EnvironmentCheckScreen> {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp.router(
+    title: 'SéTú',
+    debugShowCheckedModeBanner: false,
+    theme: CureandoTheme.light,
+    routerConfig: _router,
+    builder: (BuildContext context, Widget? child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: CureandoTheme.readingScale(
+          MediaQuery.textScalerOf(context),
+          large: _large,
+        ),
+      ),
+      child: child ?? const SizedBox.shrink(),
+    ),
+  );
 }
