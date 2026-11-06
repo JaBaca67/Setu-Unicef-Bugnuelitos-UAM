@@ -5,14 +5,14 @@ Actualizado el 2026-11-05. Decisiones vigentes: Flutter/Dart, cuenta por alias +
 ## Reglas de trabajo
 
 1. Antes de implementar, presentar archivos, diseño, dependencias y preguntas del bloque; esperar aprobación explícita. Aprobar una dirección de producto no equivale a aprobar cualquier paquete o esquema.
-2. Explicar siempre los códigos de fase con su descripción. El usuario no ha aprobado todavía el orden concreto de los nuevos bloques.
+2. Explicar siempre los códigos de fase con su descripción. ADR 0004 y la instrucción de implementación aprobaron el bloque M1 completo; no volver a pedir aprobación para repetirlo.
 3. Mantener sincronizados README, AGENTS, documentos de diseño y decisiones. Distinguir implementado, aprobado y propuesto.
 4. Crear commits pequeños por avance revisado y verificado; separar código, documentación y referencias. Revisar el diff y hacer push al cerrar el bloque autorizado. Informar hashes y pendientes. No incluir datos locales, secretos, APK o cachés.
 5. Usar razonamiento cuidadoso para contratos, permisos, persistencia e identidad visual; no introducir abstracciones sin necesidad.
 
 ## Objetivo y límites
 
-Construir una app funcional que permita crear una cuenta con alias, redactar y guardar casos, consultar mensajes y realizar solicitudes de seguimiento. Los datos funcionales de prueba deben permanecer al cerrar/reabrir el proceso. El mecanismo concreto de persistencia protegida está pendiente de propuesta y aprobación.
+Construir una app funcional que permita crear una cuenta con alias, redactar y guardar casos, consultar mensajes y realizar solicitudes de seguimiento. Los datos funcionales de prueba deben permanecer al cerrar/reabrir el proceso. M1 ya implementa el mecanismo aprobado en ADR 0004; su integración en formularios completos corresponde a M2–M4.
 
 Sin backend, los datos permanecen en un solo teléfono. Guardado local no significa envío al centro ni comunicación con otro dispositivo. La interfaz debe explicarlo y no atribuir respuestas locales a un servicio institucional conectado. Desinstalar o borrar datos puede eliminar el contenido; no prometer copias o recuperación inexistentes.
 
@@ -24,7 +24,7 @@ Según el contexto del equipo y sus documentos de evaluación: Reporte Pautado (
 
 Aplicar el logo original del manual de marca y Poppins para la interfaz. Colores exactos: azul #0D61EB, rosa #FF0091, amarillo #FFE100 y verde #00C642; superficies suaves y tokens en [la guía visual](06-guia-diseno.md). Verificar contraste por combinación y escalado de texto, sin afirmar cumplimiento AA/AAA de toda la app por usar una paleta. No reemplazar el logo por una invención ni reutilizar fuentes incrustadas sin contar con sus archivos y licencia adecuados.
 
-## Arquitectura objetivo, todavía no implementada
+## Arquitectura de M1 implementada y backend futuro
 
 - `CureandoGateway`: contrato para cuentas, reportes, conversación y solicitudes.
 - `LocalCureandoGateway`: adaptador principal con persistencia protegida en el teléfono.
@@ -75,4 +75,4 @@ Análisis, pruebas, instalación y verificación física. Comprobar conservació
 
 ## Siguiente paso
 
-Presentar al usuario un bloque concreto con archivos, dependencias y preguntas de credenciales/persistencia antes de implementar. No asumir aprobado todo M1 por haber aprobado almacenar localmente. Documentar cada decisión y guardar el avance en commits incrementales.
+M1 completo está implementado y verificado por pruebas, con APK generado; instalación física pendiente si ADB no detecta un teléfono. Presentar M2 (bienvenida, registro/acceso e Inicio) antes de implementar sus pantallas. Documentar y guardar cada avance con commits incrementales.

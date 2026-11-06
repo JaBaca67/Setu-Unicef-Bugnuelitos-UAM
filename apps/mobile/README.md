@@ -1,20 +1,42 @@
-# Cureando Demo — M0
+# SéTú — Bloque M1: identidad, protección y persistencia local
 
-Base Android para comprobar el entorno, no recepción de reportes reales. Muestra un aviso de datos ficticios y un botón que confirma que la interfaz responde. No implementa todavía E01–E09, autenticación, backend ni almacenamiento de relatos.
+Aplicación Android 0.2.0+2. M1 implementa la infraestructura de cuentas/casos y una pantalla de verificación de identidad, almacenamiento y privacidad. Los formularios completos E01–E11 y las vistas de atención se integran en fases posteriores: no se presentan como terminados.
 
-## Entorno de referencia
+## Qué está implementado
 
-- Flutter 3.44.5 stable, Dart 3.12.2.
-- Android SDK 36.1.0; Java 21 incluido en Android Studio.
-- `go_router` 18.1.3 (dependencia directa de ejecución), `flutter_lints` 6.0.0 y pruebas del SDK Flutter. Versiones resueltas en `pubspec.lock`.
-- Nombre Android: **Cureando Demo**. Application ID: `dev.cureando.mockup`.
-- APK con mínimo Android 7.0 (API 24), target API 36 y arquitecturas `arm64-v8a`, `armeabi-v7a`, `x86_64`.
+- Poppins Regular/Medium/SemiBold/Bold empaquetada con licencia OFL (fuente: repositorio oficial google/fonts, ofl/poppins). No hay descargas de fuentes en ejecución. Fallback del sistema y síntesis tipográfica si falta un peso solicitado.
+- `CureandoTheme`, isotipo de tres piezas con las proporciones de docs/06, rompecabezas, flor de 12 pétalos y espiral; nombre e icono Android SéTú.
+- Lectura Normal/Grande (+20 %) combinada con el escalado de Android sin limitarlo.
+- Canal `dev.cureando.app/screen_security`, `setSecureScreen(bool)` e `isSecureScreenEnabled()`. Protección activa en cada arranque de la actividad, confirmación para desactivarla y estado visible. La preferencia desactivada no se persiste.
+- `CureandoGateway`, modelos estudiantiles inmutables sin notas internas ni credenciales, y contrato separado `StaffCureandoGateway`.
+- `LocalCureandoGateway`: alias de 3–24 letras/números/guion bajo, PIN numérico de 4–6 dígitos, respaldo `SETU-XXXX-XXXX`, centros ficticios Norte/Sur, interlocutor CCE/Psicología, chips, ruta alternativa, mensajes, solicitudes y estados.
+- Código de caso opaco + PIN de 4 dígitos: acceso limitado a ese caso con mensajes y solicitudes, sin acceso al listado de la cuenta. La cuenta propietaria puede emitir/rotar ese PIN mediante `createCaseAccess`; se devuelve una sola vez en memoria y solo se guarda su derivación. No recupera datos desde otro teléfono.
+- Cinco fallos de acceso bloquean durante cinco minutos. Contadores persistidos para PIN de cuenta, respaldo y PIN de caso. Acceso fallido no mantiene una sesión previa.
+- Idempotencia por actor/operación/`clientRequestId`: misma entrada devuelve la misma referencia; contenido distinto con la misma clave se rechaza. Estado persistido antes de simular resultado incierto.
 
-No se actualizó el SDK Flutter existente. Las herramientas no están en el PATH de la terminal de esta sesión; pueden invocarse por su ruta completa, sin cambiar el PATH global.
+## Almacenamiento y límites de seguridad
 
-## Ejecutar y verificar
+Archivo privado `setu_local_store.enc`, JSON cifrado con AES-GCM-256, nonce nuevo de 96 bits en cada escritura y MAC de 128 bits. Versión autenticada mediante AAD. Clave aleatoria de 256 bits protegida por `flutter_secure_storage` (cifrado respaldado por Android Keystore; no es un PIN guardado como clave del archivo).
 
-Desde `apps/mobile/`, con Flutter disponible en el PATH:
+PIN, respaldo y PIN de caso se guardan como PBKDF2-HMAC-SHA256, 600 000 iteraciones, salt aleatorio independiente de 128 bits por credencial y separación por finalidad. Derivación fuera del hilo UI en un isolate. El mock de pruebas usa 1 000 iteraciones solo para velocidad; la app real no construye el mock.
+
+Escritura serializada y transaccional: copia de estado → archivo temporal cifrado con flush → renombrado → publicación en memoria. Clave ausente, archivo alterado, versión incompatible o temporal huérfano se informan sin borrar ni reinicializar los casos. Nunca se escribe JSON de casos en claro. Las copias cloud y transferencias Android se excluyen explícitamente para no restaurar datos sin su clave.
+
+Cuenta/casos sobreviven a cerrar y abrir la app; las sesiones de acceso no persisten. Borrar datos o desinstalar puede eliminar archivo y clave. La recuperación por respaldo solo restablece el PIN de una cuenta en el mismo teléfono; no recupera una clave Keystore perdida ni un archivo eliminado.
+
+El cifrado es del archivo completo; la separación entre orientador/estudiante es por autorización y modelos, no por claves independientes para cada rol. Los perfiles de personal allowlisted en `staffForLocalTesting` son herramientas locales de prueba, no autenticación institucional ni permisos de Supabase. La app está limitada a datos ficticios. No hay servidor, notificaciones externas, llamadas, citas confirmadas o envío a centros reales.
+
+Mantener una única instancia propietaria del almacén por proceso y compartirla con sus fachadas. El formato versionado no implementa migraciones arbitrarias: rechaza versiones desconocidas. No subir automáticamente estos datos al futuro backend.
+
+## Herramientas y dependencias
+
+Flutter 3.44.5 stable, Dart 3.12.2; Android SDK 36.1.0, JDK 21 de Android Studio. Dependencias directas de ejecución: `go_router` 18.1.3, `cryptography` 2.9.0, `flutter_secure_storage` 11.2.0 y `path_provider` 2.1.6. Resueltas en `pubspec.lock`. No se actualizó Flutter, Java, licencias ni el PATH global.
+
+Nombre visible SéTú; application ID conservado `dev.cureando.mockup` para actualizar la instalación M0. Namespace Kotlin `dev.cureando.cureando_mobile`. APK debug universal: mínimo API 24, target API 36, arm64-v8a/armeabi-v7a/x86_64.
+
+## Ejecutar, probar y compilar
+
+Desde `apps/mobile/`:
 
 ```powershell
 flutter pub get
@@ -23,38 +45,34 @@ flutter test
 flutter build apk --debug
 ```
 
-En esta computadora, el equivalente es `& C:\flutter\bin\flutter.bat --no-version-check analyze`, cambiando `analyze` por `test` o `build apk --debug` según la tarea.
+En esta computadora puede usarse `& C:\flutter\bin\flutter.bat --no-version-check` en lugar de `flutter`. Las herramientas no necesitan estar en el PATH global.
 
-Salida del APK: `build/app/outputs/flutter-apk/app-debug.apk`. Es una compilación de desarrollo con firma debug local, no una publicación ni firma de producción. El APK y las rutas locales del SDK no se versionan en Git.
+APK: `build/app/outputs/flutter-apk/app-debug.apk`, firma debug local, excluido de Git. No publicar este corte como servicio para casos reales.
 
-## Instalar en teléfono por USB
+Para capturas de QA de widgets, con datos ficticios y fuente real:
 
-1. Conectar un teléfono desbloqueado con cable de datos, activar depuración USB y aceptar personalmente la autorización de esta computadora.
-2. Comprobar `adb devices -l`: debe aparecer como `device`, no `unauthorized` ni `offline`.
-3. Si hay varios dispositivos, seleccionar explícitamente el teléfono con `adb -s <dispositivo> ...`.
-4. Instalar: `adb -s <dispositivo> install -r build/app/outputs/flutter-apk/app-debug.apk`.
-5. Abrir **Cureando Demo** y tocar **Comprobar funcionamiento**. Debe aparecer “¡Listo! La interfaz responde correctamente.”
+```powershell
+flutter test --dart-define=SETU_CAPTURE_QA=true test/app_test.dart
+```
 
-ADB local: `& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" devices -l`.
+Se generan `build/qa/m1-home.png` y `m1-controls.png`, fuera de Git. No son capturas de un teléfono.
 
-`FLAG_SECURE` se configura en toda la actividad Android: el sistema puede bloquear capturas y ocultar el contenido en recientes. Esto no garantiza protección absoluta en todos los dispositivos. Su comportamiento debe probarse en el teléfono; las pruebas de widgets no validan flags nativos.
+## Verificación M1 — 2026-11-05
 
-## Estado de verificación
+- Análisis sin incidencias.
+- 18 pruebas unitarias/widgets aprobadas: cifrado, alteraciones de nonce/MAC/ciphertext/versión, clave perdida, temporal huérfano, reapertura, credenciales/salts/recuperación, bloqueo persistente, aislamiento, interlocutor/conflicto, notas internas, no leídos, idempotencia/concurrencia, seguimiento/citas y rollback de disco; además interfaz, canal, contraste y texto Android al 200 % con Grande adicional.
+- QA visual de logo, tipografía y controles mediante render de widgets con Poppins real. No certifica toda la app como WCAG AA/AAA.
+- `flutter build apk --debug`: correcto, versión 0.2.0+2, 195 230 247 bytes (aprox. 186 MiB; debug universal sin optimización).
+- SHA-256: `9D1622EB2797F2D442656C7E3CB36082E12E3327B3E69B517319501A31BE229F`.
+- M0 sí fue instalado/verificado previamente. En este corte M1, ADB no detecta un teléfono: instalación, Keystore real y nuevo interruptor en dispositivo quedan pendientes. Los tests de plataforma simulan el canal; no sustituyen la prueba física.
 
-Verificación del 2026-11-05:
+## Instalación USB
 
-- `flutter analyze`: sin incidencias.
-- `flutter test`: 2 pruebas aprobadas (aviso de demo/interacción y pantalla de 320 × 568 con texto al 200 %, sin desbordamiento).
-- `flutter build apk --debug`: correcta, salida `build/app/outputs/flutter-apk/app-debug.apk`, 155 254 011 bytes (aprox. 148 MiB). Es un APK debug con tres arquitecturas, no una entrega optimizada.
-- `aapt dump badging`: nombre, application ID, versión 0.1.0+1, mínimo API 24, target API 36 y arquitecturas verificados en el APK.
-- SHA-256 de este APK: `5602F7CF019E00D59E63CB23D1B45108050F1A1D74DF8DB386C838E31E0DF056`.
-- Teléfono: autorización USB confirmada; `adb install -r` terminó con `Success` y `am start -W` con `Status: ok`. Proceso activo y actividad de Cureando en primer plano verificados. Versión instalada 0.1.0+1. No se guardan identificadores del dispositivo en el repositorio.
-- Verificación por ADB del 2026-11-05 (20:10): el toque en **Comprobar funcionamiento** cambió el texto a “¡Listo! La interfaz responde correctamente.” (leído del árbol de accesibilidad con `uiautomator dump`); `screencap` devolvió la app en negro, lo que confirma el bloqueo de capturas por `FLAG_SECURE`; con `font_scale` 2.0 el contenido pasa a desplazable sin cortes (el ajuste del teléfono se restauró a 1.0); sin errores de Flutter ni `AndroidRuntime` en logcat. La miniatura en recientes no se comprobó visualmente.
+Autorizar depuración USB personalmente en el teléfono. Comprobar `adb devices -l`; debe aparecer `device`. Si hay varios, seleccionar el correcto.
 
-No interpretar compilación o pruebas de widgets como instalación verificada en teléfono. `flutter doctor -v` detectó licencias Android pendientes y una advertencia de versiones XML de herramientas SDK; no bloquearon esta compilación. No se aceptaron licencias ni se actualizaron herramientas. `FLAG_SECURE` está implementado y su bloqueo de capturas se comprobó en el teléfono; como consecuencia, las capturas de la app para documentos o proyecciones salen en negro mientras siga activo globalmente.
+```powershell
+adb -s <dispositivo> install -r build/app/outputs/flutter-apk/app-debug.apk
+adb -s <dispositivo> shell am start -W -n dev.cureando.mockup/dev.cureando.cureando_mobile.MainActivity
+```
 
-## Límites de esta fase
-
-Material 3 y tema claro provisional. La interacción local usa `setState`; `ChangeNotifier` está aprobado para controladores cuando sean necesarios. La ruta `/` usa `go_router`. No se han creado controladores, contratos o carpetas vacías de funcionalidades por anticipado.
-
-La dirección del siguiente desarrollo está aprobada: cuenta por alias, solicitudes de seguimiento y datos locales persistentes; ver [ADR 0003](../../docs/decisiones/0003-cuenta-alias-y-persistencia-local.md). Todavía no están implementados. Archivos, credenciales y paquetes del bloque concreto necesitan propuesta previa. La identidad gráfica del manual todavía no se ha aplicado al tema provisional.
+ADB local: `& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"`. Comprobar almacenamiento listo, botón de interacción, protección activada por defecto, cancelación y confirmación del interruptor, capturas permitidas al pausarlo y protección restaurada tras reiniciar. Nunca guardar identificadores del teléfono o datos locales en commits.

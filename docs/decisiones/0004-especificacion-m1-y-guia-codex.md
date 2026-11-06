@@ -44,7 +44,19 @@ Con la Fase `M0` verificada físicamente por USB/ADB (instalación del APK, tran
 - **Chips de momento / alerta temprana (`E04`):** Además de rol (*Afectado* / *Testigo Solidario*), tipo de situación y lugar, incluir selector opcional de momento/frecuencia (*"Empezó hace poco"*, *"Pasa seguido"*, *"Necesito apoyo pronto"*) sin puntuación clínica.
 - **Separación estricta de notas internas (`R03` vs `E08`):** Los modelos visibles al estudiante (`StudentCaseDetailView`) no incluyen el campo `internalNotes` del orientador ni siquiera en memoria.
 
-## 3. Recomendación de Nivel de Intensidad / Modelo para Codex
+## 3. Resultado de implementación de M1 (2026-11-05)
+
+Implementado en `apps/mobile/`: modelos y contratos, `LocalCureandoGateway`, archivo privado `setu_local_store.enc` autenticado con AES-GCM-256, clave en `flutter_secure_storage`, PBKDF2-HMAC-SHA256 (600 000 iteraciones, salts de 16 bytes independientes por credencial), y mock exclusivo de pruebas. La clave del archivo no deriva del PIN. Android excluye copias cloud y transferencia del contenido para no restaurarlo sin su clave local.
+
+La cuenta puede emitir/rotar un PIN complementario de caso; solo su derivación se persiste y la credencial se devuelve una vez en memoria. No se incorpora el PIN al recibo idempotente de envío, para no conservar secretos en claro. Cinco fallos de credencial bloquean durante cinco minutos; el contador persiste. La recuperación con respaldo restablece el PIN de la cuenta, no una clave Keystore perdida. Sesiones en memoria; casos en disco.
+
+La interfaz M1 incluye nombre/icono SéTú, isotipo con proporciones del manual, tres motivos, Poppins local con licencia, controles de lectura y protección de pantalla. La protección se activa al arrancar la actividad y solo se pausa tras confirmación; no se persiste la pausa. Los formularios E01–E11 se integran después, no están completos en esta entrega.
+
+Verificado: análisis sin incidencias, 18 pruebas aprobadas, renders de widgets revisados con Poppins y APK debug 0.2.0+2 compilado. M0 se verificó físicamente; el teléfono no está conectado para instalar/verificar este M1. Resultados y SHA-256 en [la guía móvil](../../apps/mobile/README.md).
+
+Separación de roles por autorización y DTO, no por cifrado individual de notas. Los perfiles de personal son allowlisted de prueba local, no autenticación de empleados. Sin backend no hay comunicación entre teléfonos, citas confirmadas o recepción institucional real. No se añadieron contactos activos ni contenido clínico.
+
+## 4. Recomendación de Nivel de Intensidad / Modelo para Codex
 
 | Bloque de trabajo | Modelo / Intensidad recomendada en Codex | Justificación técnica |
 | --- | --- | --- |

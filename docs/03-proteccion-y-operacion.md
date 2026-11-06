@@ -26,7 +26,7 @@ La interfaz debe indicar que no es un servicio de emergencias y ofrecer vías lo
 | Represalias o identificación | Minimización, acceso restringido, notificaciones discretas | Revisar contenido y experiencia con especialistas |
 | Filtración entre centros | RLS, privilegios y validación de referencias | Probar lectura/escritura cruzada con dos centros |
 | Personal abusivo o implicado | Asignación limitada, auditoría y vía alternativa | Simular conflicto de interés |
-| Dispositivo compartido o perdido | Cuenta por alias, cierre de sesión, persistencia local protegida y aislamiento de casos | Revisar cifrado, credenciales, autorización y pantalla de recientes; todavía pendiente de implementar |
+| Dispositivo compartido o perdido | Cuenta por alias/PIN, cierre de sesión, persistencia cifrada y aislamiento de casos | Motor probado en M1; validar formularios y comportamiento nativo al instalar M1, sin asumir protección absoluta |
 | Suplantación o spam | Ingreso controlado, cuotas en servidor y revisión humana | Probar revocación, abuso y errores sin bloquear ayuda arbitrariamente |
 | Expectativa de respuesta inmediata | Horarios y estado claros; responsable suplente | Validar comprensión y simulacro de ausencia |
 | Datos en logs o soporte | Telemetría mínima, sin cuerpos ni secretos | Inspeccionar errores, logs y exportaciones |
@@ -34,7 +34,7 @@ La interfaz debe indicar que no es un servicio de emergencias y ofrecer vías lo
 
 ## Datos y retención
 
-Para el desarrollo local se aprobó conservar datos funcionales ficticios después de cerrar la app (ADR 0003). Esto reemplaza la propuesta anterior de almacenamiento exclusivamente en memoria; no autoriza datos reales ni recepción institucional. Borradores descartados siguen siendo temporales, credenciales nunca en texto plano y datos del teléfono fuera de Git. Cifrado, paquetes, borrado y recuperación deben concretarse antes de implementar. Desinstalación o borrado de datos pueden eliminar los casos.
+Para el desarrollo local se aprobó conservar datos funcionales ficticios después de cerrar la app (ADR 0003/0004). M1 implementa archivo AES-GCM-256 y clave protegida por Keystore, PBKDF2 para credenciales y separación entre notas internas y modelos estudiantiles; no autoriza datos reales ni recepción institucional. Borradores descartados siguen siendo temporales, credenciales nunca en texto plano y datos del teléfono fuera de Git. Recuperación de PIN solo con respaldo y datos existentes en el mismo teléfono. Desinstalación, pérdida de clave o borrado de datos pueden impedir recuperar los casos; el respaldo de cuenta no sustituye un backup cifrado. Plazos de retención y derechos para el piloto siguen pendientes.
 
 No solicitar fecha de nacimiento completa, cédula, dirección, GPS o contactos por defecto. El relato libre puede contener datos sensibles incluso sin campos de identidad; advertir con lenguaje amable y permitir revisión antes del envío.
 

@@ -1,5 +1,7 @@
 # Cureando — Guía de pantallas para diseño
 
+**Estado M1:** implementados `CureandoTheme`, Poppins local, isotipo de tres piezas con las coordenadas de este documento y motivos de rompecabezas/flor/espiral. La pantalla M1 permite revisar identidad, lectura Normal/Grande y protección de capturas. Formularios completos posteriores. Los renders se revisaron con la fuente real; las combinaciones blanco/azul y texto oscuro/rosa/amarillo/verde se probaron para contraste de texto normal, sin atribuir certificación AA/AAA a toda la app.
+
 **Actualización vigente (2026-11-05):** cuenta estudiantil por alias, solicitudes de seguimiento y persistencia protegida local aprobadas en [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md). Los diagramas e inventario antiguos no incluyen todavía el nuevo registro; son referencias históricas hasta actualizarse. El plan vigente está en docs/07. No implementar un acceso basado únicamente en invitación ni descartar casos guardados al cerrar la app.
 
 **Diagramas históricos:** [flujos clásicos](diseno/flujos/index.html), disponibles como [imágenes y fuentes](diseno/flujos/README.md). Conservan la versión anterior y necesitan actualizarse con ADR 0003 antes de implementar.
@@ -132,7 +134,7 @@ Extraídos directamente de los flujos vectoriales de `ManualDeIdentidad gráfica
 | ID / prioridad | Pantalla y propósito | Contenido mínimo | Acción y destino |
 | --- | --- | --- | --- |
 | E01 · P0 | Bienvenida y privacidad: comprender el servicio | Qué permite hacer, quién recibe el reporte, límites de privacidad y atención; sin carrusel obligatorio | Continuar → E02; Buscar ayuda → E09 |
-| E02 · P0 | Registro/acceso con alias y vinculación al centro | Formularios de alias/credencial por concretar e invitación del centro; no pedir nombre civil | Acceso válido → E03; ayuda → E09 |
+| E02 · P0 | Registro/acceso con alias y vinculación al centro | Alias, PIN de 4–6 dígitos, respaldo local y código escolar (ADR 0004); formularios por integrar, sin nombre civil | Acceso válido → E03; ayuda → E09 |
 | E03 · P0 | Inicio: encontrar rápidamente qué hacer | Centro activo, botón principal Pedir apoyo, acceso a Mis reportes, Ayuda y Cuidarme | E04 / E07 / E09 / E10 |
 | E04 · P0 | Contar lo ocurrido: redactar sin presión | Me pasa a mí / Lo presencié; relato; contexto y fecha aproximada opcionales; recordar no incluir datos innecesarios | Revisar → E05; volver con aviso si se perderá texto |
 | E05 · P0 | Revisar reporte: decidir antes del envío | Resumen editable, destinatario real del centro, límites y horario; no exigir identificar a personas | Editar → E04; Enviar → estado de carga y E06 solo tras confirmación |
@@ -169,7 +171,7 @@ No todas las variantes necesitan un frame completo; usar variantes de componente
 - Navegación propuesta tras entrar: Inicio, Mis reportes, Ayuda y Cuidarme. Ayuda también accesible desde E01/E02 sin pertenencia escolar. Pedir apoyo es la acción principal de Inicio.
 - Tono cálido, directo y sin culpabilizar. Ejemplos: “Pedir apoyo”, “Cuéntanos qué pasó”, “Revisa antes de enviar”, “Tu reporte fue recibido”, “Todavía no hay una respuesta”. Son textos propuestos para validar con estudiantes.
 - No usar “100 % anónimo”, “nadie sabrá”, “resolveremos tu caso” ni un horario ficticio. En maqueta usar “[horario por confirmar]” y “[equipo responsable por confirmar]”.
-- No pedir nombre civil, foto, cédula, teléfono o ubicación para acceder. Diseñar cuenta por alias; no inventar recuperación de contraseña ni equivalencia con Código/PIN antes de aprobar sus reglas.
+- No pedir nombre civil, foto, cédula, teléfono o ubicación para acceder. Aplicar cuenta Alias/PIN y recuperación local por respaldo de ADR 0004; Código/PIN de caso no equivale al acceso completo de la cuenta ni opera entre dispositivos sin backend.
 - Errores junto al campo y texto comprensible; contraste suficiente, foco visible, objetivos táctiles cómodos y estados que no dependan solo del color.
 - No añadir adjuntos, rankings, muro público, chat entre alumnos, terapia con IA o gamificación del reporte.
 - Datos de muestra completamente ficticios y breves, sin relatos gráficos ni nombres que parezcan personas reales.

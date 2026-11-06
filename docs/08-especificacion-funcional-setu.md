@@ -1,5 +1,7 @@
 # Especificación Funcional Detallada — Plataforma SéTú (Cureando)
 
+**Estado de implementación:** M1 completa identidad, canal de protección, contratos y motor local cifrado. Las pantallas E01–E11 descritas aquí son objetivo posterior; el APK actual muestra verificación de M1. Sin backend, Código/PIN y solicitudes solo operan en el mismo teléfono. No se han activado llamadas ni derivaciones externas.
+
 **Documento para alineación del equipo Bugñuelitos y desarrollo del Prototipo UAM - UNICEF 2026**  
 **Fecha de actualización:** 5 de noviembre de 2026  
 **Autores/Equipo:** James Fernández, José Alfredo Baca, Fátima Moreira, María Cecilia Aguilera, Aaron Navarrete, Samantha Juárez.
@@ -27,7 +29,7 @@ A partir del estudio funcional de **Andrea App** (España) y **b-resol** (plataf
 | --- | --- | --- |
 | **Vinculación escolar** | El alumno ingresa un código único del centro educativo al instalar la app (*Andrea* y *b-resol*). | **Doble vía inclusiva (`E02`):** Cuenta estudiantil por **Alias + PIN numérico (4–6 dígitos) + código de respaldo** vinculada por código escolar (`DEMO-NORTE`) o QR simulado del mural, **más** consulta puntual por **Código de Caso + PIN** para alumnos sin celular propio que usan tabletas del Aula Digital Móvil (ADM). |
 | **Activación del Testigo (80 % de los reportes)** | Canal anónimo para que los compañeros rompan la "ley del silencio" sin miedo a ser llamados "chivatos" (*b-resol*). | **Ruta de Testigo Solidario dedicada (`E01`, `E04`, `E10`):** Selector explícito *"Lo presencié (Compañero/Testigo solidario)"* con chips adaptados y micro-cápsula educativa sobre cómo apoyar sin ponerse en riesgo físico. |
-| **Elección de interlocutor y conflicto de interés** | En *b-resol*, el estudiante ve los perfiles de orientación del colegio y elige a quién dirigir su alerta. | **Selector de destinatario + Salvaguarda de Conflicto de Interés (`E04`/`E05`):** El estudiante puede elegir a qué rol de orientación dirigir su caso (Consejería Escolar CCE, Psicología/Orientación) y marcar la casilla **Conflicto de Interés**, que bloquea criptográficamente/por permisos el caso para el personal involucrado y lo desvía a una ruta alternativa. |
+| **Elección de interlocutor y conflicto de interés** | En *b-resol*, el estudiante ve los perfiles de orientación del colegio y elige a quién dirigir su alerta. | **Selector de destinatario + Salvaguarda de Conflicto de Interés (`E04`/`E05`):** El estudiante puede elegir a qué rol de orientación dirigir su caso (Consejería Escolar CCE, Psicología/Orientación) y marcar la casilla **Conflicto de Interés**, que excluye por autorización local el caso (el cifrado protege el archivo completo, no cada rol por separado) para el personal involucrado y lo desvía a una ruta alternativa. |
 | **Alertas tempranas** | Avisos de conflicto inicial antes de que escalen a violencia grave (*Andrea App*). | **Nivel de momento / frecuencia percibida (`E04`):** Chips simples no clínicos (*"Empezó hace poco"*, *"Pasa casi todos los días"*, *"Necesito que alguien lo sepa hoy"*) para ayudar a orientación a priorizar sin usar IA clínica ni diagnósticos. |
 | **Chat seguro y continuidad** | Chat bidireccional confidencial entre el menor y el orientador (*Andrea* y *b-resol*). | **Seguimiento asíncrono + Solicitudes estructuradas (`E08`):** Además del chat con separación estricta de notas internas, incorpora botones de 1 toque para **Solicitar cita discreta en persona** (evitando ser llamado frente al aula) y **Solicitar seguimiento** en casos cerrados. |
 
@@ -170,7 +172,7 @@ Para asegurar una entrega exitosa y con alta calidad técnica para la **Jornada 
   - Ilustración de confirmación en Verde Esperanza (`#00C642`).
   - Titular: *"Tu reporte fue recibido con éxito"*.
   - **Código de Caso:** Identificador opaco de 6 caracteres (ej. `CUR-8421`).
-  - **PIN de Seguimiento de 4 dígitos:** Clave numérica (ej. `PIN: 5932`) que permite consultar este reporte específico desde cualquier otro dispositivo o tableta del aula sin necesidad de tener abierta la cuenta principal.
+  - **PIN de Seguimiento de 4 dígitos:** Clave numérica (ej. `PIN: 5932`) que permite consultar este reporte específico en el mismo teléfono sin necesidad de tener abierta la cuenta principal; la consulta desde otro dispositivo requiere el backend futuro.
   - Explicación de los siguientes pasos: *"El equipo de orientación revisará tu caso en su horario de atención. Puedes revisar las respuestas en Mis reportes"*.
   - Botón: *"Ver seguimiento"* (navega a `E08`).
 
@@ -196,7 +198,7 @@ Para asegurar una entrega exitosa y con alta calidad técnica para la **Jornada 
   - **Historial de mensajes:** Burbujas de diálogo claramente diferenciadas:
     - Mensajes del estudiante (alineados a la derecha, tono azul).
     - Mensajes del orientador (alineados a la izquierda, etiqueta *"Equipo de Orientación Escolar"*, sin revelar el nombre personal del funcionario para proteger el marco institucional).
-  - **Separación de Notas Internas:** Las notas de trabajo del orientador se guardan en una tabla independiente; **nunca** viajan al teléfono del estudiante.
+  - **Separación de Notas Internas:** Las notas de trabajo del orientador se guardan en una tabla independiente; **nunca** se incluyen en el modelo visible al estudiante; en este corte local el archivo cifrado conserva ambas clases de información con autorización separada.
   - **Botón voluntario "Solicitar cita discreta en el centro":**
     - Permite al estudiante solicitar acordar una fecha/hora presencial (ej. en biblioteca o consejería) de forma cuidada, evitando que el profesor lo llame frente a sus compañeros de aula.
   - **Casos Cerrados:** Si el caso está cerrado, se explica el motivo de cierre y se habilita el botón *"Solicitar nuevo seguimiento"*, que envía una notificación al orientador sin reabrir automáticamente el estado.

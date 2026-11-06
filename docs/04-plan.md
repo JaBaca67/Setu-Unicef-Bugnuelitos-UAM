@@ -12,7 +12,7 @@ Evaluación del prototipo académico (con datos ficticios) y un eventual piloto 
 
 ## Preguntas que cambian la solución
 
-**Decisiones nuevas confirmadas:** cuenta por alias, solicitudes de seguimiento y datos funcionales persistentes en el teléfono (ADR 0003). Credenciales, paquetes y esquema local aún necesitan propuesta técnica; la implementación actual sigue siendo M0.
+**Decisiones nuevas confirmadas:** cuenta por alias, solicitudes de seguimiento y datos funcionales persistentes en el teléfono (ADR 0003). ADR 0004 aprobó y M1 implementó credenciales, paquetes y almacén cifrado; análisis limpio y 18 pruebas aprobadas. Pantallas completas M2–M4 pendientes.
 
 | Prioridad | Decisión | Estado |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ Evaluación del prototipo académico (con datos ficticios) y un eventual piloto 
 ## Primer backlog propuesto
 
 1. Completar M0: base Flutter, análisis, pruebas, APK debug y validación USB; registrar evidencia real.
-2. Presentar y aprobar el siguiente bloque antes de implementar `CureandoGateway`, cuenta por alias y `LocalCureandoGateway` con persistencia protegida. El mock en memoria solo sirve a pruebas.
+2. M1 implementado: contratos, cuenta por alias/PIN y LocalCureandoGateway cifrado; mock solo para pruebas. APK compilado e instalación física pendiente. Presentar el siguiente bloque de pantallas M2 para aprobación.
 3. Seguir M2–M4 para registro/acceso por alias, inicio, ayuda informativa, reporte guardado localmente y solicitudes de seguimiento. Los detalles de atención local y herramientas de presentación requieren propuesta; no son un servicio institucional conectado.
 4. Completar M5 y guion de evaluación. Autocuidado y backend real quedan fuera de M0.
 

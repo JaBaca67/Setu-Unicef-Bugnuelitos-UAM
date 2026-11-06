@@ -2,7 +2,7 @@
 
 Estado: stack móvil (Flutter/Dart) y backend objetivo (Supabase/PostgreSQL) confirmados; modelo de datos y políticas en fase de diseño previo a implementación. Ver [decisión 0001](decisiones/0001-base-propuesta.md).
 
-**Actualización vigente:** [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md) aprueba cuenta por alias, solicitudes de seguimiento y almacenamiento protegido local. La app actual solo implementa M0; el adaptador local y su esquema aún requieren propuesta técnica.
+**Actualización vigente:** [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md) aprueba cuenta por alias, solicitudes de seguimiento y almacenamiento protegido local. M1 ya implementa el adaptador local y sus contratos según ADR 0004; las pantallas completas y el backend siguen pendientes.
 
 ## Selección técnica
 
@@ -11,7 +11,7 @@ Estado: stack móvil (Flutter/Dart) y backend objetivo (Supabase/PostgreSQL) con
 | App móvil | Flutter + Dart | Experiencia previa en el equipo, UI consistente con Material 3 y compilación directa de APK en Android (`flutter build apk`) |
 | Navegación | `go_router`, aprobado en M0 | Organización por pantallas; M0 solo tiene la ruta de comprobación `/` |
 | Estado móvil | `ChangeNotifier` nativo para futuros controladores | M0 usa estado efímero de widget para el botón de comprobación, sin crear controladores vacíos |
-| Persistencia inicial | Almacenamiento local protegido mediante `LocalCureandoGateway` | Aprobado como dirección; motor, cifrado y dependencias pendientes de aprobación |
+| Persistencia inicial | Almacenamiento local protegido mediante `LocalCureandoGateway` | Implementado en M1: archivo AES-GCM-256, clave protegida por Keystore, credenciales PBKDF2; ADR 0004 |
 | Backend | Supabase: Auth y PostgreSQL (`supabase_flutter`) | Reducir operación inicial, tipado claro y expresar permisos en datos |
 | Operaciones sensibles | Funciones SQL restringidas (`RPC`) / servidor | Validar pertenencia, cuotas, envío idempotente y transiciones en una sola transacción |
 | Datos | PostgreSQL con RLS y privilegios mínimos | Aislar instituciones y sesiones |
@@ -27,7 +27,7 @@ Lecturas mínimas pueden usar la API de Supabase con RLS o vistas con `security_
 
 ## Organización objetivo y estado de implementación
 
-M0 crea únicamente el proyecto Android en `apps/mobile/`, arranque, `app.dart`, tema y pruebas de widgets. Las carpetas de funcionalidades, contratos, mock y Supabase del árbol siguiente son objetivo de fases posteriores, no implementaciones existentes. Ver [ADR 0002](decisiones/0002-inicializacion-android.md).
+M1 incluye arranque, pantalla de verificación, tema, widgets de marca, plataforma, contratos, modelos, adaptador local y mock solo para pruebas. Las funcionalidades E01–E11 y Supabase del árbol siguiente son objetivo de fases posteriores, no implementaciones existentes. Ver [ADR 0002](decisiones/0002-inicializacion-android.md).
 
 ```text
 apps/mobile/                  # Proyecto Flutter (Android prioritario)
@@ -45,7 +45,7 @@ Separar presentación, casos de uso y acceso a datos dentro de cada funcionalida
 
 ## Identidad, pertenencia y dispositivos compartidos
 
-Acceso principal aprobado: cuenta estudiantil por alias, sin exigir nombre civil. Reglas de contraseña, recuperación y vinculación institucional pendientes de concretar. La invitación vincula al centro; no sustituye la credencial de la cuenta. El alias no garantiza anonimato absoluto y no prueba pertenencia escolar. Código de Caso + PIN, si se conserva como vía complementaria, debe limitarse a un caso y tener sus permisos aprobados antes de implementar.
+Acceso principal aprobado: cuenta estudiantil por alias, sin exigir nombre civil. ADR 0004 fija PIN de cuenta de 4–6 dígitos, respaldo local SETU-XXXX-XXXX y vinculación ficticia DEMO-NORTE/DEMO-SUR. Las credenciales se derivan con PBKDF2 y salts independientes. Reglas del piloto institucional todavía pendientes. La invitación vincula al centro; no sustituye la credencial de la cuenta. El alias no garantiza anonimato absoluto y no prueba pertenencia escolar. Código de Caso + PIN de 4 dígitos está implementado como acceso complementario limitado a un caso y sus solicitudes; nunca al listado de la cuenta. Solo opera con los datos del mismo teléfono.
 
 Antes del piloto definir invitaciones no enumerables, vigencia, límite de usos, revocación y prevención de abuso. Un código escolar compartido no demuestra pertenencia por sí solo; las invitaciones deben almacenarse como hash (`code_hash`) y validarse en servidor con límite de intentos.
 
@@ -92,9 +92,9 @@ Cualquier rol acumulado requiere concesión explícita y auditoría. Personal no
 
 ## Conectividad y operación
 
-Se aprueba persistencia protegida de casos y datos funcionales de prueba en el teléfono, conservándolos al reiniciar el proceso. El mecanismo concreto y sus dependencias aún no están aprobados ni implementados. Los borradores sin guardar siguen siendo temporales y se limpian al descartarlos; las credenciales no deben guardarse en texto plano. Desinstalar o borrar datos puede eliminar los casos locales. Sin Supabase no hay sincronización, entrega a otro teléfono ni respuesta institucional remota. La interfaz debe diferenciar guardado local de envío al centro.
+Se aprueba persistencia protegida de casos y datos funcionales de prueba en el teléfono, conservándolos al reiniciar el proceso. Implementado en M1 con AES-GCM-256, clave protegida por flutter_secure_storage y archivo privado obtenido con path_provider; ADR 0004. Escrituras transaccionales serializadas y temporales cifrados. Errores de clave/integridad no borran ni reinicializan el almacén. Los borradores sin guardar siguen siendo temporales y se limpian al descartarlos; las credenciales no deben guardarse en texto plano. Desinstalar o borrar datos puede eliminar los casos locales. Sin Supabase no hay sincronización, entrega a otro teléfono ni respuesta institucional remota. La interfaz debe diferenciar guardado local de envío al centro.
 
-En el APK M0 sigue activo `FLAG_SECURE` en toda la actividad Android. La opción de desactivarlo para una presentación se ha solicitado, pero su diseño concreto todavía no está implementado. No afirmar que ya existe un interruptor.
+En M1 `FLAG_SECURE` está activo en cada arranque de la actividad. El interruptor confirmado mediante MethodChannel permite pausarlo tras un diálogo y muestra el estado; no persiste la desactivación. El nuevo comportamiento debe validarse físicamente al instalar M1.
 
 Un reintento de reporte o de mensaje reutiliza una clave aleatoria de idempotencia única por sesión y operación: si la operación ya fue registrada previamente, el servidor devuelve de forma transaccional el mismo recibo o confirmación sin duplicar filas ni devolver un error ambiguo al usuario.
 
