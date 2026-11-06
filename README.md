@@ -1,13 +1,18 @@
-# Cureando
+# SéTú (Cureando) — Proyecto UAM & UNICEF 2026
 
-Nombre provisional de una aplicación móvil para estudiantes en Nicaragua: reportar situaciones de acoso escolar, pedir apoyo y acceder a recursos de bienestar en un entorno privado y acompañado por personas responsables.
+**Equipo:** Bugñuelitos (Universidad Americana - UAM)  
+**Temática oficial:** Apoyo a la Salud Mental de Niñas, Niños y Adolescentes (Prevención del acoso escolar y acompañamiento socioemocional)  
+**Fechas de entrega:** Reporte Pautado: **10 de noviembre de 2026** (12:00 m.) | Prototipo y Pitch: **17 de noviembre de 2026**
 
-El equipo describe el proyecto como una propuesta que será evaluada en un contexto de UNICEF. No se ha acreditado patrocinio, aprobación institucional ni autorización para usar su marca.
+SéTú es una plataforma móvil para adolescentes de secundaria en Nicaragua (12 a 17 años) orientada a romper la cultura del silencio frente al acoso escolar y situaciones de vulnerabilidad, permitiendo a víctimas y testigos pedir apoyo privado, dar seguimiento continuo y acceder a recursos de bienestar y ayuda verificada.
 
-**Estado:** base Flutter de M0 implementada, análisis sin incidencias, 2 pruebas aprobadas y APK debug compilado. Instalación USB y apertura en teléfono verificadas; falta la confirmación manual del botón y de la protección de capturas. El recorrido de reportes todavía no está implementado. **Actualizado:** 2026-11-05.
+El proyecto es una propuesta académica y de innovación social desarrollada para la **Jornada Académica y Social para el Cumplimiento de los Derechos de la Niñez y Adolescencia (UAM - UNICEF 2026)**. No se presenta como producto oficial ni avalado por UNICEF.
 
-## Documentación
+**Estado:** base Flutter de M0 implementada, análisis sin incidencias, 2 pruebas aprobadas y APK debug compilado. En desarrollo hacia la app funcional local con persistencia protegida (M1). **Actualizado:** 2026-11-05.
 
+## Documentación del Proyecto
+
+- **[Especificación Funcional Detallada SéTú](docs/08-especificacion-funcional-setu.md)**: bosquejo textual completo de pantallas (`E01`–`E11`), módulos incluidos, exclusiones explícitas y Modo Demo Jurado 2 Minutos para compartir con el equipo.
 - [Diagramas de flujo históricos](docs/diseno/flujos/index.html): pendientes de actualizar para cuenta por alias y persistencia local; [fuentes e imágenes](docs/diseno/flujos/README.md).
 - [Fichas anteriores de pantallas](docs/diseno/pantallas-explicadas.html): referencia visual histórica; usar el plan vigente para registro y datos. [Versión Markdown](docs/diseno/pantallas-explicadas.md).
 - [Visión y alcance](docs/01-producto.md): problema, personas usuarias, MVP y exclusiones.

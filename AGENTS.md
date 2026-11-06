@@ -2,13 +2,26 @@
 
 ## Contexto obligatorio
 
-Leer primero README.md y los documentos pertinentes de docs/. El proyecto es una app móvil para Nicaragua, en etapa de definición y prototipado para la **Jornada Académica y Social UAM - UNICEF 2026**, centrada en reportes privados de acoso escolar y acceso a apoyo para adolescentes de secundaria (12 a 17 años). Español es el idioma de documentación y de la interfaz inicial. El nombre Cureando es provisional.
+Leer primero README.md y los documentos pertinentes de docs/. El proyecto es una app móvil para Nicaragua, en etapa de definición y prototipado para la **Jornada Académica y Social UAM - UNICEF 2026** (temática oficial: *Apoyo a la Salud Mental de Niñas, Niños y Adolescentes*), centrada en reportes privados de acoso escolar, prevención y acceso a apoyo para adolescentes de secundaria (12 a 17 años). Español es el idioma de documentación y de la interfaz inicial.
+- **Nombre oficial del proyecto:** **SéTú** (nombre provisional / código de repositorio: *Cureando*).
+- **Nombre del equipo:** **Bugñuelitos** (Universidad Americana - UAM).
+- **Equipo interdisciplinario:**
+  1. *James Santiago Fernández Obregón* (Economía Empresarial, 2.º año) — Coordinación general, enlace institucional y análisis económico/sistemas.
+  2. *José Alfredo Baca Moreno* (Ingeniería en Sistemas, 1.er año) — Arquitectura y desarrollo de la plataforma tecnológica y referentes técnicos.
+  3. *Fátima Abigail Moreira Cuarezma* (Comunicación y RRPP, 2.º año) — Estrategia de comunicación, campaña de concienciación y narrativa del Pitch.
+  4. *María Cecilia Aguilera Zamora* (Psicología, 1.er año) — Fundamentación psicológica y enfoque de derechos.
+  5. *Aaron Emanuel Navarrete Mendoza* (Diseño Gráfico y Multimedia, 2.º año) — Diseño UI/UX de la plataforma, identidad visual y presentaciones.
+  6. *Samantha Camile Juárez Díaz* (Economía Empresarial, 2.º año) — Análisis socioeconómico, dinámicas de apoyo entre pares y trabajo comunitario.
+
+### Fechas críticas y entregables oficiales (100 puntos):
+1. **Lunes 10 de noviembre de 2026 (12:00 m.):** Entrega del documento oficial **Reporte Pautado (50 pts)** y del **Manual de Marca**.
+2. **Martes 17 de noviembre de 2026 (9:00 a.m. – 4:30 p.m.):** Evento central en la UAM. Presentación de **Elevator Pitch (20 pts, 3 minutos)** y demostración en vivo del **Prototipo funcional en APK (30 pts, 2 minutos)** ante el jurado de UNICEF y la UAM.
 
 ### Fuentes de contexto del equipo en el repositorio
-1. **Carpeta de Google Drive del equipo (`drive_bugnuelitos_lluvia de ideas.txt`):** `https://drive.google.com/drive/folders/1BSIhalcR9OKPbfXwTDoexnr12lPAXE6c` (contiene grabaciones/notas de sesiones de Meet, lluvia de ideas y el documento entregable del **Reporte Pautado**). Si un agente cuenta con integración/acceso web o plugin de Google Drive habilitado y el usuario lo solicita, debe consultarlo para sincronizar avances.
-2. **Investigación de referente Andrea App y Salud Mental Escolar en Nicaragua:** `docs/referencia-investigacion-gemini.md` conserva el texto aportado sin metadatos de cuenta/sesión del navegador. El export HTML original se mantiene solo localmente, excluido de Git. Es referencia de investigación, no evidencia independiente ni autorización para implementar; prevalecen las decisiones vigentes y las fuentes primarias verificadas.
+1. **Carpeta de Google Drive del equipo (`drive_bugnuelitos_lluvia de ideas.txt`):** `https://drive.google.com/drive/folders/1BSIhalcR9OKPbfXwTDoexnr12lPAXE6c` (contiene grabaciones y minutas de sesiones de Meet, el documento de *Resumen General y Avance*, y la plantilla del *Reporte Pautado*). La herramienta CLI `gdrive` ya cuenta con autenticación para consultar y sincronizar avances.
+2. **Investigación de referente Andrea App y Salud Mental Escolar en Nicaragua:** `docs/referencia-investigacion-gemini.md` conserva el texto aportado sin metadatos de cuenta/sesión del navegador. Es referencia de investigación, no evidencia independiente ni autorización para implementar; prevalecen las decisiones vigentes y las fuentes primarias verificadas.
 3. **Manual de Identidad Gráfica inicial:** `ManualDeIdentidad gráfica_cureando.pdf` (isotipo azul `#0D61EB`, paleta `#0D61EB`, `#FF0091`, `#FFE100`, `#00C642`, tipografías `Poppins` y `Clayful`, y motivos gráficos de piezas de rompecabezas, flores de 12 puntas y espirales; tokens de interfaz documentados en `docs/06-guia-diseno.md`).
-4. **Rúbrica y Guía Oficial de Evaluación (100 pts):** `Guía Prototipado y Presentación UAM - UNICEF 2026.docx` y `Formato - Rúbrica Jurado UAM - UNICEF 2026.xlsx` (Reporte Pautado 50 pts el 10/11/2026; Elevator Pitch 20 pts + Prototipo en vivo 30 pts en 2 minutos el 17/11/2026).
+4. **Rúbrica y Guía Oficial de Evaluación (100 pts):** `Guía Prototipado y Presentación UAM - UNICEF 2026.docx` y `Formato - Rúbrica Jurado UAM - UNICEF 2026.xlsx`.
 
 No presentar el proyecto como producto oficial o avalado por UNICEF. No inventar requisitos de la evaluación, convenios, estadísticas, contactos de ayuda ni aprobaciones.
 
