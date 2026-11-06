@@ -30,6 +30,8 @@ Thumbs.db
 *.jks
 *.keystore
 key.properties
+setu_local_store.enc*
+*.apk
 
 # Browser export contains account/session metadata; use the text reference instead
 *Google Gemini.html
