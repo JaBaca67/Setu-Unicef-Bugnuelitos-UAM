@@ -8,7 +8,7 @@ SéTú es una plataforma móvil para adolescentes de secundaria en Nicaragua (12
 
 El proyecto es una propuesta académica y de innovación social desarrollada para la **Jornada Académica y Social para el Cumplimiento de los Derechos de la Niñez y Adolescencia (UAM - UNICEF 2026)**. No se presenta como producto oficial ni avalado por UNICEF.
 
-**Estado:** base Flutter de M0 implementada, análisis sin incidencias, 2 pruebas aprobadas y APK debug compilado. En desarrollo hacia la app funcional local con persistencia protegida (M1). **Actualizado:** 2026-11-05.
+**Estado:** base Flutter de M0 implementada, análisis sin incidencias, 2 pruebas aprobadas y APK debug instalado y probado en teléfono Android (botón, bloqueo de capturas y texto ampliado verificados por ADB). En desarrollo hacia la app funcional local con persistencia protegida (M1). **Actualizado:** 2026-11-05.
 
 ## Documentación del Proyecto
 

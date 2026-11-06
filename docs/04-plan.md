@@ -18,7 +18,7 @@ Evaluación del prototipo académico (con datos ficticios) y un eventual piloto 
 | --- | --- | --- |
 | Antes de código | Stack móvil y experiencia: **Flutter + Dart** (experiencia previa confirmada) | Confirmado (2026-11-05) |
 | Antes de código | Plataforma inicial: **Android mediante APK instalable** (`E01`–`E08` + Modo Demo Jurado) | Confirmado (2026-11-05) |
-| M0 | Base: `go_router`, controladores posteriores con `ChangeNotifier`, `FLAG_SECURE` global, APK debug e instalación USB | Análisis y 2 pruebas correctos; APK instalado y abierto por USB; comprobación manual de interacción y capturas pendiente |
+| M0 | Base: `go_router`, controladores posteriores con `ChangeNotifier`, `FLAG_SECURE` global, APK debug e instalación USB | Verificado en teléfono USB por ADB (instalación, botón, `FLAG_SECURE` y fuente 200%) (2026-11-05) |
 | Antes de código | Fecha y rúbrica oficial: **Jornada UAM - UNICEF 2026 (10 nov Reporte / 17 nov Pitch y Prototipo)** | Confirmado (2026-11-05) |
 | Antes de código | Población destinataria: **Adolescentes de secundaria en Nicaragua (12–17 años, 7.º a 11.º grado, afectados y testigos)** | Confirmado (2026-11-05) |
 | Antes de backend real | Presupuesto, hosting, titularidad de cuentas en Supabase | Pendiente |
