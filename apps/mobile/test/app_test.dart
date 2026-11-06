@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:cureando_mobile/app.dart';
 import 'package:cureando_mobile/shared/mock/mock_cureando_gateway.dart';

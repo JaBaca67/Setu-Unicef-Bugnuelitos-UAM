@@ -443,6 +443,32 @@ void main() {
           isFalse,
         );
         expect(student.runtimeType, StudentCaseDetailView);
+        expect(student.situations, <SituationType>[SituationType.exclusion]);
+        expect(student.earlyWarning, EarlyWarning.recent);
+        final CaseAccessCredential ticket = await gateway.createCaseAccess(
+          receipt.reportId,
+        );
+        await staff.sendReply(
+          SendMessageInput(
+            reportId: receipt.reportId,
+            clientRequestId: 'reply2',
+            body: 'Segundo mensaje ficticio',
+          ),
+        );
+        expect(
+          (await gateway.listMyReports()).single.hasUnreadStaffReply,
+          isTrue,
+        );
+        final StudentCaseDetailView openedByTicket = await gateway.accessCase(
+          referenceCode: ticket.referenceCode,
+          pin: ticket.pin,
+        );
+        expect(openedByTicket.summary.hasUnreadStaffReply, isFalse);
+        await gateway.signIn(alias: 'TestigoNotas', pin: '1234');
+        expect(
+          (await gateway.listMyReports()).single.hasUnreadStaffReply,
+          isFalse,
+        );
       },
     );
 

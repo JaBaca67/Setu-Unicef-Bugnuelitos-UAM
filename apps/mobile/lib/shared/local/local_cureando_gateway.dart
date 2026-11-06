@@ -609,7 +609,9 @@ class LocalCureandoGateway implements CureandoGateway {
             CredentialDigest.fromJson(_object(found.first['casePin'])),
           );
       _db.attempt(state, scope, success: valid);
-      return valid ? _studentDetail(state, found.first) : _invalidCredential;
+      if (!valid) return _invalidCredential;
+      found.first['lastReadSequence'] = state['sequence'];
+      return _studentDetail(state, found.first);
     });
     if (result is GatewayException) throw result;
     final StudentCaseDetailView detail = result as StudentCaseDetailView;
