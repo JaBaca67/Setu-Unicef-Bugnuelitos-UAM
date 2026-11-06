@@ -58,11 +58,74 @@ Los colores vibrantes del manual se utilizan como **acentos de identidad, botone
 - **Acento de marca (`Clayful-Regular` — presente en el Manual PDF):** Reservado exclusivamente para el logotipo/encabezado de marca o numerales decorativos (`01`, `02`), nunca para párrafos largos ni formularios.
 - **Control de accesibilidad visible para el jurado:** Incluir un control rápido de tamaño de lectura (`Normal` / `Texto grande +20%`) en la barra superior o perfil de sesión para demostrar en vivo el criterio de accesibilidad de la rúbrica.
 
-### 3. Motivos gráficos del Manual integrados con sobriedad en Flutter
+### 3. Motivos gráficos del Manual integrados con sobriedad en Flutter (Coordenadas vectoriales exactas)
 
-1. **Isotipo Cureando (Cuadrado orgánico de pétalos curvos en `#0D61EB`):** Dibujado mediante `CustomPainter` o SVG vectorial en `E01` Bienvenida y el encabezado de `E03` Inicio.
-2. **Pieza de rompecabezas (*Conexión y apoyo mutuo*):** Usada como icono/ilustración sutil en la tarjeta de *Testigo Solidario* y en las etiquetas de sección.
-3. **Flor redondeada de 12 puntas y espiral:** Usadas como acento decorativo suave en las esquinas superiores de tarjetas de bienvenida (`E01`) y autocuidado (`E10`–`E11`), sin invadir el área de lectura del formulario.
+Extraídos directamente de los flujos vectoriales de `ManualDeIdentidad gráfica_cureando.pdf` (páginas 1 a 13) para que los agentes de desarrollo (Codex) dibujen los elementos originales con fidelidad matemática mediante `CustomPainter`:
+
+1. **Isotipo Oficial SéTú / Cureando (Cuadrado de 3 piezas orgánicas en `#0D61EB`, Portada pág. 1):**
+   - **Geometría exacta (`viewBox: 87.6853 × 87.6853`):**
+     - Radio base de cada módulo: `R = 42.734` (`r = R / S = 0.487356` del lado total `S = 87.6853`).
+     - Separación interna (canal entre columna izquierda y derecha, y entre pieza superior e inferior izquierda): `G = 2.2173` (`g = G / S = 0.025287`).
+     - **Pieza 1 (Superior izquierda):** Sector de cuarto de círculo anclado en la esquina superior izquierda `(0, 0)` con bordes rectos hacia `(R, 0)` y `(0, R)`, y arco convexo de radio `R` desde `(R, 0)` hasta `(0, R)`.
+     - **Pieza 2 (Inferior izquierda):** Sector de cuarto de círculo anclado en la esquina inferior izquierda `(0, S)` con bordes rectos hacia `(0, R + G)` y `(R, S)`, y arco convexo de radio `R` desde `(0, R + G)` hasta `(R, S)`.
+     - **Pieza 3 (Columna derecha — Hoja vertical):** Ocupa `x ∈ [R + G, S]` y `y ∈ [0, S]` (ancho `R`, alto `S`). Esquina superior izquierda `(R + G, 0)` recta (90°); esquina superior derecha redondeada con radio `R` (de `(R + G, 0)` a `(S, R)`); borde derecho recto hasta la esquina inferior derecha `(S, S)` recta (90°); esquina inferior izquierda redondeada con radio `R` (de `(S, S)` a `(R + G, S - R)`); borde izquierdo recto de regreso a `(R + G, 0)`.
+   - **Implementación exacta para Flutter (`lib/shared/widgets/setu_brand_mark.dart`):**
+     ```dart
+     class SetuBrandMarkPainter extends CustomPainter {
+       const SetuBrandMarkPainter({this.color = const Color(0xFF0D61EB)});
+       final Color color;
+
+       @override
+       void paint(Canvas canvas, Size size) {
+         final double s = size.shortestSide;
+         final double r = s * 0.487356; // 42.734 / 87.6853
+         final double g = s - (2 * r);  // 2.2173 / 87.6853
+         final Paint paint = Paint()
+           ..color = color
+           ..style = PaintingStyle.fill
+           ..isAntiAlias = true;
+
+         // 1. Pieza superior izquierda
+         final Path topLeft = Path()
+           ..moveTo(0, 0)
+           ..lineTo(r, 0)
+           ..arcToPoint(Offset(0, r), radius: Radius.circular(r), clockwise: true)
+           ..close();
+
+         // 2. Pieza inferior izquierda
+         final Path bottomLeft = Path()
+           ..moveTo(0, s)
+           ..lineTo(0, r + g)
+           ..arcToPoint(Offset(r, s), radius: Radius.circular(r), clockwise: true)
+           ..close();
+
+         // 3. Pieza derecha (hoja vertical con esquinas opuestas redondeadas)
+         final double x0 = r + g;
+         final Path rightLeaf = Path()
+           ..moveTo(x0, 0)
+           ..arcToPoint(Offset(s, r), radius: Radius.circular(r), clockwise: true)
+           ..lineTo(s, s)
+           ..arcToPoint(Offset(x0, s - r), radius: Radius.circular(r), clockwise: true)
+           ..close();
+
+         canvas.drawPath(topLeft, paint);
+         canvas.drawPath(bottomLeft, paint);
+         canvas.drawPath(rightLeaf, paint);
+       }
+
+       @override
+       bool shouldRepaint(covariant SetuBrandMarkPainter oldDelegate) =>
+           oldDelegate.color != color;
+     }
+     ```
+2. **Pieza de rompecabezas redondeada (*Conexión, pertenencia y Testigo Solidario*, págs. 4–11 y 13):**
+   - Cuadrado de esquinas redondeadas (`borderRadius: 0.18 * lado`) con muescas/pestañas circulares (`radio: 0.16 * lado`) en dos lados adyacentes o cinta horizontal con dos muescas circulares en el extremo izquierdo (como los encabezados de sección en págs. 4–11).
+   - Se utiliza como insignia visual en la tarjeta de **Testigo Solidario**, en los encabezados de cápsulas y en el selector de perfil/orientador.
+3. **Flor / Estrella de 12 pétalos redondeados (*Bienestar, escucha y comunidad*, págs. 1–13):**
+   - Estrella radial simétrica de **12 puntas con extremos semicirculares** (`radio exterior R_out`, `radio interior R_in ≈ 0.58 * R_out`, 12 lóbulos cada `30°` con tapas redondeadas).
+   - Se usa como ornamento suave en esquinas de tarjetas destacadas (`E01`, `E03`, `E10`) y como sello visual de confirmación (`E06`).
+4. **Espiral orgánica de trazo grueso (*Acompañamiento continuo y desahogo*, págs. 1–12):**
+   - Espiral arquimediana/logarítmica de 1.75 vueltas con `StrokeCap.round` y grosor `0.11 * ancho`, usada como ilustración de respiración guiada en `E11` y decoración sutil de cabeceras.
 
 ## Inventario de pantallas
 

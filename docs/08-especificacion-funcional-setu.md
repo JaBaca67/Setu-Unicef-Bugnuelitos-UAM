@@ -20,6 +20,17 @@
 - **Privacidad y seudonimato:** No se solicita cédula, nombre civil, teléfono personal ni fotografías obligatorias.
 - **Acceso universal sin barreras:** Los recursos de ayuda local (`E09`) y autocuidado (`E10`–`E11`) están disponibles incluso sin registrarse y sin conexión a internet.
 
+### 1.3. Análisis Comparativo de Referentes Internacionales (Andrea App y b-resol) y Mejoras en SéTú
+A partir del estudio funcional de **Andrea App** (España) y **b-resol** (plataforma escolar europea donde cerca del **80 % de las alertas las envían testigos u observadores**), **SéTú** integra sus mejores prácticas y las adapta a la realidad escolar y de conectividad de Nicaragua:
+
+| Dimensión funcional | Cómo funciona en **Andrea App** / **b-resol** | Cómo lo supera / adapta **SéTú (Cureando)** para Nicaragua |
+| --- | --- | --- |
+| **Vinculación escolar** | El alumno ingresa un código único del centro educativo al instalar la app (*Andrea* y *b-resol*). | **Doble vía inclusiva (`E02`):** Cuenta estudiantil por **Alias + PIN numérico (4–6 dígitos) + código de respaldo** vinculada por código escolar (`DEMO-NORTE`) o QR simulado del mural, **más** consulta puntual por **Código de Caso + PIN** para alumnos sin celular propio que usan tabletas del Aula Digital Móvil (ADM). |
+| **Activación del Testigo (80 % de los reportes)** | Canal anónimo para que los compañeros rompan la "ley del silencio" sin miedo a ser llamados "chivatos" (*b-resol*). | **Ruta de Testigo Solidario dedicada (`E01`, `E04`, `E10`):** Selector explícito *"Lo presencié (Compañero/Testigo solidario)"* con chips adaptados y micro-cápsula educativa sobre cómo apoyar sin ponerse en riesgo físico. |
+| **Elección de interlocutor y conflicto de interés** | En *b-resol*, el estudiante ve los perfiles de orientación del colegio y elige a quién dirigir su alerta. | **Selector de destinatario + Salvaguarda de Conflicto de Interés (`E04`/`E05`):** El estudiante puede elegir a qué rol de orientación dirigir su caso (Consejería Escolar CCE, Psicología/Orientación) y marcar la casilla **Conflicto de Interés**, que bloquea criptográficamente/por permisos el caso para el personal involucrado y lo desvía a una ruta alternativa. |
+| **Alertas tempranas** | Avisos de conflicto inicial antes de que escalen a violencia grave (*Andrea App*). | **Nivel de momento / frecuencia percibida (`E04`):** Chips simples no clínicos (*"Empezó hace poco"*, *"Pasa casi todos los días"*, *"Necesito que alguien lo sepa hoy"*) para ayudar a orientación a priorizar sin usar IA clínica ni diagnósticos. |
+| **Chat seguro y continuidad** | Chat bidireccional confidencial entre el menor y el orientador (*Andrea* y *b-resol*). | **Seguimiento asíncrono + Solicitudes estructuradas (`E08`):** Además del chat con separación estricta de notas internas, incorpora botones de 1 toque para **Solicitar cita discreta en persona** (evitando ser llamado frente al aula) y **Solicitar seguimiento** en casos cerrados. |
+
 ---
 
 ## 2. Mapa de Alcance: Qué VA y Qué NO VA en el Prototipo

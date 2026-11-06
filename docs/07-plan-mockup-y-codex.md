@@ -1,6 +1,6 @@
 # Plan de aplicación Android funcional local e instrucciones para agentes
 
-Actualizado el 2026-11-05. Decisiones vigentes: Flutter/Dart, cuenta por alias, solicitudes de seguimiento y persistencia protegida local. Supabase es el backend futuro. Ver [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md).
+Actualizado el 2026-11-05. Decisiones vigentes: Flutter/Dart, cuenta por alias + PIN de 4–6 dígitos + código de respaldo, interruptor `FLAG_SECURE` por `MethodChannel`, solicitudes de seguimiento y persistencia protegida local con `AES-GCM` (`flutter_secure_storage` + `cryptography`/`path_provider`). Supabase es el backend futuro. Ver [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md) y [ADR 0004](decisiones/0004-especificacion-m1-y-guia-codex.md).
 
 ## Reglas de trabajo
 
@@ -39,19 +39,19 @@ Aplicar el logo original del manual de marca y Poppins para la interfaz. Colores
 
 Implementado: proyecto en `apps/mobile/`, pantalla de comprobación, `go_router`, tema provisional, Dart estricto y `FLAG_SECURE` global. Análisis sin incidencias, dos pruebas aprobadas y APK debug compilado. Instalación USB exitosa, apertura en primer plano, transición del botón de prueba, escalado de fuente al 200 % y bloqueo de capturas (`FLAG_SECURE`) verificados en teléfono Android por ADB el 2026-11-05. Ver [guía móvil](../apps/mobile/README.md) y [ADR 0002](decisiones/0002-inicializacion-android.md).
 
-Solicitado para una presentación: poder activar/desactivar la protección de pantalla. Su configuración concreta requiere aprobación antes de implementarse; el APK actual no tiene interruptor. No es necesario un modo demo como navegación principal.
+Solicitado para una presentación y **aprobado en [ADR 0004](decisiones/0004-especificacion-m1-y-guia-codex.md)**: poder activar/desactivar la protección de pantalla (`FLAG_SECURE`) mediante `MethodChannel('dev.cureando.app/screen_security')`, manteniéndola activa por defecto al arrancar `MainActivity.kt`.
 
-### M1 visual — Identidad y componentes reutilizables
+### M1 visual — Identidad y componentes reutilizables (Aprobado para implementar en ADR 0004)
 
-Propuesto: `CureandoTheme`, logo original, Poppins local, botones, campos, tarjetas, chips y estados accesibles. Usar estos componentes directamente en las pantallas funcionales. No hacer una galería de componentes como entrega principal. Archivos, dependencias y orden pendientes de aprobar.
+Aprobado: `CureandoTheme` (`lib/shared/theme/app_theme.dart`), isotipo vectorial de 3 piezas orgánicas y motivos del manual (`lib/shared/widgets/setu_brand_mark.dart` según las coordenadas exactas de `docs/06-guia-diseno.md`), fuente `Poppins` empaquetada localmente en `assets/fonts/`, botones, campos, tarjetas, chips y estados accesibles. Usar estos componentes directamente en las pantallas funcionales.
 
-### M1 datos — Cuenta por alias, contratos y persistencia protegida
+### M1 datos — Cuenta por alias, contratos y persistencia protegida (Aprobado para implementar en ADR 0004)
 
-Dirección aprobada: cuenta por alias, conservación de datos funcionales locales y solicitudes de seguimiento. Antes de implementar concretar contraseña y recuperación, esquema, cifrado, gestión de claves, paquetes y separación de permisos.
-
-Persistir cuentas y centros de prueba, reportes guardados, mensajes, estados, solicitudes y notas internas separadas. No almacenar credenciales en texto plano, duplicar relatos en logs ni conservar borradores descartados.
-
-Código de Caso + PIN puede mantenerse como acceso complementario a un único caso con solicitudes de seguimiento. Su convivencia con la cuenta por alias, formato, permisos y límites de intentos todavía deben concretarse. No presentar recuperación entre tabletas como disponible sin backend.
+Aprobado en [ADR 0004](decisiones/0004-especificacion-m1-y-guia-codex.md):
+- **Credenciales de cuenta estudiantil:** Alias + PIN numérico de 4 a 6 dígitos + código de respaldo local (`SETU-XXXX-XXXX`), almacenados mediante derivación `PBKDF2-HMAC-SHA256` con `salt` por cuenta (nunca en texto plano).
+- **Persistencia local cifrada (`LocalCureandoGateway`):** archivo JSON local cifrado con `AES-GCM` de 256 bits (`cryptography` + `path_provider`) y clave simétrica resguardada en el Keystore de Android (`flutter_secure_storage`).
+- **Modelos y aislamiento:** cuentas y centros de prueba (`DEMO-NORTE`, `DEMO-SUR`), selección de interlocutor de orientación y casilla de conflicto de interés (desvío a ruta alternativa), reportes con idempotencia por `clientRequestId`, mensajes, estados, solicitudes de seguimiento/cita discreta y notas internas estrictamente separadas de las vistas estudiantiles.
+- **Acceso complementario por caso:** `Código de Caso + PIN de 4 dígitos` mantenido para consulta puntual de un único reporte y envío de solicitudes de seguimiento en dispositivos compartidos.
 
 ### M2 — Bienvenida, registro/acceso e Inicio funcionales
 
