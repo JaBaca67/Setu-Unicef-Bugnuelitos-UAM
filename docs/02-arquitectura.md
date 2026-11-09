@@ -1,105 +1,139 @@
-# Arquitectura base
+# Arquitectura de SéTú
 
-> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+**Revisión:** 2026-11-09. Producto según ADR 0005 y Drive; contratos siguientes **propuestos**, pendientes de aprobación antes de implementar. README describe el estado real de M1. No hay backend ni RLS implementados.
 
-Estado: stack móvil (Flutter/Dart) y backend objetivo (Supabase/PostgreSQL) confirmados; modelo de datos y políticas en fase de diseño previo a implementación. Ver [decisión 0001](decisiones/0001-base-propuesta.md).
+## Componentes y confianza
 
-**Actualización vigente:** [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md) aprueba cuenta por alias, solicitudes de seguimiento y almacenamiento protegido local. M1 ya implementa el adaptador local y sus contratos según ADR 0004; las pantallas completas y el backend siguen pendientes.
+El cliente Flutter no es una autoridad: puede ser modificado, perderse o compartir dispositivo. El servidor valida pertenencia, actor, cuotas, contenido y transiciones. PostgreSQL aplica privilegios y RLS por recurso. Operaciones sensibles pasan por funciones transaccionales controladas; si una función evita RLS, debe verificar explícitamente el actor y ámbito, limitar privilegios y fijar un `search_path` seguro.
 
-## Selección técnica
+Estudiante → API autorizada → datos de caso y proyecciones por destinatario. Alternativa offline: estudiante → retransmisores → puente → servidor. El puente es portador y no autor del reporte. Las fronteras de confidencialidad se mantienen cuando el transporte cambia.
 
-| Capa | Selección / Propuesta | Motivo / condición |
+Flutter/Dart y Supabase/PostgreSQL son decisiones confirmadas. `go_router`, `ChangeNotifier` para controladores posteriores y almacenamiento local corresponden al corte aprobado M0/M1. La tecnología de paneles, SDK de proximidad, biblioteca criptográfica del sobre y API definitiva requieren aprobación. No se fijan versiones nuevas en esta revisión.
+
+## Acceso sin cuentas y autorización privada
+
+### Código público de colegio
+
+QR/código identifica el contexto escolar. No es contraseña, prueba de matrícula, clave de cifrado ni autorización para leer expedientes. El servidor obtiene el centro efectivo de una configuración validada y no acepta un `institution_id` arbitrario enviado por el cliente como prueba de pertenencia.
+
+Una configuración escolar offline debería contener identificador, versión, caducidad, claves públicas de destinatarios y firma verificable contra una raíz confiable. Es una propuesta: el QR público simple de Drive no contiene por sí solo esos mecanismos. Revocación reciente no puede comprobarse sin conectividad; hay que definir el riesgo y el estado mostrado.
+
+Geolocalización al QR es intención de producto; faltan condiciones de uso, alternativa y minimización. Validar cercanía no equivale a verificar matrícula. No guardar coordenadas precisas ni bloquear contenidos informativos por rechazar permisos.
+
+### Propiedad y continuidad del caso
+
+| Alternativa propuesta | Ventaja | Límite que debe resolverse |
 | --- | --- | --- |
-| App móvil | Flutter + Dart | Experiencia previa en el equipo, UI consistente con Material 3 y compilación directa de APK en Android (`flutter build apk`) |
-| Navegación | `go_router`, aprobado en M0 | Organización por pantallas; M0 solo tiene la ruta de comprobación `/` |
-| Estado móvil | `ChangeNotifier` nativo para futuros controladores | M0 usa estado efímero de widget para el botón de comprobación, sin crear controladores vacíos |
-| Persistencia inicial | Almacenamiento local protegido mediante `LocalCureandoGateway` | Implementado en M1: archivo AES-GCM-256, clave protegida por Keystore, credenciales PBKDF2; ADR 0004 |
-| Backend | Supabase: Auth y PostgreSQL (`supabase_flutter`) | Reducir operación inicial, tipado claro y expresar permisos en datos |
-| Operaciones sensibles | Funciones SQL restringidas (`RPC`) / servidor | Validar pertenencia, cuotas, envío idempotente y transiciones en una sola transacción |
-| Datos | PostgreSQL con RLS y privilegios mínimos | Aislar instituciones y sesiones |
-| Panel de atención | Vista mínima por rol para demo; web por decidir | Evitar dos productos completos desde el inicio |
+| Sesión técnica seudónima, sin formulario visible | Permite aislar datos mediante sujeto autenticado | Alta inicial necesita servidor; borrar datos o salir puede perder continuidad. |
+| Capacidad privada de alta entropía por caso | Puede generarse antes de tener internet; lectura limitada al caso | Respaldo, pérdida, revocación y custodia en equipos compartidos. |
+| Combinación | Vincula operación offline con sesión posterior | Mayor complejidad de prueba de posesión y recuperación. |
 
-No seleccionar todavía bibliotecas secundarias innecesarias, proveedores de analítica o planes de pago. Flutter permite compilar APK nativo para Android desde el inicio según su [documentación oficial](https://docs.flutter.dev/). Supabase documenta [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security); habilitarla no reemplaza diseñar y probar políticas.
+[Supabase documenta sesiones anónimas](https://supabase.com/docs/guides/auth/auth-anonymous) que funcionan como sujetos autenticados sin pedir correo o contraseña. No son el rol público `anon` y no resuelven automáticamente el ingreso offline ni la recuperación. Son una alternativa, no una selección aprobada.
 
-## Flujo y límites de confianza
+La propuesta preferible para estudiar el primer envío offline es una capacidad privada o clave de dispositivo/caso y prueba de posesión al registrar la operación. La capacidad no viaja con el sobre reenviado; no se entrega al puente ni se deriva del código escolar. El protocolo concreto, respaldo y bloqueo local quedan abiertos. No se reutiliza el PIN corto M1 como autorización remota sin rediseño.
 
-App no confiable → autenticación → API/operaciones autorizadas → PostgreSQL con RLS. La identidad y la institución se derivan de la sesión y pertenencias verificadas, no de valores aceptados sin validación desde el dispositivo.
+La sesión se guarda protegida. Bloqueo local opcional no es crear una cuenta por alias; no debe incorporarse como obligación de producto sin acuerdo. La consulta desde otro teléfono y recuperación tras desinstalar no se prometen.
 
-Lecturas mínimas pueden usar la API de Supabase con RLS o vistas con `security_invoker = true` que oculten columnas internas (como el identificador individual del personal frente al estudiante). Envíos, lecturas auditadas del detalle de un caso, respuestas, asignaciones y cambios de estado pasan por operaciones controladas y transaccionales (RPC / funciones restringidas). Si se usa una función `SECURITY DEFINER` o credencial que evita RLS, debe fijar explícitamente `search_path` y verificar actor, institución, pertenencia activa, cuotas y permisos; nunca exponer credenciales privilegiadas al cliente.
+### Dirección, MINED y mesa de escucha
 
-## Organización objetivo y estado de implementación
+Drive decide código privado para dirección y enlace, pero no define formato, entrega o recuperación. Propuesta: canjearlo mediante un alta confiable por una sesión restringida y revocable; nunca usar el código público ni guardar el privado en claro. Para casos reales se necesitan actores atribuibles, autenticación apropiada y auditoría individual. El acceso MINED/mesa y la supervisión de practicantes requieren diseño propio.
 
-M1 incluye arranque, pantalla de verificación, tema, widgets de marca, plataforma, contratos, modelos, adaptador local y mock solo para pruebas. Las funcionalidades E01–E11 y Supabase del árbol siguiente son objetivo de fases posteriores, no implementaciones existentes. Ver [ADR 0002](decisiones/0002-inicializacion-android.md).
+La función técnica de puente usa una credencial de dispositivo limitada a transportar. No obtiene credenciales de dirección ni poderes clínicos. Si comparte teléfono con una vista institucional, los contextos y secretos se separan.
 
-```text
-apps/mobile/                  # Proyecto Flutter (Android prioritario)
-  lib/
-    features/                 # auth, home, reports, help, wellbeing, staff, dev_simulator
-    shared/                   # contracts, local, theme, widgets; mock solo para pruebas
-  test/                       # Pruebas de widgets, contratos e idempotencia
-supabase/migrations/          # Esquema, privilegios y políticas versionados
-supabase/functions/           # Solo operaciones externas que necesiten Edge Runtime
-tests/                        # Integración de permisos y recorridos críticos de BD
-docs/                         # Contexto y decisiones
-```
+## Modelo de datos conceptual propuesto
 
-Separar presentación, casos de uso y acceso a datos dentro de cada funcionalidad. No crear paquetes compartidos ni microservicios hasta que exista una necesidad concreta.
+No define tablas definitivas ni autoriza migraciones.
 
-## Identidad, pertenencia y dispositivos compartidos
-
-Acceso principal aprobado: cuenta estudiantil por alias, sin exigir nombre civil. ADR 0004 fija PIN de cuenta de 4–6 dígitos, respaldo local SETU-XXXX-XXXX y vinculación ficticia DEMO-NORTE/DEMO-SUR. Las credenciales se derivan con PBKDF2 y salts independientes. Reglas del piloto institucional todavía pendientes. La invitación vincula al centro; no sustituye la credencial de la cuenta. El alias no garantiza anonimato absoluto y no prueba pertenencia escolar. Código de Caso + PIN de 4 dígitos está implementado como acceso complementario limitado a un caso y sus solicitudes; nunca al listado de la cuenta. Solo opera con los datos del mismo teléfono.
-
-Antes del piloto definir invitaciones no enumerables, vigencia, límite de usos, revocación y prevención de abuso. Un código escolar compartido no demuestra pertenencia por sí solo; las invitaciones deben almacenarse como hash (`code_hash`) y validarse en servidor con límite de intentos.
-
-Recuperar acceso y usar teléfonos compartidos presentan riesgos opuestos (perder el seguimiento si se borra la app vs. que otro usuario del teléfono abra `Mis reportes`):
-- No diseñar recuperación por nombre civil, correo ni teléfono.
-- Evaluar como propuesta complementar la sesión con un código de recibo de alta entropía por reporte o con bloqueo local opcional (PIN ligero / biometría del sistema) antes de mostrar el historial en dispositivos compartidos.
-
-Personal con cuentas individuales; autenticación reforzada para acceso a casos reales. Las pertenencias y roles solo cambian desde operaciones administrativas confiables.
-
-## Modelo conceptual
-
-| Entidad | Datos mínimos y finalidad |
+| Entidad lógica | Finalidad y mínimos |
 | --- | --- |
-| institutions | Identificador, nombre y estado operativo |
-| institution_invites | Institución, hash de invitación, vigencia, límite/contador de usos, revocación y creador |
-| memberships | Sujeto autenticado, institución, rol, estado; sin autoasignación |
-| reports | Institución, sesión creadora, código de referencia, relato, estado, indicador de ruta alternativa (conflicto de interés), marcas de lectura (`student_last_read_at`, `staff_last_read_at`), marca de seguimiento en cierre (`reopen_requested_at`), clave de idempotencia y fechas |
-| report_assignments | Institución, reporte, personal autorizado asignado, actor y fecha |
-| report_messages | Institución, reporte, rol visible del autor (`student` / `staff`), referencia interna del actor (oculta al estudiante), mensaje visible, clave de idempotencia y fecha |
-| case_notes | Institución, reporte, autor del personal y nota interna separada; nunca accesible al estudiante |
-| report_events | Institución, reporte, cambios de estado/derivación, motivo cuando aplique y actor sin duplicar relatos |
-| help_resources | Territorio, contacto, horarios, fuente, revisión y estado editorial |
-| wellbeing_content | Contenido revisado, responsable y versión; sin perfil emocional |
-| audit_events | Institución, acción (incluyendo apertura de caso por personal), recurso, actor y fecha; sin texto del caso ni secretos |
+| Institución | ID opaco, nombre, municipio, estado y configuración vigente. |
+| Acceso institucional | Verificador de código privado o alta, vigencia, revocación y registro de emisión; sin secreto en claro. |
+| Actor y permiso institucional | Sujeto, función, ámbito, asignación y estado, administrados por vía confiable. |
+| Acceso privado de caso | Verificador de capacidad o clave pública y su relación con el caso; sin capacidad reutilizable en logs. |
+| Caso | ID, institución validada, referencia opaca, tipo, rol, estado, nivel humano opcional y fechas. |
+| Contenido reservado | Relato opcional; separado de la alerta mínima y de proyecciones institucionales. |
+| Mensaje de escucha | Caso, autor interno, rol visible, texto, operación idempotente y fechas. |
+| Nota interna | Caso, profesional autorizado y nota; sin incluirla en vistas estudiantiles o escolares. |
+| Asignación | Caso, actor o equipo autorizado, ámbito, inicio/fin y motivo de cambio. |
+| Ficha de actuación | Caso, versión, autor profesional, destinatarios, datos mínimos y fecha de emisión. |
+| Actuación escolar | Ficha, responsable autorizado, acción, fecha y evidencia documental de actuación permitida. |
+| Evento del caso | Estado anterior/nuevo, nivel o derivación, actor, motivo y fecha; no duplicar relato. |
+| Operación recibida | Identificador del emisor/operación, huella autenticada, resultado persistido y recibo estable. |
+| Sobre y acuse | ID de transporte, destino opaco, versión, vigencia y confirmación de custodia/central; sin credenciales del estudiante. |
+| Recurso editorial | Texto, territorio, responsable, fuente, revisión, vigencia y disponibilidad offline. |
+| Auditoría | Actor, acción, recurso, ámbito y resultado; sin cuerpos ni secretos. |
 
-Los identificadores son opacos. Para impedir por motor de base de datos cruzar datos entre centros (*cross-tenant*), las tablas dependientes incluyen `institution_id` y usan claves foráneas compuestas (`UNIQUE (id, institution_id)` y `FOREIGN KEY (..., institution_id)`). Además, se aplican límites de longitud de texto y cuotas por ventana de tiempo en servidor. No es todavía un esquema listo para migrar.
+En datos dependientes usar referencias que impidan enlazar un caso de A con una ficha de B, además de RLS. Una alternativa es incluir `institution_id` en claves compuestas y sus referencias. IDs opacos y verificación de relaciones en servidor; no confiar en filtros de pantalla. Reglas de retención, cifrado de campos, región, copias y eliminación deben cerrarse antes de un piloto.
 
-## Matriz mínima de autorización y conflicto de interés
+## Matriz de autorización propuesta
 
-| Recurso | Estudiante | Responsable autorizado | Supervisor / Ruta alternativa | Administrador |
-| --- | --- | --- | --- | --- |
-| Reporte ordinario | Crear propio y leer propio | Leer casos autorizados de su centro | Según protocolo de escalamiento | Sin lectura de contenido por defecto |
-| Reporte con conflicto de interés | Crear propio y leer propio | Denegado si está marcado para ruta alternativa | Leer y atender casos derivados por conflicto en su ámbito | Sin lectura de contenido por defecto |
-| Respuestas visibles | Leer propias y enviar seguimiento (con cuota e idempotencia) | Leer/escribir en casos autorizados | Leer/escribir en casos de ruta alternativa | Sin acceso por defecto |
-| Notas internas | Ninguno | Leer/escribir según asignación | Leer/escribir en casos bajo su supervisión | Sin acceso por defecto |
-| Estado/asignación | Solo lectura del estado propio (puede solicitar seguimiento si está cerrado) | Cambiar según protocolo y facultades | Cambiar/reasignar en casos con conflicto | Configuración, no cierre de casos por defecto |
-| Roles/pertenencias/invitaciones | Sin edición | Sin autoasignación | Sin autoasignación | Gestionar dentro de su ámbito, sin elevar su propio rol |
+| Recurso | Estudiante | Mesa de escucha | MINED supervisor | Dirección/enlace | Retransmisor/puente |
+| --- | --- | --- | --- | --- | --- |
+| Crear reporte | Propio y válido | No suplanta al estudiante | No suplanta al estudiante | No suplanta al estudiante | Solo entrega sobre ajeno |
+| Alerta mínima | Propia | Caso asignado | Ámbito autorizado | Su centro, salvo restricción por conflicto | Solo ciphertext |
+| Relato/chat | Propio | Casos asignados | Denegado por defecto; función excepcional por definir | Denegado | Denegado |
+| Nota interna | Denegado | Según asignación | Solo concesión específica justificada | Denegado | Denegado |
+| Ficha emitida | Solo resumen visible autorizado | Crear/versionar según facultad | Leer y gestionar en ámbito | Leer la destinada a su centro | Solo transporte cifrado |
+| Actuación escolar | Resumen visible separado | Leer lo necesario | Leer/supervisar | Registrar sobre ficha autorizada | Sin acceso |
+| Estado/nivel | Lectura visible; no edición | Según facultad humana | Según facultad y protocolo | Registrar actuación; no asignar nivel clínico ni cerrar globalmente por sí solo | Sin acceso |
+| Agregados | Sin listado de casos ajenos | Según necesidad | Ámbito autorizado | Su centro, con control de grupos pequeños | Sin acceso |
+| Roles y claves | No | Sin autoasignación | Administración solo si se concede aparte | Sin autoasignación | Sin autoasignación |
 
-Cualquier rol acumulado requiere concesión explícita y auditoría. Personal no asignado: denegado salvo función de recepción autorizada para la bandeja institucional (excluyendo casos marcados con conflicto de interés). La lectura del detalle de un reporte por parte del personal debe quedar registrada en `audit_events`.
+Los roles acumulados requieren concesión explícita; no asumir que MINED equivale a acceso clínico universal. Personal no asignado: denegado salvo función de recepción expresamente aprobada. Lecturas de contenido y cambios sensibles se auditan sin copiarlo.
 
-## Estados propuestos
+### Conflicto de interés
 
-`recibido → en_revision → en_acompanamiento → cerrado`. `en_revision → cerrado` requiere motivo. Reapertura `cerrado → en_revision` solo por personal autorizado y con motivo. Si un estudiante envía un mensaje de seguimiento sobre un caso `cerrado`, el caso no cambia de estado automáticamente, pero activa `reopen_requested_at` para destacarlo en la bandeja del personal autorizado. La derivación se registra como evento con seguimiento; no debe cerrar automáticamente un caso. Urgencia es una evaluación humana separada del estado. Registrar transición y actor en una transacción; no permitir al cliente escribir directamente el estado.
+Si el relato implica a dirección o personal del centro, la vía alternativa evita notificar a la persona implicada o entregarle una ficha identificable. Resolver qué aviso mínimo puede omitirse o diferirse y quién autoriza la excepción antes del piloto. La regla general de aviso simultáneo no puede convertirse en exposición automática al señalado. El formulario puede proponer una indicación opcional de conflicto; no se presenta como nueva decisión ya aprobada.
 
-## Conectividad y operación
+## Operaciones lógicas propuestas
 
-Se aprueba persistencia protegida de casos y datos funcionales de prueba en el teléfono, conservándolos al reiniciar el proceso. Implementado en M1 con AES-GCM-256, clave protegida por flutter_secure_storage y archivo privado obtenido con path_provider; ADR 0004. Escrituras transaccionales serializadas y temporales cifrados. Errores de clave/integridad no borran ni reinicializan el almacén. Los borradores sin guardar siguen siendo temporales y se limpian al descartarlos; las credenciales no deben guardarse en texto plano. Desinstalar o borrar datos puede eliminar los casos locales. Sin Supabase no hay sincronización, entrega a otro teléfono ni respuesta institucional remota. La interfaz debe diferenciar guardado local de envío al centro.
+| Operación | Validación y resultado |
+| --- | --- |
+| Validar contexto escolar | Configuración vigente, firma si opera offline y estado conocido; no concede lectura de casos. |
+| Recibir sobre | Versión, tamaño, integridad, destino, prueba del emisor, institución, vigencia, cuotas e idempotencia. |
+| Consultar recibo | Prueba privada del solicitante; devuelve resultado de su operación sin enumerar otros casos. |
+| Abrir caso | Posesión de acceso privado o actor autorizado y asignación; proyección mínima y auditoría. |
+| Enviar mensaje | Autor, caso, longitud/cuota y operación; no mezclar con nota interna. |
+| Valorar nivel | Profesional autorizado; nivel permitido y registro de evaluación humana. |
+| Emitir ficha | Autor, contenido mínimo, destinatario y conflicto; nueva versión auditable. |
+| Registrar actuación | Dirección/enlace autorizado sobre ficha propia; validación y control de concurrencia. |
+| Cambiar estado | Actor, transición, versión anterior y motivo en una transacción. |
+| Revelación excepcional | Protocolo, motivo, dos autorizaciones distintas, alcance y aviso; no genera identidad inexistente. |
 
-En M1 `FLAG_SECURE` está activo en cada arranque de la actividad. El interruptor confirmado mediante MethodChannel permite pausarlo tras un diálogo y muestra el estado; no persiste la desactivación. El nuevo comportamiento debe validarse físicamente al instalar M1.
+No son endpoints implementados. RPC, función de servidor o API directa con RLS se eligen según la operación. No exponer credenciales privilegiadas, secretos de descifrado institucional ni `service_role` en ningún cliente.
 
-Un reintento de reporte o de mensaje reutiliza una clave aleatoria de idempotencia única por sesión y operación: si la operación ya fue registrada previamente, el servidor devuelve de forma transaccional el mismo recibo o confirmación sin duplicar filas ni devolver un error ambiguo al usuario.
+## Estados y transiciones propuestas
 
-TLS en tránsito; verificar protección del almacenamiento y copias con el proveedor. No prometer cifrado de extremo a extremo: el personal autorizado necesita leer el caso. Notificaciones opcionales y genéricas; revisar exposición en pantalla bloqueada antes de habilitarlas.
+Los nombres provienen de Drive; las transiciones siguientes resuelven las ramas necesarias y **requieren validación del protocolo**.
 
-Entornos de desarrollo, demo y eventual producción separados. Migraciones reproducibles y pruebas de restauración antes del piloto. Definir retención también para copias de seguridad. Presupuesto, región de alojamiento, egreso, disponibilidad y recuperación siguen pendientes.
+| Desde | Hacia | Condición propuesta |
+| --- | --- | --- |
+| Sin recepción central | Recibido | Persistencia central válida y recibo emitido; recepción local se registra aparte. |
+| Recibido | En escucha | Profesional asignado inicia atención; no por abrir un retransmisor. |
+| Recibido o En escucha | Escalado | Valoración humana de riesgo grave o ruta especial aprobada; no esperar ficha escolar. |
+| En escucha | Cerrado | Acompañamiento nivel 1 concluido con motivo y posibilidad de seguimiento. |
+| En escucha | Ficha enviada | Profesional emite ficha de nivel 2 a destinatarios autorizados. |
+| Ficha enviada | Colegio actuando | Actuación escolar documentada, validada y vinculada a la ficha. |
+| Ficha enviada o Colegio actuando | Escalado | Falta de respuesta o situación agravada, según plazo/protocolo acordado; sin sanción automática. |
+| Colegio actuando o Escalado | Cerrado | Responsable con facultad verifica cierre y registra motivo; derivar no equivale a cerrar. |
+| Cerrado | En escucha | Reapertura autorizada con motivo; el mensaje del estudiante solo solicita revisión. |
+
+Nivel de riesgo, transporte y estado son dimensiones separadas. El backend debe rechazar saltos no permitidos aunque el cliente muestre el botón. No asumir orden total de acontecimientos offline: distinguir hora declarada, recepción local y recepción central.
+
+## Concurrencia y sincronización
+
+El caso tiene una versión de concurrencia. Cambios con versión antigua se rechazan o requieren revisión; no usar última escritura gana para transiciones, notas o fichas. Actuaciones offline se suben como eventos con operación idempotente y origen/fecha local; el servidor valida sin reescribir silenciosamente su estado autoritativo.
+
+Varias rutas pueden entregar el mismo sobre. Unicidad por operación/emisor autenticado, persistencia transaccional y recibo repetible. El puente no recibe permiso para consultar el caso por haberlo entregado. La retransmisión no puede reemplazar propietario ni institución.
+
+## Persistencia actual y adaptación
+
+M1 implementa archivo local AES-GCM-256, clave protegida con `flutter_secure_storage`, ruta privada mediante `path_provider`, escrituras serializadas y errores de integridad sin reinicialización destructiva. Alias/PIN y cuatro estados pertenecen al formato anterior.
+
+Reutilizar el almacén exige diseñar cola, separación de secretos, cuotas y versión de formato. No convertir automáticamente cuentas locales en identidades remotas ni subir casos almacenados. Borrar app/datos puede perder clave y acceso. La prueba física de M1 sigue pendiente en la bitácora existente.
+
+## Pruebas necesarias
+
+Integración con al menos dos instituciones y dos estudiantes del mismo centro: lectura/escritura cruzadas, alteración de IDs, filtrado de columnas, sesión caducada, roles revocados, asignaciones y conflicto. Probar recepción paralela, misma operación con contenido distinto, acuse perdido y transición concurrente. La autorización de la entrega local debe probarse también sin servidor.
+
+[Docs/10](10-flujo-datos-y-red-mesh.md) define las pruebas de radio, colas, sobres, custodia, caducidad y retorno de acuses. Nada de esto se certifica con las pruebas locales M1.
