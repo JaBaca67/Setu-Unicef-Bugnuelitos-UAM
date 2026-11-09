@@ -1,30 +1,16 @@
-%% HISTORICO: acceso y persistencia sustituidos por ADR 0003; actualizar antes de implementar.
 flowchart TD
-    start(["Desde Inicio: Pedir apoyo"])
-    form["E04 · Contar lo ocurrido · Me pasó / Lo presencié + relato · Lugar y momento: opcionales"]
-    complete{"¿Completó las opciones · y el relato?"}
-    fix["Señalar lo que falta · Sin borrar el texto escrito"]
-    review["E05 · Revisar reporte · Resumen + destinatario + horario · Botones: Editar / Enviar reporte"]
-    confirm{"¿Confirma enviar?"}
-    send["Enviar reporte · Mostrar: Enviando… · Evitar pulsaciones repetidas"]
-    received{"¿Recepción confirmada?"}
-    retry["Mostrar pendiente / error · Conservar texto en pantalla · Comprobar y reintentar"]
-    receipt["E06 · Reporte recibido · Referencia + siguiente paso · Botón: Ver seguimiento"]
-    detail["E08 · Estado y conversación · Con respuesta: leer y contestar · Sin respuesta: explicar la espera"]
-    finish(["Fin del recorrido · Volver a Mis reportes o Inicio"])
-    start --> form
-    form --> complete
-    complete -->|"No"| fix
-    fix -->|"Corregir"| form
-    complete -->|"Sí"| review
-    review --> confirm
-    confirm -->|"No: editar"| form
-    confirm -->|"Sí"| send
-    send --> received
-    received -->|"No / incierto"| retry
-    retry -->|"Reintentar"| send
-    received -->|"Sí"| receipt
-    receipt --> detail
-    detail --> finish
-    classDef plain fill:#fff,stroke:#000,color:#000,stroke-width:2px;
-    class start,form,complete,fix,review,confirm,send,received,retry,receipt,detail,finish plain;
+    A(["Pedir apoyo"]) --> B["E04 · Tipo de situación y rol · Detalles opcionales"]
+    B --> C["E05 · Revisar contenido, destinatarios y límites"]
+    C --> D{"¿Confirma enviar?"}
+    D -->|"No: editar"| B
+    D -->|"Sí"| E["Crear operación estable · Guardar cola protegida"]
+    E --> F{"¿Hay recepción central por internet?"}
+    F -->|"Sí"| G["E06 · Servidor recibió · Recibo persistido"]
+    F -->|"No o incierto"| H["Intentar mesh si hay configuración y radios"]
+    H --> I{"¿Existe acuse auténtico?"}
+    I -->|"No"| J["Pendiente / incierto · Conservar y reintentar misma operación"]
+    J --> F
+    I -->|"Solo custodia o entrega local"| K["Mostrar ámbito local · MINED pendiente"]
+    K -->|"Sincronización y retorno central"| G
+    I -->|"Central"| G
+    G --> L(["E08 · Seguimiento privado · No implica lectura humana"])

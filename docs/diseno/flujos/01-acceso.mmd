@@ -1,28 +1,11 @@
-%% HISTORICO: acceso y persistencia sustituidos por ADR 0003; actualizar antes de implementar.
 flowchart TD
-    start(["Inicio: abrir Cureando"])
-    session{"¿Sesión estudiantil · válida?"}
-    welcome["E01 · Bienvenida · Qué hace la app y privacidad · Botón: Entrar a mi centro"]
-    invite["E02 · Primer ingreso / registro · Campo: invitación del centro · Botón: Comprobar invitación"]
-    valid{"¿Invitación válida y · centro disponible?"}
-    invalid["Mostrar el problema · Revisar invitación / Reintentar · También puede ir a Ayuda"]
-    school["E02 · Confirmar centro · Mostrar nombre encontrado · Botón: Entrar a este centro"]
-    recognize{"¿Reconoce el centro · y confirma entrar?"}
-    register["Activar acceso privado al centro · Crear sesión sin nombre civil · No es un formulario adicional"]
-    home(["E03 · Inicio / Home · Continuar al diagrama 2"])
-    help["E09 · Ayuda sin iniciar sesión · Volver a la pantalla anterior"]
-    start --> session
-    session -->|"No"| welcome
-    session -->|"Sí: acceso habitual"| home
-    welcome -->|"Entrar"| invite
-    welcome -->|"Buscar ayuda"| help
-    invite --> valid
-    valid -->|"No"| invalid
-    invalid -->|"Corregir"| invite
-    valid -->|"Sí"| school
-    school --> recognize
-    recognize -->|"No: otra invitación"| invite
-    recognize -->|"Sí"| register
-    register --> home
-    classDef plain fill:#fff,stroke:#000,color:#000,stroke-width:2px;
-    class start,session,welcome,invite,valid,invalid,school,recognize,register,home,help plain;
+    A(["Abrir SéTú"]) --> B["E01 · Privacidad, ayuda e información"]
+    B -->|"Entrar al colegio"| C["E02 · Escanear QR o escribir código público"]
+    B -->|"Ayuda o información"| H["E09 / E10 · Sin reportar"]
+    C --> D{"¿Configuración escolar validable?"}
+    D -->|"No"| X["Explicar error o falta de configuración offline"]
+    X -->|"Corregir o reintentar"| C
+    X -->|"Consultar recursos"| H
+    D -->|"Sí"| E["Confirmar colegio · QR/GPS y alternativas por cerrar"]
+    E --> F["Acceso sin cuenta visible · Continuidad privada por caso pendiente"]
+    F --> G(["E03 · Inicio"])

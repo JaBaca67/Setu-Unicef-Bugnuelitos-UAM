@@ -1,61 +1,16 @@
-%% HISTORICO: acceso y persistencia sustituidos por ADR 0003; actualizar antes de implementar.
 flowchart LR
-subgraph access ["P0 · Entrada del estudiante"]
-welcome["E01 Bienvenida y privacidad"]
-school["E02 Acceso al centro"]
-home["E03 Inicio"]
-welcome --> school
-school -->|"Acceso válido"| home
-school -->|"Invitación no válida"| accessError["Estado: revisar acceso"]
-accessError --> school
-end
-subgraph report ["P0 · Pedir apoyo"]
-form["E04 Contar lo ocurrido"]
-review["E05 Revisar reporte"]
-sent{"¿Envío confirmado?"}
-receipt["E06 Reporte recibido"]
-retry["Estado: envío pendiente"]
-form --> review
-review -->|"Enviar"| sent
-sent -->|"Sí"| receipt
-sent -->|"No o incierto"| retry
-retry -->|"Reintentar sin duplicar"| sent
-review -->|"Editar"| form
-end
-subgraph followup ["P0 · Seguimiento privado"]
-list["E07 Mis reportes"]
-detail["E08 Estado y conversación"]
-list --> detail
-detail -->|"Volver"| list
-end
-subgraph care ["P0 · Atención del responsable"]
-login["R01 Acceso del personal"]
-inbox["R02 Bandeja autorizada"]
-caseView["R03 Atender caso"]
-login --> inbox
-inbox --> caseView
-caseView -->|"Volver"| inbox
-end
-subgraph resources ["P1 · Apoyo complementario"]
-help["E09 Ayuda verificada"]
-activities["E10 Autocuidado"]
-activity["E11 Actividad breve"]
-activities --> activity
-end
-home -->|"Pedir apoyo"| form
-home -->|"Mis reportes"| list
-receipt -->|"Ver seguimiento"| detail
-sent -.->|"Caso recibido"| inbox
-caseView -.->|"Respuesta visible"| detail
-detail -.->|"Mensaje del estudiante"| caseView
-home -->|"Ayuda sin reportar"| help
-welcome -->|"Buscar ayuda"| help
-school -->|"No puedo acceder"| help
-home -->|"Cuidarme"| activities
-style access fill:#C2E5FF,stroke:#3DADFF
-style report fill:#C2E5FF,stroke:#3DADFF
-style followup fill:#C2E5FF,stroke:#3DADFF
-style care fill:#DCCCFF,stroke:#874FFF
-style resources fill:#FFECBD,stroke:#FFC943
-style retry fill:#FFCDC2,stroke:#FF7556
-style receipt fill:#CDF4D3,stroke:#66D575
+    A["Estudiante · Acceso privado del caso"] -->|"Tipo, rol y relato opcional"| Q["Preparación de sobres por destinatario"]
+    Q -->|"Internet"| S["Recepción autorizada · Persistencia e idempotencia"]
+    Q -->|"Ciphertext offline"| R["Retransmisores · Sin contenido legible"]
+    R --> P["Puente · Custodia protegida"]
+    P -->|"Internet recuperado"| S
+    P -.->|"Alerta mínima local cifrada · Contrato pendiente"| D["Dirección · Su centro"]
+    S -->|"Tipo, rol y hora"| M["MINED · Ámbito autorizado"]
+    S -->|"Tipo, rol y hora"| D
+    S -->|"Relato y chat reservados"| E["Mesa de escucha asignada"]
+    E -->|"Ficha autorizada · Sin chat"| M
+    M -->|"Ficha destinada al centro"| D
+    D -->|"Actuaciones documentadas"| S
+    E -->|"Respuesta visible permitida"| S
+    S -->|"Estado y mensajes propios"| A
+    E --> N["Notas internas separadas · Sin acceso estudiantil/escolar"]

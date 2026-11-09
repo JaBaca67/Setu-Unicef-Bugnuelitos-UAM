@@ -1,27 +1,17 @@
-%% HISTORICO: acceso y persistencia sustituidos por ADR 0003; actualizar antes de implementar.
 flowchart TD
-    start(["E01: Acceso del personal"])
-    login["R01 · Iniciar sesión · Correo institucional + contraseña · Botón: Iniciar sesión"]
-    valid{"¿Acceso validado y · cuenta autorizada?"}
-    error["Mostrar error de acceso · Corregir / pedir ayuda al centro"]
-    inbox["R02 · Bandeja autorizada · Centro + filtros por estado · Referencia, fecha y mensaje nuevo"]
-    cases{"¿Hay un caso que abrir?"}
-    empty["Mostrar bandeja vacía · Volver o consultar más tarde"]
-    case["R03 · Atender caso · Leer relato y conversación · Responder / registrar atención"]
-    answer["Enviar respuesta visible · Actualizar estado con permiso · Notas internas: sección separada"]
-    student["E08 · El estudiante consulta · Solo la respuesta visible · Nunca las notas internas"]
-    finish(["Fin de la atención actual · Volver a bandeja R02"])
-    start --> login
-    login --> valid
-    valid -->|"No"| error
-    error -->|"Reintentar"| login
-    valid -->|"Sí"| inbox
-    inbox --> cases
-    cases -->|"No"| empty
-    empty -->|"Volver"| inbox
-    cases -->|"Sí"| case
-    case --> answer
-    answer -->|"Si responde"| student
-    answer --> finish
-    classDef plain fill:#fff,stroke:#000,color:#000,stroke-width:2px;
-    class start,login,valid,error,inbox,cases,empty,case,answer,student,finish plain;
+    A(["Operación recibida centralmente"]) --> B["Aviso mínimo a MINED y dirección autorizada · Sin relato/chat"]
+    A --> C["Mesa asignada accede al contenido reservado"]
+    C --> D["Profesional inicia escucha humana"]
+    D --> E{"¿Nivel valorado por profesional?"}
+    E -->|"1 · Acompañamiento"| F["Conversación y cierre autorizado con motivo"]
+    E -->|"2 · Convivencia"| G["Emitir ficha mínima · Revisar conflicto y destinatarios"]
+    E -->|"3 · Riesgo grave"| H["Derivación humana por protocolo · Escalado"]
+    G --> I["Dirección registra actuaciones sobre su ficha"]
+    I --> J["MINED supervisa y solicita seguimiento"]
+    J --> K{"¿Puede cerrarse según protocolo?"}
+    K -->|"Sí"| L["Cierre autorizado con motivo"]
+    K -->|"No: falta respuesta o agrava"| H
+    H -->|"Seguimiento de derivación"| J
+    F --> M(["Estudiante ve respuesta permitida · Sin notas internas"])
+    L --> M
+    B -.->|"Supervisión no concede acceso clínico"| J

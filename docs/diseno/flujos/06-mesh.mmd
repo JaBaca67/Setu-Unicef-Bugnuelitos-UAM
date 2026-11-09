@@ -1,0 +1,19 @@
+flowchart TD
+    A(["Emisor con configuración y claves auténticas"]) --> B["Operación estable · Sobre cifrado · Cola local"]
+    B --> C{"¿Vecino compatible disponible?"}
+    C -->|"No"| W["Esperar encuentro · Sin promesa de entrega"]
+    W --> C
+    C -->|"Sí"| D["Retransmisor valida límites y duplicados · Persiste ciphertext"]
+    D --> E["Acuse de custodia · No recepción MINED"]
+    D --> F["Reenvío acotado a otro vecino o puente"]
+    F --> G["Puente persiste sobre · No descifra relato"]
+    G -.-> H["Entrega mínima local a dirección · Contrato y claves pendientes"]
+    G --> I{"¿Puente tiene internet?"}
+    I -->|"No"| J["Conservar cola protegida · MINED pendiente"]
+    J --> I
+    I -->|"Sí"| K["Servidor valida emisor, centro e integridad · Un caso por operación"]
+    K --> L["Acuse central auténtico · Retorno por ruta disponible"]
+    L --> M{"¿Emisor recibió acuse central?"}
+    M -->|"No"| N["Resultado incierto · Consultar/reintentar misma operación"]
+    N --> K
+    M -->|"Sí"| O(["Mostrar recepción central · Limpieza según política"])

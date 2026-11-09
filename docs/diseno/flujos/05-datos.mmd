@@ -1,0 +1,16 @@
+flowchart LR
+    A["Estudiante · Acceso privado del caso"] -->|"Tipo, rol y relato opcional"| Q["Preparación de sobres por destinatario"]
+    Q -->|"Internet"| S["Recepción autorizada · Persistencia e idempotencia"]
+    Q -->|"Ciphertext offline"| R["Retransmisores · Sin contenido legible"]
+    R --> P["Puente · Custodia protegida"]
+    P -->|"Internet recuperado"| S
+    P -.->|"Alerta mínima local cifrada · Contrato pendiente"| D["Dirección · Su centro"]
+    S -->|"Tipo, rol y hora"| M["MINED · Ámbito autorizado"]
+    S -->|"Tipo, rol y hora"| D
+    S -->|"Relato y chat reservados"| E["Mesa de escucha asignada"]
+    E -->|"Ficha autorizada · Sin chat"| M
+    M -->|"Ficha destinada al centro"| D
+    D -->|"Actuaciones documentadas"| S
+    E -->|"Respuesta visible permitida"| S
+    S -->|"Estado y mensajes propios"| A
+    E --> N["Notas internas separadas · Sin acceso estudiantil/escolar"]

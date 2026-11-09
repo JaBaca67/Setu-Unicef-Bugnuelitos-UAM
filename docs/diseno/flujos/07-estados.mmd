@@ -1,0 +1,21 @@
+stateDiagram-v2
+    state "En escucha" as En_escucha
+    state "Ficha enviada" as Ficha_enviada
+    state "Colegio actuando" as Colegio_actuando
+    [*] --> Recibido: Recepción central persistida
+    Recibido --> En_escucha: Profesional asignado
+    Recibido --> Escalado: Riesgo grave valorado
+    En_escucha --> Cerrado: Nivel 1 y cierre autorizado
+    En_escucha --> Ficha_enviada: Nivel 2 y ficha profesional
+    En_escucha --> Escalado: Nivel 3 / ruta aprobada
+    Ficha_enviada --> Colegio_actuando: Actuación documentada
+    Ficha_enviada --> Escalado: Falta de respuesta / protocolo
+    Colegio_actuando --> Escalado: Agravamiento / falta de respuesta
+    Colegio_actuando --> Cerrado: Cierre autorizado
+    Escalado --> Cerrado: Seguimiento y cierre autorizado
+    Cerrado --> En_escucha: Reapertura autorizada con motivo
+    note right of Recibido
+        Nombres decididos por el equipo.
+        Transiciones propuestas: validar protocolo.
+        Entrega local y transporte son dimensiones aparte.
+    end note

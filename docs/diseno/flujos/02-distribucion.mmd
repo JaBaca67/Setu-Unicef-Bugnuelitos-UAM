@@ -1,26 +1,13 @@
-%% HISTORICO: acceso y persistencia sustituidos por ADR 0003; actualizar antes de implementar.
 flowchart TD
-    home(["E03 · Inicio / Home · Centro + privacidad y sesión · Pedir apoyo + accesos principales"])
-    choice{"¿Qué quiere hacer?"}
-    report["Pedir apoyo · E04 · Contar lo ocurrido · Continuar al diagrama 3"]
-    reports["Mis reportes · E07 · Lista propia: referencia, fecha, · estado y respuesta nueva"]
-    help["Ayuda · E09 · Recursos locales verificados · Fuente, horario y contacto"]
-    care["Cuidarme · E10 · Actividades opcionales · Título y descripción breve"]
-    detail["Seguimiento · E08 · Estado + relato + conversación · Enviar mensaje de seguimiento"]
-    contact["Contacto externo · Confirmar destino antes de · llamar o abrir un sitio"]
-    activity["Actividad · E11 · Instrucciones revisadas · Terminar o salir libremente"]
-    back(["Volver a Inicio / cambiar de sección · Barra inferior: Inicio | Mis reportes | Ayuda | Cuidarme"])
-    home --> choice
-    choice -->|"Reportar"| report
-    choice -->|"Consultar"| reports
-    choice -->|"Buscar ayuda"| help
-    choice -->|"Autocuidado"| care
-    report -->|"Al salir del recorrido"| back
-    reports -->|"Abrir un reporte"| detail
-    help -->|"Elegir recurso"| contact
-    care -->|"Elegir actividad"| activity
-    detail --> back
-    contact --> back
-    activity --> back
-    classDef plain fill:#fff,stroke:#000,color:#000,stroke-width:2px;
-    class home,choice,report,reports,help,care,detail,contact,activity,back plain;
+    A(["E03 · Inicio · Colegio activo"]) --> B{"¿Qué necesita hacer?"}
+    B -->|"Pedir apoyo"| C["E04 / E05 · Tipo, rol y detalles opcionales"]
+    B -->|"Mi seguimiento"| D["E07 · Solo casos con acceso privado"]
+    B -->|"Información"| E["E10 / E11 · Artículos, testimonios y guías"]
+    B -->|"Ayuda"| F["E09 · Recursos revisados"]
+    C --> G["E06 · Estado real de entrega"]
+    D --> H["E08 · Estado del caso y escucha humana"]
+    G -->|"Acceso privado autorizado"| H
+    E -->|"Volver"| A
+    F -->|"Volver"| A
+    H -->|"Volver"| A
+    G -->|"Pendiente o incierto: comprobar sin duplicar"| G
