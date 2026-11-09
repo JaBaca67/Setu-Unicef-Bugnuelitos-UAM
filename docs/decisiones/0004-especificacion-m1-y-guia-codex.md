@@ -1,5 +1,7 @@
 # ADR 0004 — Especificación técnica aprobada de M1 y guía de ejecución para Codex
 
+> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+
 - **Fecha:** 2026-11-05
 - **Estado:** Aceptado (Decisiones explícitas aprobadas por el usuario tras la verificación física de M0 en el teléfono Android `SM-A566E`).
 

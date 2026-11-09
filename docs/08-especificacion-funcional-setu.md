@@ -1,5 +1,7 @@
 # Especificación Funcional Detallada — Plataforma SéTú (Cureando)
 
+> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+
 **Estado de implementación:** M1 completa identidad, canal de protección, contratos y motor local cifrado. Las pantallas E01–E11 descritas aquí son objetivo posterior; el APK actual muestra verificación de M1. Sin backend, Código/PIN y solicitudes solo operan en el mismo teléfono. No se han activado llamadas ni derivaciones externas.
 
 **Documento para alineación del equipo Bugñuelitos y desarrollo del Prototipo UAM - UNICEF 2026**  

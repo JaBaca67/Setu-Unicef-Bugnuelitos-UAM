@@ -1,5 +1,7 @@
 # Cureando — Diagramas de flujo para diseño
 
+> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](../../decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+
 > Referencia histórica: el acceso por invitación como única credencial y el almacenamiento solo en memoria fueron sustituidos. Cuenta por alias, solicitudes de seguimiento y datos locales persistentes son las decisiones vigentes; consultar el plan actualizado en docs/07-plan-mockup-y-codex.md y ADR 0003. Los diagramas y su generador deben actualizarse antes de usarlos como especificación de implementación.
 
 Estado: propuesta. Estos diagramas describen pantallas y navegación, no estructura de carpetas.

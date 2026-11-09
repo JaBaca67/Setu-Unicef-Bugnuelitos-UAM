@@ -1,5 +1,7 @@
 # Visión y alcance
 
+> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+
 Estado: borrador de trabajo. Fuente principal: planteamiento del equipo el 2026-11-04.
 
 **Decisiones vigentes del 2026-11-05:** cuenta por alias, solicitudes de seguimiento y persistencia protegida local, según [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md). La app funcional se desarrolla primero en un teléfono; el modelo exclusivamente en memoria se descarta como aplicación principal. La implementación actual sigue limitada a M0.

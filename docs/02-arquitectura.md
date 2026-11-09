@@ -1,5 +1,7 @@
 # Arquitectura base
 
+> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+
 Estado: stack móvil (Flutter/Dart) y backend objetivo (Supabase/PostgreSQL) confirmados; modelo de datos y políticas en fase de diseño previo a implementación. Ver [decisión 0001](decisiones/0001-base-propuesta.md).
 
 **Actualización vigente:** [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md) aprueba cuenta por alias, solicitudes de seguimiento y almacenamiento protegido local. M1 ya implementa el adaptador local y sus contratos según ADR 0004; las pantallas completas y el backend siguen pendientes.

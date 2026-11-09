@@ -1,5 +1,7 @@
 # Cureando — Guía de pantallas para diseño
 
+> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+
 **Estado M1:** implementados `CureandoTheme`, Poppins local, isotipo de tres piezas con las coordenadas de este documento y motivos de rompecabezas/flor/espiral. La pantalla M1 permite revisar identidad, lectura Normal/Grande y protección de capturas. Formularios completos posteriores. Los renders se revisaron con la fuente real; las combinaciones blanco/azul y texto oscuro/rosa/amarillo/verde se probaron para contraste de texto normal, sin atribuir certificación AA/AAA a toda la app.
 
 **Actualización vigente (2026-11-05):** cuenta estudiantil por alias, solicitudes de seguimiento y persistencia protegida local aprobadas en [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md). Los diagramas e inventario antiguos no incluyen todavía el nuevo registro; son referencias históricas hasta actualizarse. El plan vigente está en docs/07. No implementar un acceso basado únicamente en invitación ni descartar casos guardados al cerrar la app.
@@ -38,11 +40,11 @@ Los colores vibrantes del manual se utilizan como **acentos de identidad, botone
 
 | Token en Flutter | Hexadecimal | Origen / Uso en la interfaz |
 | --- | --- | --- |
-| `brandBlue` (Primary) | `#0D61EB` | **Azul Cureando (Manual PDF):** Isotipo, botón principal (*Pedir apoyo*, *Enviar*), encabezados clave y estado `En revisión`. |
+| `brandBlue` (Primary) | `#0C62EB` | **Azul SéTú (Manual de Marca final; antes `#0D61EB`):** Isotipo, botón principal (*Pedir apoyo*, *Enviar*), encabezados clave y estado `En revisión`. |
 | `brandBlueSoft` | `#EEF4FF` | Superficie suave para tarjetas destacadas de inicio, chips seleccionados y burbujas informativas del centro. |
-| `brandPink` (Urgent/Help) | `#FF0091` | **Rosa/Magenta (Manual PDF):** Acento de atención inmediata, acceso rápido a `E09 Buscar ayuda` / Línea 133 y alertas de protección. |
+| `brandPink` (Urgent/Help) | `#FF0092` | **Rosa/Magenta (Manual de Marca final; antes `#FF0091`):** Acento de atención inmediata, acceso rápido a `E09 Buscar ayuda` / Línea 133 y alertas de protección. |
 | `brandPinkSoft` | `#FFF0F8` | Fondo suave para el bloque de emergencia / riesgo vital y tarjeta de ayuda sin sesión (con texto oscuro `#831843`). |
-| `brandYellow` (Warmth) | `#FFE100` | **Amarillo Sol (Manual PDF):** Acento cálido para ornamentos (flores/espirales), avisos de horario y estado `Recibido`. |
+| `brandYellow` (Warmth) | `#FFE000` | **Amarillo Sol (Manual de Marca final; antes `#FFE100`):** Acento cálido para ornamentos (flores/espirales), avisos de horario y estado `Recibido`. |
 | `brandYellowSoft` | `#FFFBEB` | Fondo cálido legible para bloques de privacidad, recordatorios antes de enviar (`E05`) e insignia `Recibido` (con texto `#92400E`). |
 | `brandGreen` (Support) | `#00C642` | **Verde Esperanza (Manual PDF):** Confirmación de recepción (`E06`), estado `En acompañamiento`, cápsulas `Cuidarme` (`E10`–`E11`) y sello de *Testigo Solidario*. |
 | `brandGreenSoft` | `#ECFDF5` | Fondo suave para confirmación de reporte enviado, tarjeta de *Compañero Solidario* y actividades de bienestar (con texto `#065F46`). |

@@ -1,7 +1,7 @@
 # ADR 0003 — Cuenta por alias, seguimiento y persistencia local
 
 - Fecha: 2026-11-05.
-- Estado: aceptado; detalles técnicos concretados y aprobados por ADR 0004. M1 implementa contratos y persistencia; pantallas completas pendientes. Las preguntas históricas siguientes se resuelven en ADR 0004.
+- Estado: **superado** por [ADR 0005](0005-alineacion-con-decisiones-del-equipo-drive.md) (2026-11-09) en dirección de producto: la cuenta por alias se reemplaza por acceso con código del colegio y la app deja de ser solo local. Se conserva como registro histórico; M1 implementó estas decisiones según ADR 0004.
 
 ## Contexto
 

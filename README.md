@@ -1,45 +1,52 @@
 # SéTú (Cureando) — Proyecto UAM & UNICEF 2026
 
 **Equipo:** Bugñuelitos (Universidad Americana - UAM)  
-**Temática oficial:** Apoyo a la Salud Mental de Niñas, Niños y Adolescentes (Prevención del acoso escolar y acompañamiento socioemocional)  
-**Fechas de entrega:** Reporte Pautado: **10 de noviembre de 2026** (12:00 m.) | Prototipo y Pitch: **17 de noviembre de 2026**
+**Temática oficial:** Apoyo a la Salud Mental de Niñas, Niños y Adolescentes (prevención del acoso escolar y acompañamiento socioemocional)
+**Fechas de entrega:** Reporte Pautado y Manual de Marca: **10 de noviembre de 2026** (12:00 m.) | Prototipo y Pitch: **17 de noviembre de 2026**
 
-SéTú es una plataforma móvil para adolescentes de secundaria en Nicaragua (12 a 17 años) orientada a romper la cultura del silencio frente al acoso escolar y situaciones de vulnerabilidad, permitiendo a víctimas y testigos pedir apoyo privado, dar seguimiento continuo y acceder a recursos de bienestar y ayuda verificada.
+SéTú es un puente confidencial hacia la ayuda para que niñas, niños y adolescentes de **3.º a 11.º grado** en Nicaragua sean escuchados y protegidos dentro y fuera de su colegio. Combina una **aplicación móvil ligera** y una **campaña permanente de sensibilización**, con el **Ministerio de Educación (MINED) como primer intermediario** de cada reporte para que ningún caso dependa de la capacidad o la voluntad de un solo colegio. La Fase 1 se plantea en colegios públicos del casco urbano de Managua.
 
-El proyecto es una propuesta académica y de innovación social desarrollada para la **Jornada Académica y Social para el Cumplimiento de los Derechos de la Niñez y Adolescencia (UAM - UNICEF 2026)**. No se presenta como producto oficial ni avalado por UNICEF.
+El proyecto es una propuesta académica y de innovación social para la **Jornada Académica y Social para el Cumplimiento de los Derechos de la Niñez y Adolescencia (UAM - UNICEF 2026)**. No se presenta como producto oficial ni avalado por UNICEF ni por el MINED; las alianzas institucionales están por validar.
 
-**Estado:** M1 implementado: identidad SéTú, protección de pantalla conmutable, contratos y persistencia local cifrada. Análisis limpio, 18 pruebas aprobadas y APK 0.2.0+2 compilado. M0 se verificó en teléfono; instalación y prueba física de M1 pendientes por ausencia de dispositivo ADB. Los formularios completos E01–E11 siguen en fases posteriores. **Actualizado:** 2026-11-05.
+**Actualizado:** 2026-11-09. Las decisiones de producto vienen de los documentos del equipo en Google Drive y se registran en [ADR 0005](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md). Ante conflicto con documentos anteriores del repositorio, prevalece ADR 0005.
 
-## Documentación del Proyecto
+## Propuesta (decisiones del equipo)
 
-- **[Especificación Funcional Detallada SéTú](docs/08-especificacion-funcional-setu.md)**: bosquejo textual completo de pantallas (`E01`–`E11`), módulos incluidos, exclusiones explícitas y Modo Demo Jurado 2 Minutos para compartir con el equipo.
-- [Diagramas de flujo históricos](docs/diseno/flujos/index.html): pendientes de actualizar para cuenta por alias y persistencia local; [fuentes e imágenes](docs/diseno/flujos/README.md).
-- [Fichas anteriores de pantallas](docs/diseno/pantallas-explicadas.html): referencia visual histórica; usar el plan vigente para registro y datos. [Versión Markdown](docs/diseno/pantallas-explicadas.md).
-- [Visión y alcance](docs/01-producto.md): problema, personas usuarias, MVP y exclusiones.
-- [Arquitectura propuesta](docs/02-arquitectura.md): stack, módulos, datos y permisos.
+- **Acceso sin cuentas ni perfiles:** el estudiante entra con el código público de su colegio (cartel QR en el centro). Dirección y persona de enlace usan un código privado.
+- **Pedir ayuda en tres pasos:** tipo de situación (acoso físico, verbal, social, ciberacoso, violencia sexual o necesidad de hablar), rol (**Víctima** o **Testigo Solidario**) y detalles opcionales. Líneas de ayuda siempre visibles.
+- **Mesa de escucha humana:** chat confidencial con psicólogos de planta, alianza con MINSA y practicantes de Psicología de 5.º año, con filtro de vocabulario y tarjetas rompehielos. Sin chatbot ni IA. El anonimato solo se levanta por protección de la vida, con doble autorización, registro y aviso al estudiante.
+- **Protocolo de 3 niveles:** Acompañamiento, Convivencia (acoso) y Riesgo grave (derivación a MIFAN, MINSA y Policía). **Estados del caso:** Recibido → En escucha → Ficha enviada → Colegio actuando → Escalado → Cerrado.
+- **Tres superficies:** celular del alumno, panel del MINED y panel de dirección del colegio. El colegio no ve el chat; recibe una ficha de actuación y estadísticas anonimizadas.
+- **Modo sin internet:** la alerta viaja cifrada de celular en celular (red mesh) hasta un teléfono puente del colegio y se sincroniza con el MINED al recuperar conexión.
+- **Sección informativa** con testimonios, artículos y guías paso a paso, útil aun sin enviar un reporte.
+- **Campaña:** Instagram y TikTok para jóvenes; Facebook y WhatsApp para familias; radio local; dinámicas de aula de 5 a 10 minutos guiadas por docentes, que **no usan la app**.
+
+**MVP objetivo para el 17 de noviembre:** un caso viajando en vivo entre las tres superficies, con el modo sin conexión como demostración central.
+
+**Costos estimados del piloto** (5 colegios, ~1,750 estudiantes): USD 25.93 al mes; USD 1,336.16 el primer año con 5 teléfonos puente; USD 0 para colegios y estudiantes. No incluye el personal de la mesa de escucha. Detalle en la hoja *SeTu_Costos_App* de Drive.
+
+## Estado del código
+
+El APK actual (0.2.0+2, bloque **M1**) implementa identidad visual SéTú, protección de capturas conmutable, contratos y un almacén local cifrado (AES-GCM-256) con cuentas por alias + PIN. Análisis limpio, 18 pruebas aprobadas; M0 verificado en teléfono y M1 pendiente de prueba física.
+
+**Brecha con la propuesta:** el acceso por alias + PIN quedó reemplazado por el código del colegio; no existen todavía el envío entre dispositivos, los paneles del MINED y de dirección, el chat ni la red mesh. El almacén cifrado puede reutilizarse para alertas pendientes sin conexión. Cada bloque nuevo requiere propuesta y aprobación previa ([AGENTS.md](AGENTS.md)). La paleta del código (`app_theme.dart`) aún usa los colores del manual inicial.
+
+Desde `apps/mobile/`: `flutter pub get`, `flutter analyze`, `flutter test` y `flutter build apk --debug`. Ver [la guía móvil](apps/mobile/README.md).
+
+## Identidad e investigación
+
+- **Manual de Marca final:** `Manual de Marca.pdf` en la carpeta *Diseño e Identidad Visual* de Drive (el PDF del repositorio es la versión inicial). Paleta `#0C62EB`, `#FF0092`, `#FFE000`, `#00C642`; Poppins y Clayful. Valores: Valentía, Empatía, Confianza, Respeto y Compromiso.
+- **Investigación de campo:** entrevista de validación con la Lic. María Paola Castro Pérez (psicóloga, 8 nov 2026) y encuesta a estudiantes y familias (28 respuestas al 9 nov: 24 estudiantes y 4 familias; meta 40–50). Documentos en *Investigación y Campo* de Drive.
+
+## Documentación del proyecto
+
+- [ADR 0005 — Alineación con las decisiones del equipo](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): **fuente vigente**.
+- [Plan y decisiones pendientes](docs/04-plan.md): fechas, rúbrica y preguntas abiertas.
 - [Protección y operación](docs/03-proteccion-y-operacion.md): privacidad, atención humana y requisitos para un piloto.
-- [Plan y decisiones pendientes](docs/04-plan.md): fases, criterios de entrega y preguntas abiertas.
-- [Plan de app funcional local](docs/07-plan-mockup-y-codex.md): fases, contratos desacoplados, persistencia y aprobaciones.
-- [Investigación y skills](docs/05-investigacion-y-skills.md): referencias, límites de la evidencia y herramientas.
-- [Guía para diseño en Figma](docs/06-guia-diseno.md): pantallas prioritarias, contenido, estados y prototipo.
-- [Mapa visual de pantallas](docs/diseno/flujo-pantallas.html): archivo autónomo para abrir y compartir; [SVG](docs/diseno/flujo-pantallas.svg) para importar a Figma.
-- [Registro de decisiones](docs/decisiones/0001-base-propuesta.md) y [ADR 0002 — Inicialización Android M0](docs/decisiones/0002-inicializacion-android.md).
-- [Decisiones de M0](docs/decisiones/0002-inicializacion-android.md): navegación, estado, identidad de la demo y protección de pantalla.
-- [Cuenta por alias y datos locales](docs/decisiones/0003-cuenta-alias-y-persistencia-local.md): decisiones aprobadas y límites actuales.
-- [Referencia de investigación aportada](docs/referencia-investigacion-gemini.md): contenido de Gemini sin metadatos de sesión; sus afirmaciones requieren verificación.
-- [M1 aprobado y resultados](docs/decisiones/0004-especificacion-m1-y-guia-codex.md).
-- [Proyecto móvil, seguridad y comprobaciones](apps/mobile/README.md).
-- [Instrucciones para agentes](AGENTS.md): contexto y forma de trabajar en este repositorio.
-
-## Punto de partida
-
-Stack técnico confirmado para el prototipo: **Flutter + Dart** para la aplicación móvil (con prioridad en Android y generación directa de `.apk`) y **Supabase (Auth + PostgreSQL con RLS)** para el backend futuro. Población del prototipo: secundaria, 12–17 años. El calendario de evaluación está registrado en docs/04-plan.md; presupuesto e institución piloto siguen pendientes.
-
-La siguiente entrega objetivo es una **app funcional local**: cuenta por alias, reportes y solicitudes de seguimiento guardados en el teléfono, incluso después de cerrar y abrir la app. El motor local ya implementa cuentas por alias + PIN, respaldo, casos y solicitudes con AES-GCM-256 y credenciales derivadas PBKDF2; sus formularios se conectarán en M2–M4. Las decisiones técnicas fueron aprobadas en ADR 0004. Supabase se conectará después mediante `CureandoGateway`. Guardar en el teléfono no equivale a enviar al centro ni permite consultar desde otro dispositivo. Solo datos ficticios hasta cumplir los requisitos de un piloto real.
-
-La pantalla M1 muestra el isotipo original, Poppins y colores del manual, estado del almacén, protección de capturas y lectura Normal/Grande. Usa `go_router`, Material 3 y `ChangeNotifier`. El almacén persiste datos, pero las sesiones de acceso no se conservan. No hay backend ni formularios completos de reportes todavía.
-
-Desde `apps/mobile/`: `flutter pub get`, `flutter analyze`, `flutter test` y `flutter build apk --debug`. Ver requisitos y rutas locales en [la guía móvil](apps/mobile/README.md). M1 ya está aprobado e implementado; el siguiente bloque de pantallas M2 requiere su propuesta y aprobación.
+- [Investigación y skills](docs/05-investigacion-y-skills.md) y [referencia de investigación aportada](docs/referencia-investigacion-gemini.md) (sus afirmaciones requieren verificación).
+- Documentos con partes superadas por ADR 0005 (alias + PIN, solo local, 12–17 años), pendientes de reescritura: [visión y alcance](docs/01-producto.md), [arquitectura](docs/02-arquitectura.md), [guía de diseño](docs/06-guia-diseno.md), [plan de app local](docs/07-plan-mockup-y-codex.md), [especificación funcional E01–E11](docs/08-especificacion-funcional-setu.md), [diagramas de flujo](docs/diseno/flujos/index.html) y [fichas de pantallas](docs/diseno/pantallas-explicadas.html).
+- Decisiones históricas: [ADR 0001](docs/decisiones/0001-base-propuesta.md), [ADR 0002 — M0](docs/decisiones/0002-inicializacion-android.md), [ADR 0003 — alias y persistencia local](docs/decisiones/0003-cuenta-alias-y-persistencia-local.md) (superado), [ADR 0004 — M1](docs/decisiones/0004-especificacion-m1-y-guia-codex.md).
+- [Instrucciones para agentes](AGENTS.md).
 
 ## Versiones y guardado incremental
 

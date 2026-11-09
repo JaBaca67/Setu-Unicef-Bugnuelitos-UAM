@@ -1,5 +1,7 @@
 # Plan de aplicación Android funcional local e instrucciones para agentes
 
+> **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
+
 Actualizado el 2026-11-05. Decisiones vigentes: Flutter/Dart, cuenta por alias + PIN de 4–6 dígitos + código de respaldo, interruptor `FLAG_SECURE` por `MethodChannel`, solicitudes de seguimiento y persistencia protegida local con `AES-GCM` (`flutter_secure_storage` + `cryptography`/`path_provider`). Supabase es el backend futuro. Ver [ADR 0003](decisiones/0003-cuenta-alias-y-persistencia-local.md) y [ADR 0004](decisiones/0004-especificacion-m1-y-guia-codex.md).
 
 ## Reglas de trabajo
