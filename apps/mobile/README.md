@@ -2,6 +2,8 @@
 
 > **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](../../docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
 
+**Especificación del producto vigente:** [README técnico](../../README.md). Este archivo describe el corte histórico M1 y su ejecución; los contratos por alias no son el diseño actual.
+
 Aplicación Android 0.2.0+2. M1 implementa la infraestructura de cuentas/casos y una pantalla de verificación de identidad, almacenamiento y privacidad. Los formularios completos E01–E11 y las vistas de atención se integran en fases posteriores: no se presentan como terminados.
 
 ## Qué está implementado

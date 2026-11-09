@@ -1,6 +1,6 @@
 # Investigación inicial y skills
 
-Consulta realizada el 2026-11-04. Son referencias de diseño, no validación de impacto ni asesoría legal. Revalidar información cambiante antes de implementarla.
+Antecedentes consultados el 2026-11-04. La revisión vigente de Drive y fuentes técnicas está en [docs/09](09-revision-drive-y-trazabilidad.md), 2026-11-09. Este documento conserva investigación histórica y no fija el alcance actual.
 
 ## Referentes y evidencia
 
@@ -35,4 +35,4 @@ Las skills no sustituyen conocimientos de desarrollo móvil, accesibilidad, prot
 
 ## Investigación siguiente
 
-Obtener rúbrica; entrevistar responsables institucionales; validar el recorrido con participación segura de estudiantes; revisar marco local con una persona competente; verificar directorio de ayuda; medir conectividad y dispositivos del piloto. Registrar fecha, método y límites de cada hallazgo, evitando datos identificables en este repositorio.
+Guía y rúbrica oficiales ya presentes y revisadas el 9 nov; entrevistar responsables institucionales; validar el recorrido con participación segura de estudiantes; revisar marco local con una persona competente; verificar directorio de ayuda; medir conectividad y dispositivos del piloto. Registrar fecha, método y límites de cada hallazgo, evitando datos identificables en este repositorio.

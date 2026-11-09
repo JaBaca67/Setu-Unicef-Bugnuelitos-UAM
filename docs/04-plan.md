@@ -1,41 +1,53 @@
 # Plan y decisiones pendientes
 
-## Fechas oficiales de evaluación (Jornada UAM - UNICEF 2026)
+**Revisión:** 2026-11-09. Producto vigente: ADR 0005. Propuestas técnicas: ADR 0006. La documentación no autoriza implementación.
 
-| Hito oficial | Fecha | Peso en rúbrica | Formato / requisito clave |
-| --- | --- | --- | --- |
-| **Reporte Pautado + Manual de Marca** | **10 nov 2026 (12:00 m.)** | **50 % (50 pts)** | Problema y evidencia (10), Población y derechos (10), Solución e innovación (12), Impacto e indicadores (8), Viabilidad y riesgos (6), Fuentes y transparencia (4) |
-| **Prototipo funcional** | **17 nov 2026** | **30 % (30 pts)** | **2 minutos de demo en vivo**: Coherencia y recorrido completo (10), Desarrollo y calidad tangible en APK (10), Adecuación a 12–17 años, inclusión y accesibilidad (10) |
-| **Elevator Pitch + Jurado** | **17 nov 2026** | **20 % (20 pts)** | **3 minutos de pitch + 1 min de preguntas**: Síntesis (5), Problema/solución (5), Valor y derechos (5), Comunicación y defensa (5) |
+## Fechas y evaluación
 
-Evaluación del prototipo académico (con datos ficticios) y un eventual piloto real en un centro educativo siguen siendo entregas distintas.
+| Hito | Fecha | Peso y condición |
+| --- | --- | --- |
+| Reporte Pautado y Manual de Marca | 10 nov 2026; mediodía según planificación del equipo | Reporte 50 puntos. |
+| Pitch | 17 nov 2026 | 20 puntos; guía dice en vivo. Propuesta operativa: 3 min, sujeta a confirmación. |
+| Prototipo | 17 nov 2026 | 30 puntos; propuesta de demo de 2 min y hasta 1 min de preguntas. APK elegido por el equipo. |
 
-## Preguntas que cambian la solución
+La guía no impone software a todas las propuestas ni limita el producto a 12–17 años. El 10 nov 2026 cae martes, aunque algunas minutas dicen lunes. Mantener fechas numéricas hasta conciliar comunicación organizativa. El resumen de Drive dice Video Pitch; la guía oficial local dice pitch en vivo.
 
-**Decisiones vigentes (2026-11-09):** [ADR 0005](decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md) alinea el repositorio con Drive: acceso sin cuentas por código del colegio, tres superficies (alumno, MINED, dirección), mesa de escucha humana, protocolo de 3 niveles y 6 estados, modo sin internet por red mesh y población de 3.º a 11.º grado. La cuenta por alias de ADR 0003 queda superada; el almacén cifrado de M1 (ADR 0004) sigue implementado.
+## Estado real
+
+M0/M1: base Flutter, marca inicial, protección de pantalla, contratos y persistencia cifrada con alias/PIN, modelo anterior. Verificación M1 registrada el 5 nov: análisis limpio y 18 pruebas; prueba física pendiente. No hay envío remoto, paneles, acceso nuevo o mesh implementados.
+
+Bloque documental actual: README técnico, alineación de producto/arquitectura/pantallas y flujos del sistema. Próximo bloque de código pendiente de propuesta y aprobación.
+
+## Decisiones que cambian la solución
 
 | Prioridad | Decisión | Estado |
 | --- | --- | --- |
-| Antes de código | Stack móvil y experiencia: **Flutter + Dart** (experiencia previa confirmada) | Confirmado (2026-11-05) |
-| Antes de código | Plataforma inicial: **Android mediante APK instalable** | Confirmado (2026-11-05) |
-| MVP 17 nov | Caso en vivo entre **tres superficies** (celular del alumno, panel MINED, panel de dirección) con **modo sin conexión por red mesh** | Decidido por el equipo (Drive, ADR 0005); implementación no iniciada |
-| Acceso | **Código público del colegio (QR)** para estudiantes y **código privado** para dirección/enlace; sin cuentas | Decidido (ADR 0005); reemplaza alias + PIN |
-| M0 | Base: `go_router`, controladores posteriores con `ChangeNotifier`, `FLAG_SECURE` global, APK debug e instalación USB | Verificado en teléfono USB por ADB (instalación, botón, `FLAG_SECURE` y fuente 200%) (2026-11-05) |
-| Antes de código | Fecha y rúbrica oficial: **Jornada UAM - UNICEF 2026 (10 nov Reporte / 17 nov Pitch y Prototipo)** | Confirmado (2026-11-05) |
-| Antes de código | Población destinataria: **estudiantes de 3.º a 11.º grado (víctimas y Testigos Solidarios)**, Fase 1 en colegios públicos del casco urbano de Managua | Decidido (Drive, ADR 0005); adaptar interfaz a primaria pendiente |
-| Antes de backend real | Presupuesto estimado: USD 25.93/mes (Supabase Pro + dominio), USD 1,336.16 el primer año con 5 teléfonos puente | Estimado (hoja *SeTu_Costos_App*); titularidad de cuentas y costo del personal de escucha pendientes |
-| Antes de piloto | 5 colegios del piloto y validación de la ruta con el MINED | Pendiente (alianza por validar) |
-| Antes de piloto | Quién atiende: psicólogos de planta, alianza MINSA y practicantes de 5.º año; escalamiento por 3 niveles | Modelo decidido (ADR 0005); horarios, convenios y conflictos pendientes |
-| Antes de piloto | Revisión local, consentimiento/base jurídica y retención | Pendiente |
-| Antes de publicación | Contactos de Nicaragua y contenidos revisados | Pendiente |
+| Confirmado | Flutter/Dart Android y backend objetivo Supabase/PostgreSQL | ADR 0001/0002 y decisiones de equipo. |
+| Confirmado | Código público del colegio, código privado dirección y sin cuentas visibles | ADR 0005; implementación pendiente. |
+| Confirmado | Tres superficies, mesa humana, tres niveles y seis nombres de estado | Producto decidido; contratos y facultades por cerrar. |
+| Confirmado | 3.º–11.º, Fase 1 urbana pública Managua | Adaptación de comprensión para primaria pendiente. |
+| Antes de código conectado | Continuidad privada por caso y recuperación sin cuenta | Comparar sesión técnica, capacidad por caso y combinación. |
+| Antes de mesh | Destinatario offline: alerta mínima local o custodia central | Drive describe entrega mínima local; aprobar claves, receptor y alcance. Consulta al usuario pendiente al redactar. |
+| Antes de mesh | Primer ingreso offline, configuración, firma y claves auténticas | No resuelto por código público simple. |
+| Antes de mesh | Transporte, biblioteca/canal Flutter, versiones y permisos | Nearby Connections candidato; prueba física no realizada. |
+| Antes de paneles | Tecnología y disponibilidad local del panel sin internet | Una web cloud no basta; decidir vista nativa o servicio LAN seguro. |
+| Antes de backend | Alta de personal, asignaciones, código privado y revocación | Código compartido no da auditoría individual. |
+| Antes de protocolo | Ramas de cierre/escalamiento, conflicto y revelación excepcional | Propuestas en docs/02; aprobación humana/institucional pendiente. |
+| Antes de piloto | MINED, centros, atención MINSA/practicantes, horarios y suplencia | Alianzas por validar, no confirmadas. |
+| Antes de piloto | Revisión local de datos, región, retención y derechos | Pendiente. |
+| Antes de publicar | Ayuda, testimonios, guías y permisos de contenidos | Fuente, territorio, fecha, vigencia y responsable. |
+| Antes de presupuesto operativo | Conciliar Canvas/costos e incluir personal | Estimaciones incompatibles; sin financiación confirmada. |
 
-## Backlog vigente
+## Bloques propuestos de desarrollo
 
-1. M0 y M1 completados (base Flutter, identidad, protección de pantalla, almacén cifrado). Prueba física de M1 pendiente.
-2. Proponer y aprobar el bloque del MVP del 17 de noviembre: acceso por código de colegio, flujo de reporte (tipo, rol, detalles), paneles del MINED y de dirección, envío entre dispositivos y modo sin conexión (red mesh + teléfono puente). Evaluar primero la viabilidad técnica de la red mesh en Android.
-3. Chat de mesa de escucha, sección informativa y estados del caso según el tiempo disponible.
-4. Guion de la demo de 2 minutos y del Pitch; alinear colores del código con el Manual de Marca final.
+1. **Viabilidad:** aprobar experimento físico A→B→puente, sobres ficticios, permisos y criterios. No empezar creando paneles completos.
+2. **Contratos mínimos:** acceso privado, recepción idempotente, aviso mínimo y permisos; pruebas de integración con dos centros.
+3. **Recorrido conectado:** estudiante → recepción → MINED/dirección con datos separados; sin atribuir chat al colegio.
+4. **Offline:** cola protegida, custodia, puente, entrega local aprobada, sincronización y retorno de acuses.
+5. **Interfaz y demo:** marca final, primaria/secundaria, fallos y guion. Chat y contenidos según prioridad aprobada.
 
-## Definición de terminado para funcionalidades
+Cada bloque necesita propuesta concreta, preguntas materiales y aprobación explícita antes de código, dependencias, migraciones o estructura. Cambiar el generador documental no aprueba ninguno de estos bloques.
 
-Cumple criterios acordados, contempla carga/error/sin conexión cuando corresponda, no filtra datos, respeta permisos, funciona en el dispositivo objetivo y mantiene documentación coherente. Pruebas proporcionales al riesgo; no exigir métricas de cobertura artificiales. Ninguna demo usa reportes reales.
+## Definición de terminado
+
+Resultado real observado, datos ficticios, límites y fallas claros, sin filtración, pruebas proporcionales y documentación coherente. Permisos, transiciones y reintentos necesitan integración. Mesh exige teléfonos físicos y evidencia de saltos; simulaciones identificadas. Commit pequeño revisado, comprobaciones registradas y push o pendiente concreto de sincronización.

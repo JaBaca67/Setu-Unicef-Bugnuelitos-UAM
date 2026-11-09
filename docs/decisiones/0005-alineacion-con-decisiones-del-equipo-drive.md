@@ -30,7 +30,8 @@ El repositorio documentaba al 5 de noviembre una app local con cuenta por alias 
 
 - El código de M1 (alias + PIN, almacén local cifrado AES-GCM) sigue en el repositorio y funciona, pero **ya no es la dirección de producto**. El almacén cifrado puede reutilizarse para guardar alertas pendientes del modo sin conexión; la autenticación por alias + PIN debe reemplazarse por el acceso con código de colegio.
 - El MVP del 17 de noviembre requiere trabajo no iniciado: paneles del MINED y de dirección, envío real entre dispositivos y red mesh. Cada bloque sigue necesitando propuesta y aprobación antes de implementarse (AGENTS.md).
-- Los documentos `docs/01`, `02`, `06`, `07`, `08`, `diseno/` y `apps/mobile/README.md` describen el modelo anterior en partes; llevan un aviso que remite a este ADR hasta su reescritura.
+- Revisión documental del 9 nov: README y docs/01–04, 06–08 ya describen el alcance vigente; docs/09 registra fuentes y discrepancias y docs/10 propone datos/mesh. Las fuentes Mermaid están actualizadas. Los HTML anteriores se retiraron como especificaciones y remiten a las fuentes vigentes; imágenes y generador visual históricos pendientes de aprobación. El README móvil conserva la implementación M1, diferenciada del producto nuevo.
+- ADR 0006 documenta alternativas técnicas propuestas, sin aceptación implícita. La recepción mínima local antes de sincronizar y la supervisión central requieren distinguir ámbitos; no entregar relato/chat a dirección.
 - `apps/mobile/lib/shared/theme/app_theme.dart` aún usa la paleta anterior (`#0D61EB`, `#FF0091`, `#FFE100`); cambiarla es una tarea de código pendiente.
 
 ## Puntos abiertos

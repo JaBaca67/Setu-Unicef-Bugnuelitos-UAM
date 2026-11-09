@@ -1,59 +1,57 @@
 # Protección de estudiantes y operación
 
-Estado: requisitos de diseño propuestos; no certificación legal, clínica ni institucional.
+**Revisión:** 2026-11-09. Condiciones de diseño y operación por validar; no certificación legal, clínica o institucional. Alcance vigente según ADR 0005.
 
-## Condición para usar casos reales
+## Demo y recepción real
 
-Una demo usa información ficticia. Un piloto con estudiantes necesita una institución responsable, personal capacitado, protocolo aprobado y revisión local de protección de menores y datos. Estas condiciones forman parte de la capacidad del servicio, no solo de la implementación técnica.
+La demo solo usa información ficticia. No autoriza recibir casos de menores. Antes de un piloto se necesitan institución responsable, acuerdos de atención, profesionales capacitados, protocolo aprobado y revisión local de protección de menores/datos. La participación académica UAM–UNICEF no acredita aval ni convenio operativo.
 
-La [Ley n.º 787, disponible en la OEA](https://www.oas.org/es/sla/ddi/docs/N3%20Ley%20de%20Proteccion%20de%20Datos%20Personales.pdf), es una referencia inicial sobre tratamiento de datos en Nicaragua. No se ha comprobado aquí el conjunto de normas aplicables, reformas, interpretación ni su cumplimiento por el proyecto. Revisión local pendiente: edades y representación, base de tratamiento, avisos comprensibles, datos de terceros, deberes de protección, alojamiento internacional y ejercicio de derechos. No asumir que una casilla de consentimiento resuelve estos puntos.
+La revisión local debe resolver base del tratamiento, información comprensible por edad, representación cuando corresponda, datos de terceros, deberes de protección, alojamiento, derechos y retención. No asumir que una casilla de consentimiento lo resuelve. Las referencias normativas anteriores son antecedentes, no un dictamen actualizado de cumplimiento.
 
-## Protocolo mínimo a acordar
+## Responsabilidades por acordar
 
-1. Nombrar responsable de recepción, suplente y supervisor con límites de acceso.
-2. Establecer horario y tiempos de revisión realistas; no prometer atención continua.
-3. Definir evaluación humana de riesgo, derivación y seguimiento, incluida una ruta alternativa si el personal escolar está implicado.
-4. Precisar cuándo puede compartirse información, con quién y cómo se registra. No avisar automáticamente a familiares o personas señaladas sin evaluación del riesgo.
-5. Definir cómo manejar errores, reportes repetidos, abuso y falta de información sin desacreditar automáticamente al estudiante.
-6. Acordar cierre, reapertura, quejas, incidentes de privacidad y retirada de accesos.
+1. Responsable de recepción, suplencia, mesa profesional, supervisión de practicantes y alcance MINED/colegio.
+2. Horarios y tiempos realistas, ausencia del equipo y contingencia sin internet; no prometer atención continua.
+3. Valoración humana en tres niveles y procedimiento de derivación, incluida ruta alternativa por conflicto.
+4. Información mínima que se comparte, destinatario, facultades offline y registro. No notificar automáticamente a familiares o personas señaladas sin valorar el riesgo.
+5. Tratamiento de bromas, repetidos o información insuficiente sin desacreditar ni bloquear automáticamente ayuda.
+6. Cierre, reapertura, quejas, incidentes, revocación y retirada de dispositivos/claves.
 
-La interfaz debe indicar que no es un servicio de emergencias y ofrecer vías locales verificadas de ayuda. No publicar teléfonos, disponibilidad o servicios sin confirmarlos.
+La interfaz explica que enviar un aviso no garantiza respuesta inmediata. Los recursos de ayuda deben estar verificados antes de presentarlos como disponibles.
 
-## Riesgos y controles previstos
+## Confidencialidad y acceso
 
-| Riesgo | Control propuesto | Verificación |
+No hay cuentas visibles del estudiante; el código público solo identifica al colegio. Debe aprobarse un acceso privado por caso/sesión que impida lectura entre compañeros, incluso usando el mismo dispositivo. Recuperación, bloqueo local y pérdida siguen pendientes; no reintroducir alias + PIN como decisión vigente.
+
+Dirección nunca recibe el chat. MINED recibe avisos y fichas en su ámbito; no se concede chat por defecto a todo supervisor. Mesa y practicantes solo acceden a lo asignado y bajo facultades revisadas. El puente transporta sobres protegidos y no es un lector clínico.
+
+Drive contempla revelación excepcional con doble autorización, registro y aviso al estudiante. No existe una identidad civil oculta en la app. El protocolo debe limitarse a datos ya aportados o contacto voluntario y definir quién autoriza, qué información se comparte y cómo se documenta. No usar GPS como identificación encubierta.
+
+## Datos y conectividad
+
+Minimizar campos y advertir que el relato puede revelar identidades. No exigir nombre civil, carnet, contactos o agenda. La geolocalización de QR se limita a una decisión por resolver; no conservar posición precisa.
+
+Separar alerta mínima, relato/chat, notas, ficha, actuación y respuesta visible. Evitar texto de casos en notificaciones, soporte, analítica y auditoría. Estadísticas con control de grupos pequeños; sin ranking público o incentivos al subregistro/cierre precipitado.
+
+Mesh exige cifrado hasta destinatarios autorizados. Metadatos de tipo/rol/hora también son sensibles. Dispositivos de terceros no leen contenido; consentir retransmitir no los convierte en profesionales ni destinatarios. Evaluar patrones de proximidad, batería, abuso y métricas del SDK elegido.
+
+## Persistencia y retención
+
+M1 almacena datos ficticios en archivo AES-GCM-256 con clave protegida y formato previo por alias. El cifrado no elimina riesgos de acceso en un teléfono desbloqueado ni convierte la demo en servicio real. Borrar datos, perder la clave o desinstalar puede eliminar continuidad. No migrar o subir datos locales automáticamente.
+
+Definir plazos por categoría: cola y copias en retransmisores, acuses, expedientes, notas, actuaciones, auditoría y respaldos. La caducidad de un sobre no cierra el caso. No conservar indefinidamente ni borrar expedientes sin protocolo aprobado. Resolver pérdida de acceso privado y ejercicio de derechos sin exigir identidad innecesaria.
+
+## Riesgos y comprobaciones
+
+| Riesgo | Control por validar | Evidencia necesaria |
 | --- | --- | --- |
-| Represalias o identificación | Minimización, acceso restringido, notificaciones discretas | Revisar contenido y experiencia con especialistas |
-| Filtración entre centros | RLS, privilegios y validación de referencias | Probar lectura/escritura cruzada con dos centros |
-| Personal abusivo o implicado | Asignación limitada, auditoría y vía alternativa | Simular conflicto de interés |
-| Dispositivo compartido o perdido | Cuenta por alias/PIN, cierre de sesión, persistencia cifrada y aislamiento de casos | Motor probado en M1; validar formularios y comportamiento nativo al instalar M1, sin asumir protección absoluta |
-| Suplantación o spam | Ingreso controlado, cuotas en servidor y revisión humana | Probar revocación, abuso y errores sin bloquear ayuda arbitrariamente |
-| Expectativa de respuesta inmediata | Horarios y estado claros; responsable suplente | Validar comprensión y simulacro de ausencia |
-| Datos en logs o soporte | Telemetría mínima, sin cuerpos ni secretos | Inspeccionar errores, logs y exportaciones |
-| Contactos desactualizados | Responsable editorial, verificación y retiro al vencer | Comprobar procedencia y fecha antes de publicar |
+| Represalias/identificación | Minimización, separación y notificaciones discretas | Revisión con especialistas y usuarios por edad. |
+| Cruce entre colegios o estudiantes | Autorización por recurso y RLS | Integración con dos centros y dos estudiantes del mismo centro. |
+| Dirección implicada | Ruta independiente y exclusión de destinatario en conflicto | Simulacro sin aviso identificable al señalado. |
+| Teléfono compartido/perdido | Acceso privado protegido y política de recuperación | Pruebas de sesión, borrado y reinicio. |
+| Falsa confirmación | Acuses por ámbito y estado incierto | Radio cortada, puente offline y respuesta perdida. |
+| Retransmisor hostil | Sobre cifrado, autenticación, cuotas y deduplicación | Alteración, repetición, exceso y acuse falsificado. |
+| Atención ausente | Horarios y suplencia institucional | Simulacro operativo y comprensión de límites. |
+| Contactos vencidos | Responsable editorial y retiro | Fuente, territorio, fecha y vigencia comprobados. |
 
-## Datos y retención
-
-Para el desarrollo local se aprobó conservar datos funcionales ficticios después de cerrar la app (ADR 0003/0004). M1 implementa archivo AES-GCM-256 y clave protegida por Keystore, PBKDF2 para credenciales y separación entre notas internas y modelos estudiantiles; no autoriza datos reales ni recepción institucional. Borradores descartados siguen siendo temporales, credenciales nunca en texto plano y datos del teléfono fuera de Git. Recuperación de PIN solo con respaldo y datos existentes en el mismo teléfono. Desinstalación, pérdida de clave o borrado de datos pueden impedir recuperar los casos; el respaldo de cuenta no sustituye un backup cifrado. Plazos de retención y derechos para el piloto siguen pendientes.
-
-No solicitar fecha de nacimiento completa, cédula, dirección, GPS o contactos por defecto. El relato libre puede contener datos sensibles incluso sin campos de identidad; advertir con lenguaje amable y permitir revisión antes del envío.
-
-Retención pendiente: acordar plazos por tipo de dato, finalidad, acceso, eliminación, respaldos y excepciones documentadas. No conservar indefinidamente ni borrar automáticamente expedientes sin un protocolo aprobado. Definir cómo una sesión seudónima ejerce derechos sin revelar identidad innecesariamente.
-
-## Autocuidado y lenguaje
-
-Contenido breve y opcional, revisado por personal competente; sin puntuaciones diagnósticas ni promesas terapéuticas. Evitar culpabilizar: reportar es pedir apoyo, no acusar públicamente. No mostrar nombres de personas señaladas en notificaciones o listados generales.
-
-## Lista de preparación del piloto
-
-- [ ] Institución, responsable del tratamiento y responsables de atención identificados.
-- [ ] Edades, mecanismo de ingreso y recuperación de sesión validados.
-- [ ] Protocolo de protección, riesgo y conflicto de interés aprobado y ensayado.
-- [ ] Revisión legal local y avisos para estudiantes completados.
-- [ ] Retención, borrado, copias, restauración y respuesta a incidentes definidos.
-- [ ] Permisos, aislamiento, autenticación del personal y revocación probados.
-- [ ] Directorio y contenidos revisados por responsables identificados.
-- [ ] Pruebas de usabilidad y accesibilidad planificadas con participación segura.
-- [ ] Costos, soporte, disponibilidad y límites del piloto acordados.
-
-Esta lista no está completada y no constituye una autorización para operar.
+Antes de casos reales: aprobar estos puntos, probar operación y restauración, acordar atención de incidentes y conservar evidencia de aceptación institucional. Ninguno se da por cumplido con esta revisión documental.
