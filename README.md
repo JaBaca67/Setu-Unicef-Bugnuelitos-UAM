@@ -12,7 +12,7 @@
 
 [Índice](#indice) · [Diagramas de datos](#dfd) · [Desarrollo técnico](#stack) · [Ejecutar la app](#instalacion)
 
-SéTú combina un **espacio propio de información y orientación**, solicitudes privadas de apoyo y una campaña permanente de sensibilización sobre salud mental. Artículos, videos, testimonios editoriales y guías permiten informarse por curiosidad, comprender situaciones/emociones o acompañar la espera de atención, incluso sin enviar una alerta. Se dirige a estudiantes de **3.º a 11.º grado**; la primera fase propuesta comprende colegios públicos del casco urbano de Managua. El MINED se plantea como primer intermediario institucional, una mesa de escucha humana atiende al estudiante y el colegio documenta actuaciones sin acceder al chat.
+SéTú combina un **espacio de información y orientación**, solicitudes privadas de apoyo y una campaña permanente de sensibilización sobre salud mental. Artículos, videos, testimonios editoriales y guías permiten informarse por curiosidad, comprender situaciones y emociones o acompañar la espera de atención, incluso sin enviar una alerta. Se dirige a estudiantes de **3.º a 11.º grado**; la primera fase se centra en colegios públicos del casco urbano de Managua. Su modelo de atención sitúa al MINED como primer intermediario institucional, incorpora una mesa de escucha humana y permite al colegio documentar actuaciones sin acceder al chat.
 
 El proyecto participa en la **Jornada Académica y Social UAM - UNICEF 2026**, bajo la temática *Apoyo a la Salud Mental de Niñas, Niños y Adolescentes*. No es un producto oficial ni avalado por UNICEF, MINED o MINSA. Alianzas, financiación y operación con casos reales están pendientes de validación.
 
@@ -30,7 +30,7 @@ Este README es el documento principal de especificación técnica. Describe el p
 | **02 · Experiencia** | Informarse, pedir apoyo y consultar seguimiento | [Recorrido de usuarios](#usuarios) · [Información y acompañamiento](#informacion) · [Protocolo y estados](#protocolo) |
 | **03 · Modelado de datos** | DFD de Kendall y Kendall, datos y transporte | [Contexto y diagrama 0](#dfd) · [Datos privados](#datos) · [DFD mesh](#mesh-logico) · [Ruta física offline](#mesh) |
 | **04 · Desarrollo técnico** | Lenguajes, web, app, backend y verificación | [Arquitectura](#arquitectura) · [Stack completo](#stack) · [Paneles web](#paneles) · [App existente](#app) · [Instalación](#instalacion) · [Seguridad](#seguridad) · [Pruebas](#pruebas) |
-| **05 · Gestión** | Decisiones, pendientes y documentos de apoyo | [Autoridad y estado](#decisiones) · [Próximos bloques](#pendientes) · [Biblioteca](#documentacion) · [Colaboración](#colaboracion) |
+| **05 · Gestión** | Estado del desarrollo, próximos bloques y documentación | [Estado del desarrollo](#decisiones) · [Próximos bloques](#pendientes) · [Biblioteca](#documentacion) · [Colaboración](#colaboracion) |
 
 **Para desarrollar:** empieza por [estado real de la app](#app), [recursos por capa](#stack) y [decisiones abiertas](#pendientes). **Para comprender el proyecto:** sigue [propósito](#problema) → [usuarios](#usuarios) → [DFD](#dfd).
 
@@ -40,7 +40,7 @@ Este README es el documento principal de especificación técnica. Describe el p
 - **Flujo de usuario:** acciones, pantallas, decisiones y recuperación ante errores.
 - **DFD lógico:** entidades, procesos, almacenes y datos; enfoque Kendall y Kendall. No describe clics ni radios.
 - **Arquitectura y ruta física:** componentes, lenguajes, SDK, dispositivos y conectividad.
-- **Implementado:** existe en M1. **Confirmado:** decisión de producto o stack objetivo. **Propuesto:** requiere aprobación antes de programar. **Pendiente:** falta resolver una condición material.
+- **Implementado:** existe en M1. **En diseño:** describe el sistema objetivo. **Candidato:** tecnología por evaluar. **Pendiente:** aspecto técnico u operativo por resolver.
 
 Los modelos nuevos documentan el sistema objetivo. **Hoy solo existe la base Android local M1; no hay paneles, backend conectado o mesh implementados.**
 
@@ -56,12 +56,12 @@ Contexto social, alcance del prototipo y criterios de presentación.
 
 ## 1. Problema, propósito y alcance
 
-El equipo identifica temor a represalias, dificultad para expresar el malestar, estigma sobre la atención psicológica y desconfianza en la respuesta escolar. SéTú propone conectar solicitudes privadas con escucha profesional y seguimiento institucional. El impacto aún no está medido: la entrevista y los instrumentos de encuesta orientan el diseño, pero no prueban la eficacia del sistema.
+SéTú aborda barreras como el temor a represalias, la dificultad para expresar el malestar, el estigma sobre la atención psicológica y la desconfianza en la respuesta escolar. Conecta solicitudes privadas con escucha profesional y seguimiento institucional, y ofrece información para comprender situaciones y explorar opciones de apoyo. El impacto aún no está medido: la entrevista y los instrumentos de encuesta orientan el diseño, pero no prueban la eficacia del sistema.
 
 El proyecto comprende seis componentes:
 
 1. **App estudiantil:** código escolar, solicitud de apoyo, seguimiento privado y chat humano.
-2. **Información y orientación en la app:** artículos, videos, testimonios editoriales y guías; acceso independiente del reporte y durante la espera. Componente confirmado, no una ampliación opcional.
+2. **Información y orientación en la app:** artículos, videos, testimonios editoriales y guías para comprender lo que se está viviendo, conocer opciones de apoyo y acompañar la espera; acceso independiente del reporte.
 3. **Atención y supervisión:** mesa de escucha y panel MINED para fichas, seguimiento y escalamiento.
 4. **Panel de dirección:** avisos mínimos, fichas autorizadas, actuaciones y estadísticas del centro; sin chat.
 5. **Modo sin internet:** transporte cifrado de alertas mediante teléfonos cercanos hasta un teléfono puente.
@@ -71,7 +71,7 @@ El proyecto comprende seis componentes:
 
 Mostrar un **caso ficticio** viajando entre celular del estudiante, panel MINED y panel de dirección, incluido un tramo por red mesh sin internet. Demostrar entrega y separación de datos entre destinatarios. Cualquier tramo simulado se identifica en pantalla y ante el jurado.
 
-El espacio Información forma parte confirmada de la solución ([ADR 0009](docs/decisiones/0009-espacio-informativo-confirmado.md)); catálogo y reproducción no están implementados en M1. El corte de prototipo debe representar su recorrido autónomo y durante la espera, con material de ejemplo identificado. La cantidad de recursos, implementación de video, revisión y derechos se dimensionan por bloque. Chat completo y reconocimientos institucionales conservan sus pendientes de implementación/priorización.
+La demostración incluye el recorrido de Información desde el inicio y durante la espera de atención, con material de ejemplo identificado y retorno al seguimiento. El catálogo y la reproducción de video forman parte del desarrollo pendiente de M1; su entrega requiere seleccionar los recursos, revisar su contenido y resolver derechos y accesibilidad. El alcance ejecutable de cada componente se detalla en el estado de desarrollo.
 
 ### Límites
 
@@ -96,9 +96,9 @@ Adjuntos y evidencias aparecen en investigación y costos, pero no tienen contra
 | Operación técnica | Mantener dispositivos y plataforma | Configuración y salud técnica; sin contenido por defecto. |
 | Docentes y familias | Campaña y apoyo presencial | Material editorial; el vínculo no concede acceso a casos. |
 
-La mesa de escucha es una función dentro del sistema de atención; no obliga a crear una cuarta aplicación. Drive plantea psicólogos de planta, articulación con MINSA y practicantes de Psicología de 5.º año. Convenios, acreditación, supervisión de practicantes, horarios y disponibilidad siguen pendientes.
+La mesa de escucha es una función del sistema de atención. Su estructura contempla psicólogos de planta y la participación de profesionales de MINSA y practicantes de Psicología de 5.º año. Convenios, acreditación, supervisión de practicantes, horarios y disponibilidad siguen pendientes de validación.
 
-Los [manuales operativos de uso](https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ) son versiones de trabajo para validar: precisan que el chat y el relato pertenecen al estudiante y a la mesa, excluyen tanto al colegio como al MINED y requieren internet para el chat. Dirección puede **registrar la alerta de un docente**; esto no crea cuentas docentes ni convierte esa alerta institucional en un mensaje escrito por el estudiante.
+El relato y el chat son accesibles únicamente al estudiante y a la mesa de escucha asignada; el chat requiere internet. Dirección puede **registrar la alerta de un docente**, conservando el actor y origen institucionales. Los docentes no necesitan cuentas y la alerta no se atribuye al estudiante. Los [manuales operativos](https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ) detallan estos recorridos y requieren validación institucional antes de operar con casos reales.
 
 [↑ Volver al índice](#indice)
 
@@ -106,7 +106,7 @@ Los [manuales operativos de uso](https://drive.google.com/drive/folders/1i3h6JxU
 
 ## 3. Identidad visual
 
-Autoridad: [Manual de Marca final de Drive](https://drive.google.com/file/d/11vE2_hviWBnT79giw6Y8mgofxUckyae6/view), **32 páginas**, y [variantes SVG oficiales](https://drive.google.com/drive/folders/16XnURY24OzDCv9UqPX7VS9Bx4QxwfzsZ). El PDF del repositorio es inicial.
+La identidad se define en el [Manual de Marca](https://drive.google.com/file/d/11vE2_hviWBnT79giw6Y8mgofxUckyae6/view), de **32 páginas**, y sus [variantes SVG oficiales](https://drive.google.com/drive/folders/16XnURY24OzDCv9UqPX7VS9Bx4QxwfzsZ). El PDF del repositorio corresponde a una versión inicial.
 
 | Elemento | Especificación |
 | --- | --- |
@@ -125,9 +125,9 @@ Usar los activos oficiales sin deformarlos ni reconstruirlos si hay una variante
 
 ## 4. Entregables y estimaciones
 
-La [guía oficial](<Guía Prototipado y Presentación UAM - UNICEF 2026.docx>) fija Reporte Pautado el **10 nov 2026 (50 %)** y Pitch/Prototipo el **17 nov 2026 (20 % / 30 %)**. Dice **pitch en vivo** y propone, sujeto a confirmación organizativa, **3 minutos de pitch, 2 de demo y hasta 1 de preguntas**. No obliga a que todo prototipo sea software: el APK es elección del equipo. Conciliar “Video Pitch” de Drive si cambia la organización.
+La [guía oficial](<Guía Prototipado y Presentación UAM - UNICEF 2026.docx>) fija Reporte Pautado el **10 nov 2026 (50 %)** y Pitch/Prototipo el **17 nov 2026 (20 % / 30 %)**. Prevé **pitch en vivo**, con **3 minutos de pitch, 2 de demo y hasta 1 de preguntas**, sujetos a validación organizativa. SéTú presenta una demo en APK; la guía admite otros tipos de prototipo según el proyecto.
 
-[SeTu_Costos_App](https://docs.google.com/spreadsheets/d/1t4idB2KwksaVkriVMrovDxuk8UW-88fA3H6XVb04cSA/edit) estima **USD 25.93/mes**, **USD 311.16/año** recurrentes y **USD 1,336.16** el primer año, incluidos cinco puentes de USD 200 y una cuenta de publicación de USD 25. Son estimaciones del equipo, sin verificación actual de precios; no incluyen personal de escucha. El Lean Canvas presenta cifras distintas y posibles financiadores: discrepancia abierta en [docs/09](docs/09-revision-drive-y-trazabilidad.md). No hay financiación confirmada.
+[SeTu_Costos_App](https://docs.google.com/spreadsheets/d/1t4idB2KwksaVkriVMrovDxuk8UW-88fA3H6XVb04cSA/edit) estima **USD 25.93/mes**, **USD 311.16/año** recurrentes y **USD 1,336.16** el primer año, incluidos cinco puentes de USD 200 y una cuenta de publicación de USD 25. Estas estimaciones requieren actualizar precios y no incluyen personal de escucha. El presupuesto operativo completo y la financiación están por definir.
 
 [↑ Volver al índice](#indice)
 
@@ -151,9 +151,9 @@ Recorridos previstos; las pantallas citadas se especifican en [docs/08](docs/08-
 8. El profesional decide acompañamiento, ficha de convivencia o derivación por riesgo grave. Dirección documenta actuaciones sobre la ficha permitida.
 9. El estudiante consulta solo su respuesta y estado visibles; cierre y escalamiento quedan registrados por personal autorizado.
 
-**Sin cuentas visibles no significa acceso compartido a casos.** El código público identifica al centro, no al dueño del reporte. Hay que aprobar continuidad privada, pérdida de dispositivo y uso compartido. Alternativas en [arquitectura](docs/02-arquitectura.md).
+**Sin cuentas visibles no significa acceso compartido a casos.** El código público identifica al centro, no al dueño del reporte. El acceso privado debe resolver continuidad, pérdida de dispositivo y uso compartido. Alternativas en [arquitectura](docs/02-arquitectura.md).
 
-Drive contempla geolocalización al escanear el QR. Permisos, rechazo, ausencia de señal, uso fuera del colegio e ingreso inicial sin internet están abiertos. La ubicación precisa no se guarda. QR + GPS no demuestra por sí solo matrícula ni identidad.
+El diseño contempla comprobar cercanía al colegio al escanear el QR. Permisos, rechazo, ausencia de señal, uso fuera del colegio e ingreso inicial sin internet requieren definición. La ubicación precisa no se guarda. QR + GPS no demuestra por sí solo matrícula ni identidad.
 
 ### Recorrido integrado de las tres superficies
 
@@ -211,9 +211,9 @@ flowchart TD
 
 ### Información y acompañamiento durante la espera
 
-**Decisión confirmada:** la [sesión de Meet del 9 nov a las 13:33 CST](https://docs.google.com/document/d/1c6E9dED-tzHSSu2ciC-TWYNtGH2fxLXYpq14DAt0Eeg/edit) registra la propuesta bajo la etiqueta **Andrea Juárez**, desde **01:21:40**, y la lectura mientras se espera desde **01:23:49**. El acuerdo quedó recogido en el Resumen General de Drive y el usuario confirma su inclusión. [Origen, límites de atribución y análisis del referente](docs/14-espacio-informativo-y-referente-netflix.md).
+**Información** es el espacio de SéTú para conocer temas de salud mental, comprender situaciones y emociones y explorar formas de pedir apoyo. Reúne artículos breves, videos explicativos, testimonios editoriales y guías adaptados a la etapa escolar, con lenguaje cercano y recursos accesibles.
 
-El portal [Wanna Talk About It? de Netflix](https://www.wannatalkaboutit.com/) sirve como referente de organización informativa y acompañamiento. SéTú tendrá un espacio propio con su marca y recursos revisados/autorizados; no depende de una cuenta Netflix, una API o importar sus contactos/catálogo.
+El estudiante puede explorarlo por curiosidad, consultar un tema que le resulte familiar o leer mientras espera atención humana. El recorrido es libre: puede elegir un recurso, detenerlo, cambiar de tema o regresar a su seguimiento sin tener que enviar una alerta.
 
 | Entrada | Para qué sirve | Recorrido |
 | --- | --- | --- |
@@ -235,21 +235,21 @@ E10 muestra temas, formatos y disponibilidad; E11 permite leer/ver con controles
 
 ## 6. Protocolo humano y estados
 
-| Nivel decidido por el equipo | Tratamiento previsto | Condición |
+| Nivel de atención | Tratamiento previsto | Condición |
 | --- | --- | --- |
 | 1 · Acompañamiento | Escucha y orientación; puede resolverse en chat | No forzar ficha escolar. |
 | 2 · Convivencia / acoso | Ficha y seguimiento MINED–colegio | Información mínima y destinatarios autorizados. |
 | 3 · Riesgo grave | Derivación humana a enlaces de protección y salud | Responsables, contactos y protocolo por validar. |
 
-Nombres utilizados por el equipo para el prototipo: **Recibido, En escucha, Ficha enviada, Colegio actuando, Escalado y Cerrado**. El Manual del MINED los presenta como propuesta a ajustar con esa institución: recepción automática, escucha/ficha por la mesa, actuación por dirección y escalamiento/cierre por MINED. No todos los casos recorren todos los estados. Cierre de nivel 1 sin ficha y reapertura requieren completar el contrato. **Derivar por riesgo grave es un evento urgente distinto del estado Escalado**, que el manual utiliza para falta de respuesta institucional. No se espera al siguiente estado para activar una derivación humana.
+El prototipo representa seis estados: **Recibido, En escucha, Ficha enviada, Colegio actuando, Escalado y Cerrado**. La recepción es automática; la mesa gestiona escucha y ficha; dirección documenta actuaciones; MINED gestiona escalamiento y cierre. Los nombres finales y las facultades requieren validación institucional. No todos los casos recorren todos los estados; el cierre de nivel 1 sin ficha y la reapertura requieren completar el contrato. **Derivar por riesgo grave es un evento urgente distinto del estado Escalado**, reservado a falta de respuesta institucional. No se espera al siguiente estado para activar una derivación humana.
 
 *Pendiente sin conexión* es un estado de transporte, no un séptimo estado del caso. *Recibido* debe indicar ámbito local o central. Los indicadores de atención necesitan marcas de tiempo definidas; el reloj del emisor no es una autoridad confiable.
 
-Drive plantea doble autorización, registro y aviso para revelación excepcional por protección de la vida. **No existe una identidad civil secreta que la app pueda desanonimizar.** Solo puede compartir información aportada o coordinar una solicitud de contacto según protocolo aprobado. No se convierte el GPS en identificación encubierta ni se promete confidencialidad sin límites.
+El diseño de revelación excepcional por protección de la vida contempla doble autorización, registro y aviso al estudiante; sus responsables y alcance requieren validación de protección. **No existe una identidad civil secreta que la app pueda desanonimizar.** Solo puede compartir información aportada o coordinar una solicitud de contacto según protocolo aprobado. No se convierte el GPS en identificación encubierta ni se promete confidencialidad sin límites.
 
-Los manuales proponen bloquear el paso de contacto familiar mientras el anonimato siga activo y registrar acciones grupales. Su habilitación exige el procedimiento autorizado, con dos aprobadores aún por definir. Debe validarse con responsables de protección: no se convierte esta propuesta en una regla jurídica automática ni se bloquean medidas urgentes que el protocolo aprobado requiera. El sistema debe registrar autorizaciones y limitar qué datos se comparten; no basta ocultar un botón.
+El flujo de contacto familiar prevé restringir ese paso mientras siga activa la reserva de identidad y registrar acciones grupales. Su habilitación depende de un procedimiento de protección validado, con dos aprobadores aún por definir, y debe contemplar las medidas urgentes necesarias. Esta regla operativa sigue en diseño. El sistema debe registrar autorizaciones y limitar qué datos se comparten; no basta ocultar un botón.
 
-El protocolo de acoso entre estudiantes no cubre por sí solo violencia sexual, armas o sustancias. Los manuales mencionan rutas distintas pendientes de acordar con MINED. Esas referencias no agregan automáticamente categorías, formularios o funcionalidades al MVP. Los plazos de atención y escalamiento no están fijados; las metas del Canvas no son un SLA.
+El protocolo de acoso entre estudiantes no cubre por sí solo violencia sexual, armas o sustancias. Estas situaciones requieren rutas específicas de protección por definir con MINED. Sus categorías y formularios deben delimitarse antes de incorporarlos al corte ejecutable. Los plazos de atención y escalamiento no están fijados; los objetivos del proyecto no son un SLA.
 
 <details>
 <summary><strong>Ver transiciones propuestas del caso</strong></summary>
@@ -336,7 +336,7 @@ La biblioteca tiene su propio contexto **I0** y diagrama 0 **I1–I3**, sin vinc
 
 </details>
 
-Los seis flujos **C01–C06** conservan entidad/dirección/contenido: consulta y catálogo, solicitud y recurso/disponibilidad, contenido revisado y resultado de publicación. [Diccionario y fuentes](docs/14-espacio-informativo-y-referente-netflix.md#6-dfd-del-contenido-editorial). No llevan caso, relato, nivel clínico o una identidad civil del lector.
+Los seis flujos **C01–C06** conservan entidad/dirección/contenido: consulta y catálogo, solicitud y recurso/disponibilidad, contenido revisado y resultado de publicación. Ver [modelos y diccionario de datos](docs/12-modelado-dfd-kendall.md). No llevan caso, relato, nivel clínico o una identidad civil del lector.
 
 [↑ Volver al índice](#indice)
 
@@ -405,7 +405,7 @@ Esta es una **vista lógica independiente del subsistema de transporte**: tiene 
 
 ## 10. Red mesh y funcionamiento físico sin internet
 
-**Decisión del equipo:** la alerta viaja cifrada entre celulares hasta un teléfono puente. **Propuesta técnica:** almacenamiento y reenvío oportunista; un dispositivo conserva sobres y los transfiere cuando encuentra un vecino apto, sin exigir todos los eslabones conectados simultáneamente. La viabilidad física todavía no está probada.
+La red mesh de SéTú transporta alertas cifradas entre celulares hasta un teléfono puente. El diseño técnico plantea almacenamiento y reenvío oportunista: cada dispositivo conserva sobres y los transfiere cuando encuentra un vecino apto, sin exigir todos los eslabones conectados simultáneamente. Este transporte todavía requiere implementación y pruebas físicas.
 
 Sin internet se necesitan app compatible, permisos, radios Bluetooth/Wi-Fi según el transporte, batería y encuentros dentro del alcance real. Sin vecinos o puente accesible, el reporte permanece pendiente. No se promete cobertura de todo el colegio ni entrega inmediata.
 
@@ -429,7 +429,7 @@ No se incluye una clave común en todos los APK ni se usa el código del colegio
 
 [Nearby Connections](https://developers.google.com/nearby/connections/overview) permite conexiones cercanas sin internet usando Bluetooth/BLE/Wi-Fi; [Cluster](https://developers.google.com/nearby/connections/strategies) admite varios vecinos. Se propone evaluarlo. La conexión entre vecinos no sustituye el protocolo de retransmisión, deduplicación y acuses de SéTú.
 
-Los [permisos necesarios](https://developers.google.com/nearby/connections/android/get-started) dependen de versión y transporte. Android aplica [restricciones en segundo plano](https://developer.android.com/develop/connectivity/bluetooth/ble/background). Primero se probarán equipos concretos con apps visibles; no se promete reenvío continuo con la app cerrada. ADR 0008 propone evaluar un canal nativo Kotlin desde Flutter hacia Nearby Connections/Cluster. Google Play services, consumo, compatibilidad y versiones requieren prueba aprobada; no se ha elegido o instalado un plugin.
+Los [permisos necesarios](https://developers.google.com/nearby/connections/android/get-started) dependen de versión y transporte. Android aplica [restricciones en segundo plano](https://developer.android.com/develop/connectivity/bluetooth/ble/background). Primero se probarán equipos concretos con apps visibles; no se promete reenvío continuo con la app cerrada. La integración candidata utiliza un canal nativo Kotlin desde Flutter hacia Nearby Connections/Cluster. Google Play services, consumo, compatibilidad y versiones requieren pruebas; no se ha elegido o instalado un plugin.
 
 Ver [flujo de datos y red mesh](docs/10-flujo-datos-y-red-mesh.md) para sobres, estados, colas, retorno, sincronización y pruebas.
 
@@ -441,7 +441,7 @@ Este flujo sí incluye decisiones de conectividad: corresponde a ejecución, no 
 
 [Fuente Mermaid](docs/diseno/flujos/06-mesh.mmd) · Abrir la imagen para ampliarla.
 
-**Límite web:** una web cloud no recibe por Bluetooth una alerta desde el puente por estar abierta. Hay que aprobar un receptor local autorizado, claves y enlace seguro: vista nativa o servicio LAN con cliente disponible offline. PWA/caché por sí solas no resuelven recepción, confidencialidad o sincronización.
+**Límite web:** una web cloud no recibe por Bluetooth una alerta desde el puente por estar abierta. La entrega requiere un receptor local autorizado, claves y enlace seguro: vista nativa o servicio LAN con cliente disponible offline. Su contrato técnico está por definir. PWA/caché por sí solas no resuelven recepción, confidencialidad o sincronización.
 
 [↑ Volver al índice](#indice)
 
@@ -449,13 +449,13 @@ Este flujo sí incluye decisiones de conectividad: corresponde a ejecución, no 
 
 # IV. Especificación para desarrollo
 
-Tecnología confirmada, recursos propuestos y estado ejecutable, con sus diferencias explícitas.
+Componentes del sistema, recursos por integrar y estado del código ejecutable.
 
 <a id="arquitectura"></a>
 
 ## 11. Arquitectura de componentes objetivo
 
-**Stack confirmado:** Flutter/Dart para Android y Supabase/PostgreSQL como backend objetivo. **Propuesta ADR 0008:** cliente web React/TypeScript/Vite para MINED, escucha y dirección; Nearby/Cluster vía canal Kotlin para evaluar proximidad. No implementados.
+La app Android utiliza **Flutter/Dart** y el backend objetivo es **Supabase/PostgreSQL**. Para los paneles se evalúa un cliente **React/TypeScript/Vite** y para proximidad, **Nearby Connections/Cluster mediante un canal Kotlin**. Los paneles, el backend conectado y el transporte de proximidad están pendientes de implementación y validación técnica.
 
 ```mermaid
 flowchart LR
@@ -473,14 +473,14 @@ flowchart LR
     D -->|"Actuaciones"| S
 ```
 
-Las flechas representan destinos lógicos, no acceso a tablas completas. La rama local punteada figura en Drive; contenido, claves y autenticación deben aprobarse antes de implementarla.
+Las flechas representan destinos lógicos, no acceso a tablas completas. La rama punteada corresponde a la entrega local de la alerta mínima; su contrato, claves y autenticación requieren definición antes de implementarla.
 
 | Componente | Función | Estado |
 | --- | --- | --- |
 | App Flutter y `go_router` | APK Android y navegación | Base implementada; nuevo recorrido pendiente. |
 | Almacén AES-GCM-256 | Proteger datos ficticios al reiniciar | Implementado M1; adaptación como cola pendiente. |
 | API de aplicación | Validación, recepción idempotente y permisos | Propuesta; sin backend conectado. |
-| PostgreSQL y RLS | Aislamiento por institución y recurso | Objetivo confirmado; esquema/políticas no implementados. |
+| PostgreSQL y RLS | Aislamiento por institución y recurso | Backend objetivo; esquema y políticas pendientes de implementación. |
 | Paneles y mesa | React/TypeScript/Vite propuestos; vistas por función | Diseñados; no implementados. |
 | Transporte de proximidad | Canal Dart–Kotlin → Nearby Connections/Cluster propuesto | Candidato, sin instalación o prueba. |
 | Protocolo de reenvío | Colas, caducidad, deduplicación y acuses | Propuesta técnica. |
@@ -494,17 +494,17 @@ Esta es una vista de componentes, distinta de los DFD. Cloudflare Pages se propo
 
 ## 12. Lenguajes y recursos técnicos de todo el sistema
 
-La matriz cubre app, panel MINED, mesa, panel institucional, backend y proximidad. **Confirmado** significa objetivo acordado; **propuesto/candidato** requiere aprobación de implementación. Las versiones nuevas se resolverán juntas antes de instalarlas; no se atribuye compatibilidad probada a una lista de herramientas.
+La matriz cubre app, información, panel MINED, mesa, panel institucional, backend y proximidad. Distingue los recursos existentes de los que se evalúan para integrar. Las versiones nuevas requieren comprobar compatibilidad conjunta antes de instalarlas.
 
 | Capa o superficie | Lenguajes | Recursos a integrar o conservar | Estado |
 | --- | --- | --- | --- |
 | App Android | **Dart**, Kotlin nativo cuando haga falta | Flutter, `go_router`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base M1 implementada; nuevo flujo pendiente. |
-| Información E10/E11 | **Dart + JSON**; texto y medios editoriales | Widgets Flutter; catálogo/recursos empaquetados propuestos; `video_player` candidato para reproducción local o de red | Producto confirmado; implementación, versiones, catálogo y derechos pendientes. No es una API de Netflix. |
+| Información E10/E11 | **Dart + JSON**; texto y medios editoriales | Widgets Flutter; catálogo y recursos empaquetados; `video_player` candidato para reproducción local o de red | Catálogo, lector y reproducción pendientes de implementación; contenido, versiones y derechos por definir. |
 | QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | No instalados. GPS no guarda ubicación precisa; finalidad/alternativas por resolver. |
-| Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Propuesta ADR 0008; avisos, fichas y supervisión sin chat. |
+| Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Stack en evaluación; avisos, fichas y supervisión sin chat. |
 | Mesa de escucha | TypeScript/TSX + HTML + CSS | Mismo cliente web, vistas y contratos del rol de escucha | Propuesto; chat humano conectado y casos asignados. |
 | Panel de instituciones | TypeScript/TSX + HTML + CSS | Mismo cliente web, proyecciones del centro y tokens de marca | Propuesto; actuaciones y propuesta de cierre sin relato/chat. |
-| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Plataforma objetivo confirmada; contratos, esquema y políticas propuestos. |
+| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Backend objetivo; contratos, esquema y políticas en diseño. |
 | SDK móvil de backend | Dart | `supabase_flutter` | Propuesto; no presente en M1. Acceso privado estudiantil por decidir. |
 | Operaciones confiables | **TypeScript / Deno** | Supabase Edge Functions solo cuando sean necesarias | Propuesto; no servidor Node adicional. |
 | Actualizaciones y chat | Dart/TypeScript + SQL | Realtime autorizado y mensajes persistidos, reintentos idempotentes | Propuesto; internet obligatorio, sin relato en avisos. |
@@ -518,7 +518,7 @@ La matriz cubre app, panel MINED, mesa, panel institucional, backend y proximida
 
 Se contrastaron las capacidades con [React/TypeScript](https://react.dev/learn/typescript), [Vite](https://vite.dev/guide/), [Supabase](https://supabase.com/docs/reference/javascript/introduction), [canales Flutter](https://docs.flutter.dev/platform-integration/platform-channels), [Nearby](https://developers.google.com/nearby/connections/strategies) y [Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/). Ver [catálogo técnico completo](docs/13-recursos-tecnicos.md) para fuentes de cada recurso, requisitos, contratos, configuración y límites.
 
-No se agregan Firebase, mapas, analítica, IA, evidencias multimedia, framework CSS o push por aparecer en referentes/costos. Una web pública de campaña y un CMS no están implementados ni son prerrequisitos de los paneles.
+El corte técnico actual no contempla Firebase, mapas, analítica, IA, adjuntos multimedia de casos, un framework CSS o notificaciones push. Una web pública de campaña y un CMS no están implementados ni son prerrequisitos de los paneles.
 
 [↑ Volver al índice](#indice)
 
@@ -542,7 +542,7 @@ No se agregan Firebase, mapas, analítica, IA, evidencias multimedia, framework 
 
 **Sin conexión:** los paneles cloud no se declaran operativos offline. Primera carga, receptor local, caché protegida, terminal compartida, revocación y sincronización deben resolverse. No guardar casos por defecto en `localStorage` o caché PWA.
 
-**Pruebas previstas:** teclado/lector de pantalla, formularios y estados vacíos/error/reconexión, aislamiento de dos centros, separación MINED–mesa, accesos revocados y transiciones. Los contratos y alternativas React frente a Flutter Web/Next.js están en [ADR 0008](docs/decisiones/0008-stack-web-y-modelado-logico-propuesto.md).
+**Pruebas previstas:** teclado/lector de pantalla, formularios y estados vacíos/error/reconexión, aislamiento de dos centros, separación MINED–mesa, accesos revocados y transiciones. Los contratos se detallan en [arquitectura](docs/02-arquitectura.md) y las alternativas de integración en el [catálogo técnico](docs/13-recursos-tecnicos.md).
 
 [↑ Volver al índice](#indice)
 
@@ -566,7 +566,7 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Java de construcción | JDK 21 de Android Studio; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
 | Backend objetivo | Supabase / PostgreSQL | No hay `supabase_flutter`, esquema, políticas o servidor conectado en el corte actual. |
 
-Android es la plataforma inicial aprobada. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. La propuesta independiente para paneles es React/TypeScript/Vite (ADR 0008), pendiente de aprobación e implementación.
+Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. Para los paneles se evalúa React/TypeScript/Vite, pendiente de validación técnica e implementación.
 
 | Implementación M1 | Límite |
 | --- | --- |
@@ -643,7 +643,7 @@ APK en `build/app/outputs/flutter-apk/app-debug.apk`, excluido de Git. Instalaci
 
 ### Configuración, secretos y archivos locales
 
-El corte actual no tiene `.env` obligatorio, `firebase_options.dart`, claves de mapas ni credenciales de backend. No copiar esos archivos o requisitos del README de Nikara. No incluir secretos al preparar los futuros paneles o servidor.
+El corte actual no tiene `.env` obligatorio, `firebase_options.dart`, claves de mapas ni credenciales de backend. Las futuras integraciones deben documentar su configuración y mantener los secretos fuera del código y de los clientes publicados.
 
 El archivo `setu_local_store.enc` es dato privado de ejecución y no se distribuye con el repositorio. Android excluye copias cloud/transferencias del corte actual. `android/local.properties`, cachés, APK y credenciales de firma son locales; `.gitignore` los protege según su finalidad. La compilación `release` conserva firma debug provisional en Gradle: no es una configuración de publicación lista para tiendas.
 
@@ -706,26 +706,23 @@ Permisos, aislamiento, transiciones y reintentos requieren integración cuando e
 
 <a id="gestion"></a>
 
-# V. Decisiones, trazabilidad y colaboración
+# V. Desarrollo, documentación y colaboración
 
-Cómo mantener esta especificación alineada con Drive y el repositorio.
+Estado de las entregas, próximos bloques y documentación de apoyo.
 
 <a id="decisiones"></a>
 
-## 18. Estado y autoridad de las decisiones
+## 18. Estado del desarrollo
 
-| Etiqueta | Significado |
+| Área | Estado actual |
 | --- | --- |
-| Implementado | Existe en el código; se explican límites y verificaciones disponibles. |
-| Decisión del equipo | Dirección de producto registrada en Drive; no implica implementación. |
-| Propuesta técnica | Alternativa para materializarla; requiere aprobación antes de programar. |
-| Pendiente | Falta un acuerdo, validación o prueba que cambia el resultado. |
+| Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
+| Recorrido estudiantil e Información | Recorridos, pantallas y formatos descritos en la especificación; módulos pendientes de implementación. |
+| Paneles y backend | Arquitectura y contratos en diseño; sin conexión operativa entre dispositivos. |
+| Red mesh y entrega local | Protocolo y transporte en evaluación; requieren implementación y pruebas físicas. |
+| Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
 
-Las fuentes de producto están en el [Drive del equipo](https://drive.google.com/drive/folders/1BSIhalcR9OKPbfXwTDoexnr12lPAXE6c). Su revisión se registra en [docs/09](docs/09-revision-drive-y-trazabilidad.md). [ADR 0005](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md) reemplaza el acceso por alias + PIN de ADR 0003. [ADR 0006](docs/decisiones/0006-especificacion-tecnica-y-mesh-propuesta.md) registra las propuestas técnicas de esta especificación **sin declararlas aprobadas**. [ADR 0007](docs/decisiones/0007-alineacion-con-manuales-operativos.md) incorpora las precisiones de los nuevos manuales de uso, todavía sujetos a validación institucional.
-
-[ADR 0008](docs/decisiones/0008-stack-web-y-modelado-logico-propuesto.md) añade la propuesta de stack web y la separación de modelos lógicos/físicos. No autoriza programación, dependencias, migraciones o despliegues. [docs/13](docs/13-recursos-tecnicos.md) distingue selección candidata de compatibilidad realmente probada.
-
-[ADR 0009](docs/decisiones/0009-espacio-informativo-confirmado.md) confirma Información como componente del producto, respaldado por Meet, resumen de Drive e instrucción del usuario. Su existencia no se vuelve a tratar como opcional; catálogo, revisión, derechos y tecnología conservan decisiones de implementación pendientes.
+El [producto](docs/01-producto.md) define el alcance, la [especificación funcional](docs/08-especificacion-funcional-setu.md) describe las pantallas y la [arquitectura](docs/02-arquitectura.md) desarrolla datos, permisos y contratos. El [catálogo técnico](docs/13-recursos-tecnicos.md) distingue recursos existentes y candidatos a integrar. El historial de análisis y alternativas se conserva en la documentación de apoyo.
 
 [↑ Volver al índice](#indice)
 
@@ -759,12 +756,11 @@ Antes de desarrollar paneles, aprobar o ajustar React/TypeScript/Vite, el acceso
 | [Diseño](docs/06-guia-diseno.md) | Marca y accesibilidad. |
 | [Plan del prototipo](docs/07-plan-mockup-y-codex.md) | Bloques y demostración. |
 | [Especificación funcional](docs/08-especificacion-funcional-setu.md) | Pantallas y flujos por superficie. |
-| [Revisión de Drive](docs/09-revision-drive-y-trazabilidad.md) | Inventario, fuentes y discrepancias. |
+| [Fuentes del proyecto](docs/09-revision-drive-y-trazabilidad.md) | Inventario y verificación de documentos de apoyo. |
 | [Accesos para Drive](docs/11-acceso-a-especificacion-tecnica.md) | Contenido preparado con el repositorio y los accesos principales. |
 | [Datos y mesh](docs/10-flujo-datos-y-red-mesh.md) | Protocolo de transporte propuesto y pruebas. |
 | [DFD Kendall y Kendall](docs/12-modelado-dfd-kendall.md) | Método, diccionario, contexto/diagrama 0 y balance de atención/transporte. |
 | [Recursos técnicos](docs/13-recursos-tecnicos.md) | Lenguajes, SDK, web, backend, proximidad y fuentes oficiales. |
-| [Información y referente Netflix](docs/14-espacio-informativo-y-referente-netflix.md) | Evidencia de Meet, uso durante la espera, E10/E11, recursos editoriales y DFD C01–C06. |
 | [Diagramas vigentes](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. |
 | [Fichas de pantalla](docs/diseno/pantallas-explicadas.md) | Acciones, entradas, salidas y variantes. |
 
