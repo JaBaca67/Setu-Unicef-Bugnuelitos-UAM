@@ -93,6 +93,12 @@ La variante azul oficial `logos-22.svg` se copia sin modificar a `docs/diseno/se
 | Pitch y evaluación | D01 dice Video Pitch; guía local dice pitch en vivo, tiempos sujetos a confirmación. | Dar prioridad a guía oficial para formato; confirmar cambios con organización. APK es decisión del equipo, no requisito universal de la guía. |
 | Calendario | Algunas minutas llaman lunes al 10 nov 2026. | El 10 nov 2026 cae martes. Usar fecha numérica sin perpetuar el día erróneo. |
 
+## Confirmación del espacio informativo y referente Netflix
+
+La revisión dirigida del 9 nov volvió a consultar las diez sesiones inventariadas y el Resumen General. La propuesta explícita se localizó en la sesión de las 13:33 CST, bajo la etiqueta de transcripción **Andrea Juárez**, desde **01:21:40**. Desde **01:23:49** se describe leer mientras se espera al psicólogo o consultar información sin querer recibir atención; desde 01:26:40 se solicita adaptar el referente al móvil. Los acuerdos registran la sección informativa y el enfoque híbrido como aceptados.
+
+El usuario aporta [Wanna Talk About It?](https://www.wannatalkaboutit.com/) y el HTML local de su portada y confirma expresamente que este espacio forma parte de la solución. [docs/14](14-espacio-informativo-y-referente-netflix.md) conserva marcas de tiempo, análisis del referente, límites de atribución y requisitos; [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md) formaliza la confirmación. No se atribuye una identidad de voz con certeza a partir de una nota automática ni se copia la transcripción/HTML al repositorio. La referencia se adopta como patrón editorial, sin importar su catálogo, contactos o rastreadores.
+
 ## Verificación técnica externa
 
 Consultada el 9 nov 2026 para fundamentar propuestas, no para alterar decisiones del equipo:

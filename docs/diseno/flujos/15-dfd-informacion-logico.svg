@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 961" width="1280" height="961" role="img" aria-labelledby="title desc"><title id="title">SéTú · Diagrama 0 de información y orientación</title><desc id="desc">Diagrama 0 · Entidades/almacenes repetidos conservan su ID · Bloques sin orden temporal</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#596579"/></marker></defs><rect width="100%" height="100%" fill="white"/>
+<text x="30" y="38" font-family="Arial, sans-serif" font-size="27" fill="#153b72" text-anchor="start">
+<tspan x="30" dy="0">SéTú · Diagrama 0 de información y orientación</tspan>
+</text>
+<text x="30" y="70" font-family="Arial, sans-serif" font-size="17" fill="#46556c" text-anchor="start">
+<tspan x="30" dy="0">Diagrama 0 · Entidades/almacenes repetidos conservan su ID · Bloques sin orden temporal</tspan>
+</text>
+<path d="M15 103 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="I1" data-kind="process">
+<rect x="530" y="115" width="220" height="230" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="155" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">I1</tspan>
+</text>
+<path d="M530 175 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="215" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Publicar contenido</tspan>
+<tspan x="640.0" dy="26">validado</tspan>
+</text>
+</g>
+<g data-node="E6" data-kind="entity">
+<rect x="15" y="154" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 238 V160 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="191.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">E6 · Responsable</tspan>
+<tspan x="110.0" dy="22">editorial</tspan>
+</text>
+</g>
+<g data-from="E6" data-to="I1" data-flow="C05 · Contenido revisado y metadatos"><path d="M205 206 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="172" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">C05 · Contenido revisado y</tspan>
+<tspan x="367.5" dy="22">metadatos</tspan>
+</text>
+</g>
+<g data-node="E6" data-kind="entity">
+<rect x="15" y="254" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 338 V260 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="291.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">E6 · Responsable</tspan>
+<tspan x="110.0" dy="22">editorial</tspan>
+</text>
+</g>
+<g data-from="I1" data-to="E6" data-flow="C06 · Resultado de publicación"><path d="M530 306 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="294" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">C06 · Resultado de publicación</tspan>
+</text>
+</g>
+<g data-node="D8" data-kind="store">
+<path d="M1265 154 H1075 V238 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 154 V238" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="191.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D8 · Recursos</tspan>
+<tspan x="1170.0" dy="22">editoriales</tspan>
+</text>
+</g>
+<g data-from="D8" data-to="I1" data-flow="Catálogo y versión vigentes"><path d="M1075 206 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="194" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Catálogo y versión vigentes</tspan>
+</text>
+</g>
+<g data-node="D8" data-kind="store">
+<path d="M1265 254 H1075 V338 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 254 V338" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="291.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D8 · Recursos</tspan>
+<tspan x="1170.0" dy="22">editoriales</tspan>
+</text>
+</g>
+<g data-from="I1" data-to="D8" data-flow="Recurso publicado y versionado"><path d="M750 306 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="294" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Recurso publicado y versionado</tspan>
+</text>
+</g>
+<path d="M15 371 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="I2" data-kind="process">
+<rect x="530" y="383" width="220" height="230" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="423" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">I2</tspan>
+</text>
+<path d="M530 443 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="483" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Presentar catálogo</tspan>
+</text>
+</g>
+<g data-node="E1" data-kind="entity">
+<rect x="15" y="422" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 506 V428 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="470.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">E1 · Estudiante</tspan>
+</text>
+</g>
+<g data-from="E1" data-to="I2" data-flow="C01 · Consulta del catálogo"><path d="M205 474 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="462" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">C01 · Consulta del catálogo</tspan>
+</text>
+</g>
+<g data-node="E1" data-kind="entity">
+<rect x="15" y="522" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 606 V528 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="570.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">E1 · Estudiante</tspan>
+</text>
+</g>
+<g data-from="I2" data-to="E1" data-flow="C02 · Catálogo publicado"><path d="M530 574 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="562" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">C02 · Catálogo publicado</tspan>
+</text>
+</g>
+<g data-node="D8" data-kind="store">
+<path d="M1265 422 H1075 V506 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 422 V506" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="459.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D8 · Recursos</tspan>
+<tspan x="1170.0" dy="22">editoriales</tspan>
+</text>
+</g>
+<g data-from="D8" data-to="I2" data-flow="Proyección pública del catálogo"><path d="M1075 474 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="462" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Proyección pública del catálogo</tspan>
+</text>
+</g>
+<path d="M15 639 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="I3" data-kind="process">
+<rect x="530" y="651" width="220" height="230" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="691" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">I3</tspan>
+</text>
+<path d="M530 711 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="751" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Entregar recurso</tspan>
+</text>
+</g>
+<g data-node="E1" data-kind="entity">
+<rect x="15" y="690" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 774 V696 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="738.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">E1 · Estudiante</tspan>
+</text>
+</g>
+<g data-from="E1" data-to="I3" data-flow="C03 · Solicitud de recurso"><path d="M205 742 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="730" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">C03 · Solicitud de recurso</tspan>
+</text>
+</g>
+<g data-node="E1" data-kind="entity">
+<rect x="15" y="790" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 874 V796 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="838.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">E1 · Estudiante</tspan>
+</text>
+</g>
+<g data-from="I3" data-to="E1" data-flow="C04 · Recurso o disponibilidad"><path d="M530 842 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="830" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">C04 · Recurso o disponibilidad</tspan>
+</text>
+</g>
+<g data-node="D8" data-kind="store">
+<path d="M1265 690 H1075 V774 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 690 V774" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="727.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D8 · Recursos</tspan>
+<tspan x="1170.0" dy="22">editoriales</tspan>
+</text>
+</g>
+<g data-from="D8" data-to="I3" data-flow="Recurso publicado y alternativas"><path d="M1075 742 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="708" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Recurso publicado y</tspan>
+<tspan x="912.5" dy="22">alternativas</tspan>
+</text>
+</g>
+<text x="30" y="937" font-family="Arial, sans-serif" font-size="16" fill="#46556c" text-anchor="start">
+<tspan x="30" dy="0">SéTú · Modelo propuesto · 2026-11-09 · Mismo ID = mismo elemento lógico</tspan>
+</text>
+</svg>

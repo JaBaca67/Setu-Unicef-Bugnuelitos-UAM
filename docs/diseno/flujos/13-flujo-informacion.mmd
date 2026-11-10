@@ -1,0 +1,14 @@
+flowchart TD
+    A(["Bienvenida · E01 · Sin QR ni reporte"]) --> CAT
+    B(["Inicio · E03 · Por curiosidad"]) --> CAT
+    W(["Entrega, seguimiento o espera · E06/E07/E08"]) --> CAT
+    CAT["E10 · Información · Temas y formatos · Catálogo público revisado"] --> CH["Elegir artículo, video, testimonio o guía"]
+    CH --> AV{"¿Recurso disponible?"}
+    AV -->|"No"| OFF["Indicar no disponible · Ofrecer texto/transcripción disponible"]
+    OFF --> CAT
+    AV -->|"Sí"| READ["E11 · Leer/ver voluntariamente · Controles, fuente y alternativa accesible"]
+    READ --> NEXT{"¿Qué desea hacer?"}
+    NEXT -->|"Explorar otro tema"| CAT
+    NEXT -->|"Buscar ayuda"| HELP["E09 · Recursos verificados para el territorio"]
+    NEXT -->|"Pedir apoyo"| ASK["E02/E04 · Validar colegio si hace falta · No enviar automáticamente"]
+    NEXT -->|"Volver"| BACK(["Regresar al origen · Conservar operación y estado real · Sin reenviar alerta"])

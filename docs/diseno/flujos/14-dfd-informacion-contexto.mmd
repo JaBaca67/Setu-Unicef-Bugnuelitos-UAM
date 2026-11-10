@@ -1,0 +1,14 @@
+flowchart LR
+    E1["E1 · Estudiante"]
+    E6["E6 · Responsable editorial"]
+    I0("I0 · Ofrecer información y orientación")
+    E1 -->|"C01 · Consulta del catálogo"| I0
+    I0 -->|"C02 · Catálogo publicado"| E1
+    E1 -->|"C03 · Solicitud de recurso"| I0
+    I0 -->|"C04 · Recurso o disponibilidad"| E1
+    E6 -->|"C05 · Contenido revisado y metadatos"| I0
+    I0 -->|"C06 · Resultado de publicación"| E6
+    classDef entity fill:#fff0f8,stroke:#a90060,color:#202638
+    classDef process fill:#edf4ff,stroke:#0c62eb,color:#202638
+    class E1,E6 entity
+    class I0 process
