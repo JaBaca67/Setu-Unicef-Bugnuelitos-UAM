@@ -1,0 +1,44 @@
+flowchart TB
+    X1["X1 · Emisor autorizado"]
+    X2["X2 · Otros custodios"]
+    X3["X3 · Receptor institucional local"]
+    X4["X4 · Receptor central"]
+    M1("M1 · Preparar y admitir sobre")
+    M2("M2 · Transferir custodia")
+    M3("M3 · Tramitar entrega local")
+    M4("M4 · Tramitar entrega central")
+    M5("M5 · Consolidar resultado")
+    D6["D6 · Sobres y configuración auténtica"]
+    D7["D7 · Acuses y deduplicación"]
+    X1 -->|"T01 · Solicitud de transporte"| M1
+    M5 -->|"T02 · Resultado de transporte"| X1
+    X2 -->|"T03 · Sobre recibido"| M1
+    M2 -->|"T04 · Sobre transferido"| X2
+    X2 -->|"T05 · Acuse de custodia vecina"| M2
+    M1 -->|"T06 · Constancia de custodia propia"| X2
+    M3 -->|"T07 · Alerta local cifrada"| X3
+    X3 -->|"T08 · Acuse local"| M3
+    M4 -->|"T09 · Alerta central cifrada"| X4
+    X4 -->|"T10 · Acuse central"| M4
+    M1 -->|"Sobre admitido y destino"| D6
+    D6 -->|"Referencia para validación y duplicados"| M1
+    D7 -->|"Registro previo de operación"| M1
+    D6 -->|"Sobre pendiente y límites"| M2
+    M2 -->|"Registro de transferencia"| D6
+    M2 -->|"Custodia acreditada"| D7
+    D6 -->|"Proyección local sellada y destino"| M3
+    D7 -->|"Recepciones locales previas"| M3
+    M3 -->|"Recepción local verificada"| D7
+    D6 -->|"Proyección central sellada y destino"| M4
+    D7 -->|"Recepciones centrales previas"| M4
+    M4 -->|"Recepción central verificada"| D7
+    M1 -->|"Acuse de retorno verificado en destino"| D7
+    D6 -->|"Operación y vencimiento"| M5
+    D7 -->|"Custodia, recepción local y central"| M5
+    M5 -->|"Sobre de retorno con acuse verificado"| D6
+    classDef entity fill:#fff0f8,stroke:#a90060,color:#202638
+    classDef process fill:#edf4ff,stroke:#0c62eb,color:#202638
+    classDef store fill:#f2fff6,stroke:#007d2b,color:#202638
+    class X1,X2,X3,X4 entity
+    class M1,M2,M3,M4,M5 process
+    class D6,D7 store

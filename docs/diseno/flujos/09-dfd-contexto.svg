@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 944" width="1280" height="944" role="img" aria-labelledby="title desc"><title id="title">SéTú · DFD de contexto de atención</title><desc id="desc">Conserva todos los flujos externos · Entidades y proceso único · Sin almacenes internos</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#596579"/></marker></defs><rect width="100%" height="100%" fill="white"/>
+<text x="30" y="38" font-family="Arial, sans-serif" font-size="27" fill="#153b72" text-anchor="start">
+<tspan x="30" dy="0">SéTú · DFD de contexto de atención</tspan>
+</text>
+<text x="30" y="70" font-family="Arial, sans-serif" font-size="17" fill="#46556c" text-anchor="start">
+<tspan x="30" dy="0">Conserva todos los flujos externos · Entidades y proceso único · Sin almacenes internos</tspan>
+</text>
+<g data-node="P0" data-kind="process">
+<rect x="530" y="105" width="220" height="779" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="145" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">0</tspan>
+</text>
+<path d="M530 165 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="205" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Gestionar apoyo</tspan>
+<tspan x="640.0" dy="26">privado SéTú</tspan>
+</text>
+</g>
+<g data-node="E1" data-kind="entity">
+<rect x="15" y="110" width="190" height="572" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 682 V116 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="402.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">E1 · Estudiante</tspan>
+</text>
+</g>
+<g data-from="E1" data-to="P0" data-flow="F01 · Solicitud de apoyo"><path d="M205 177 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="165" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">F01 · Solicitud de apoyo</tspan>
+</text>
+</g>
+<g data-from="E1" data-to="P0" data-flow="F02 · Mensaje estudiantil"><path d="M205 275 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="263" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">F02 · Mensaje estudiantil</tspan>
+</text>
+</g>
+<g data-from="E1" data-to="P0" data-flow="F03 · Consulta privada"><path d="M205 373 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="361" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">F03 · Consulta privada</tspan>
+</text>
+</g>
+<g data-from="P0" data-to="E1" data-flow="F04 · Recibo de recepción"><path d="M530 471 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="459" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">F04 · Recibo de recepción</tspan>
+</text>
+</g>
+<g data-from="P0" data-to="E1" data-flow="F05 · Respuesta de escucha"><path d="M530 569 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="557" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">F05 · Respuesta de escucha</tspan>
+</text>
+</g>
+<g data-from="P0" data-to="E1" data-flow="F06 · Seguimiento visible"><path d="M530 667 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="655" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">F06 · Seguimiento visible</tspan>
+</text>
+</g>
+<g data-node="E2" data-kind="entity">
+<rect x="1075" y="110" width="190" height="180" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M1081 290 V116 H1265" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="1170.0" y="195.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">E2 · Profesional</tspan>
+<tspan x="1170.0" dy="22">de escucha</tspan>
+</text>
+</g>
+<g data-from="E2" data-to="P0" data-flow="F07 · Intervención profesional"><path d="M1075 177 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="165" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F07 · Intervención profesional</tspan>
+</text>
+</g>
+<g data-from="P0" data-to="E2" data-flow="F08 · Caso asignado"><path d="M750 275 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="263" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F08 · Caso asignado</tspan>
+</text>
+</g>
+<g data-node="E3" data-kind="entity">
+<rect x="1075" y="306" width="190" height="180" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M1081 486 V312 H1265" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="1170.0" y="391.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">E3 · Supervisor</tspan>
+<tspan x="1170.0" dy="22">MINED</tspan>
+</text>
+</g>
+<g data-from="E3" data-to="P0" data-flow="F09 · Gestión supervisora"><path d="M1075 373 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="361" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F09 · Gestión supervisora</tspan>
+</text>
+</g>
+<g data-from="P0" data-to="E3" data-flow="F10 · Expediente mínimo MINED"><path d="M750 471 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="459" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F10 · Expediente mínimo MINED</tspan>
+</text>
+</g>
+<g data-node="E4" data-kind="entity">
+<rect x="1075" y="502" width="190" height="180" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M1081 682 V508 H1265" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="1170.0" y="587.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">E4 · Dirección del</tspan>
+<tspan x="1170.0" dy="22">colegio</tspan>
+</text>
+</g>
+<g data-from="E4" data-to="P0" data-flow="F11 · Gestión del colegio"><path d="M1075 569 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="557" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F11 · Gestión del colegio</tspan>
+</text>
+</g>
+<g data-from="P0" data-to="E4" data-flow="F12 · Expediente mínimo escolar"><path d="M750 667 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="655" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F12 · Expediente mínimo escolar</tspan>
+</text>
+</g>
+<g data-node="E5" data-kind="entity">
+<rect x="1075" y="698" width="190" height="180" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M1081 878 V704 H1265" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="1170.0" y="772.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">E5 ·</tspan>
+<tspan x="1170.0" dy="22">Administración</tspan>
+<tspan x="1170.0" dy="22">autorizada</tspan>
+</text>
+</g>
+<g data-from="E5" data-to="P0" data-flow="F13 · Configuración autorizada"><path d="M1075 765 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="753" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F13 · Configuración autorizada</tspan>
+</text>
+</g>
+<g data-from="P0" data-to="E5" data-flow="F14 · Resultado de configuración"><path d="M750 863 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="829" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">F14 · Resultado de</tspan>
+<tspan x="912.5" dy="22">configuración</tspan>
+</text>
+</g>
+<text x="30" y="920" font-family="Arial, sans-serif" font-size="16" fill="#46556c" text-anchor="start">
+<tspan x="30" dy="0">SéTú · Modelo propuesto · 2026-11-09 · Mismo ID = mismo elemento lógico</tspan>
+</text>
+</svg>

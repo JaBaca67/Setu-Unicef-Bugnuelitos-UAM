@@ -1,0 +1,25 @@
+flowchart LR
+    E1["E1 · Estudiante"]
+    E2["E2 · Profesional de escucha"]
+    E3["E3 · Supervisor MINED"]
+    E4["E4 · Dirección del colegio"]
+    E5["E5 · Administración autorizada"]
+    P0("0 · Gestionar apoyo privado SéTú")
+    E1 -->|"F01 · Solicitud de apoyo"| P0
+    E1 -->|"F02 · Mensaje estudiantil"| P0
+    E1 -->|"F03 · Consulta privada"| P0
+    P0 -->|"F04 · Recibo de recepción"| E1
+    P0 -->|"F05 · Respuesta de escucha"| E1
+    P0 -->|"F06 · Seguimiento visible"| E1
+    E2 -->|"F07 · Intervención profesional"| P0
+    P0 -->|"F08 · Caso asignado"| E2
+    E3 -->|"F09 · Gestión supervisora"| P0
+    P0 -->|"F10 · Expediente mínimo MINED"| E3
+    E4 -->|"F11 · Gestión del colegio"| P0
+    P0 -->|"F12 · Expediente mínimo escolar"| E4
+    E5 -->|"F13 · Configuración autorizada"| P0
+    P0 -->|"F14 · Resultado de configuración"| E5
+    classDef entity fill:#fff0f8,stroke:#a90060,color:#202638
+    classDef process fill:#edf4ff,stroke:#0c62eb,color:#202638
+    class E1,E2,E3,E4,E5 entity
+    class P0 process

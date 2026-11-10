@@ -1,0 +1,410 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 2097" width="1280" height="2097" role="img" aria-labelledby="title desc"><title id="title">SéTú · Diagrama 0 lógico de transporte mesh</title><desc id="desc">Diagrama 0 · Entidades/almacenes repetidos conservan su ID · Bloques sin orden temporal</desc><defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 Z" fill="#596579"/></marker></defs><rect width="100%" height="100%" fill="white"/>
+<text x="30" y="38" font-family="Arial, sans-serif" font-size="27" fill="#153b72" text-anchor="start">
+<tspan x="30" dy="0">SéTú · Diagrama 0 lógico de transporte mesh</tspan>
+</text>
+<text x="30" y="70" font-family="Arial, sans-serif" font-size="17" fill="#46556c" text-anchor="start">
+<tspan x="30" dy="0">Diagrama 0 · Entidades/almacenes repetidos conservan su ID · Bloques sin orden temporal</tspan>
+</text>
+<path d="M15 103 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="M1" data-kind="process">
+<rect x="530" y="115" width="220" height="430" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="155" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">M1</tspan>
+</text>
+<path d="M530 175 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="215" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Preparar y admitir</tspan>
+<tspan x="640.0" dy="26">sobre</tspan>
+</text>
+</g>
+<g data-node="X1" data-kind="entity">
+<rect x="15" y="154" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 238 V160 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="191.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X1 · Emisor</tspan>
+<tspan x="110.0" dy="22">autorizado</tspan>
+</text>
+</g>
+<g data-from="X1" data-to="M1" data-flow="T01 · Solicitud de transporte"><path d="M205 206 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="194" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T01 · Solicitud de transporte</tspan>
+</text>
+</g>
+<g data-node="X2" data-kind="entity">
+<rect x="15" y="254" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 338 V260 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="291.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X2 · Otros</tspan>
+<tspan x="110.0" dy="22">custodios</tspan>
+</text>
+</g>
+<g data-from="X2" data-to="M1" data-flow="T03 · Sobre recibido"><path d="M205 306 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="294" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T03 · Sobre recibido</tspan>
+</text>
+</g>
+<g data-node="X2" data-kind="entity">
+<rect x="15" y="354" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 438 V360 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="391.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X2 · Otros</tspan>
+<tspan x="110.0" dy="22">custodios</tspan>
+</text>
+</g>
+<g data-from="M1" data-to="X2" data-flow="T06 · Constancia de custodia propia"><path d="M530 406 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="372" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T06 · Constancia de custodia</tspan>
+<tspan x="367.5" dy="22">propia</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 154 H1075 V238 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 154 V238" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="180.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="M1" data-to="D6" data-flow="Sobre admitido y destino"><path d="M750 206 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="194" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Sobre admitido y destino</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 254 H1075 V338 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 254 V338" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="280.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="D6" data-to="M1" data-flow="Referencia para validación y duplicados"><path d="M1075 306 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="272" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Referencia para validación y</tspan>
+<tspan x="912.5" dy="22">duplicados</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 354 H1075 V438 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 354 V438" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="391.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="D7" data-to="M1" data-flow="Registro previo de operación"><path d="M1075 406 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="394" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Registro previo de operación</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 454 H1075 V538 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 454 V538" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="491.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="M1" data-to="D7" data-flow="Acuse de retorno verificado en destino"><path d="M750 506 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="472" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Acuse de retorno verificado en</tspan>
+<tspan x="912.5" dy="22">destino</tspan>
+</text>
+</g>
+<path d="M15 571 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="M2" data-kind="process">
+<rect x="530" y="583" width="220" height="330" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="623" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">M2</tspan>
+</text>
+<path d="M530 643 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="683" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Transferir</tspan>
+<tspan x="640.0" dy="26">custodia</tspan>
+</text>
+</g>
+<g data-node="X2" data-kind="entity">
+<rect x="15" y="622" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 706 V628 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="659.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X2 · Otros</tspan>
+<tspan x="110.0" dy="22">custodios</tspan>
+</text>
+</g>
+<g data-from="M2" data-to="X2" data-flow="T04 · Sobre transferido"><path d="M530 674 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="662" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T04 · Sobre transferido</tspan>
+</text>
+</g>
+<g data-node="X2" data-kind="entity">
+<rect x="15" y="722" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 806 V728 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="759.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X2 · Otros</tspan>
+<tspan x="110.0" dy="22">custodios</tspan>
+</text>
+</g>
+<g data-from="X2" data-to="M2" data-flow="T05 · Acuse de custodia vecina"><path d="M205 774 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="762" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T05 · Acuse de custodia vecina</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 622 H1075 V706 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 622 V706" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="648.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="D6" data-to="M2" data-flow="Sobre pendiente y límites"><path d="M1075 674 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="662" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Sobre pendiente y límites</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 722 H1075 V806 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 722 V806" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="748.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="M2" data-to="D6" data-flow="Registro de transferencia"><path d="M750 774 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="762" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Registro de transferencia</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 822 H1075 V906 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 822 V906" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="859.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="M2" data-to="D7" data-flow="Custodia acreditada"><path d="M750 874 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="862" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Custodia acreditada</tspan>
+</text>
+</g>
+<path d="M15 939 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="M3" data-kind="process">
+<rect x="530" y="951" width="220" height="330" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="991" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">M3</tspan>
+</text>
+<path d="M530 1011 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="1051" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Tramitar entrega</tspan>
+<tspan x="640.0" dy="26">local</tspan>
+</text>
+</g>
+<g data-node="X3" data-kind="entity">
+<rect x="15" y="990" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 1074 V996 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="1016.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X3 · Receptor</tspan>
+<tspan x="110.0" dy="22">institucional</tspan>
+<tspan x="110.0" dy="22">local</tspan>
+</text>
+</g>
+<g data-from="M3" data-to="X3" data-flow="T07 · Alerta local cifrada"><path d="M530 1042 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="1030" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T07 · Alerta local cifrada</tspan>
+</text>
+</g>
+<g data-node="X3" data-kind="entity">
+<rect x="15" y="1090" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 1174 V1096 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="1116.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X3 · Receptor</tspan>
+<tspan x="110.0" dy="22">institucional</tspan>
+<tspan x="110.0" dy="22">local</tspan>
+</text>
+</g>
+<g data-from="X3" data-to="M3" data-flow="T08 · Acuse local"><path d="M205 1142 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="1130" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T08 · Acuse local</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 990 H1075 V1074 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 990 V1074" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1016.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="D6" data-to="M3" data-flow="Proyección local sellada y destino"><path d="M1075 1042 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1008" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Proyección local sellada y</tspan>
+<tspan x="912.5" dy="22">destino</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 1090 H1075 V1174 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1090 V1174" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1127.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="D7" data-to="M3" data-flow="Recepciones locales previas"><path d="M1075 1142 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1130" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Recepciones locales previas</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 1190 H1075 V1274 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1190 V1274" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1227.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="M3" data-to="D7" data-flow="Recepción local verificada"><path d="M750 1242 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1230" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Recepción local verificada</tspan>
+</text>
+</g>
+<path d="M15 1307 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="M4" data-kind="process">
+<rect x="530" y="1319" width="220" height="330" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="1359" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">M4</tspan>
+</text>
+<path d="M530 1379 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="1419" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Tramitar entrega</tspan>
+<tspan x="640.0" dy="26">central</tspan>
+</text>
+</g>
+<g data-node="X4" data-kind="entity">
+<rect x="15" y="1358" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 1442 V1364 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="1395.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X4 · Receptor</tspan>
+<tspan x="110.0" dy="22">central</tspan>
+</text>
+</g>
+<g data-from="M4" data-to="X4" data-flow="T09 · Alerta central cifrada"><path d="M530 1410 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="1398" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T09 · Alerta central cifrada</tspan>
+</text>
+</g>
+<g data-node="X4" data-kind="entity">
+<rect x="15" y="1458" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 1542 V1464 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="1495.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X4 · Receptor</tspan>
+<tspan x="110.0" dy="22">central</tspan>
+</text>
+</g>
+<g data-from="X4" data-to="M4" data-flow="T10 · Acuse central"><path d="M205 1510 H530" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="1498" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T10 · Acuse central</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 1358 H1075 V1442 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1358 V1442" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1384.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="D6" data-to="M4" data-flow="Proyección central sellada y destino"><path d="M1075 1410 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1376" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Proyección central sellada y</tspan>
+<tspan x="912.5" dy="22">destino</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 1458 H1075 V1542 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1458 V1542" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1495.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="D7" data-to="M4" data-flow="Recepciones centrales previas"><path d="M1075 1510 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1498" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Recepciones centrales previas</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 1558 H1075 V1642 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1558 V1642" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1595.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="M4" data-to="D7" data-flow="Recepción central verificada"><path d="M750 1610 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1598" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Recepción central verificada</tspan>
+</text>
+</g>
+<path d="M15 1675 H1265" stroke="#dce5ef" stroke-width="1"/>
+<g data-node="M5" data-kind="process">
+<rect x="530" y="1687" width="220" height="330" rx="15" fill="#edf4ff" stroke="#0c62eb" stroke-width="2"/>
+<text x="640.0" y="1727" font-family="Arial, sans-serif" font-size="24" fill="#0c62eb" text-anchor="middle">
+<tspan x="640.0" dy="0">M5</tspan>
+</text>
+<path d="M530 1747 H750" stroke="#0c62eb" stroke-width="1.5"/>
+<text x="640.0" y="1787" font-family="Arial, sans-serif" font-size="22" fill="#202638" text-anchor="middle">
+<tspan x="640.0" dy="0">Consolidar</tspan>
+<tspan x="640.0" dy="26">resultado</tspan>
+</text>
+</g>
+<g data-node="X1" data-kind="entity">
+<rect x="15" y="1726" width="190" height="84" rx="0" fill="#fff0f8" stroke="#a90060" stroke-width="2"/>
+<path d="M21 1810 V1732 H205" stroke="#a90060" stroke-width="1" fill="none"/>
+<text x="110.0" y="1763.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="110.0" dy="0">X1 · Emisor</tspan>
+<tspan x="110.0" dy="22">autorizado</tspan>
+</text>
+</g>
+<g data-from="M5" data-to="X1" data-flow="T02 · Resultado de transporte"><path d="M530 1778 H205" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="367.5" y="1766" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="367.5" dy="0">T02 · Resultado de transporte</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 1726 H1075 V1810 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1726 V1810" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1752.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="D6" data-to="M5" data-flow="Operación y vencimiento"><path d="M1075 1778 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1766" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Operación y vencimiento</tspan>
+</text>
+</g>
+<g data-node="D7" data-kind="store">
+<path d="M1265 1826 H1075 V1910 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1826 V1910" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1863.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D7 · Acuses y</tspan>
+<tspan x="1170.0" dy="22">deduplicación</tspan>
+</text>
+</g>
+<g data-from="D7" data-to="M5" data-flow="Custodia, recepción local y central"><path d="M1075 1878 H750" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1844" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Custodia, recepción local y</tspan>
+<tspan x="912.5" dy="22">central</tspan>
+</text>
+</g>
+<g data-node="D6" data-kind="store">
+<path d="M1265 1926 H1075 V2010 H1265" fill="#f2fff6" stroke="#007d2b" stroke-width="2"/><path d="M1083 1926 V2010" stroke="#007d2b" stroke-width="1"/>
+<text x="1170.0" y="1952.0" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="1170.0" dy="0">D6 · Sobres y</tspan>
+<tspan x="1170.0" dy="22">configuración</tspan>
+<tspan x="1170.0" dy="22">auténtica</tspan>
+</text>
+</g>
+<g data-from="M5" data-to="D6" data-flow="Sobre de retorno con acuse verificado"><path d="M750 1978 H1075" stroke="#596579" stroke-width="1.7" fill="none" marker-end="url(#arrow)"/>
+<text x="912.5" y="1944" font-family="Arial, sans-serif" font-size="18" fill="#202638" text-anchor="middle">
+<tspan x="912.5" dy="0">Sobre de retorno con acuse</tspan>
+<tspan x="912.5" dy="22">verificado</tspan>
+</text>
+</g>
+<text x="30" y="2073" font-family="Arial, sans-serif" font-size="16" fill="#46556c" text-anchor="start">
+<tspan x="30" dy="0">SéTú · Modelo propuesto · 2026-11-09 · Mismo ID = mismo elemento lógico</tspan>
+</text>
+</svg>

@@ -4,7 +4,22 @@
 
 Las fuentes Mermaid de esta carpeta son la versión vigente. La entrega local offline conserva la indicación de contrato pendiente; no concede acceso al chat a dirección o puente. Los seis nombres se usan como propuesta de prototipo y necesitan validación institucional. La derivación urgente no fuerza Escalado, que el manual MINED reserva a falta de respuesta. MINED y dirección nunca ven chat/relato; el chat necesita internet.
 
-Las imágenes PNG/SVG y los HTML generados antes de esta revisión son históricos y no deben usarse para implementar. El generador Python conserva el modelo anterior y no debe ejecutarse sobre estas fuentes. Su actualización y la regeneración visual requieren aprobación del cambio de código; se solicitó por separado. Los diagramas actuales pueden leerse aquí con un visor Markdown compatible con Mermaid o desde sus archivos `.mmd`.
+Las imágenes `01`–`04` PNG/SVG y los HTML generados antes de esta revisión son históricos y no deben usarse para implementar. El generador Python conserva el modelo anterior y no debe ejecutarse sobre estas fuentes; su modificación no forma parte del bloque autorizado. Los **SVG `06` y `08`–`12` son nuevos y vigentes** para esta revisión documental. Los `.mmd` conservan el modelo editable; los DFD SVG ofrecen la notación de almacén abierto y una disposición legible, con entidades/almacenes repetidos por ID. No se instalaron dependencias del producto ni se modificó el generador histórico.
+
+## Accesos por tipo de modelo
+
+| Modelo | Fuente editable | Vista ampliable |
+| --- | --- | --- |
+| Recorrido de las tres superficies | [08 · Usuarios](08-recorrido-usuarios.mmd) | [SVG vigente](08-recorrido-usuarios.svg) |
+| DFD de atención: contexto | [09 · Contexto](09-dfd-contexto.mmd) | [SVG vigente](09-dfd-contexto.svg) |
+| DFD de atención: diagrama 0 | [10 · Diagrama 0](10-dfd-diagrama-0.mmd) | [SVG vigente](10-dfd-diagrama-0.svg) |
+| DFD de transporte: contexto M0 | [11 · Contexto mesh](11-dfd-mesh-contexto.mmd) | [SVG vigente](11-dfd-mesh-contexto.svg) |
+| DFD de transporte: diagrama 0 M1–M5 | [12 · Mesh lógico](12-dfd-mesh-logico.mmd) | [SVG vigente](12-dfd-mesh-logico.svg) |
+| Ruta física de transporte y fallos | [06 · Ejecución mesh](06-mesh.mmd) | [SVG vigente](06-mesh.svg) |
+
+[Diccionario, alcance, balance F01–F14/T01–T10 y método Kendall y Kendall](../../12-modelado-dfd-kendall.md). El flujo `05` de componentes/destinatarios que aparece abajo es una vista de arquitectura; no sustituye los DFD `09`–`12`.
+
+El [README principal](../../../README.md) reúne la especificación técnica; las secciones siguientes conservan los flujos funcionales de detalle.
 
 ## Acceso sin cuentas
 

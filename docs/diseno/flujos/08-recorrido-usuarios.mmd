@@ -1,0 +1,30 @@
+flowchart TD
+    subgraph EST["Estudiante · App Android"]
+        A(["Privacidad y ayuda · E01"]) --> B["QR/código público · Confirmar colegio · E02"]
+        A --> INFO["Información y ayuda sin reportar · E09/E10"]
+        B --> C["Inicio · E03 · Acceso privado del caso por resolver"]
+        C --> D["Tipo, rol, detalles opcionales · Revisar y enviar · E04/E05"]
+        D --> NET{"¿Internet disponible?"}
+        NET -->|"Sí"| API["Recepción central única"]
+        NET -->|"No"| Q["Cola cifrada → vecinos → puente"]
+        Q --> LOC["Recepción mínima local en dirección · Contrato pendiente"]
+        Q -->|"Sincronización posterior"| API
+        D --> TRACK["Entrega y seguimiento propio · E06/E07 · Pendiente/local/central"]
+        TRACK --> CHAT["Chat humano · E08 · Requiere internet"]
+    end
+    API --> MIN["MINED · M01–M03 · Avisos y fichas, sin relato/chat"]
+    API --> DIR["Dirección · D01–D04 · Avisos de su centro, sin relato/chat"]
+    API --> MESA["Mesa asignada · L01/L02 · Relato y chat reservados"]
+    CHAT --> MESA
+    MESA --> NIV{"Valoración humana"}
+    NIV -->|"Nivel 1"| APOYO["Acompañamiento · Cierre por conciliar"]
+    NIV -->|"Nivel 2"| FICHA["Ficha mínima autorizada"]
+    NIV -->|"Nivel 3"| URG["Derivación urgente humana · Independiente de Escalado"]
+    FICHA --> MIN
+    MIN -->|"Ficha y requerimientos autorizados"| DIR
+    DIR --> ACT["Documentar actuación y proponer cierre"]
+    ACT --> CLOSE["MINED verifica y cierra · Escala falta de respuesta"]
+    CLOSE --> FIN(["Estudiante consulta seguimiento y respuesta propios · E07/E08"])
+    APOYO --> FIN
+    URG --> MIN
+    DOC["Aviso docente presencial"] -->|"Dirección registra origen institucional"| DIR

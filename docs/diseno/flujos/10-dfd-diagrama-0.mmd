@@ -1,0 +1,55 @@
+flowchart TB
+    E1["E1 · Estudiante"]
+    E2["E2 · Profesional de escucha"]
+    E3["E3 · Supervisor MINED"]
+    E4["E4 · Dirección del colegio"]
+    E5["E5 · Administración autorizada"]
+    P1("1.0 · Recibir solicitud")
+    P2("2.0 · Coordinar escucha")
+    P3("3.0 · Gestionar actuación")
+    P4("4.0 · Publicar seguimiento")
+    P5("5.0 · Administrar acceso")
+    D1["D1 · Configuración y permisos"]
+    D2["D2 · Alertas y estados"]
+    D3["D3 · Contenido reservado"]
+    D4["D4 · Fichas y actuaciones"]
+    E1 -->|"F01 · Solicitud de apoyo"| P1
+    E1 -->|"F02 · Mensaje estudiantil"| P2
+    E1 -->|"F03 · Consulta privada"| P4
+    P1 -->|"F04 · Recibo de recepción"| E1
+    P2 -->|"F05 · Respuesta de escucha"| E1
+    P4 -->|"F06 · Seguimiento visible"| E1
+    E2 -->|"F07 · Intervención profesional"| P2
+    P2 -->|"F08 · Caso asignado"| E2
+    E3 -->|"F09 · Gestión supervisora"| P3
+    P3 -->|"F10 · Expediente mínimo MINED"| E3
+    E4 -->|"F11 · Gestión del colegio"| P3
+    P3 -->|"F12 · Expediente mínimo escolar"| E4
+    E5 -->|"F13 · Configuración autorizada"| P5
+    P5 -->|"F14 · Resultado de configuración"| E5
+    P5 -->|"Configuración validada"| D1
+    D1 -->|"Centro y autorización"| P1
+    D1 -->|"Asignación de escucha"| P2
+    D1 -->|"Ámbito y facultades"| P3
+    D1 -->|"Permiso privado del caso"| P4
+    D1 -->|"Configuración vigente"| P5
+    P1 -->|"Alerta mínima y recepción"| D2
+    P1 -->|"Relato opcional recibido por internet"| D3
+    P3 -->|"Aviso docente con origen institucional"| D2
+    D2 -->|"Referencia y estado del caso"| P2
+    D3 -->|"Relato y conversación asignados"| P2
+    P2 -->|"Mensajes y notas separados"| D3
+    P2 -->|"Nivel humano y estado de escucha"| D2
+    P2 -->|"Ficha mínima y registro de derivación"| D4
+    D2 -->|"Alerta y estado institucional"| P3
+    D4 -->|"Ficha y actuaciones autorizadas"| P3
+    P3 -->|"Actuaciones, requerimientos y cierre"| D4
+    P3 -->|"Transición autorizada"| D2
+    D2 -->|"Estado visible del caso propio"| P4
+    D3 -->|"Respuesta visible sin notas internas"| P4
+    classDef entity fill:#fff0f8,stroke:#a90060,color:#202638
+    classDef process fill:#edf4ff,stroke:#0c62eb,color:#202638
+    classDef store fill:#f2fff6,stroke:#007d2b,color:#202638
+    class E1,E2,E3,E4,E5 entity
+    class P1,P2,P3,P4,P5 process
+    class D1,D2,D3,D4 store

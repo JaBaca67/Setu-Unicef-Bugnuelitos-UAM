@@ -1,0 +1,20 @@
+flowchart LR
+    X1["X1 · Emisor autorizado"]
+    X2["X2 · Otros custodios"]
+    X3["X3 · Receptor institucional local"]
+    X4["X4 · Receptor central"]
+    M0("M0 · Transportar alerta protegida")
+    X1 -->|"T01 · Solicitud de transporte"| M0
+    M0 -->|"T02 · Resultado de transporte"| X1
+    X2 -->|"T03 · Sobre recibido"| M0
+    M0 -->|"T04 · Sobre transferido"| X2
+    X2 -->|"T05 · Acuse de custodia vecina"| M0
+    M0 -->|"T06 · Constancia de custodia propia"| X2
+    M0 -->|"T07 · Alerta local cifrada"| X3
+    X3 -->|"T08 · Acuse local"| M0
+    M0 -->|"T09 · Alerta central cifrada"| X4
+    X4 -->|"T10 · Acuse central"| M0
+    classDef entity fill:#fff0f8,stroke:#a90060,color:#202638
+    classDef process fill:#edf4ff,stroke:#0c62eb,color:#202638
+    class X1,X2,X3,X4 entity
+    class M0 process
