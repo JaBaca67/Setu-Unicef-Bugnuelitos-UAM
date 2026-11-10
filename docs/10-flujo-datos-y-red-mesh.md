@@ -2,6 +2,8 @@
 
 **Estado:** especificación propuesta, 2026-11-09. ADR 0005 decide el modo sin internet; este documento concreta opciones técnicas para revisión. No hay red mesh implementada ni autorización para recibir casos reales.
 
+Los [DFD de Kendall y Kendall](12-modelado-dfd-kendall.md) separan contexto/diagrama 0 del transporte, con diccionario y balance T01–T10. Es un modelo lógico: no confundirlo con los rombos de conectividad del flujo físico. [ADR 0008](decisiones/0008-stack-web-y-modelado-logico-propuesto.md) y el [catálogo técnico](13-recursos-tecnicos.md) proponen evaluar Nearby Connections/Cluster mediante Kotlin y canal Flutter; no existe integración instalada. Paneles React/TypeScript/Vite propuestos; receptor local puente–dirección todavía sin tecnología seleccionada.
+
 ## 1. Datos que viajan
 
 Se separan tres productos de información:

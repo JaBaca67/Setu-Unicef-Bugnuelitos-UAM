@@ -8,7 +8,11 @@ El cliente Flutter no es una autoridad: puede ser modificado, perderse o compart
 
 Estudiante → API autorizada → datos de caso y proyecciones por destinatario. Alternativa offline: estudiante → retransmisores → puente → servidor. El puente es portador y no autor del reporte. Las fronteras de confidencialidad se mantienen cuando el transporte cambia.
 
-Flutter/Dart y Supabase/PostgreSQL son decisiones confirmadas. `go_router`, `ChangeNotifier` para controladores posteriores y almacenamiento local corresponden al corte aprobado M0/M1. La tecnología de paneles, SDK de proximidad, biblioteca criptográfica del sobre y API definitiva requieren aprobación. No se fijan versiones nuevas en esta revisión.
+Flutter/Dart y Supabase/PostgreSQL son decisiones confirmadas. `go_router`, `ChangeNotifier` para controladores posteriores y almacenamiento local corresponden al corte aprobado M0/M1. [ADR 0008](decisiones/0008-stack-web-y-modelado-logico-propuesto.md) propone React/TypeScript/Vite para un único cliente web de paneles con áreas y contratos separados, Supabase JS/Flutter, SQL/PLpgSQL con RLS/RPC y Edge Functions TypeScript/Deno cuando hagan falta. Cloudflare Pages se propone como alojamiento estático; no hay paneles o despliegues implementados. [Catálogo completo de lenguajes y recursos](13-recursos-tecnicos.md).
+
+Proximidad: candidato Nearby Connections/Cluster mediante Kotlin y canal de plataforma Flutter; el protocolo de reenvío es propio y sigue en diseño. Stack web, SDK/canal, biblioteca criptográfica del sobre y API definitiva requieren aprobación. El enlace local seguro puente–dirección sigue abierto: una web cloud no lo resuelve. No se fijan versiones nuevas ni se instalan dependencias en esta revisión.
+
+Los [DFD según Kendall y Kendall](12-modelado-dfd-kendall.md) modelan transformaciones lógicas, contexto/diagrama 0 y balance de atención y transporte. La vista de componentes del README y los flujos de pantalla son modelos distintos; no se interpretan como esquemas SQL ni como autorización implementada.
 
 ## Acceso sin cuentas y autorización privada
 

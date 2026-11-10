@@ -13,12 +13,14 @@ Este documento reúne los accesos a la documentación técnica del prototipo Sé
 - **Arquitectura y permisos:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/02-arquitectura.md
 - **Flujo de datos y red mesh:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/10-flujo-datos-y-red-mesh.md
 - **Diagramas editables:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/diseno/flujos/README.md
+- **DFD Kendall y Kendall, diccionario y balance:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/12-modelado-dfd-kendall.md
+- **Lenguajes y recursos para app, paneles y backend:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/13-recursos-tecnicos.md
 - **Pantallas y funciones:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/08-especificacion-funcional-setu.md
 - **Fuentes y revisión de manuales:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/09-revision-drive-y-trazabilidad.md
 
 ## Qué contiene el README técnico
 
-Alcance y población; actores y responsabilidades; flujo de reportes; arquitectura; separación de alerta, chat y ficha; transporte sin internet y acuses; protocolo humano; seguridad y accesibilidad; identidad visual; tecnologías y versiones de M1; estructura real; requisitos, instalación y comandos; configuración local; solución de problemas; pruebas, criterios de aceptación y siguientes decisiones.
+Índice enlazado por proyecto, experiencia, modelado, desarrollo y gestión; alcance y población; actores y responsabilidades; flujo de usuarios; DFD de contexto y diagrama 0 de atención y transporte según Kendall y Kendall; arquitectura; separación de alerta, chat y ficha; transporte sin internet y acuses; protocolo humano; seguridad y accesibilidad; identidad visual; matriz de lenguajes/recursos web, móvil y backend; versiones de M1; estructura real; requisitos, instalación y comandos; configuración local; solución de problemas; pruebas, criterios de aceptación y siguientes decisiones.
 
 ## Estado y límites
 

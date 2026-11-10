@@ -1,6 +1,6 @@
 # Plan y decisiones pendientes
 
-**Revisión:** 2026-11-09. Producto vigente: ADR 0005. Propuestas técnicas: ADR 0006; alineación de manuales de uso: ADR 0007. La documentación no autoriza implementación.
+**Revisión:** 2026-11-09. Producto vigente: ADR 0005. Propuestas técnicas: ADR 0006/0008; alineación de manuales de uso: ADR 0007. La documentación no autoriza implementación.
 
 ## Fechas y evaluación
 
@@ -16,7 +16,7 @@ La guía no impone software a todas las propuestas ni limita el producto a 12–
 
 M0/M1: base Flutter, marca inicial, protección de pantalla, contratos y persistencia cifrada con alias/PIN, modelo anterior. Verificación M1 registrada el 5 nov: análisis limpio y 18 pruebas; prueba física pendiente. No hay envío remoto, paneles, acceso nuevo o mesh implementados.
 
-Bloque documental actual: README técnico, alineación de producto/arquitectura/pantallas y flujos del sistema. Próximo bloque de código pendiente de propuesta y aprobación.
+Bloque documental actual: README organizado por contexto, experiencia, modelado, desarrollo y gestión; DFD Kendall y Kendall de atención/transporte, flujo de usuarios y catálogo de recursos web/móvil/backend. Próximo bloque de código pendiente de propuesta y aprobación.
 
 ## Decisiones que cambian la solución
 
@@ -29,8 +29,9 @@ Bloque documental actual: README técnico, alineación de producto/arquitectura/
 | Antes de código conectado | Continuidad privada por caso y recuperación sin cuenta | Comparar sesión técnica, capacidad por caso y combinación. |
 | Antes de mesh | Destinatario offline: alerta mínima local o custodia central | Drive describe entrega mínima local; aprobar claves, receptor y alcance. Entrega mínima local confirmada en los manuales y reunión; contrato técnico y claves por aprobar. |
 | Antes de mesh | Primer ingreso offline, configuración, firma y claves auténticas | No resuelto por código público simple. |
-| Antes de mesh | Transporte, biblioteca/canal Flutter, versiones y permisos | Nearby Connections candidato; prueba física no realizada. |
-| Antes de paneles | Tecnología y disponibilidad local del panel sin internet | Una web cloud no basta; decidir vista nativa o servicio LAN seguro. |
+| Antes de mesh | Transporte, biblioteca/canal Flutter, versiones y permisos | ADR 0008 propone Nearby Connections/Cluster vía canal Kotlin; sin instalación ni prueba física. Criptografía del sobre aún sin seleccionar. |
+| Antes de paneles | Aprobar tecnología del cliente web | ADR 0008 propone React + TypeScript + Vite, React Router y Supabase JS; una SPA con áreas de permisos separados. Alternativas Flutter Web/Next.js documentadas. |
+| Antes de recepción local | Disponibilidad y autenticación del receptor sin internet | Una web cloud no basta; decidir vista nativa o servicio LAN seguro, cliente disponible, claves y conciliación. |
 | Antes de backend | Alta de personal, asignaciones, código privado y revocación | Código compartido no da auditoría individual. |
 | Antes de código | Registro de aviso docente por dirección, origen y propiedad | Descrito en el manual de colegio; formulario mínimo por aprobar. |
 | Antes de protocolo | Cierre MINED, derivación separada de Escalado, contacto familiar, conflicto y revelación excepcional | Manuales operativos en versión de trabajo y propuestas en docs/02; aprobación institucional pendiente. |

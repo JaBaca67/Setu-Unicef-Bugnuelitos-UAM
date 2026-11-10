@@ -2,6 +2,8 @@
 
 **Revisión:** 2026-11-09. Alcance vigente ADR 0005; contratos técnicos propuestos ADR 0006. Los IDs son referencias de diseño, no pantallas ya implementadas ni marcos oficiales de Figma. Código actual: base M1 local con modelo anterior.
 
+[Recorrido integrado de usuarios](diseno/flujos/08-recorrido-usuarios.svg) · [DFD lógico y diccionario](12-modelado-dfd-kendall.md) · [Recursos de app y paneles](13-recursos-tecnicos.md). ADR 0008 propone el cliente React/TypeScript/Vite para M/L/D, con permisos separados; no cambia pantallas o facultades de producto ni autoriza implementarlas.
+
 ## Estudiante
 
 | ID | Pantalla y finalidad | Entradas y acciones | Salida y límites |
