@@ -1,5 +1,7 @@
 # SéTú — Especificación técnica del proyecto
 
+<p align="center"><img src="docs/diseno/setu-logo-azul.svg" alt="Logotipo oficial azul de SéTú" width="180" /></p>
+
 **Bugñuelitos · Universidad Americana (UAM) · Nicaragua**
 **Revisión:** 9 de noviembre de 2026. **APK existente:** 0.2.0+2 (M1).
 **Estado:** definición y prototipado académico; arquitectura ampliada en diseño.
@@ -10,6 +12,10 @@ El proyecto participa en la **Jornada Académica y Social UAM - UNICEF 2026**, b
 
 Este README es el documento principal de especificación técnica. Describe el producto, componentes, datos, funcionamiento sin internet, seguridad y condiciones de desarrollo. Los documentos enlazados amplían los contratos y diagramas.
 
+**Repositorio:** [GitHub · SéTú](https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM).
+
+**Lectura rápida:** [Alcance](#2-problema-propósito-y-alcance) · [Actores](#3-personas-superficies-y-responsabilidades) · [Arquitectura](#5-arquitectura-lógica-objetivo) · [Datos](#6-datos-y-límites-de-confianza) · [Red mesh](#7-red-mesh-y-funcionamiento-sin-internet) · [Stack y estado real](#11-estado-comprobable-del-código) · [Instalación](#12-ejecutar-el-corte-existente) · [Pruebas](#13-aceptación-del-sistema-ampliado).
+
 ## 1. Estado y autoridad de las decisiones
 
 | Etiqueta | Significado |
@@ -19,7 +25,7 @@ Este README es el documento principal de especificación técnica. Describe el p
 | Propuesta técnica | Alternativa para materializarla; requiere aprobación antes de programar. |
 | Pendiente | Falta un acuerdo, validación o prueba que cambia el resultado. |
 
-Las fuentes de producto están en el [Drive del equipo](https://drive.google.com/drive/folders/1BSIhalcR9OKPbfXwTDoexnr12lPAXE6c). Su revisión se registra en [docs/09](docs/09-revision-drive-y-trazabilidad.md). [ADR 0005](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md) reemplaza el acceso por alias + PIN de ADR 0003. [ADR 0006](docs/decisiones/0006-especificacion-tecnica-y-mesh-propuesta.md) registra las propuestas técnicas de esta especificación **sin declararlas aprobadas**.
+Las fuentes de producto están en el [Drive del equipo](https://drive.google.com/drive/folders/1BSIhalcR9OKPbfXwTDoexnr12lPAXE6c). Su revisión se registra en [docs/09](docs/09-revision-drive-y-trazabilidad.md). [ADR 0005](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md) reemplaza el acceso por alias + PIN de ADR 0003. [ADR 0006](docs/decisiones/0006-especificacion-tecnica-y-mesh-propuesta.md) registra las propuestas técnicas de esta especificación **sin declararlas aprobadas**. [ADR 0007](docs/decisiones/0007-alineacion-con-manuales-operativos.md) incorpora las precisiones de los nuevos manuales de uso, todavía sujetos a validación institucional.
 
 ## 2. Problema, propósito y alcance
 
@@ -51,7 +57,7 @@ Adjuntos y evidencias aparecen en investigación y costos, pero no tienen contra
 | --- | --- | --- |
 | Estudiante: víctima o Testigo Solidario | Pedir apoyo y consultar seguimiento | Sus casos y conversación visible mediante un acceso privado aún por definir. |
 | Mesa de escucha | Conversar, valorar nivel y preparar derivación | Relato y chat de casos asignados; notas internas separadas. |
-| Asesor MINED autorizado | Supervisar fichas y solicitar actuaciones | Avisos y fichas dentro de su ámbito; chat no concedido por defecto. |
+| Asesor MINED autorizado | Supervisar fichas y solicitar actuaciones | Avisos y fichas dentro de su ámbito; nunca chat ni relato del estudiante. |
 | Dirección/enlace | Recibir avisos y documentar actuaciones | Alerta mínima, ficha autorizada y estadísticas de su colegio; nunca chat. |
 | Retransmisor | Guardar y reenviar sobres cifrados | Metadatos mínimos de transporte y ciphertext; sin contenido legible. |
 | Teléfono puente | Recibir sobres, entregar al destino local y sincronizar | No obtiene acceso al relato por actuar como puente. |
@@ -59,6 +65,8 @@ Adjuntos y evidencias aparecen en investigación y costos, pero no tienen contra
 | Docentes y familias | Campaña y apoyo presencial | Material editorial; el vínculo no concede acceso a casos. |
 
 La mesa de escucha es una función dentro del sistema de atención; no obliga a crear una cuarta aplicación. Drive plantea psicólogos de planta, articulación con MINSA y practicantes de Psicología de 5.º año. Convenios, acreditación, supervisión de practicantes, horarios y disponibilidad siguen pendientes.
+
+Los [manuales operativos de uso](https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ) son versiones de trabajo para validar: precisan que el chat y el relato pertenecen al estudiante y a la mesa, excluyen tanto al colegio como al MINED y requieren internet para el chat. Dirección puede **registrar la alerta de un docente**; esto no crea cuentas docentes ni convierte esa alerta institucional en un mensaje escrito por el estudiante.
 
 ## 4. Recorrido funcional
 
@@ -68,7 +76,7 @@ La mesa de escucha es una función dentro del sistema de atención; no obliga a 
 4. La app protege la operación localmente y muestra el estado real de transporte.
 5. Con internet, el servidor registra una sola recepción y entrega avisos mínimos al MINED y al colegio. El relato se reserva al circuito de escucha.
 6. Sin internet, se intenta llevar el sobre hasta el puente mediante dispositivos cercanos. Recepción local y recepción central se distinguen.
-7. La mesa de escucha conversa cuando está disponible. Las tarjetas rompehielos facilitan escribir. El filtro de vocabulario no decide riesgo ni debe impedir pedir ayuda.
+7. La mesa de escucha conversa por internet cuando está disponible. Sin internet solo se transporta la alerta: no se promete chat por mesh. Las tarjetas rompehielos facilitan escribir. El filtro de vocabulario no decide riesgo ni debe impedir pedir ayuda; su comportamiento debe validarse para no ocultar una revelación de violencia.
 8. El profesional decide acompañamiento, ficha de convivencia o derivación por riesgo grave. Dirección documenta actuaciones sobre la ficha permitida.
 9. El estudiante consulta solo su respuesta y estado visibles; cierre y escalamiento quedan registrados por personal autorizado.
 
@@ -116,15 +124,15 @@ No se crean microservicios, cuentas, despliegues o dependencias por describir es
 | Código público escolar | App y validación de centro | No consulta expedientes ni administra. |
 | Código privado institucional | Validación/canje de acceso de dirección | No se publica en QR estudiantil, Git ni logs. |
 | Alerta mínima: tipo, rol y hora | MINED y dirección autorizados | Sin relato, chat, capturas o identidad civil. Estos metadatos también son sensibles. |
-| Relato opcional y chat | Circuito de escucha autorizado | Nunca dirección ni retransmisores en claro. |
-| Nivel y ficha de actuación | MINED y colegio correspondiente, salvo conflicto | Datos necesarios, sin copiar el chat. |
+| Relato opcional y chat | Estudiante y mesa de escucha asignada | Nunca MINED, dirección ni retransmisores. |
+| Nivel y ficha de actuación | MINED y colegio correspondiente, salvo conflicto | Tipo, rol, hora y nivel humano; sin relato, chat ni capturas. Formato final pendiente. |
 | Actuaciones | Supervisión y seguimiento autorizados | Respuesta al estudiante como proyección distinta. |
 | Notas internas | Equipo asignado según facultades | Fuera del modelo estudiantil. |
 | Sobre cifrado | Retransmisores y puente | Sin sesiones, credenciales o claves privadas del emisor. |
 | Auditoría | Supervisión de seguridad | Sin cuerpos del caso, códigos privados ni tokens. |
 | Estadísticas agregadas | Centro propio y ámbito MINED autorizado | Sin rankings públicos ni grupos pequeños identificables. |
 
-El modelo propuesto separa instituciones, accesos institucionales, capacidades privadas de caso, reportes, mensajes, notas, fichas, actuaciones, eventos, sobres, acuses y contenidos. Ver [docs/02](docs/02-arquitectura.md). No es un esquema listo para migrar.
+El modelo propuesto separa instituciones, accesos institucionales, capacidades privadas de caso, reportes, mensajes, notas, fichas, actuaciones, eventos, sobres, acuses y contenidos. Debe distinguir también el origen estudiantil de un aviso docente registrado por dirección, las autorizaciones excepcionales y los pasos de actuación habilitados. Ver [docs/02](docs/02-arquitectura.md). No es un esquema listo para migrar.
 
 ### Recepción e idempotencia propuestas
 
@@ -170,11 +178,15 @@ Ver [flujo de datos y red mesh](docs/10-flujo-datos-y-red-mesh.md) para sobres, 
 | 2 · Convivencia / acoso | Ficha y seguimiento MINED–colegio | Información mínima y destinatarios autorizados. |
 | 3 · Riesgo grave | Derivación humana a enlaces de protección y salud | Responsables, contactos y protocolo por validar. |
 
-Estados acordados: **Recibido, En escucha, Ficha enviada, Colegio actuando, Escalado y Cerrado**. No todos los casos deben recorrerlos todos: acompañamiento puede cerrar sin ficha y riesgo grave puede escalar antes de actuación escolar. Las transiciones excepcionales y sus permisos son propuestas en [arquitectura](docs/02-arquitectura.md).
+Nombres utilizados por el equipo para el prototipo: **Recibido, En escucha, Ficha enviada, Colegio actuando, Escalado y Cerrado**. El Manual del MINED los presenta como propuesta a ajustar con esa institución: recepción automática, escucha/ficha por la mesa, actuación por dirección y escalamiento/cierre por MINED. No todos los casos recorren todos los estados. Cierre de nivel 1 sin ficha y reapertura requieren completar el contrato. **Derivar por riesgo grave es un evento urgente distinto del estado Escalado**, que el manual utiliza para falta de respuesta institucional. No se espera al siguiente estado para activar una derivación humana.
 
 *Pendiente sin conexión* es un estado de transporte, no un séptimo estado del caso. *Recibido* debe indicar ámbito local o central. Los indicadores de atención necesitan marcas de tiempo definidas; el reloj del emisor no es una autoridad confiable.
 
 Drive plantea doble autorización, registro y aviso para revelación excepcional por protección de la vida. **No existe una identidad civil secreta que la app pueda desanonimizar.** Solo puede compartir información aportada o coordinar una solicitud de contacto según protocolo aprobado. No se convierte el GPS en identificación encubierta ni se promete confidencialidad sin límites.
+
+Los manuales proponen bloquear el paso de contacto familiar mientras el anonimato siga activo y registrar acciones grupales. Su habilitación exige el procedimiento autorizado, con dos aprobadores aún por definir. Debe validarse con responsables de protección: no se convierte esta propuesta en una regla jurídica automática ni se bloquean medidas urgentes que el protocolo aprobado requiera. El sistema debe registrar autorizaciones y limitar qué datos se comparten; no basta ocultar un botón.
+
+El protocolo de acoso entre estudiantes no cubre por sí solo violencia sexual, armas o sustancias. Los manuales mencionan rutas distintas pendientes de acordar con MINED. Esas referencias no agregan automáticamente categorías, formularios o funcionalidades al MVP. Los plazos de atención y escalamiento no están fijados; las metas del Canvas no son un SLA.
 
 ## 9. Seguridad, privacidad y accesibilidad
 
@@ -207,6 +219,24 @@ Usar los activos oficiales sin deformarlos ni reconstruirlos si hay una variante
 
 ## 11. Estado comprobable del código
 
+### Tecnologías y versiones del corte M1
+
+Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitácora M1; son la base registrada del proyecto, no una recomendación de usar versiones recordadas al iniciar un bloque nuevo.
+
+| Capa | Tecnología/version registrada | Uso actual |
+| --- | --- | --- |
+| Aplicación | Flutter 3.44.5 stable / Dart 3.12.2 | Base Android 0.2.0+2. |
+| Navegación | `go_router` 18.1.3 | Arranque y navegación base; recorrido ampliado pendiente. |
+| Criptografía local | `cryptography` 2.9.0 | AES-GCM-256 y derivaciones de credenciales M1. |
+| Custodia de clave | `flutter_secure_storage` 11.2.0 | Almacenamiento seguro del secreto local. |
+| Archivo privado | `path_provider` 2.1.6 | Ruta del almacén cifrado. |
+| Análisis y pruebas | `flutter_lints` 6.0.0 / `flutter_test` del SDK | Casts, inferencia y tipos genéricos estrictos; pruebas de lógica/widgets. |
+| Android registrado | SDK 36.1.0; APK M1 mínimo API 24, target 36 | La configuración Gradle obtiene niveles del SDK Flutter; comprobar manifiesto del APK al recompilar. |
+| Java de construcción | JDK 21 de Android Studio; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
+| Backend objetivo | Supabase / PostgreSQL | No hay `supabase_flutter`, esquema, políticas o servidor conectado en el corte actual. |
+
+Android es la plataforma inicial aprobada. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. La selección de paneles es independiente y sigue pendiente.
+
 | Implementación M1 | Límite |
 | --- | --- |
 | Flutter Android, `go_router` y pantalla de verificación | Nuevo recorrido completo pendiente. |
@@ -225,7 +255,6 @@ Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equ
 
 ```text
 apps/mobile/                 Aplicación Flutter Android
-  lib/features/              Funcionalidades existentes
   lib/shared/                Contratos, modelos, almacén, tema y widgets
   test/                      Pruebas locales y de interfaz
 docs/                        Producto, arquitectura, operación y diseño
@@ -233,9 +262,27 @@ docs/                        Producto, arquitectura, operación y diseño
   diseno/flujos/             Diagramas
 ```
 
-No existen migraciones Supabase ni paneles operativos. Conservar módulos por funcionalidad y evitar infraestructura anticipada.
+No existen todavía `lib/features/`, migraciones Supabase ni paneles operativos. La organización por funcionalidad está prevista para los próximos bloques aprobados; no crear carpetas vacías o infraestructura por anticipado.
+
+Puntos de entrada: `lib/main.dart` inicia la app; `lib/app.dart` ensambla la pantalla base. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas; no sustituye una conexión institucional. Los tests actuales están en `test/local_gateway_test.dart` y `test/app_test.dart`. Poppins y su licencia se incluyen en `assets/fonts/`.
 
 ## 12. Ejecutar el corte existente
+
+### Requisitos e instalación
+
+Se necesitan Git, Flutter con Dart compatible, herramientas Android y un emulador o teléfono de prueba autorizado. El entorno de referencia está descrito arriba. No hace falta crear cuentas Supabase, Firebase o Google Cloud para el corte local M1.
+
+```powershell
+git clone https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM.git
+cd Setu-Unicef-Bugnuelitos-UAM/apps/mobile
+flutter --version
+flutter doctor -v
+flutter pub get
+flutter devices
+flutter run
+```
+
+### Comandos de trabajo
 
 Desde `apps/mobile/`:
 
@@ -250,6 +297,35 @@ flutter build apk --debug
 
 APK en `build/app/outputs/flutter-apk/app-debug.apk`, excluido de Git. Instalación USB con dispositivo autorizado. Compilar el corte local no prueba el sistema conectado.
 
+| Comando | Finalidad |
+| --- | --- |
+| `flutter analyze` | Análisis estático según `analysis_options.yaml`. |
+| `flutter test test/local_gateway_test.dart` | Persistencia, permisos locales, integridad e idempotencia M1. |
+| `flutter test test/app_test.dart` | Widgets y comportamiento del canal simulado. |
+| `dart format --output=none --set-exit-if-changed lib test` | Comprobar formato sin escribir. |
+| `flutter test --dart-define=SETU_CAPTURE_QA=true test/app_test.dart` | QA de widgets documentada en el README móvil; capturas bajo `build/qa/`. |
+| `flutter build apk --debug` | Compilar la demo local con firma de depuración. |
+
+### Configuración, secretos y archivos locales
+
+El corte actual no tiene `.env` obligatorio, `firebase_options.dart`, claves de mapas ni credenciales de backend. No copiar esos archivos o requisitos del README de Nikara. No incluir secretos al preparar los futuros paneles o servidor.
+
+El archivo `setu_local_store.enc` es dato privado de ejecución y no se distribuye con el repositorio. Android excluye copias cloud/transferencias del corte actual. `android/local.properties`, cachés, APK y credenciales de firma son locales; `.gitignore` los protege según su finalidad. La compilación `release` conserva firma debug provisional en Gradle: no es una configuración de publicación lista para tiendas.
+
+El manifiesto principal todavía no pide cámara, Bluetooth, proximidad o ubicación. Los manifiestos debug/profile incluyen internet para desarrollo; eso no demuestra envío de casos ni backend. Los permisos nuevos se diseñarán y aprobarán con su funcionalidad.
+
+### Solución de problemas
+
+| Síntoma | Comprobación o acción |
+| --- | --- |
+| Flutter no se reconoce | Usar la ruta local documentada o configurar el entorno propio; comprobar `flutter --version`. |
+| Dependencias/SDK incompatibles | Revisar `flutter doctor -v`, restricción Dart y `pubspec.lock`; no actualizar paquetes a ciegas. |
+| No aparece teléfono | Revisar cable, depuración USB y autorización personal; `flutter devices` o `adb devices -l`. |
+| No permite captura | M1 activa `FLAG_SECURE`; su control de prueba pide confirmación y se reactiva al arrancar. |
+| Error de clave/integridad local | Conservar el archivo, no borrar ni reinicializar automáticamente. La pérdida de clave puede impedir recuperar la demo. |
+| El aviso no llega a otro dispositivo | M1 es local; no existe transporte mesh ni servidor para recibirlo. |
+| Falta de acceso tras borrar datos | Recuperación remota no implementada; el respaldo M1 no restaura una clave o archivo eliminados. |
+
 ## 13. Aceptación del sistema ampliado
 
 | Escenario | Evidencia necesaria |
@@ -257,7 +333,7 @@ APK en `build/app/outputs/flutter-apk/app-debug.apk`, excluido de Git. Instalaci
 | Acceso escolar | QR/código sin cuenta visible, errores y permisos denegados comprensibles; código público sin acceso a casos. |
 | Privacidad por caso | Dos estudiantes del mismo centro no consultan casos ajenos; continuidad privada verificable. |
 | Aislamiento institucional | Centro A no lee/escribe recursos B alterando identificadores; roles MINED limitados por ámbito. |
-| Chat frente a ficha | Dirección no recibe chat ni notas en API, caché o canal local. |
+| Chat frente a ficha | MINED y dirección no reciben chat, relato ni notas en API, caché o canal local. |
 | Recepción por internet | Persistencia antes del recibo; respuesta perdida y reintento sin duplicar. |
 | Dos saltos sin internet | Emisor → retransmisor → puente, impidiendo contacto directo emisor–puente; intermediario sin plaintext. |
 | Reinicio y corte de radio | Recuperación protegida de cola y reintentos sin pérdida silenciosa. |
@@ -295,6 +371,7 @@ Secuencia propuesta, con aprobación previa de cada bloque:
 | [Plan del prototipo](docs/07-plan-mockup-y-codex.md) | Bloques y demostración. |
 | [Especificación funcional](docs/08-especificacion-funcional-setu.md) | Pantallas y flujos por superficie. |
 | [Revisión de Drive](docs/09-revision-drive-y-trazabilidad.md) | Inventario, fuentes y discrepancias. |
+| [Accesos para Drive](docs/11-acceso-a-especificacion-tecnica.md) | Contenido preparado con el repositorio y los accesos principales. |
 | [Datos y mesh](docs/10-flujo-datos-y-red-mesh.md) | Protocolo de transporte propuesto y pruebas. |
 | [Diagramas vigentes](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. |
 | [Fichas de pantalla](docs/diseno/pantallas-explicadas.md) | Acciones, entradas, salidas y variantes. |
