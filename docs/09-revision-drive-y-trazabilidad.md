@@ -43,7 +43,35 @@ El proyecto de [Claude aportado](https://claude.ai/project/01a1b41d-594c-7496-bd
 | 8 nov, sesión 2 | [Costos y mascota](https://docs.google.com/document/d/1q-vwMobFCWymUR92AOC7OyKe8SmlxqF1308oqSdlqA4/edit) | Organización de entregables, costos, identidad y mascota. |
 | 9 nov, mañana | [Manuales, protocolo e indicadores](https://docs.google.com/document/d/1oJY-CpafZAqDWCqFdpV-ZlAVguUlPqYFazaj4FxkmUM/edit) | Especificación técnica asignada a José Alfredo; tres niveles, estados, manuales y campaña. |
 
-El Resumen General describe una **décima sesión del 9 nov, 1:33–3:41 p. m.**, sobre sección informativa, MINSA/practicantes y doble código. No apareció su documento independiente en el listado público consultado: estas novedades se sustentan en D01, no en una transcripción de esa sesión que no se haya leído.
+La **décima sesión del 9 nov, 1:33–3:41 p. m.**, no apareció en el primer corte. En la revisión posterior se localizó y leyó su [documento independiente](https://docs.google.com/document/d/1c6E9dED-tzHSSu2ciC-TWYNtGH2fxLXYpq14DAt0Eeg/edit), incluidos sus acuerdos y menciones pertinentes de la transcripción: entrega local cuando falta internet, apartado informativo, acceso presencial inicial, doble código y tratamiento voluntario. Las alianzas MINSA/practicantes aparecen con viabilidad pendiente; no se presentan como convenios confirmados.
+
+## Ampliación con manuales operativos y referencia Nikara
+
+En la revisión posterior del mismo día se localizó [Manuales de uso/despliegue+](https://drive.google.com/drive/folders/1WxN3VZvNzXiitXJD6Jf8oe1Fdz4eiRyW), dentro de Investigación y Campo. Se descargaron y extrajeron cinco PDF: dos de despliegue equivalentes a los SVG ya revisados y tres manuales de uso nuevos. Los tres nuevos manuales se revisaron en texto completo y visualmente mediante sus páginas renderizadas. Se identifican como **versiones de trabajo para validar**, no como protocolos institucionales aprobados.
+
+| ID | Fuente | Regla aportada |
+| --- | --- | --- |
+| D11 | [Manual de la Mesa de Escucha](https://drive.google.com/file/d/1-uMtjFXaxjJ10gGqRlBIPPmtCsGUEShD/view), 9 páginas | Mesa/estudiante como únicos lectores de chat y relato; chat con internet; ficha mínima; nivel humano; autorizaciones y responsables pendientes. |
+| D12 | [Manual del Colegio](https://drive.google.com/file/d/1H3vYtqP63tAwYxJIToyJP8iOVseaWZoU/view), 10 páginas | Cinco pasos; registro de aviso docente por dirección; ruta de llegada y reserva de identidad; “Documentar y enviar al MINED”; contacto familiar condicionado a autorización validada. |
+| D13 | [Manual del MINED](https://drive.google.com/file/d/1ZCCoqMQnfdud6HtrnH0NZhqlnV_zFd_m/view), 8 páginas físicas | Sin chat/relato; filtros por nivel/tipo/colegio; exigir, escalar por falta de respuesta y cerrar; plazos e instancia pendientes. La última página está numerada 9 en su pie. |
+| D14 | [Guía rural PDF](https://drive.google.com/file/d/1TEZl0T0Uabc91ki9tAdZvDjLUmRa5AWC/view), 12 páginas | Versión PDF del material de despliegue, sin ampliar la Fase 1. |
+| D15 | [Despliegue técnico PDF](https://drive.google.com/file/d/19wiXjoOEkp2F2mxH1k7GvEqaOuAoH0uO/view), 15 páginas | Configuración y operación de puente/colegio; tecnología y alcance por validar. |
+
+El usuario aportó `C:\Users\Littl\Downloads\README.md`, del proyecto Nikara. Se leyó como referencia de **organización documental**: presentación, navegación, stack real, carpetas, instalación, comandos, configuración, pruebas y problemas frecuentes. No prueba ninguna capacidad de SéTú; no se copian sus integraciones de IA, mapas, perfiles públicos, credenciales, migraciones o plataformas.
+
+La variante azul oficial `logos-22.svg` se copia sin modificar a `docs/diseno/setu-logo-azul.svg` para la cabecera del README; su origen es [el activo de Drive](https://drive.google.com/file/d/1b1CsZm1Z0LOOJ6CinFyll1FJkE-T30nS/view). El logotipo no implica aval institucional.
+
+### Cambios y tensiones resueltos documentalmente
+
+- Se elimina la posibilidad propuesta de que el supervisor MINED lea chat/relato: D11/D13 lo prohíben. La asignación profesional de escucha es un permiso diferente.
+- El chat necesita internet. La decisión offline es entrega de alerta mínima local; autenticación, claves y retorno siguen pendientes de diseño.
+- Ficha mínima: tipo, rol, hora y nivel. El nivel no existe hasta valoración humana; el aviso inicial no lo inventa.
+- Registro docente: dirección registra el aviso con su actor y origen, sin acceso docente ni autoría estudiantil ficticia. Campos y tratamiento sin chat por cerrar.
+- D12 propone contacto familiar bloqueado mientras haya anonimato. D11/D12 dejan aprobadores/datos por definir; requiere validación de protección y no se interpreta como regla legal ya aprobada.
+- D13 reserva el estado Escalado a falta de respuesta institucional. La derivación urgente de riesgo se registra como evento independiente; se retira el salto automático propuesto de riesgo a Escalado.
+- Cierre habitual: dirección documenta y envía, MINED cierra. El cierre de nivel 1 sin ficha y reapertura quedan abiertos; no se atribuye esa facultad a la mesa por inferencia.
+- Nombres de estados: utilizados por el equipo para prototipo, pendientes de ajuste con MINED. No hay plazos institucionales fijados por estos manuales ni permiso para inventarlos.
+- D11 describe filtro de vocabulario que bloquea mensajes; su comportamiento requiere validación para no suprimir una revelación. Rutas de violencia sexual, armas y sustancias siguen pendientes y no amplían automáticamente el MVP.
 
 ## Hallazgos que cambian la especificación
 
