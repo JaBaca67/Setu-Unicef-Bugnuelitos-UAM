@@ -42,3 +42,7 @@ El repositorio documentaba al 5 de noviembre una app local con cuenta por alias 
 - Validación de la ruta de reportes con el MINED (alianza por validar).
 - Financiamiento del personal de la mesa de escucha.
 - Formato del Pitch: el repositorio decía elevator pitch en vivo de 3 minutos; el Resumen de Drive lo llama "Video Pitch". Confirmar con la guía oficial.
+
+## Aclaración documental posterior del 9 de noviembre
+
+ADR 0007 y los manuales operativos de uso precisan que MINED tampoco lee chat/relato, el chat requiere internet, dirección registra avisos docentes y el cierre habitual corresponde al MINED tras documentación del colegio. Escalado por falta de respuesta y derivación urgente son acontecimientos distintos. Los nombres de estados son de prototipo y quedan por validar institucionalmente; esta aclaración no autoriza código.

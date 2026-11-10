@@ -50,7 +50,7 @@ No define tablas definitivas ni autoriza migraciones.
 | Acceso institucional | Verificador de código privado o alta, vigencia, revocación y registro de emisión; sin secreto en claro. |
 | Actor y permiso institucional | Sujeto, función, ámbito, asignación y estado, administrados por vía confiable. |
 | Acceso privado de caso | Verificador de capacidad o clave pública y su relación con el caso; sin capacidad reutilizable en logs. |
-| Caso | ID, institución validada, referencia opaca, tipo, rol, estado, nivel humano opcional y fechas. |
+| Caso | ID, institución validada, referencia opaca, tipo, rol cuando proceda, origen de alerta, estado, nivel humano opcional y fechas. Un aviso docente registrado por dirección conserva ese origen. |
 | Contenido reservado | Relato opcional; separado de la alerta mínima y de proyecciones institucionales. |
 | Mensaje de escucha | Caso, autor interno, rol visible, texto, operación idempotente y fechas. |
 | Nota interna | Caso, profesional autorizado y nota; sin incluirla en vistas estudiantiles o escolares. |
@@ -58,6 +58,7 @@ No define tablas definitivas ni autoriza migraciones.
 | Ficha de actuación | Caso, versión, autor profesional, destinatarios, datos mínimos y fecha de emisión. |
 | Actuación escolar | Ficha, responsable autorizado, acción, fecha y evidencia documental de actuación permitida. |
 | Evento del caso | Estado anterior/nuevo, nivel o derivación, actor, motivo y fecha; no duplicar relato. |
+| Autorización excepcional | Solicitud, motivo, dos aprobadores distintos, alcance de datos, fecha de aviso y vigencia; responsables por definir. |
 | Operación recibida | Identificador del emisor/operación, huella autenticada, resultado persistido y recibo estable. |
 | Sobre y acuse | ID de transporte, destino opaco, versión, vigencia y confirmación de custodia/central; sin credenciales del estudiante. |
 | Recurso editorial | Texto, territorio, responsable, fuente, revisión, vigencia y disponibilidad offline. |
@@ -69,17 +70,27 @@ En datos dependientes usar referencias que impidan enlazar un caso de A con una 
 
 | Recurso | Estudiante | Mesa de escucha | MINED supervisor | Dirección/enlace | Retransmisor/puente |
 | --- | --- | --- | --- | --- | --- |
-| Crear reporte | Propio y válido | No suplanta al estudiante | No suplanta al estudiante | No suplanta al estudiante | Solo entrega sobre ajeno |
+| Crear reporte | Propio y válido | No suplanta al estudiante | No suplanta al estudiante | Registra aviso docente con origen y autor institucional; no suplanta al estudiante | Solo entrega sobre ajeno |
 | Alerta mínima | Propia | Caso asignado | Ámbito autorizado | Su centro, salvo restricción por conflicto | Solo ciphertext |
-| Relato/chat | Propio | Casos asignados | Denegado por defecto; función excepcional por definir | Denegado | Denegado |
-| Nota interna | Denegado | Según asignación | Solo concesión específica justificada | Denegado | Denegado |
+| Relato/chat | Propio | Casos asignados | Denegado, según manual de uso | Denegado | Denegado |
+| Nota interna | Denegado | Según asignación | Denegado al supervisor institucional | Denegado | Denegado |
 | Ficha emitida | Solo resumen visible autorizado | Crear/versionar según facultad | Leer y gestionar en ámbito | Leer la destinada a su centro | Solo transporte cifrado |
 | Actuación escolar | Resumen visible separado | Leer lo necesario | Leer/supervisar | Registrar sobre ficha autorizada | Sin acceso |
 | Estado/nivel | Lectura visible; no edición | Según facultad humana | Según facultad y protocolo | Registrar actuación; no asignar nivel clínico ni cerrar globalmente por sí solo | Sin acceso |
 | Agregados | Sin listado de casos ajenos | Según necesidad | Ámbito autorizado | Su centro, con control de grupos pequeños | Sin acceso |
 | Roles y claves | No | Sin autoasignación | Administración solo si se concede aparte | Sin autoasignación | Sin autoasignación |
 
-Los roles acumulados requieren concesión explícita; no asumir que MINED equivale a acceso clínico universal. Personal no asignado: denegado salvo función de recepción expresamente aprobada. Lecturas de contenido y cambios sensibles se auditan sin copiarlo.
+Los manuales de mesa y MINED excluyen chat/relato del acceso institucional, sin excepción de supervisor. Una persona que ejerza escucha necesita una asignación profesional separada; no acumula acceso por su cargo MINED. Personal no asignado: denegado salvo función de recepción expresamente aprobada. Lecturas y cambios sensibles se auditan sin copiar contenido.
+
+### Reglas de los manuales operativos
+
+La ficha institucional tiene tipo, rol, hora y nivel asignado por una persona profesional; no incluye relato, chat o capturas. El nivel es opcional hasta esa valoración, no se inventa al recibir la alerta inicial. Dirección registra el origen de transporte y si la reserva de identidad sigue activa.
+
+El chat necesita internet. Su cola local, si se autoriza para borradores o reintentos, no debe confundirse con entrega por mesh. Ni una alerta docente ni una alerta mínima sin chat producen automáticamente una clasificación profesional.
+
+El manual del colegio contempla cinco pasos: identificar, comunicar a dirección, comunicar a familia, acompañar y derivar/dar seguimiento. Propone bloquear el contacto familiar mientras el anonimato siga activo y registrar acción grupal. Su aplicación y excepciones por protección requieren validación operativa; el servidor debe comprobar autorización, datos compartibles y alcance. No es un botón que revele una identidad inexistente.
+
+El manual MINED asigna escalamiento por falta de respuesta y cierre a MINED. Dirección propone el cierre mediante “Documentar y enviar al MINED”, sin cerrar globalmente por sí misma. La ruta de nivel 1, la reapertura y los nombres finales de estado permanecen por acordar. Derivación por riesgo grave se registra como evento de protección separado del estado Escalado.
 
 ### Conflicto de interés
 
@@ -97,6 +108,8 @@ Si el relato implica a dirección o personal del centro, la vía alternativa evi
 | Valorar nivel | Profesional autorizado; nivel permitido y registro de evaluación humana. |
 | Emitir ficha | Autor, contenido mínimo, destinatario y conflicto; nueva versión auditable. |
 | Registrar actuación | Dirección/enlace autorizado sobre ficha propia; validación y control de concurrencia. |
+| Registrar aviso docente | Actor de dirección, colegio y origen docente; sin crear sesión del docente o atribuir el aviso al estudiante. |
+| Contactar familia | Regla validada de protección, estado de reserva, autorizaciones y alcance de información; no se concede por cambiar un campo del cliente. |
 | Cambiar estado | Actor, transición, versión anterior y motivo en una transacción. |
 | Revelación excepcional | Protocolo, motivo, dos autorizaciones distintas, alcance y aviso; no genera identidad inexistente. |
 
@@ -104,21 +117,22 @@ No son endpoints implementados. RPC, función de servidor o API directa con RLS 
 
 ## Estados y transiciones propuestas
 
-Los nombres provienen de Drive; las transiciones siguientes resuelven las ramas necesarias y **requieren validación del protocolo**.
+Los nombres son la propuesta de prototipo del equipo. El Manual del MINED los considera pendientes de ajuste institucional. Las transiciones siguientes **requieren validación del protocolo** y distinguen la derivación urgente del escalamiento por falta de respuesta.
 
 | Desde | Hacia | Condición propuesta |
 | --- | --- | --- |
 | Sin recepción central | Recibido | Persistencia central válida y recibo emitido; recepción local se registra aparte. |
 | Recibido | En escucha | Profesional asignado inicia atención; no por abrir un retransmisor. |
-| Recibido o En escucha | Escalado | Valoración humana de riesgo grave o ruta especial aprobada; no esperar ficha escolar. |
-| En escucha | Cerrado | Acompañamiento nivel 1 concluido con motivo y posibilidad de seguimiento. |
+| En escucha | Cerrado | Acompañamiento nivel 1 concluido; facultad de cierre sin ficha pendiente de conciliar con el cierre MINED del manual. |
 | En escucha | Ficha enviada | Profesional emite ficha de nivel 2 a destinatarios autorizados. |
 | Ficha enviada | Colegio actuando | Actuación escolar documentada, validada y vinculada a la ficha. |
-| Ficha enviada o Colegio actuando | Escalado | Falta de respuesta o situación agravada, según plazo/protocolo acordado; sin sanción automática. |
-| Colegio actuando o Escalado | Cerrado | Responsable con facultad verifica cierre y registra motivo; derivar no equivale a cerrar. |
+| Ficha enviada o Colegio actuando | Escalado | MINED escala por falta de respuesta según plazo e instancia acordados; sin sanción automática. |
+| Colegio actuando o Escalado | Cerrado | Dirección documenta y envía; MINED verifica y cierra con motivo. Derivar no equivale a cerrar. |
 | Cerrado | En escucha | Reapertura autorizada con motivo; el mensaje del estudiante solo solicita revisión. |
 
 Nivel de riesgo, transporte y estado son dimensiones separadas. El backend debe rechazar saltos no permitidos aunque el cliente muestre el botón. No asumir orden total de acontecimientos offline: distinguir hora declarada, recepción local y recepción central.
+
+La valoración humana de riesgo grave registra y activa una derivación sin esperar una transición del rastreador. Los manuales no fijan tiempos ni destinatarios finales de escalamiento; no generar cronómetros de incumplimiento con plazos inventados. La definición de Recibido debe conciliar “llegó al MINED y dirección” con entregas parciales/offline, mediante marcas por destinatario.
 
 ## Concurrencia y sincronización
 

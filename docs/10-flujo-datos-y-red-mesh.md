@@ -7,8 +7,8 @@
 Se separan tres productos de información:
 
 - **Alerta mínima institucional:** tipo de situación, rol de víctima/testigo y hora declarada, más referencia técnica e institución validada. Puede ser visible al MINED y dirección autorizados; no es información pública.
-- **Relato y conversación:** contenido reservado al estudiante y mesa de escucha asignada. El colegio no lo recibe. La disponibilidad de chat sin internet no se deduce del transporte de la alerta inicial.
-- **Ficha y actuaciones:** la ficha la prepara el profesional después de valorar; dirección documenta acciones. No se genera una ficha clínica automáticamente a partir de chips.
+- **Relato y conversación:** contenido reservado al estudiante y mesa de escucha asignada. Ni el colegio ni MINED lo reciben. Los tres manuales de uso precisan que **el chat necesita internet**; mesh transporta la alerta, no una conversación remota.
+- **Ficha y actuaciones:** la ficha la prepara el profesional después de valorar y lleva tipo, rol, hora y nivel; sin relato ni capturas. Dirección documenta acciones y envía propuesta de cierre al MINED. No se genera una ficha clínica automáticamente a partir de chips.
 
 La capa de transporte solo necesita sobres cifrados y metadatos mínimos. No descubre el tipo de acoso para decidir una ruta o prioridad. No transporta sesiones Supabase, PIN, claves privadas ni una lista de nombres/dispositivos vecinos persistida.
 
@@ -29,6 +29,8 @@ Drive describe estudiante → celulares → teléfono puente → dirección, seg
 | Ficha local autorizada | Dirección recibe una ficha emitida por un profesional habilitado | Requiere atención y firma profesional offline; no equivale a inferir una ficha automáticamente. Mayor alcance. |
 
 Ninguna opción concede al teléfono de un compañero acceso al contenido. La selección queda pendiente; los diagramas señalan el contrato local como tal. Si el centro está implicado, resolver la ruta alternativa antes de notificarlo.
+
+La entrega mínima local a dirección ya está descrita como comportamiento de producto en la reunión de la tarde y los manuales; lo pendiente es su contrato técnico, destinatarios, autenticación y claves. La opción de solo custodia central se conserva para comparar sus límites, sin sustituir esa decisión de producto por conveniencia de implementación.
 
 ## 4. Preparación previa
 

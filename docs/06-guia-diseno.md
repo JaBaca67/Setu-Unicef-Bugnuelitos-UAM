@@ -33,7 +33,7 @@ Reporte: tipo → rol → detalles opcionales → revisión → estado real de e
 
 Seguimiento privado: mostrar únicamente casos accesibles mediante mecanismo privado aprobado; código escolar no abre una lista común. Estado de entrega separado del estado del caso.
 
-MINED y dirección tienen vistas distintas. Dirección ve aviso mínimo/ficha/actuaciones; nunca burbujas de chat, relato completo o notas internas. La mesa de escucha se identifica como humana y con horario real cuando esté acordado.
+MINED y dirección tienen vistas distintas. Dirección y MINED ven aviso mínimo/ficha/actuaciones; nunca burbujas de chat, relato o notas internas. El chat necesita internet. Dirección incluye registro de avisos docentes sin acceso para docentes. La mesa de escucha se identifica como humana y con horario real cuando esté acordado.
 
 ## Estados y mensajes
 
@@ -44,7 +44,7 @@ MINED y dirección tienen vistas distintas. Dirección ve aviso mínimo/ficha/ac
 | Resultado incierto | Explicar incertidumbre y permitir comprobar/reintentar sin duplicación. |
 | Permiso QR/radios denegado | Explicar para qué sirve y alternativa disponible, sin insistencia coercitiva. |
 | Configuración desconocida offline | No afirmar pertenencia validada; ofrecer ayuda/contenidos disponibles. |
-| Chat sin profesional disponible | Mensaje de espera y límites; no indicador ficticio de atención en vivo. |
+| Chat sin internet o sin profesional disponible | Mensaje de espera y límites; no indicador ficticio de atención en vivo. |
 | Caso cerrado | Motivo visible permitido y solicitud de revisión sin reapertura automática. |
 | Error de autorización | Sin datos ajenos, códigos privados o detalles internos en el mensaje. |
 

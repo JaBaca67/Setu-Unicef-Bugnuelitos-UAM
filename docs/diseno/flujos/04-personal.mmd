@@ -1,17 +1,19 @@
 flowchart TD
+    T["Dirección registra aviso docente · Sin cuenta docente ni autoría estudiantil"] --> A
     A(["Operación recibida centralmente"]) --> B["Aviso mínimo a MINED y dirección autorizada · Sin relato/chat"]
     A --> C["Mesa asignada accede al contenido reservado"]
-    C --> D["Profesional inicia escucha humana"]
+    C --> D["Profesional inicia escucha humana por internet"]
     D --> E{"¿Nivel valorado por profesional?"}
-    E -->|"1 · Acompañamiento"| F["Conversación y cierre autorizado con motivo"]
-    E -->|"2 · Convivencia"| G["Emitir ficha mínima · Revisar conflicto y destinatarios"]
-    E -->|"3 · Riesgo grave"| H["Derivación humana por protocolo · Escalado"]
-    G --> I["Dirección registra actuaciones sobre su ficha"]
-    I --> J["MINED supervisa y solicita seguimiento"]
-    J --> K{"¿Puede cerrarse según protocolo?"}
-    K -->|"Sí"| L["Cierre autorizado con motivo"]
-    K -->|"No: falta respuesta o agrava"| H
+    E -->|"1 · Acompañamiento"| F["Se resuelve en chat sin ficha · Facultad de cierre por conciliar"]
+    E -->|"2 · Convivencia"| G["Ficha mínima · Tipo, rol, hora y nivel · Revisar conflicto"]
+    E -->|"3 · Riesgo grave"| H["Derivación urgente registrada · No fuerza estado Escalado"]
+    G --> I["Dirección documenta pasos permitidos · Familia según autorización validada"]
+    I --> J["MINED exige respuesta y supervisa"]
+    J --> K{"¿Actuación y cierre documentados?"}
+    K -->|"Sí"| L["Dirección envía · MINED verifica y cierra"]
+    K -->|"No"| N["MINED requiere actuación · Escala por demora según protocolo"]
+    N --> J
     H -->|"Seguimiento de derivación"| J
-    F --> M(["Estudiante ve respuesta permitida · Sin notas internas"])
+    F --> M(["Estudiante ve respuesta propia · MINED y colegio no ven chat/relato"])
     L --> M
-    B -.->|"Supervisión no concede acceso clínico"| J
+    B -.->|"Supervisión institucional"| J

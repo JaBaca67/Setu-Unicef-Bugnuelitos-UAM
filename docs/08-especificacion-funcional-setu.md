@@ -13,7 +13,7 @@
 | E05 | Revisión y envío | Revisar destinatarios, límites y contenido; editar o confirmar | Operación guardada y protegida; E06 muestra entrega real. |
 | E06 | Estado de entrega | Ver guardado, transferencia, custodia, recepción local/central; comprobar/reintentar | No mostrar recibido central por un acuse de vecino. No crear otro caso al reintentar. |
 | E07 | Mi seguimiento privado | Abrir solo casos accesibles con mecanismo privado aprobado | E08. El código escolar no lista casos de compañeros. Recuperación pendiente. |
-| E08 | Caso y escucha humana | Estado visible, conversación propia y tarjetas rompehielos; solicitar revisión | Sin notas internas ni datos del personal innecesarios. Horarios reales cuando existan. |
+| E08 | Caso y escucha humana | Estado visible, conversación propia por internet y tarjetas rompehielos; solicitar revisión | Sin chat por mesh. Sin notas internas ni datos del personal innecesarios. Horarios reales cuando existan. |
 | E09 | Ayuda | Recursos revisados, territorio, fuente, fecha y horarios; confirmar destino externo | Accesible sin reportar; no presentar contactos de borrador como operativos. |
 | E10 | Información | Artículos, testimonios y guías; indicar qué está descargado | E11. Contenido híbrido decidido, catálogo y derechos pendientes. |
 | E11 | Contenido o guía | Leer, reproducir si está disponible, volver libremente | Sin historial clínico, diagnóstico ni obligación de completar. Actividades digitales adicionales por priorizar. |
@@ -28,17 +28,17 @@ Detalles se conservan en errores/reintentos según política aprobada. No escrib
 
 ## Mesa de escucha y MINED
 
-Son funciones de atención y supervisión dentro de la segunda superficie. Tener acceso al panel no concede acceso clínico universal.
+Son funciones diferenciadas de atención y supervisión dentro de la segunda superficie. Los nuevos manuales excluyen chat y relato de todo acceso institucional MINED; la asignación profesional de escucha es independiente.
 
 | ID | Vista | Acciones autorizadas propuestas | Límites |
 | --- | --- | --- | --- |
 | M01 | Acceso de personal | Sesión institucional con rol/ámbito dados por vía confiable | No alta pública con rol editable. Método por cerrar. |
-| M02 | Bandeja MINED | Avisos/fichas del ámbito, filtros y seguimiento | No mostrar relato/chat en listados de supervisión por defecto. |
-| M03 | Ficha y supervisión | Solicitar actuaciones, revisar evidencia permitida, escalar/cerrar según facultad | No sanción automática ni cierre por timeout sin protocolo. |
+| M02 | Bandeja MINED | Avisos/fichas del ámbito, filtros por nivel, tipo y colegio, rastreador y agregados | No mostrar relato/chat en listados ni detalle. Nivel ausente hasta valoración humana. |
+| M03 | Ficha y supervisión | Pedir y exigir actuaciones, escalar por falta de respuesta y revisar el cierre enviado por dirección | MINED cierra según manual; plazos e instancia de escalamiento pendientes. No cierre automático por timeout. |
 | L01 | Bandeja de escucha | Casos asignados y disponibilidad del profesional | Practicantes bajo supervisión por definir. |
 | L02 | Conversación profesional | Chat humano, valoración de nivel, nota interna, emisión de ficha/derivación | Mensaje visible, nota y ficha son acciones distintas. |
 
-La ficha deriva de valoración profesional. Nivel 1 puede cerrar en escucha; nivel 2 puede generar ficha; nivel 3 requiere ruta de protección sin esperar que el colegio avance todos los pasos. Las transiciones propuestas se detallan en docs/02.
+La ficha deriva de valoración profesional y solo lleva tipo, rol, hora y nivel; no relato ni capturas. Nivel 1 se resuelve en escucha sin ficha, con facultad de cierre por conciliar; nivel 2 genera ficha; nivel 3 registra derivación urgente sin esperar los pasos del colegio. Esa derivación no es el estado Escalado, reservado en el manual a falta de respuesta institucional. Transiciones propuestas en docs/02.
 
 ## Dirección y enlace
 
@@ -46,9 +46,12 @@ La ficha deriva de valoración profesional. Nivel 1 puede cerrar en escucha; niv
 | --- | --- | --- | --- |
 | D01 | Acceso privado | Validar/canjear código privado conforme al mecanismo aprobado | Sin guardarlo en claro; alta, rotación, revocación y atribución por definir. |
 | D02 | Avisos y fichas del centro | Ver alerta mínima, recepción local/central, fichas y pendientes | Nunca chat/relato/notas; ruta por conflicto puede restringir destinatarios. |
-| D03 | Actuación escolar | Registrar acción sobre ficha permitida y ver seguimiento/agregados | No definir nivel clínico, revelar identidad o cerrar globalmente sin facultad. |
+| D03 | Actuación escolar | Registrar los cinco pasos y proponer cierre con “Documentar y enviar al MINED” | No definir nivel clínico ni cerrar globalmente. Contacto familiar sujeto al procedimiento validado de reserva/autorización. |
+| D04 | Registrar alerta de docente | Dirección registra el aviso con origen docente y actor institucional | Docentes fuera de la app; no crear una conversación o identidad estudiantil ficticia. Formulario y campos mínimos por aprobar. |
 
 El panel puede recibir una alerta mínima antes de internet solo si se implementa el contrato local aprobado. Un panel alojado en la nube no funciona por sí solo cuando el colegio está sin internet.
+
+Dirección ve tipo, rol cuando corresponda, hora, estado de reserva y ruta de llegada. El manual propone el paso de contacto familiar bloqueado mientras siga activo el anonimato, sustituyéndolo por acción grupal; su validación de protección y las excepciones quedan pendientes. El registro docente no incorpora chat ni obliga a usar todos los pasos de un reporte estudiantil.
 
 ## Teléfono puente y retransmisión
 

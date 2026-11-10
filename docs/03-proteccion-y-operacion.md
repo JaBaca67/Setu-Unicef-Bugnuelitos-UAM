@@ -23,9 +23,11 @@ La interfaz explica que enviar un aviso no garantiza respuesta inmediata. Los re
 
 No hay cuentas visibles del estudiante; el código público solo identifica al colegio. Debe aprobarse un acceso privado por caso/sesión que impida lectura entre compañeros, incluso usando el mismo dispositivo. Recuperación, bloqueo local y pérdida siguen pendientes; no reintroducir alias + PIN como decisión vigente.
 
-Dirección nunca recibe el chat. MINED recibe avisos y fichas en su ámbito; no se concede chat por defecto a todo supervisor. Mesa y practicantes solo acceden a lo asignado y bajo facultades revisadas. El puente transporta sobres protegidos y no es un lector clínico.
+Dirección y MINED nunca reciben chat ni relato, según los manuales de uso revisados. Mesa y practicantes solo acceden a lo asignado y bajo facultades revisadas; los practicantes no se consideran habilitados por la simple propuesta de alianza. El chat requiere internet. El puente transporta sobres protegidos y no es un lector clínico.
 
 Drive contempla revelación excepcional con doble autorización, registro y aviso al estudiante. No existe una identidad civil oculta en la app. El protocolo debe limitarse a datos ya aportados o contacto voluntario y definir quién autoriza, qué información se comparte y cómo se documenta. No usar GPS como identificación encubierta.
+
+Los manuales proponen bloquear el contacto familiar mientras siga activo el anonimato y registrar acción grupal; aprobadores y datos compartibles siguen por definir. Debe validarse su relación con deberes de protección y contingencias antes de convertirlo en una regla automática. Dirección registra avisos docentes con ese origen sin crear accesos docentes o fingir autoría estudiantil. No adjudicar riesgo por el tipo de alerta sin valoración profesional.
 
 ## Datos y conectividad
 

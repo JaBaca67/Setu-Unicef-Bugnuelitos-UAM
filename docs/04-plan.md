@@ -1,6 +1,6 @@
 # Plan y decisiones pendientes
 
-**Revisión:** 2026-11-09. Producto vigente: ADR 0005. Propuestas técnicas: ADR 0006. La documentación no autoriza implementación.
+**Revisión:** 2026-11-09. Producto vigente: ADR 0005. Propuestas técnicas: ADR 0006; alineación de manuales de uso: ADR 0007. La documentación no autoriza implementación.
 
 ## Fechas y evaluación
 
@@ -24,15 +24,16 @@ Bloque documental actual: README técnico, alineación de producto/arquitectura/
 | --- | --- | --- |
 | Confirmado | Flutter/Dart Android y backend objetivo Supabase/PostgreSQL | ADR 0001/0002 y decisiones de equipo. |
 | Confirmado | Código público del colegio, código privado dirección y sin cuentas visibles | ADR 0005; implementación pendiente. |
-| Confirmado | Tres superficies, mesa humana, tres niveles y seis nombres de estado | Producto decidido; contratos y facultades por cerrar. |
+| Confirmado | Tres superficies, mesa humana, tres niveles y seis nombres de prototipo | Producto del equipo; nombres finales, contratos y facultades por validar con MINED. |
 | Confirmado | 3.º–11.º, Fase 1 urbana pública Managua | Adaptación de comprensión para primaria pendiente. |
 | Antes de código conectado | Continuidad privada por caso y recuperación sin cuenta | Comparar sesión técnica, capacidad por caso y combinación. |
-| Antes de mesh | Destinatario offline: alerta mínima local o custodia central | Drive describe entrega mínima local; aprobar claves, receptor y alcance. Consulta al usuario pendiente al redactar. |
+| Antes de mesh | Destinatario offline: alerta mínima local o custodia central | Drive describe entrega mínima local; aprobar claves, receptor y alcance. Entrega mínima local confirmada en los manuales y reunión; contrato técnico y claves por aprobar. |
 | Antes de mesh | Primer ingreso offline, configuración, firma y claves auténticas | No resuelto por código público simple. |
 | Antes de mesh | Transporte, biblioteca/canal Flutter, versiones y permisos | Nearby Connections candidato; prueba física no realizada. |
 | Antes de paneles | Tecnología y disponibilidad local del panel sin internet | Una web cloud no basta; decidir vista nativa o servicio LAN seguro. |
 | Antes de backend | Alta de personal, asignaciones, código privado y revocación | Código compartido no da auditoría individual. |
-| Antes de protocolo | Ramas de cierre/escalamiento, conflicto y revelación excepcional | Propuestas en docs/02; aprobación humana/institucional pendiente. |
+| Antes de código | Registro de aviso docente por dirección, origen y propiedad | Descrito en el manual de colegio; formulario mínimo por aprobar. |
+| Antes de protocolo | Cierre MINED, derivación separada de Escalado, contacto familiar, conflicto y revelación excepcional | Manuales operativos en versión de trabajo y propuestas en docs/02; aprobación institucional pendiente. |
 | Antes de piloto | MINED, centros, atención MINSA/practicantes, horarios y suplencia | Alianzas por validar, no confirmadas. |
 | Antes de piloto | Revisión local de datos, región, retención y derechos | Pendiente. |
 | Antes de publicar | Ayuda, testimonios, guías y permisos de contenidos | Fuente, territorio, fecha, vigencia y responsable. |

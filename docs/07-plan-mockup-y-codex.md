@@ -29,9 +29,9 @@ No crear carpetas futuras, servicios, dependencias, cuentas cloud o migraciones 
 
 1. Estudiante confirma centro ficticio y prepara aviso como Testigo Solidario con detalles opcionales.
 2. Sin internet, mostrar cola y transferencia por intermediario al puente; demostrar la separación del contenido.
-3. Dirección ve solo alerta mínima local si esa capacidad está aprobada/implementada; MINED aún figura pendiente.
+3. Dirección ve solo alerta mínima local si su contrato técnico está aprobado/implementado; MINED aún figura pendiente. El chat requiere internet.
 4. Restaurar internet del puente; un caso central pese a reintentos. MINED ve aviso/ficha correspondiente.
-5. Mostrar acción humana autorizada y seguimiento privado del estudiante; dirección sin chat/notas.
+5. Mostrar acción humana autorizada y seguimiento privado del estudiante; MINED y dirección sin chat/relato/notas.
 
 Preparar dispositivos, configuración, claves de demo y datos ficticios antes. Si mesa/chat no están implementados, delimitar esa parte del guion en vez de atribuir respuesta profesional a una plantilla automática.
 

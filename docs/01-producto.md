@@ -14,8 +14,8 @@ Estudiantes de 3.º a 11.º grado, como víctimas o Testigos Solidarios. Fase 1 
 - Tres superficies: celular estudiantil, panel MINED y panel de dirección. MINED como primer intermediario institucional, con alianza por validar.
 - Solicitud en tres pasos: tipo, rol y detalles opcionales. Tipos: acoso físico, verbal, social, ciberacoso, violencia sexual o necesidad de hablar.
 - Mesa humana: profesionales de planta y propuesta de articulación MINSA/practicantes de 5.º año; sin chatbot. Tarjetas rompehielos y filtro de vocabulario sin clasificación decisiva.
-- Aviso mínimo tipo/rol/hora; relato/chat reservados a escucha. Colegio recibe ficha autorizada y agregados, nunca el chat.
-- Tres niveles: acompañamiento, convivencia y riesgo grave. Seis estados: Recibido, En escucha, Ficha enviada, Colegio actuando, Escalado y Cerrado.
+- Aviso mínimo tipo/rol/hora; relato/chat reservados a escucha. Colegio y MINED reciben ficha autorizada y agregados, nunca chat ni relato. El chat necesita internet; la alerta sí puede viajar por mesh.
+- Tres niveles: acompañamiento, convivencia y riesgo grave. Seis nombres de prototipo: Recibido, En escucha, Ficha enviada, Colegio actuando, Escalado y Cerrado; nombres finales por validar con MINED. Derivación urgente es un evento separado de Escalado por falta de respuesta.
 - Alertas cifradas por red mesh hasta teléfono puente cuando falta internet. Recepción local y central diferentes; contrato de acceso local pendiente.
 - Sección híbrida de testimonios, artículos y guías. Publicación y disponibilidad offline requieren revisión editorial y derechos de uso.
 - Campaña para jóvenes y familias; docentes aplican rutinas impresas de 5–10 minutos y no usan la app.

@@ -33,3 +33,7 @@ El equipo amplió SéTú a tres superficies, acceso sin cuentas, escucha humana 
 La especificación puede orientar revisión y wireframes; las interfaces y el modelo propuestos no deben copiarse a migraciones sin revisión. Se mantienen ADR 0002/0004 como historia del código existente y ADR 0003 como superado.
 
 Para aceptar un bloque de desarrollo: acordar destinatarios y recuperación; cerrar claves/credenciales y límites de transporte; definir pruebas; obtener aprobación explícita del paso actual conforme a AGENTS.md. La aprobación de documentación o de un generador de diagramas no aprueba la arquitectura de seguridad.
+
+## Aclaración de las propuestas por los manuales operativos
+
+ADR 0007 precisa que MINED no lee chat/relato y el chat requiere internet. El alcance de alertas locales es decisión de producto; falta el contrato técnico. La derivación urgente no fuerza el estado Escalado por falta de respuesta, y el cierre habitual lo realiza MINED tras documentación del colegio. Esta aclaración sustituye cualquier interpretación incompatible de las alternativas anteriores.

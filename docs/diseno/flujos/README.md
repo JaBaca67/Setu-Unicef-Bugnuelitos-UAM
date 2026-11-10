@@ -2,7 +2,7 @@
 
 **Revisión:** 2026-11-09. Producto según ADR 0005; contratos y transiciones como propuestas de ADR 0006. No son evidencia de implementación. [Especificación técnica](../../../README.md) · [Pantallas](../../08-especificacion-funcional-setu.md) · [Datos y mesh](../../10-flujo-datos-y-red-mesh.md).
 
-Las fuentes Mermaid de esta carpeta son la versión vigente. La entrega local offline conserva la indicación de contrato pendiente; no concede acceso al chat a dirección o puente. Los seis nombres de estado están acordados; las ramas requieren validación del protocolo.
+Las fuentes Mermaid de esta carpeta son la versión vigente. La entrega local offline conserva la indicación de contrato pendiente; no concede acceso al chat a dirección o puente. Los seis nombres se usan como propuesta de prototipo y necesitan validación institucional. La derivación urgente no fuerza Escalado, que el manual MINED reserva a falta de respuesta. MINED y dirección nunca ven chat/relato; el chat necesita internet.
 
 Las imágenes PNG/SVG y los HTML generados antes de esta revisión son históricos y no deben usarse para implementar. El generador Python conserva el modelo anterior y no debe ejecutarse sobre estas fuentes. Su actualización y la regeneración visual requieren aprobación del cambio de código; se solicitó por separado. Los diagramas actuales pueden leerse aquí con un visor Markdown compatible con Mermaid o desde sus archivos `.mmd`.
 
@@ -73,22 +73,24 @@ flowchart TD
 
 ```mermaid
 flowchart TD
+    T["Dirección registra aviso docente · Sin cuenta docente ni autoría estudiantil"] --> A
     A(["Operación recibida centralmente"]) --> B["Aviso mínimo a MINED y dirección autorizada · Sin relato/chat"]
     A --> C["Mesa asignada accede al contenido reservado"]
-    C --> D["Profesional inicia escucha humana"]
+    C --> D["Profesional inicia escucha humana por internet"]
     D --> E{"¿Nivel valorado por profesional?"}
-    E -->|"1 · Acompañamiento"| F["Conversación y cierre autorizado con motivo"]
-    E -->|"2 · Convivencia"| G["Emitir ficha mínima · Revisar conflicto y destinatarios"]
-    E -->|"3 · Riesgo grave"| H["Derivación humana por protocolo · Escalado"]
-    G --> I["Dirección registra actuaciones sobre su ficha"]
-    I --> J["MINED supervisa y solicita seguimiento"]
-    J --> K{"¿Puede cerrarse según protocolo?"}
-    K -->|"Sí"| L["Cierre autorizado con motivo"]
-    K -->|"No: falta respuesta o agrava"| H
+    E -->|"1 · Acompañamiento"| F["Se resuelve en chat sin ficha · Facultad de cierre por conciliar"]
+    E -->|"2 · Convivencia"| G["Ficha mínima · Tipo, rol, hora y nivel · Revisar conflicto"]
+    E -->|"3 · Riesgo grave"| H["Derivación urgente registrada · No fuerza estado Escalado"]
+    G --> I["Dirección documenta pasos permitidos · Familia según autorización validada"]
+    I --> J["MINED exige respuesta y supervisa"]
+    J --> K{"¿Actuación y cierre documentados?"}
+    K -->|"Sí"| L["Dirección envía · MINED verifica y cierra"]
+    K -->|"No"| N["MINED requiere actuación · Escala por demora según protocolo"]
+    N --> J
     H -->|"Seguimiento de derivación"| J
-    F --> M(["Estudiante ve respuesta permitida · Sin notas internas"])
+    F --> M(["Estudiante ve respuesta propia · MINED y colegio no ven chat/relato"])
     L --> M
-    B -.->|"Supervisión no concede acceso clínico"| J
+    B -.->|"Supervisión institucional"| J
 ```
 
 ## Flujo de datos y destinatarios
@@ -149,21 +151,20 @@ stateDiagram-v2
     state "En escucha" as En_escucha
     state "Ficha enviada" as Ficha_enviada
     state "Colegio actuando" as Colegio_actuando
-    [*] --> Recibido: Recepción central persistida
-    Recibido --> En_escucha: Profesional asignado
-    Recibido --> Escalado: Riesgo grave valorado
-    En_escucha --> Cerrado: Nivel 1 y cierre autorizado
-    En_escucha --> Ficha_enviada: Nivel 2 y ficha profesional
-    En_escucha --> Escalado: Nivel 3 / ruta aprobada
-    Ficha_enviada --> Colegio_actuando: Actuación documentada
-    Ficha_enviada --> Escalado: Falta de respuesta / protocolo
-    Colegio_actuando --> Escalado: Agravamiento / falta de respuesta
-    Colegio_actuando --> Cerrado: Cierre autorizado
-    Escalado --> Cerrado: Seguimiento y cierre autorizado
-    Cerrado --> En_escucha: Reapertura autorizada con motivo
+    [*] --> Recibido: Recepción central y avisos autorizados
+    Recibido --> En_escucha: Profesional asignado por internet
+    En_escucha --> Cerrado: Nivel 1 sin ficha / facultad por conciliar
+    En_escucha --> Ficha_enviada: Mesa emite ficha de nivel 2
+    Ficha_enviada --> Colegio_actuando: Dirección registra actuación
+    Ficha_enviada --> Escalado: MINED por falta de respuesta
+    Colegio_actuando --> Escalado: MINED por falta de respuesta
+    Colegio_actuando --> Cerrado: Dirección documenta y envía / MINED cierra
+    Escalado --> Cerrado: MINED verifica y cierra
+    Cerrado --> En_escucha: Reapertura y facultad por validar
     note right of Recibido
-        Nombres decididos por el equipo.
-        Transiciones propuestas: validar protocolo.
-        Entrega local y transporte son dimensiones aparte.
+        Nombres de prototipo por validar con MINED.
+        Transporte local y central se registran aparte.
+        Derivación urgente es evento independiente:
+        no espera ni fuerza el estado Escalado.
     end note
 ```
