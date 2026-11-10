@@ -14,6 +14,8 @@ El límite del **modelo de atención** es el software que recibe solicitudes, fa
 
 El **modelo de transporte** tiene su propio contexto M0 y diagrama 0 M1–M5. Es una vista complementaria del transporte usado al recibir solicitudes, no una descomposición numerada de 1.0. Sus destinatarios son funciones de información; Bluetooth, Kotlin y teléfonos pertenecen a la vista física.
 
+El **modelo informativo/editorial** añade contexto I0 y diagrama 0 I1–I3 como tercera vista independiente ([ADR 0009](decisiones/0009-espacio-informativo-confirmado.md)). Sus flujos C01–C06 y almacén D8 no comparten casos con el lector público ni llevan videos por mesh. El [diccionario editorial y las vistas](14-espacio-informativo-y-referente-netflix.md#6-dfd-del-contenido-editorial) conservan exactamente seis flujos externos entre ambos niveles. Publicar contenido ya revisado es una función autorizada, sin implicar un CMS implementado.
+
 ## 1. Contexto de atención
 
 ![DFD de contexto de atención](diseno/flujos/09-dfd-contexto.svg)
@@ -66,7 +68,7 @@ No se deduce que las gestiones de F09/F11 puedan modificar cualquier campo. La m
 | D3 | Relato, conversación y notas como categorías separadas. El proceso 4.0 recibe solo una proyección visible. Compartir el símbolo no implica una tabla o permiso común. |
 | D4 | Ficha mínima, actuaciones, requerimientos y registro de derivación. Sin cuerpo del chat. |
 
-Auditoría, retención y recursos editoriales se detallan en arquitectura/operación; se omiten de este DFD para mantener el alcance declarado, sin eliminarlos de los requisitos.
+Auditoría y retención se detallan en arquitectura/operación. La publicación/consulta editorial se representa en su propio modelo I0/I1–I3, sin ampliar el alcance del DFD de casos o mezclar permisos de lectura.
 
 ## 3. Contexto y diagrama 0 del transporte mesh
 
@@ -111,4 +113,4 @@ Descubrimiento de vecinos, permisos Android y disponibilidad de internet se trat
 
 Estas comprobaciones verifican la coherencia de la documentación. La autorización, criptografía, permisos y entrega física necesitan implementación aprobada y pruebas; un DFD no las acredita.
 
-**Comprobación documental del 9 nov 2026:** las 12 fuentes Mermaid de la colección pasan el renderizador; los cuatro DFD SVG conservan exactamente los flujos de sus fuentes. El README se revisó en una vista local de escritorio y a 390 px, con navegación por índice y desplegables operativos. Los SVG nuevos son autónomos, sin scripts o etiquetas HTML incrustadas. Esta revisión no ejecutó pruebas de Flutter, web o radio: el código del producto no cambió.
+**Comprobación documental del 9 nov 2026, ampliada con Información:** las 15 fuentes Mermaid de la colección pasan el renderizador; los seis DFD SVG conservan exactamente los flujos de sus fuentes. Se verificó el balance de atención (14), transporte (10) e información editorial (6). El README se revisó en una vista local de escritorio y a 390 px, con navegación por índice y desplegables operativos. Los SVG nuevos son autónomos, sin scripts o etiquetas HTML incrustadas. Esta revisión no ejecutó pruebas de Flutter, web o radio: el código del producto no cambió.

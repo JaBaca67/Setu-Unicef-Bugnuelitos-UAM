@@ -7,6 +7,7 @@
 | Superficie o capa | Lenguajes | Recursos | Estado y alcance |
 | --- | --- | --- | --- |
 | App estudiantil Android | Dart; Kotlin para integración nativa | Flutter, `go_router`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base local M1 existente. QR, acceso nuevo, backend, chat remoto y mesh pendientes. |
+| Información E10/E11 | Dart y recursos JSON/texto/video | Widgets Flutter; catálogo versionado/recursos empaquetados propuestos; `video_player` como candidato; distribución editorial futura separada | Función de producto confirmada por ADR 0009; nada instalado. Entrada sin reporte y durante la espera, con retorno sin cambiar una alerta. |
 | QR escolar | Dart y cámara Android | **Candidato:** `mobile_scanner`; entrada manual como alternativa | No instalado. Probar QR auténtico/configuración, errores, permiso denegado y equipos sin Google Play services según modo del escáner. Escanear no autentica al dueño del caso. |
 | Comprobación de cercanía | Dart y API Android | **Candidato condicionado:** `geolocator` | Intención de producto; no instalar hasta acordar finalidad, permisos, alternativa y uso fuera del centro. No guardar ubicación precisa ni seguimiento continuo. |
 | Panel MINED | TypeScript/TSX, HTML semántico, CSS | **Propuesta:** React, Vite, React Router, `@supabase/supabase-js` | Cola de avisos/fichas, filtros del ámbito, requerimientos, escalamiento y cierre. Sin relato/chat. |
@@ -37,6 +38,14 @@ Se propone React Router para navegación, hooks/contexto para el estado de inter
 Se conservan las identificaciones funcionales de [docs/08](08-especificacion-funcional-setu.md): M01–M03, L01–L02 y D01–D04. Son pantallas de especificación, no rutas desplegadas. Las tablas presentan estados vacíos, acceso denegado, error, reconexión y confirmación pendiente. El color nunca es la única señal.
 
 No se crea todavía un directorio web, `package.json`, instalación npm o pipeline. El nombre de carpeta y las versiones exactas pertenecen al bloque de implementación que se apruebe.
+
+## Información y recursos multimedia
+
+[ADR 0009](decisiones/0009-espacio-informativo-confirmado.md) confirma un espacio propio de Información; Netflix es un referente, sin API, catálogo o rastreadores integrados. La [especificación editorial](14-espacio-informativo-y-referente-netflix.md) define E10/E11, entradas, metadatos y DFD separados de casos.
+
+Para una primera muestra se propone catálogo JSON versionado y texto/recursos autorizados en el paquete Flutter. [`video_player`](https://docs.flutter.dev/cookbook/plugins/play-video) es el candidato para reproducción nativa de video local o de red; requiere aprobar dependencia, versión, permisos y formatos. [Flutter permite empaquetar JSON y recursos](https://docs.flutter.dev/ui/assets/assets-and-images). Supabase podría distribuir futuras versiones publicadas; no se crea un CMS o cuarto panel ahora.
+
+Video no implica adjuntos de casos o payload mesh. Offline solo se ofrece lo realmente disponible, con alternativa textual/transcripción y estado explícito. Autoplay, perfil de intereses/salud, identificación del caso en consultas o importación de contactos extranjeros no forman parte de esta integración.
 
 ## 3. Contratos que deben aprobarse antes de conectar
 

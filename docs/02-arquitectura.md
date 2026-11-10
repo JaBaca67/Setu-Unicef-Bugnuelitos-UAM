@@ -65,10 +65,16 @@ No define tablas definitivas ni autoriza migraciones.
 | Autorización excepcional | Solicitud, motivo, dos aprobadores distintos, alcance de datos, fecha de aviso y vigencia; responsables por definir. |
 | Operación recibida | Identificador del emisor/operación, huella autenticada, resultado persistido y recibo estable. |
 | Sobre y acuse | ID de transporte, destino opaco, versión, vigencia y confirmación de custodia/central; sin credenciales del estudiante. |
-| Recurso editorial | Texto, territorio, responsable, fuente, revisión, vigencia y disponibilidad offline. |
+| Recurso editorial | ID/versión, tema, formato artículo/video/testimonio/guía, resumen, etapa escolar e idioma, contenido/archivo, duración orientativa, autor/fuente, revisión/responsable, vigencia, derechos, alternativa accesible y disponibilidad offline comprobable. Separado de relatos, fichas y notas. |
 | Auditoría | Actor, acción, recurso, ámbito y resultado; sin cuerpos ni secretos. |
 
 En datos dependientes usar referencias que impidan enlazar un caso de A con una ficha de B, además de RLS. Una alternativa es incluir `institution_id` en claves compuestas y sus referencias. IDs opacos y verificación de relaciones en servidor; no confiar en filtros de pantalla. Reglas de retención, cifrado de campos, región, copias y eliminación deben cerrarse antes de un piloto.
+
+## Información y publicación editorial
+
+El espacio Información está confirmado por [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md). Su catálogo público no requiere sesión de caso, código escolar o asociación institucional: se consulta desde bienvenida, inicio y espera. Solo se entrega una proyección editorial publicada; borradores, permisos y notas de revisión permanecen fuera del acceso público. La escritura/publicación se administra por una vía confiable y no crea un cuarto panel por defecto.
+
+Como propuesta inicial, catálogo JSON y recursos empaquetados Flutter permiten una muestra revisada; distribución posterior mediante Supabase queda por aprobar. Los archivos/video no pertenecen al paquete mesh. Consultar un tema o reproducir un recurso no registra una valoración emocional ni cambia el caso. Debe preservarse la operación al regresar desde la espera, sin mandar su ID o relato a proveedores de contenido. [Recorrido, metadatos y DFD editorial independiente](14-espacio-informativo-y-referente-netflix.md).
 
 ## Matriz de autorización propuesta
 

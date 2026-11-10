@@ -13,12 +13,20 @@
 | E03 | Inicio | Pedir apoyo, seguimiento privado, información y ayuda | Destinos claros; centro activo sin datos civiles. |
 | E04 | Solicitud en tres pasos | Tipo de situación; víctima/Testigo Solidario; detalles opcionales | E05. No exigir relato para una alerta mínima válida. |
 | E05 | Revisión y envío | Revisar destinatarios, límites y contenido; editar o confirmar | Operación guardada y protegida; E06 muestra entrega real. |
-| E06 | Estado de entrega | Ver guardado, transferencia, custodia, recepción local/central; comprobar/reintentar | No mostrar recibido central por un acuse de vecino. No crear otro caso al reintentar. |
+| E06 | Estado de entrega | Ver guardado, transferencia, custodia, recepción local/central; comprobar/reintentar; abrir Información mientras espera | Volver conserva operación y estado. No mostrar recibido central por un acuse de vecino ni reenviar al volver. |
 | E07 | Mi seguimiento privado | Abrir solo casos accesibles con mecanismo privado aprobado | E08. El código escolar no lista casos de compañeros. Recuperación pendiente. |
 | E08 | Caso y escucha humana | Estado visible, conversación propia por internet y tarjetas rompehielos; solicitar revisión | Sin chat por mesh. Sin notas internas ni datos del personal innecesarios. Horarios reales cuando existan. |
 | E09 | Ayuda | Recursos revisados, territorio, fuente, fecha y horarios; confirmar destino externo | Accesible sin reportar; no presentar contactos de borrador como operativos. |
-| E10 | Información | Artículos, testimonios y guías; indicar qué está descargado | E11. Contenido híbrido decidido, catálogo y derechos pendientes. |
-| E11 | Contenido o guía | Leer, reproducir si está disponible, volver libremente | Sin historial clínico, diagnóstico ni obligación de completar. Actividades digitales adicionales por priorizar. |
+| E10 | Información | Catálogo por temas y formatos: artículos, videos, testimonios editoriales y guías; disponibilidad real; entrada desde E01/E03 y espera E06/E07/E08 | E11. Parte confirmada de la solución, sin reporte/QR obligatorio para leer. Catálogo, revisión, derechos y diseño final pendientes. |
+| E11 | Recurso o guía | Leer/ver voluntariamente con controles, subtítulos/transcripción, fuente y revisión; volver al origen, consultar Ayuda o pedir apoyo | Sin diagnóstico, puntuación emocional o lectura obligatoria. Volver no modifica el caso. Pedir apoyo verifica colegio si hace falta y no envía automáticamente. |
+
+### Recorrido informativo confirmado
+
+[Origen en Meet, referente Netflix y alcance](14-espacio-informativo-y-referente-netflix.md) · [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md) · [Flujo ampliable](diseno/flujos/13-flujo-informacion.svg).
+
+E01/E03 → E10 → elegir tema/recurso → E11. Desde E06/E07/E08 puede abrirse el mismo espacio durante la espera y regresar sin perder operación, redacción o estado real. También puede explorarse por curiosidad o para comprender situaciones/emociones sin querer recibir atención. No se toma un tema leído como diagnóstico o nivel de alerta.
+
+Si un video no está disponible sin internet, se indica y se ofrece solo texto/transcripción realmente disponible; no prometer que todo el catálogo está descargado. No autoplay, cuestionarios diagnósticos o publicación de relatos privados como testimonios. La consulta de contenidos es independiente de la autorización privada de los casos.
 
 ### Detalle del reporte
 

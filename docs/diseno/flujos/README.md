@@ -4,7 +4,7 @@
 
 Las fuentes Mermaid de esta carpeta son la versión vigente. La entrega local offline conserva la indicación de contrato pendiente; no concede acceso al chat a dirección o puente. Los seis nombres se usan como propuesta de prototipo y necesitan validación institucional. La derivación urgente no fuerza Escalado, que el manual MINED reserva a falta de respuesta. MINED y dirección nunca ven chat/relato; el chat necesita internet.
 
-Las imágenes `01`–`04` PNG/SVG y los HTML generados antes de esta revisión son históricos y no deben usarse para implementar. El generador Python conserva el modelo anterior y no debe ejecutarse sobre estas fuentes; su modificación no forma parte del bloque autorizado. Los **SVG `06` y `08`–`12` son nuevos y vigentes** para esta revisión documental. Los `.mmd` conservan el modelo editable; los DFD SVG ofrecen la notación de almacén abierto y una disposición legible, con entidades/almacenes repetidos por ID. No se instalaron dependencias del producto ni se modificó el generador histórico.
+Las imágenes `01`–`04` PNG/SVG y los HTML generados antes de esta revisión son históricos y no deben usarse para implementar. El generador Python conserva el modelo anterior y no debe ejecutarse sobre estas fuentes; su modificación no forma parte del bloque autorizado. Los **SVG `06` y `08`–`15` son nuevos y vigentes** para esta revisión documental. Los `.mmd` conservan el modelo editable; los DFD SVG ofrecen la notación de almacén abierto y una disposición legible, con entidades/almacenes repetidos por ID. No se instalaron dependencias del producto ni se modificó el generador histórico.
 
 ## Accesos por tipo de modelo
 
@@ -16,8 +16,13 @@ Las imágenes `01`–`04` PNG/SVG y los HTML generados antes de esta revisión s
 | DFD de transporte: contexto M0 | [11 · Contexto mesh](11-dfd-mesh-contexto.mmd) | [SVG vigente](11-dfd-mesh-contexto.svg) |
 | DFD de transporte: diagrama 0 M1–M5 | [12 · Mesh lógico](12-dfd-mesh-logico.mmd) | [SVG vigente](12-dfd-mesh-logico.svg) |
 | Ruta física de transporte y fallos | [06 · Ejecución mesh](06-mesh.mmd) | [SVG vigente](06-mesh.svg) |
+| Información: curiosidad, comprensión y espera | [13 · Recorrido informativo](13-flujo-informacion.mmd) | [SVG vigente](13-flujo-informacion.svg) |
+| DFD editorial: contexto I0 | [14 · Contexto informativo](14-dfd-informacion-contexto.mmd) | [SVG vigente](14-dfd-informacion-contexto.svg) |
+| DFD editorial: diagrama 0 I1–I3 | [15 · Publicación, catálogo y recurso](15-dfd-informacion-logico.mmd) | [SVG vigente](15-dfd-informacion-logico.svg) |
 
 [Diccionario, alcance, balance F01–F14/T01–T10 y método Kendall y Kendall](../../12-modelado-dfd-kendall.md). El flujo `05` de componentes/destinatarios que aparece abajo es una vista de arquitectura; no sustituye los DFD `09`–`12`.
+
+[Información confirmada, referente Netflix y balance editorial C01–C06](../../14-espacio-informativo-y-referente-netflix.md). El catálogo público no consulta expedientes; abrir un recurso durante la espera no cambia el caso o el transporte.
 
 El [README principal](../../../README.md) reúne la especificación técnica; las secciones siguientes conservan los flujos funcionales de detalle.
 
@@ -48,12 +53,14 @@ flowchart TD
     A(["E03 · Inicio · Colegio activo"]) --> B{"¿Qué necesita hacer?"}
     B -->|"Pedir apoyo"| C["E04 / E05 · Tipo, rol y detalles opcionales"]
     B -->|"Mi seguimiento"| D["E07 · Solo casos con acceso privado"]
-    B -->|"Información"| E["E10 / E11 · Artículos, testimonios y guías"]
+    B -->|"Información"| E["E10 / E11 · Artículos, videos, testimonios y guías"]
     B -->|"Ayuda"| F["E09 · Recursos revisados"]
     C --> G["E06 · Estado real de entrega"]
     D --> H["E08 · Estado del caso y escucha humana"]
     G -->|"Acceso privado autorizado"| H
-    E -->|"Volver"| A
+    G -->|"Información durante la espera"| E
+    H -->|"Información voluntaria"| E
+    E -->|"Volver"| R(["Regresar al origen · E03/E06/E07/E08 · Conservar operación y estado"])
     F -->|"Volver"| A
     H -->|"Volver"| A
     G -->|"Pendiente o incierto: comprobar sin duplicar"| G

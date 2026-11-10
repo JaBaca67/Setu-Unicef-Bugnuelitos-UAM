@@ -14,6 +14,8 @@ Se separan tres productos de información:
 
 La capa de transporte solo necesita sobres cifrados y metadatos mínimos. No descubre el tipo de acoso para decidir una ruta o prioridad. No transporta sesiones Supabase, PIN, claves privadas ni una lista de nombres/dispositivos vecinos persistida.
 
+Los videos/artículos del [espacio Información confirmado](14-espacio-informativo-y-referente-netflix.md) pertenecen al catálogo editorial, no a adjuntos del caso o a la carga mesh. Puede consultarse material realmente disponible mientras una alerta sigue pendiente; leerlo no confirma entrega o atención y no altera los acuses.
+
 ## 2. Ruta con internet
 
 App → API de recepción → validación y persistencia central → recibo estable. Desde esa recepción se publican proyecciones: aviso mínimo a MINED/dirección y acceso reservado para la escucha. Chat y notas no forman parte de la notificación.

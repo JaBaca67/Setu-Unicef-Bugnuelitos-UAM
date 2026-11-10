@@ -20,6 +20,7 @@ Primero se necesita validar física y técnicamente la red. Un envío directo es
 | Experimento de proximidad | Transporte pequeño A→B→puente y recibos reales | Propuesta de dependencias/canal y equipos; prueba física. |
 | Backend mínimo | Recepción idempotente y proyecciones separadas | Esquema/RLS aprobados; integración con dos centros y dos estudiantes. |
 | Tres superficies | Reporte, aviso MINED, alerta/ficha dirección y actuación | Autorización real por recurso; sin selector público de roles privilegiados. |
+| Información E10/E11 | Catálogo/lector y muestra de artículo, video o guía revisados; acceso sin reporte y desde espera | Componente de producto confirmado en ADR 0009. Aprobar implementación, contenido/derechos y reproductor; comprobar retorno sin alterar una alerta. |
 | Cola y sincronización | Persistencia, custodia, reintentos y acuse central | Reinicio, duplicados, alteraciones y respuesta perdida. |
 | Presentación | Marca final, accesibilidad y guion de 120 s | Revisión visual y evidencia de cada tramo. |
 
@@ -30,6 +31,7 @@ No crear carpetas futuras, servicios, dependencias, cuentas cloud o migraciones 
 1. Estudiante confirma centro ficticio y prepara aviso como Testigo Solidario con detalles opcionales.
 2. Sin internet, mostrar cola y transferencia por intermediario al puente; demostrar la separación del contenido.
 3. Dirección ve solo alerta mínima local si su contrato técnico está aprobado/implementado; MINED aún figura pendiente. El chat requiere internet.
+   Durante esa espera, mostrar la entrada a Información y el regreso al mismo estado con una muestra editorial identificada; no simular atención por abrirla. Ajustar el tiempo del guion sin eliminar este componente de la propuesta.
 4. Restaurar internet del puente; un caso central pese a reintentos. MINED ve aviso/ficha correspondiente.
 5. Mostrar acción humana autorizada y seguimiento privado del estudiante; MINED y dirección sin chat/relato/notas.
 

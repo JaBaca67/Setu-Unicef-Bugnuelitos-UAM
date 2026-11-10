@@ -29,6 +29,10 @@ Propuesta tipográfica: cuerpo 16 sp, títulos 22–24 sp y controles adaptables
 
 Entrada: bienvenida → QR/código público → confirmar colegio → inicio. No formularios de alias/PIN. Ayuda y contenidos disponibles sin iniciar una solicitud. Navegación propuesta: Inicio, Mi seguimiento, Información y Ayuda. La organización final necesita validación con primaria y secundaria.
 
+**Información es un destino confirmado** ([ADR 0009](decisiones/0009-espacio-informativo-confirmado.md)), también desde bienvenida antes del QR y desde entrega/espera. E10 presenta temas y formatos; E11 muestra artículo, video, testimonio editorial o guía con fuente/revisión y salida fácil. La forma final de tarjetas, filtros o búsqueda se prototipa por etapa escolar. [Recorrido y referente](14-espacio-informativo-y-referente-netflix.md).
+
+Para videos: reproducción voluntaria, controles comprensibles y subtítulos/transcripción. Texto ampliable y alternativas disponibles con poco consumo de datos. Diferenciar recurso descargado de no disponible; volver al seguimiento conserva operación y estado. No exigir lecturas, presentar puntajes emocionales o cambiar el nivel de un caso por el tema consultado. Mantener las acciones Información, Ayuda y Pedir apoyo diferenciadas.
+
 Reporte: tipo → rol → detalles opcionales → revisión → estado real de entrega. Los pasos pueden agruparse visualmente si no perjudica comprensión. El estudiante decide cuánto narrar; el campo libre vacío no impide un aviso válido con tipo/rol.
 
 Seguimiento privado: mostrar únicamente casos accesibles mediante mecanismo privado aprobado; código escolar no abre una lista común. Estado de entrega separado del estado del caso.

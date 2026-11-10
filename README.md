@@ -12,7 +12,7 @@
 
 [Índice](#indice) · [Diagramas de datos](#dfd) · [Desarrollo técnico](#stack) · [Ejecutar la app](#instalacion)
 
-SéTú combina una aplicación para pedir apoyo de forma privada y una campaña permanente de sensibilización sobre salud mental. Se dirige a estudiantes de **3.º a 11.º grado**; la primera fase propuesta comprende colegios públicos del casco urbano de Managua. El MINED se plantea como primer intermediario institucional, una mesa de escucha humana atiende al estudiante y el colegio documenta actuaciones sin acceder al chat.
+SéTú combina un **espacio propio de información y orientación**, solicitudes privadas de apoyo y una campaña permanente de sensibilización sobre salud mental. Artículos, videos, testimonios editoriales y guías permiten informarse por curiosidad, comprender situaciones/emociones o acompañar la espera de atención, incluso sin enviar una alerta. Se dirige a estudiantes de **3.º a 11.º grado**; la primera fase propuesta comprende colegios públicos del casco urbano de Managua. El MINED se plantea como primer intermediario institucional, una mesa de escucha humana atiende al estudiante y el colegio documenta actuaciones sin acceder al chat.
 
 El proyecto participa en la **Jornada Académica y Social UAM - UNICEF 2026**, bajo la temática *Apoyo a la Salud Mental de Niñas, Niños y Adolescentes*. No es un producto oficial ni avalado por UNICEF, MINED o MINSA. Alianzas, financiación y operación con casos reales están pendientes de validación.
 
@@ -27,7 +27,7 @@ Este README es el documento principal de especificación técnica. Describe el p
 | Área | Qué encontrarás | Accesos directos |
 | --- | --- | --- |
 | **01 · Proyecto** | Problema, alcance, participantes y marca | [Propósito](#problema) · [Actores](#actores) · [Identidad](#identidad) · [Entregables](#entregables) |
-| **02 · Experiencia** | Qué hace cada usuario y cómo se atiende un caso | [Recorrido de usuarios](#usuarios) · [Protocolo y estados](#protocolo) |
+| **02 · Experiencia** | Informarse, pedir apoyo y consultar seguimiento | [Recorrido de usuarios](#usuarios) · [Información y acompañamiento](#informacion) · [Protocolo y estados](#protocolo) |
 | **03 · Modelado de datos** | DFD de Kendall y Kendall, datos y transporte | [Contexto y diagrama 0](#dfd) · [Datos privados](#datos) · [DFD mesh](#mesh-logico) · [Ruta física offline](#mesh) |
 | **04 · Desarrollo técnico** | Lenguajes, web, app, backend y verificación | [Arquitectura](#arquitectura) · [Stack completo](#stack) · [Paneles web](#paneles) · [App existente](#app) · [Instalación](#instalacion) · [Seguridad](#seguridad) · [Pruebas](#pruebas) |
 | **05 · Gestión** | Decisiones, pendientes y documentos de apoyo | [Autoridad y estado](#decisiones) · [Próximos bloques](#pendientes) · [Biblioteca](#documentacion) · [Colaboración](#colaboracion) |
@@ -58,19 +58,20 @@ Contexto social, alcance del prototipo y criterios de presentación.
 
 El equipo identifica temor a represalias, dificultad para expresar el malestar, estigma sobre la atención psicológica y desconfianza en la respuesta escolar. SéTú propone conectar solicitudes privadas con escucha profesional y seguimiento institucional. El impacto aún no está medido: la entrevista y los instrumentos de encuesta orientan el diseño, pero no prueban la eficacia del sistema.
 
-El proyecto comprende cinco componentes:
+El proyecto comprende seis componentes:
 
-1. **App estudiantil:** código escolar, solicitud de apoyo, seguimiento privado, chat humano y sección informativa.
-2. **Atención y supervisión:** mesa de escucha y panel MINED para fichas, seguimiento y escalamiento.
-3. **Panel de dirección:** avisos mínimos, fichas autorizadas, actuaciones y estadísticas del centro; sin chat.
-4. **Modo sin internet:** transporte cifrado de alertas mediante teléfonos cercanos hasta un teléfono puente.
-5. **Campaña presencial y digital:** contenidos para jóvenes y familias, y rutinas de aula de 5–10 minutos. Los docentes no usan la app.
+1. **App estudiantil:** código escolar, solicitud de apoyo, seguimiento privado y chat humano.
+2. **Información y orientación en la app:** artículos, videos, testimonios editoriales y guías; acceso independiente del reporte y durante la espera. Componente confirmado, no una ampliación opcional.
+3. **Atención y supervisión:** mesa de escucha y panel MINED para fichas, seguimiento y escalamiento.
+4. **Panel de dirección:** avisos mínimos, fichas autorizadas, actuaciones y estadísticas del centro; sin chat.
+5. **Modo sin internet:** transporte cifrado de alertas mediante teléfonos cercanos hasta un teléfono puente.
+6. **Campaña presencial y digital:** contenidos para jóvenes y familias, y rutinas de aula de 5–10 minutos. Los docentes no usan la app.
 
 ### Objetivo de demostración del 17 de noviembre
 
 Mostrar un **caso ficticio** viajando entre celular del estudiante, panel MINED y panel de dirección, incluido un tramo por red mesh sin internet. Demostrar entrega y separación de datos entre destinatarios. Cualquier tramo simulado se identifica en pantalla y ante el jurado.
 
-El chat completo, el contenido multimedia y los reconocimientos institucionales forman parte de la visión; su inclusión en el corte ejecutable debe priorizarse y aprobarse. No se consideran funcionalidades terminadas.
+El espacio Información forma parte confirmada de la solución ([ADR 0009](docs/decisiones/0009-espacio-informativo-confirmado.md)); catálogo y reproducción no están implementados en M1. El corte de prototipo debe representar su recorrido autónomo y durante la espera, con material de ejemplo identificado. La cantidad de recursos, implementación de video, revisión y derechos se dimensionan por bloque. Chat completo y reconocimientos institucionales conservan sus pendientes de implementación/priorización.
 
 ### Límites
 
@@ -162,9 +163,11 @@ El diagrama combina navegación y decisiones de atención. Los códigos E/M/L/D 
 flowchart TD
     subgraph EST["Estudiante · App Android"]
         A(["Privacidad y ayuda · E01"]) --> B["QR/código público · Confirmar colegio · E02"]
-        A --> INFO["Información y ayuda sin reportar · E09/E10"]
+        A --> HELP["Ayuda · E09 · Recursos verificados"]
+        A --> INFO["Información · E10 · Sin reporte o QR obligatorio"]
         B --> C["Inicio · E03 · Acceso privado del caso por resolver"]
         C --> D["Tipo, rol, detalles opcionales · Revisar y enviar · E04/E05"]
+        C --> INFO
         D --> NET{"¿Internet disponible?"}
         NET -->|"Sí"| API["Recepción central única"]
         NET -->|"No"| Q["Cola cifrada → vecinos → puente"]
@@ -172,6 +175,9 @@ flowchart TD
         Q -->|"Sincronización posterior"| API
         D --> TRACK["Entrega y seguimiento propio · E06/E07 · Pendiente/local/central"]
         TRACK --> CHAT["Chat humano · E08 · Requiere internet"]
+        TRACK -->|"Durante la espera"| INFO
+        CHAT -->|"Explorar información"| INFO
+        INFO --> RESOURCE["E11 · Artículos, videos, testimonios y guías · Retorno al origen sin cambiar el caso"]
     end
     API --> MIN["MINED · M01–M03 · Avisos y fichas, sin relato/chat"]
     API --> DIR["Dirección · D01–D04 · Avisos de su centro, sin relato/chat"]
@@ -195,11 +201,33 @@ flowchart TD
 
 | Usuario | Entrada y tarea principal | Salida y recuperación |
 | --- | --- | --- |
-| Estudiante | Privacidad → QR/código → confirmar colegio → redactar/revisar → enviar | Seguimiento propio; pendiente, recepción local y central diferenciados. Chat solo con internet. Errores de QR o permisos permiten corregir o consultar ayuda. |
+| Estudiante | Desde privacidad: explorar Información; o confirmar colegio y redactar/revisar/enviar una solicitud | Seguimiento propio; pendiente, recepción local y central diferenciados. Chat solo con internet. Errores de QR o permisos permiten corregir o consultar ayuda. |
 | Mesa de escucha | Acceso autorizado → casos asignados → escucha humana → valoración | Respuesta privada y, si corresponde, ficha mínima o derivación. Sin conexión no se simula conversación. |
 | MINED | Acceso autorizado → cola de su ámbito → ficha/actuaciones | Requerir respuesta, escalar demora y validar cierre. Nunca consultar chat o relato. |
 | Dirección | Acceso privado → centro propio → aviso/ficha → actuación | Documentar y enviar propuesta de cierre al MINED. Puede registrar un aviso docente con origen institucional. |
 | Puente técnico | Función autorizada → custodia de sobres → entrega/sincronización | Estado de transporte y acuses, sin contenido clínico ni autoría del caso. |
+
+<a id="informacion"></a>
+
+### Información y acompañamiento durante la espera
+
+**Decisión confirmada:** la [sesión de Meet del 9 nov a las 13:33 CST](https://docs.google.com/document/d/1c6E9dED-tzHSSu2ciC-TWYNtGH2fxLXYpq14DAt0Eeg/edit) registra la propuesta bajo la etiqueta **Andrea Juárez**, desde **01:21:40**, y la lectura mientras se espera desde **01:23:49**. El acuerdo quedó recogido en el Resumen General de Drive y el usuario confirma su inclusión. [Origen, límites de atribución y análisis del referente](docs/14-espacio-informativo-y-referente-netflix.md).
+
+El portal [Wanna Talk About It? de Netflix](https://www.wannatalkaboutit.com/) sirve como referente de organización informativa y acompañamiento. SéTú tendrá un espacio propio con su marca y recursos revisados/autorizados; no depende de una cuenta Netflix, una API o importar sus contactos/catálogo.
+
+| Entrada | Para qué sirve | Recorrido |
+| --- | --- | --- |
+| Bienvenida/inicio | Explorar por curiosidad, sin tener que contar un problema | E01/E03 → **E10 Información** → **E11 Recurso**, sin reporte, cuenta o QR obligatorio para leer. |
+| Comprender una situación o emoción | Conocer temas, poner palabras a lo que se siente y explorar opciones de apoyo | Elegir artículo, video explicativo, testimonio editorial o guía adaptados a la etapa escolar. Sin diagnóstico o puntuación automática. |
+| Entrega/seguimiento/espera | Consultar información mientras llega atención humana | E06/E07/E08 → E10/E11 → volver al origen, conservando operación, redacción y estado real. Leer no significa estar atendido. |
+
+E10 muestra temas, formatos y disponibilidad; E11 permite leer/ver con controles, subtítulos/transcripción y fuente/revisión. Las acciones **Ayuda** y **Pedir apoyo** permanecen disponibles de forma voluntaria; solicitar apoyo valida el colegio si hace falta y no envía automáticamente una alerta. No hay lecturas obligatorias, autoplay o reutilización de casos privados como testimonios.
+
+[![Flujo de Información desde bienvenida, curiosidad y espera](docs/diseno/flujos/13-flujo-informacion.svg)](docs/diseno/flujos/13-flujo-informacion.svg)
+
+[Fuente editable](docs/diseno/flujos/13-flujo-informacion.mmd) · [Especificación E10/E11](docs/08-especificacion-funcional-setu.md).
+
+**Sin internet:** solo se ofrece lo realmente empaquetado/descargado y vigente; se indica cuando falta un video y se ofrece una alternativa textual disponible. «Híbrido» significa **información más atención**, sin prometer todos los videos offline. Esta multimedia editorial no viaja por mesh como parte de una alerta.
 
 [↑ Volver al índice](#indice)
 
@@ -295,6 +323,21 @@ Referencia metodológica: Kendall y Kendall, *Systems Analysis and Design*, 10.�
 
 El DFD no otorga permisos ni selecciona tablas definitivas. Las salidas de MINED/dirección contienen avisos y fichas autorizados, **nunca relato/chat**. D3 reúne categorías lógicas separadas, no una tabla con acceso común. El permiso privado del caso sigue por aprobar.
 
+### DFD complementario del espacio Información
+
+La biblioteca tiene su propio contexto **I0** y diagrama 0 **I1–I3**, sin vincular lectura con expedientes: **I1 publica contenido ya validado por personas**, **I2 presenta catálogo** e **I3 entrega el recurso**. **D8** conserva recursos editoriales/versiones, separado de los almacenes de casos y mesh. La publicación es una función autorizada, no un CMS o cuarto panel ya implementado.
+
+<details>
+<summary><strong>Ver contexto y diagrama 0 de Información</strong></summary>
+
+[![Contexto I0: información y orientación](docs/diseno/flujos/14-dfd-informacion-contexto.svg)](docs/diseno/flujos/14-dfd-informacion-contexto.svg)
+
+[![Diagrama 0 de catálogo, publicación y entrega de recursos](docs/diseno/flujos/15-dfd-informacion-logico.svg)](docs/diseno/flujos/15-dfd-informacion-logico.svg)
+
+</details>
+
+Los seis flujos **C01–C06** conservan entidad/dirección/contenido: consulta y catálogo, solicitud y recurso/disponibilidad, contenido revisado y resultado de publicación. [Diccionario y fuentes](docs/14-espacio-informativo-y-referente-netflix.md#6-dfd-del-contenido-editorial). No llevan caso, relato, nivel clínico o una identidad civil del lector.
+
 [↑ Volver al índice](#indice)
 
 <a id="datos"></a>
@@ -303,6 +346,7 @@ El DFD no otorga permisos ni selecciona tablas definitivas. Las salidas de MINED
 
 | Información | Destino permitido | Exclusiones |
 | --- | --- | --- |
+| Información editorial publicada | Consulta autónoma de temas y recursos revisados | Sin historias privadas de casos ni necesidad de identificarse; publicación/escritura solo autorizadas. |
 | Código público escolar | App y validación de centro | No consulta expedientes ni administra. |
 | Código privado institucional | Validación/canje de acceso de dirección | No se publica en QR estudiantil, Git ni logs. |
 | Alerta mínima: tipo, rol y hora | MINED y dirección autorizados | Sin relato, chat, capturas o identidad civil. Estos metadatos también son sensibles. |
@@ -416,6 +460,8 @@ Tecnología confirmada, recursos propuestos y estado ejecutable, con sus diferen
 ```mermaid
 flowchart LR
     A["App del estudiante"] -->|"Internet: API autorizada"| S["Servidor SéTú / Supabase"]
+    A --> I["Información E10/E11 · Lectura y video voluntarios"]
+    C["Recursos públicos revisados · Paquete local o distribución publicada propuesta"] --> I
     A -->|"Sobre cifrado sin internet"| R["Retransmisores"]
     R --> P["Teléfono puente"]
     P -->|"Internet restablecido"| S
@@ -453,6 +499,7 @@ La matriz cubre app, panel MINED, mesa, panel institucional, backend y proximida
 | Capa o superficie | Lenguajes | Recursos a integrar o conservar | Estado |
 | --- | --- | --- | --- |
 | App Android | **Dart**, Kotlin nativo cuando haga falta | Flutter, `go_router`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base M1 implementada; nuevo flujo pendiente. |
+| Información E10/E11 | **Dart + JSON**; texto y medios editoriales | Widgets Flutter; catálogo/recursos empaquetados propuestos; `video_player` candidato para reproducción local o de red | Producto confirmado; implementación, versiones, catálogo y derechos pendientes. No es una API de Netflix. |
 | QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | No instalados. GPS no guarda ubicación precisa; finalidad/alternativas por resolver. |
 | Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Propuesta ADR 0008; avisos, fichas y supervisión sin chat. |
 | Mesa de escucha | TypeScript/TSX + HTML + CSS | Mismo cliente web, vistas y contratos del rol de escucha | Propuesto; chat humano conectado y casos asignados. |
@@ -531,7 +578,7 @@ Android es la plataforma inicial aprobada. No se afirman iOS, web o Windows como
 | Credenciales derivadas, permisos locales e idempotencia | No acreditan RLS ni deduplicación entre dispositivos. |
 | Pruebas y APK registrados | 18 pruebas y análisis limpio documentados el 5 nov; no verifican el sistema ampliado. |
 
-**No implementado:** acceso nuevo, QR/GPS, continuidad sin cuenta visible, paneles conectados, escucha remota, recepción central, red mesh, colas de reenvío, puente y servicio local a dirección.
+**No implementado:** acceso nuevo, QR/GPS, continuidad sin cuenta visible, catálogo/lectura/video E10/E11, paneles conectados, escucha remota, recepción central, red mesh, colas de reenvío, puente y servicio local a dirección.
 
 Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equivalen a los seis nuevos. Adaptarlos requiere aprobación y pruebas; si cambia el formato local, también una estrategia explícita de migración. No subir automáticamente los datos M1 al futuro backend.
 
@@ -640,6 +687,7 @@ Los casos reales requieren [protección y operación](docs/03-proteccion-y-opera
 
 | Escenario | Evidencia necesaria |
 | --- | --- |
+| Información autónoma y durante la espera | Abrir sin reporte/QR; artículo/video accesible con disponibilidad real; volver conservando operación/estado, sin enviar datos del caso a contenido o crear otra alerta. |
 | Acceso escolar | QR/código sin cuenta visible, errores y permisos denegados comprensibles; código público sin acceso a casos. |
 | Privacidad por caso | Dos estudiantes del mismo centro no consultan casos ajenos; continuidad privada verificable. |
 | Aislamiento institucional | Centro A no lee/escribe recursos B alterando identificadores; roles MINED limitados por ámbito. |
@@ -676,6 +724,8 @@ Cómo mantener esta especificación alineada con Drive y el repositorio.
 Las fuentes de producto están en el [Drive del equipo](https://drive.google.com/drive/folders/1BSIhalcR9OKPbfXwTDoexnr12lPAXE6c). Su revisión se registra en [docs/09](docs/09-revision-drive-y-trazabilidad.md). [ADR 0005](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md) reemplaza el acceso por alias + PIN de ADR 0003. [ADR 0006](docs/decisiones/0006-especificacion-tecnica-y-mesh-propuesta.md) registra las propuestas técnicas de esta especificación **sin declararlas aprobadas**. [ADR 0007](docs/decisiones/0007-alineacion-con-manuales-operativos.md) incorpora las precisiones de los nuevos manuales de uso, todavía sujetos a validación institucional.
 
 [ADR 0008](docs/decisiones/0008-stack-web-y-modelado-logico-propuesto.md) añade la propuesta de stack web y la separación de modelos lógicos/físicos. No autoriza programación, dependencias, migraciones o despliegues. [docs/13](docs/13-recursos-tecnicos.md) distingue selección candidata de compatibilidad realmente probada.
+
+[ADR 0009](docs/decisiones/0009-espacio-informativo-confirmado.md) confirma Información como componente del producto, respaldado por Meet, resumen de Drive e instrucción del usuario. Su existencia no se vuelve a tratar como opcional; catálogo, revisión, derechos y tecnología conservan decisiones de implementación pendientes.
 
 [↑ Volver al índice](#indice)
 
@@ -714,6 +764,7 @@ Antes de desarrollar paneles, aprobar o ajustar React/TypeScript/Vite, el acceso
 | [Datos y mesh](docs/10-flujo-datos-y-red-mesh.md) | Protocolo de transporte propuesto y pruebas. |
 | [DFD Kendall y Kendall](docs/12-modelado-dfd-kendall.md) | Método, diccionario, contexto/diagrama 0 y balance de atención/transporte. |
 | [Recursos técnicos](docs/13-recursos-tecnicos.md) | Lenguajes, SDK, web, backend, proximidad y fuentes oficiales. |
+| [Información y referente Netflix](docs/14-espacio-informativo-y-referente-netflix.md) | Evidencia de Meet, uso durante la espera, E10/E11, recursos editoriales y DFD C01–C06. |
 | [Diagramas vigentes](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. |
 | [Fichas de pantalla](docs/diseno/pantallas-explicadas.md) | Acciones, entradas, salidas y variantes. |
 

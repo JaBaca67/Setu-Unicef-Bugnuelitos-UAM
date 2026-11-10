@@ -1,9 +1,11 @@
 flowchart TD
     subgraph EST["Estudiante · App Android"]
         A(["Privacidad y ayuda · E01"]) --> B["QR/código público · Confirmar colegio · E02"]
-        A --> INFO["Información y ayuda sin reportar · E09/E10"]
+        A --> HELP["Ayuda · E09 · Recursos verificados"]
+        A --> INFO["Información · E10 · Sin reporte o QR obligatorio"]
         B --> C["Inicio · E03 · Acceso privado del caso por resolver"]
         C --> D["Tipo, rol, detalles opcionales · Revisar y enviar · E04/E05"]
+        C --> INFO
         D --> NET{"¿Internet disponible?"}
         NET -->|"Sí"| API["Recepción central única"]
         NET -->|"No"| Q["Cola cifrada → vecinos → puente"]
@@ -11,6 +13,9 @@ flowchart TD
         Q -->|"Sincronización posterior"| API
         D --> TRACK["Entrega y seguimiento propio · E06/E07 · Pendiente/local/central"]
         TRACK --> CHAT["Chat humano · E08 · Requiere internet"]
+        TRACK -->|"Durante la espera"| INFO
+        CHAT -->|"Explorar información"| INFO
+        INFO --> RESOURCE["E11 · Artículos, videos, testimonios y guías · Retorno al origen sin cambiar el caso"]
     end
     API --> MIN["MINED · M01–M03 · Avisos y fichas, sin relato/chat"]
     API --> DIR["Dirección · D01–D04 · Avisos de su centro, sin relato/chat"]

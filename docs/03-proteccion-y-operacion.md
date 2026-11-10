@@ -43,6 +43,12 @@ M1 almacena datos ficticios en archivo AES-GCM-256 con clave protegida y formato
 
 Definir plazos por categoría: cola y copias en retransmisores, acuses, expedientes, notas, actuaciones, auditoría y respaldos. La caducidad de un sobre no cierra el caso. No conservar indefinidamente ni borrar expedientes sin protocolo aprobado. Resolver pérdida de acceso privado y ejercicio de derechos sin exigir identidad innecesaria.
 
+## Contenido informativo y acompañamiento durante la espera
+
+El [espacio Información](14-espacio-informativo-y-referente-netflix.md) es parte confirmada de SéTú. Contenidos adaptados a la etapa escolar requieren revisión profesional/editorial, fuente, vigencia, derechos y alternativa accesible antes de publicarse. Consultar un artículo o video no sustituye la escucha humana, no confirma atención y no determina si una persona necesita una derivación.
+
+No extraer relatos privados para testimonios, habilitar publicación estudiantil o inferir diagnósticos a partir de lecturas. Ayuda territorial y contenido educativo son recursos distintos; los contactos extranjeros del referente no se importan como ayuda local. Videos/proveedores externos y cualquier conservación de consultas requieren revisión de privacidad, sin ID de caso, relatos o seguimiento sensible por defecto.
+
 ## Riesgos y comprobaciones
 
 | Riesgo | Control por validar | Evidencia necesaria |

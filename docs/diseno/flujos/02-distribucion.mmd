@@ -2,12 +2,14 @@ flowchart TD
     A(["E03 · Inicio · Colegio activo"]) --> B{"¿Qué necesita hacer?"}
     B -->|"Pedir apoyo"| C["E04 / E05 · Tipo, rol y detalles opcionales"]
     B -->|"Mi seguimiento"| D["E07 · Solo casos con acceso privado"]
-    B -->|"Información"| E["E10 / E11 · Artículos, testimonios y guías"]
+    B -->|"Información"| E["E10 / E11 · Artículos, videos, testimonios y guías"]
     B -->|"Ayuda"| F["E09 · Recursos revisados"]
     C --> G["E06 · Estado real de entrega"]
     D --> H["E08 · Estado del caso y escucha humana"]
     G -->|"Acceso privado autorizado"| H
-    E -->|"Volver"| A
+    G -->|"Información durante la espera"| E
+    H -->|"Información voluntaria"| E
+    E -->|"Volver"| R(["Regresar al origen · E03/E06/E07/E08 · Conservar operación y estado"])
     F -->|"Volver"| A
     H -->|"Volver"| A
     G -->|"Pendiente o incierto: comprobar sin duplicar"| G

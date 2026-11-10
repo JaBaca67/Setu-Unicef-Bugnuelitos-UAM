@@ -15,6 +15,7 @@ Este documento reúne los accesos a la documentación técnica del prototipo Sé
 - **Diagramas editables:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/diseno/flujos/README.md
 - **DFD Kendall y Kendall, diccionario y balance:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/12-modelado-dfd-kendall.md
 - **Lenguajes y recursos para app, paneles y backend:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/13-recursos-tecnicos.md
+- **Espacio Información y origen en Meet/referente Netflix:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/14-espacio-informativo-y-referente-netflix.md
 - **Pantallas y funciones:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/08-especificacion-funcional-setu.md
 - **Fuentes y revisión de manuales:** https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM/blob/main/docs/09-revision-drive-y-trazabilidad.md
 
