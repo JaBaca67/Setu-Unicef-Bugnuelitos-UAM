@@ -48,6 +48,74 @@ void main() {
         .setMockMethodCallHandler(channel, null),
   );
 
+  testWidgets('abre la bienvenida y permite visitar y cerrar cada muestra', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(392, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const ValueKey<String> captureKey = ValueKey<String>('welcome-capture');
+    await tester.pumpWidget(
+      const RepaintBoundary(key: captureKey, child: CureandoApp()),
+    );
+    await tester.pumpAndSettle();
+    final Finder title = find.text('Tu salud mental');
+    expect(title, findsOneWidget);
+    await _capture(tester, captureKey, 'e01-welcome');
+
+    const Map<String, String> destinations = <String, String>{
+      'Explorar Información': 'Información',
+      'Ayuda': 'Ayuda',
+      'Usar código del colegio': 'Código del colegio',
+    };
+    for (final MapEntry<String, String> destination in destinations.entries) {
+      final Finder action = find.text(destination.key);
+      await tester.ensureVisible(action);
+      await tester.tap(action);
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, destination.value), findsOneWidget);
+      expect(find.text('Vista de demostración'), findsOneWidget);
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
+      expect(title, findsOneWidget);
+    }
+
+    final Finder privacy = find.text('Cómo cuidamos tu información');
+    await tester.ensureVisible(privacy);
+    await tester.tap(privacy);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('equipo de escucha asignado'), findsOneWidget);
+    await tester.tap(find.text('Cerrar'));
+    await tester.pumpAndSettle();
+    expect(title, findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('la bienvenida permite abrir privacidad con texto al 200 %', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(const CureandoApp());
+    await tester.pumpAndSettle();
+    final Finder privacy = find.text('Cómo cuidamos tu información');
+    await tester.ensureVisible(privacy);
+    await tester.tap(privacy);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('equipo de escucha asignado'), findsOneWidget);
+    final Finder close = find.text('Cerrar');
+    await tester.ensureVisible(close);
+    await tester.tap(close);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('equipo de escucha asignado'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'SéTú muestra identidad y almacenamiento; responde a la interacción',
     (WidgetTester tester) async {
@@ -55,7 +123,10 @@ void main() {
       await tester.pumpWidget(
         RepaintBoundary(
           key: captureKey,
-          child: CureandoApp(gateway: MockCureandoGateway()),
+          child: CureandoApp(
+            gateway: MockCureandoGateway(),
+            showM1Verification: true,
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -77,7 +148,9 @@ void main() {
   testWidgets(
     'protección requiere confirmación; cancelar conserva FLAG_SECURE',
     (WidgetTester tester) async {
-      await tester.pumpWidget(CureandoApp(gateway: MockCureandoGateway()));
+      await tester.pumpWidget(
+        CureandoApp(gateway: MockCureandoGateway(), showM1Verification: true),
+      );
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.byType(Switch));
       await tester.tap(find.byType(Switch));
@@ -107,7 +180,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    await tester.pumpWidget(CureandoApp(gateway: MockCureandoGateway()));
+    await tester.pumpWidget(
+      CureandoApp(gateway: MockCureandoGateway(), showM1Verification: true),
+    );
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Grande +20%'));
     await tester.tap(find.text('Grande +20%'));
@@ -157,9 +232,20 @@ void main() {
 
 Future<void> _capture(WidgetTester tester, Key key, String name) async {
   if (!const bool.fromEnvironment('SETU_CAPTURE_QA')) return;
+  final Finder capture = find.byKey(key);
+  final Finder images = find.descendant(
+    of: capture,
+    matching: find.byType(Image),
+  );
+  await tester.runAsync<void>(() async {
+    for (final Element element in images.evaluate()) {
+      await precacheImage((element.widget as Image).image, element);
+    }
+  });
+  await tester.pumpAndSettle();
   await tester.runAsync<void>(() async {
     final RenderRepaintBoundary boundary = tester
-        .renderObject<RenderRepaintBoundary>(find.byKey(key));
+        .renderObject<RenderRepaintBoundary>(capture);
     final ui.Image image = await boundary.toImage(pixelRatio: 1.5);
     final ByteData? bytes = await image.toByteData(
       format: ui.ImageByteFormat.png,

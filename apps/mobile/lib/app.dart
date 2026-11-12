@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
 import 'shared/platform/screen_security_controller.dart';
@@ -7,9 +8,15 @@ import 'shared/theme/app_theme.dart';
 import 'shared/widgets/setu_brand_mark.dart';
 
 class CureandoApp extends StatefulWidget {
-  const CureandoApp({super.key, this.gateway, this.screenSecurity});
+  const CureandoApp({
+    super.key,
+    this.gateway,
+    this.screenSecurity,
+    this.showM1Verification = false,
+  });
   final CureandoGateway? gateway;
   final ScreenSecurityController? screenSecurity;
+  final bool showM1Verification;
   @override
   State<CureandoApp> createState() => _CureandoAppState();
 }
@@ -18,15 +25,31 @@ class _CureandoAppState extends State<CureandoApp> {
   late final ScreenSecurityController _security =
       widget.screenSecurity ?? ScreenSecurityController();
   late final GoRouter _router = GoRouter(
+    initialLocation: widget.showM1Verification ? '/verificacion-m1' : '/',
     routes: <RouteBase>[
       GoRoute(
         path: '/',
         builder: (BuildContext context, GoRouterState state) =>
-            ValueListenableBuilder<int>(
-              valueListenable: _revision,
-              builder: (BuildContext context, int value, Widget? child) =>
-                  _home(context),
+            const WelcomeScreen(),
+        routes: <RouteBase>[
+          for (final WelcomeDestination destination
+              in WelcomeDestination.values)
+            GoRoute(
+              path: destination.path,
+              builder: (BuildContext context, GoRouterState state) =>
+                  WelcomePreviewScreen(destination: destination),
             ),
+          if (widget.showM1Verification)
+            GoRoute(
+              path: 'verificacion-m1',
+              builder: (BuildContext context, GoRouterState state) =>
+                  ValueListenableBuilder<int>(
+                    valueListenable: _revision,
+                    builder: (BuildContext context, int value, Widget? child) =>
+                        _home(context),
+                  ),
+            ),
+        ],
       ),
     ],
   );
@@ -44,9 +67,11 @@ class _CureandoAppState extends State<CureandoApp> {
   @override
   void initState() {
     super.initState();
-    _security.addListener(_refresh);
-    _security.initialize();
-    _open();
+    if (widget.showM1Verification) {
+      _security.addListener(_refresh);
+      _security.initialize();
+      _open();
+    }
   }
 
   void _refresh() {
@@ -76,8 +101,10 @@ class _CureandoAppState extends State<CureandoApp> {
 
   @override
   void dispose() {
-    _security.removeListener(_refresh);
-    if (widget.screenSecurity == null) _security.dispose();
+    if (widget.showM1Verification) {
+      _security.removeListener(_refresh);
+      if (widget.screenSecurity == null) _security.dispose();
+    }
     _router.dispose();
     _revision.dispose();
     super.dispose();

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 abstract final class CureandoTheme {
-  static const Color blue = Color(0xFF0D61EB);
-  static const Color pink = Color(0xFFFF0091);
-  static const Color yellow = Color(0xFFFFE100);
+  static const Color blue = Color(0xFF0C62EB);
+  static const Color pink = Color(0xFFFF0092);
+  static const Color yellow = Color(0xFFFFE000);
   static const Color green = Color(0xFF00C642);
   static const Color blueSoft = Color(0xFFEEF4FF);
   static const Color pinkSoft = Color(0xFFFFF0F8);
