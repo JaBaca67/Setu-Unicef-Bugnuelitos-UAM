@@ -12,6 +12,14 @@ Desde `apps/mobile/`, `flutter run` y `flutter build apk --debug` abren E01 por 
 
 El análisis de Flutter y sus 20 pruebas pasaron. Se revisó la captura `build/qa/e01-welcome.png`, se compiló el APK debug y se verificaron el ícono, el arranque en frío y la navegación de E01 en un emulador Pixel 9 Pro con Android API 37 en modo avión. El APK incluye recursos adaptativos y variantes de arranque para versiones anteriores. La verificación en teléfono físico sigue pendiente.
 
+## Acceso escolar E02 — 2026-11-12
+
+Desde la bienvenida, **Usar código del colegio** abre el visor de QR simulado o el formulario manual. Probá `AULA-24` para cercanía confirmada y `AULA-00` para ver el estado sin confirmar. Se puede reintentar o consultar Información y Ayuda. La demostración funciona con un colegio ficticio y carece de acceso a cámara o GPS. E01 y E02 muestran el fondo detrás de la barra de estado. La navegación usa fundido y desplazamiento breve, con cambios inmediatos al activar movimiento reducido. [Maqueta y alcance de E02](../../docs/diseno/plan-acceso-escolar-e02.md).
+
+Para capturar el diseño localmente, usar `flutter run --dart-define=SETU_DESIGN_CAPTURE=true` desde `apps/mobile/`. También se puede generar un APK de depuración con `flutter build apk --debug --dart-define=SETU_DESIGN_CAPTURE=true`. El APK habitual arranca con protección. Android rechaza desactivar la protección en una compilación que carece de la marca de depuración. [Decisión de implementación](../../docs/decisiones/0011-acceso-escolar-demostracion.md).
+
+Se verificaron análisis sin incidencias y 23 pruebas de Flutter. En un emulador Pixel 9 Pro con Android API 37 y modo avión se recorrieron el QR y el código manual, se revisó la cabecera debajo de la barra de estado y se comprobó la protección de la ventana en los dos APK de depuración. Queda pendiente la prueba en un teléfono físico.
+
 ## Qué está implementado en M1
 
 - Poppins Regular/Medium/SemiBold/Bold empaquetada con licencia OFL (fuente: repositorio oficial google/fonts, ofl/poppins). No hay descargas de fuentes en ejecución. Fallback del sistema y síntesis tipográfica si falta un peso solicitado.

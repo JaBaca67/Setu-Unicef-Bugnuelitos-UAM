@@ -6,7 +6,7 @@
 
 **Bugñuelitos · Universidad Americana (UAM) · Nicaragua**
 
-**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1 y bienvenida E01.
+**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01 y acceso escolar simulado E02.
 
 **Estado:** definición y prototipado académico; arquitectura ampliada en diseño.
 
@@ -42,7 +42,7 @@ Este README es el documento principal de especificación técnica. Describe el p
 - **Arquitectura y ruta física:** componentes, lenguajes, SDK, dispositivos y conectividad.
 - **Implementado:** existe en el corte Android actual. **En diseño:** describe el sistema objetivo. **Candidato:** tecnología por evaluar. **Pendiente:** aspecto técnico u operativo por resolver.
 
-Los modelos nuevos documentan el sistema objetivo. **El corte actual ofrece la bienvenida E01 sobre la base Android local M1. Paneles, backend conectado y mesh siguen en diseño.**
+Los modelos nuevos documentan el sistema objetivo. **El corte actual ofrece E01 y el acceso escolar simulado E02 sobre la base Android local M1. Paneles, backend conectado y mesh siguen en diseño.**
 
 </details>
 
@@ -498,7 +498,7 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 
 | Capa o superficie | Lenguajes | Recursos a integrar o conservar | Estado |
 | --- | --- | --- | --- |
-| App Android | **Dart**, Kotlin nativo cuando haga falta | Flutter, `go_router`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base M1 y bienvenida E01 implementadas. |
+| App Android | **Dart**, Kotlin nativo cuando haga falta | Flutter, `go_router`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base M1, bienvenida E01 y acceso escolar simulado E02. |
 | Información E10/E11 | **Dart + JSON**; texto y medios editoriales | Widgets Flutter; catálogo y recursos empaquetados; `video_player` candidato para reproducción local o de red | Catálogo, lector y reproducción pendientes de implementación; contenido, versiones y derechos por definir. |
 | QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | No instalados. GPS no guarda ubicación precisa; finalidad/alternativas por resolver. |
 | Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Stack en evaluación; avisos, fichas y supervisión sin chat. |
@@ -557,7 +557,7 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Capa | Tecnología/version registrada | Uso actual |
 | --- | --- | --- |
 | Aplicación | Flutter 3.44.5 stable / Dart 3.12.2 | Base Android 0.2.0+2. |
-| Navegación | `go_router` 18.1.3 | E01 abre Colegio, Información y Ayuda como vistas de demostración. |
+| Navegación | `go_router` 18.1.3 | E01 abre el acceso escolar simulado y las vistas de muestra de Información y Ayuda. |
 | Criptografía local | `cryptography` 2.9.0 | AES-GCM-256 y derivaciones de credenciales M1. |
 | Custodia de clave | `flutter_secure_storage` 11.2.0 | Almacenamiento seguro del secreto local. |
 | Archivo privado | `path_provider` 2.1.6 | Ruta del almacén cifrado. |
@@ -580,6 +580,8 @@ Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como c
 
 **Bienvenida E01 (12 nov).** La ruta inicial muestra la composición estática de campaña y el panel de privacidad. Los accesos de muestra funcionan localmente. El ícono y la pantalla de arranque usan el isotipo blanco sobre azul. La verificación técnica de M1 se abre con `--dart-define=SETU_M1_QA=true`. [Ejecución y verificación](apps/mobile/README.md) · [Diseño aprobado](docs/diseno/plan-arranque-bienvenida-setu.md).
 
+**Acceso escolar E02 (12 nov).** La prueba recorre QR y código manual, confirma o deja pendiente la cercanía con datos ficticios y ofrece reintento, Información y Ayuda. E01 y E02 comparten la barra de estado transparente. Las transiciones respetan movimiento reducido. Para revisión local de diseño, el argumento `--dart-define=SETU_DESIGN_CAPTURE=true` permite capturas en depuración. [Recorrido E02](docs/diseno/plan-acceso-escolar-e02.md).
+
 **No implementado:** acceso nuevo, QR/GPS, continuidad sin cuenta visible, catálogo/lectura/video E10/E11, paneles conectados, escucha remota, recepción central, red mesh, colas de reenvío, puente y servicio local a dirección.
 
 Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equivalen a los seis nuevos. Adaptarlos requiere aprobación y pruebas; si cambia el formato local, también una estrategia explícita de migración. No subir automáticamente los datos M1 al futuro backend.
@@ -589,6 +591,7 @@ Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equ
 ```text
 apps/mobile/                 Aplicación Flutter Android
   lib/features/welcome/      Bienvenida y vistas locales de muestra
+  lib/features/school_access/ Acceso escolar simulado
   lib/shared/                Contratos, modelos, almacén, tema y widgets
   test/                      Pruebas locales y de interfaz
 docs/                        Producto, arquitectura, operación y diseño
@@ -720,7 +723,7 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | Área | Estado actual |
 | --- | --- |
 | Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
-| Recorrido estudiantil e Información | E01 implementada con accesos de muestra a E02/E09/E10. El acceso escolar, catálogo, lector y resto del recorrido siguen en diseño. |
+| Recorrido estudiantil e Información | E01 y flujo simulado E02 implementados. E09/E10 son vistas de muestra. La validación escolar real, catálogo, lector y resto del recorrido siguen en diseño. |
 | Paneles y backend | Arquitectura y contratos en diseño; sin conexión operativa entre dispositivos. |
 | Red mesh y entrega local | Protocolo y transporte en evaluación; requieren implementación y pruebas físicas. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |

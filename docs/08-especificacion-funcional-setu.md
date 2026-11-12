@@ -1,6 +1,6 @@
 # Especificación funcional de SéTú
 
-**Revisión:** 2026-11-12. Alcance vigente ADR 0005 y contratos técnicos propuestos en ADR 0006. E01 abre la app y tiene destinos de muestra para E02, E09 y E10. Los demás recorridos se describen como diseño. [Bienvenida E01](diseno/plan-arranque-bienvenida-setu.md).
+**Revisión:** 2026-11-12. Alcance vigente ADR 0005 y contratos técnicos propuestos en ADR 0006. E01 abre la app y lleva al acceso escolar simulado E02 o a las vistas de muestra E09/E10. Los demás recorridos se describen como diseño. [Bienvenida E01](diseno/plan-arranque-bienvenida-setu.md).
 
 [Recorrido integrado de usuarios](diseno/flujos/08-recorrido-usuarios.svg) · [DFD lógico y diccionario](12-modelado-dfd-kendall.md) · [Recursos de app y paneles](13-recursos-tecnicos.md). ADR 0008 propone el cliente React/TypeScript/Vite para M/L/D, con permisos separados; no cambia pantallas o facultades de producto ni autoriza implementarlas.
 
@@ -9,7 +9,7 @@
 | ID | Pantalla y finalidad | Entradas y acciones | Salida y límites |
 | --- | --- | --- | --- |
 | E01 | Bienvenida y privacidad | Entender quién recibe qué; entrar, consultar ayuda o información | E02, E09 o E10. Sin promesa de anonimato absoluto. |
-| E02 | Colegio | QR/código público, confirmar centro; pedir cámara solo para escanear | Contexto escolar validado según configuración; sin cuenta/alias/PIN. GPS y primer ingreso offline pendientes. [Maqueta de acceso escolar](diseno/plan-acceso-escolar-e02.md). |
+| E02 | Colegio | QR/código público, confirmar centro; pedir cámara solo para escanear | La demo simula el colegio y la cercanía. Validación real, GPS y primer ingreso offline pendientes. [Demostración E02](diseno/plan-acceso-escolar-e02.md). |
 | E03 | Inicio | Pedir apoyo, seguimiento privado, información y ayuda | Destinos claros; centro activo sin datos civiles. |
 | E04 | Solicitud en tres pasos | Tipo de situación; víctima/Testigo Solidario; detalles opcionales | E05. No exigir relato para una alerta mínima válida. |
 | E05 | Revisión y envío | Revisar destinatarios, límites y contenido; editar o confirmar | Operación guardada y protegida; E06 muestra entrega real. |
@@ -84,4 +84,4 @@ Los textos de error nunca incluyen relatos, tokens, códigos privados o datos de
 
 ## Aceptación
 
-Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. El corte Android actual implementa E01 con navegación de muestra y conserva la verificación técnica M1. [Pruebas del corte Android](../apps/mobile/README.md).
+Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. El corte Android actual implementa E01, acceso escolar simulado E02 y la verificación técnica M1. [Pruebas del corte Android](../apps/mobile/README.md).
