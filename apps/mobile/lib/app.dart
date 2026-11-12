@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'features/home/student_home_screen.dart';
+import 'features/home/student_resources.dart';
+import 'features/home/support_preview_screen.dart';
 import 'features/school_access/school_access_screen.dart';
 import 'features/school_access/school_location.dart';
 import 'features/welcome/welcome_screen.dart';
@@ -72,6 +75,41 @@ class _CureandoAppState extends State<CureandoApp> {
                       );
                     },
                   ),
+            ],
+          ),
+          GoRoute(
+            path: 'inicio',
+            pageBuilder: (context, state) =>
+                studentTransition(context, state, const StudentHomeScreen()),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'apoyo',
+                pageBuilder: (context, state) => studentTransition(
+                  context,
+                  state,
+                  const SupportPreviewScreen(),
+                ),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'chat',
+                    pageBuilder: (context, state) => studentTransition(
+                      context,
+                      state,
+                      const ChatPreviewScreen(),
+                    ),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'recurso/:id',
+                pageBuilder: (context, state) => studentTransition(
+                  context,
+                  state,
+                  ResourcePreviewScreen(
+                    resourceId: state.pathParameters['id'] ?? '',
+                  ),
+                ),
+              ),
             ],
           ),
           for (final WelcomeDestination destination

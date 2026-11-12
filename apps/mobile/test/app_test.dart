@@ -115,8 +115,8 @@ void main() {
       expect(find.text('Colegio confirmado'), findsOneWidget);
       expect(find.text(SchoolProximity.nearby.message), findsOneWidget);
       await _tapLabel(tester, 'Continuar');
-      expect(find.text('Inicio'), findsOneWidget);
-      expect(find.text('Vista de demostración'), findsOneWidget);
+      expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
+      expect(find.text('Pedir apoyo'), findsOneWidget);
       expect(secure, isTrue);
       expect(tester.takeException(), isNull);
     },
@@ -183,7 +183,7 @@ void main() {
     expect(find.text('Colegio confirmado'), findsNothing);
     expect(requests, 0);
     await _tapLabel(tester, 'Continuar');
-    expect(find.text('Inicio'), findsOneWidget);
+    expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
   });
 
   test(

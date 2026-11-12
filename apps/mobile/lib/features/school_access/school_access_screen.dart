@@ -27,8 +27,7 @@ enum SchoolAccessStep {
     'Comprobá si estás cerca',
     'Primero revisá que este sea tu colegio.',
   ),
-  result('resultado', 'Colegio confirmado'),
-  home('inicio', 'Inicio');
+  result('resultado', 'Colegio confirmado');
 
   const SchoolAccessStep(this.path, this.title, [this.subtitle]);
 
@@ -66,13 +65,6 @@ class SchoolAccessScreen extends StatelessWidget {
         ),
       ],
       SchoolAccessStep.result => _showResult(context),
-      SchoolAccessStep.home => <Widget>[
-        const _SchoolCard(),
-        const SizedBox(height: 18),
-        const Text('Vista de demostración', textAlign: TextAlign.center),
-        const SizedBox(height: 24),
-        ..._supportActions(context),
-      ],
     };
     return CampaignScreen(
       header: _SchoolHeader(
@@ -150,7 +142,7 @@ class SchoolAccessScreen extends StatelessWidget {
           const SizedBox(height: 32),
           _SchoolButton(
             label: 'Continuar',
-            onPressed: () => context.push<void>(SchoolAccessStep.home.location),
+            onPressed: () => context.go('/inicio'),
           ),
         ]
       : <Widget>[

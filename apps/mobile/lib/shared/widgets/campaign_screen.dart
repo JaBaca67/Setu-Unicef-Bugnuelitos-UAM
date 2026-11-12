@@ -4,10 +4,18 @@ import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 class CampaignScreen extends StatelessWidget {
-  const CampaignScreen({super.key, required this.header, required this.body});
+  const CampaignScreen({
+    super.key,
+    required this.header,
+    required this.body,
+    this.bodyRadius,
+    this.bottomNavigationBar,
+  });
 
   final Widget header;
   final Widget body;
+  final BorderRadius? bodyRadius;
+  final Widget? bottomNavigationBar;
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
@@ -20,6 +28,7 @@ class CampaignScreen extends StatelessWidget {
     ),
     child: Scaffold(
       backgroundColor: Colors.white,
+      bottomNavigationBar: bottomNavigationBar,
       body: Stack(
         fit: StackFit.expand,
         children: <Widget>[
@@ -50,8 +59,11 @@ class CampaignScreen extends StatelessWidget {
                       slivers: <Widget>[
                         SliverToBoxAdapter(child: header),
                         SliverToBoxAdapter(
-                          child: ColoredBox(
-                            color: Colors.white,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: bodyRadius,
+                            ),
                             child: SafeArea(top: false, child: body),
                           ),
                         ),
