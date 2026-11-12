@@ -9,7 +9,7 @@
 | ID | Pantalla y finalidad | Entradas y acciones | Salida y límites |
 | --- | --- | --- | --- |
 | E01 | Bienvenida y privacidad | Entender quién recibe qué; entrar, consultar ayuda o información | E02, E09 o E10. Sin promesa de anonimato absoluto. |
-| E02 | Colegio | QR/código público, confirmar centro; pedir cámara solo para escanear | Contexto escolar validado según configuración; sin cuenta/alias/PIN. GPS y primer ingreso offline pendientes. |
+| E02 | Colegio | QR/código público, confirmar centro; pedir cámara solo para escanear | Contexto escolar validado según configuración; sin cuenta/alias/PIN. GPS y primer ingreso offline pendientes. [Maqueta de acceso escolar](diseno/plan-acceso-escolar-e02.md). |
 | E03 | Inicio | Pedir apoyo, seguimiento privado, información y ayuda | Destinos claros; centro activo sin datos civiles. |
 | E04 | Solicitud en tres pasos | Tipo de situación; víctima/Testigo Solidario; detalles opcionales | E05. No exigir relato para una alerta mínima válida. |
 | E05 | Revisión y envío | Revisar destinatarios, límites y contenido; editar o confirmar | Operación guardada y protegida; E06 muestra entrega real. |
