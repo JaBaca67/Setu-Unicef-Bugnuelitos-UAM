@@ -20,6 +20,10 @@ Para capturar el diseño localmente, usar `flutter run --dart-define=SETU_DESIGN
 
 Se verificaron análisis sin incidencias y 23 pruebas de Flutter. En un emulador Pixel 9 Pro con Android API 37 y modo avión se recorrieron el QR y el código manual, se revisó la cabecera debajo de la barra de estado y se comprobó la protección de la ventana en los dos APK de depuración. Queda pendiente la prueba en un teléfono físico.
 
+### Capturas temporales para la presentación
+
+La variante local `setu-debug-capturas.apk`, compilada con `SETU_DESIGN_CAPTURE=true`, desactiva temporalmente la protección contra capturas y grabación para revisar el diseño con Aaron y presentar la demostración con datos ficticios. Para volver a la configuración protegida, reinstalar el APK habitual compilado sin ese argumento. El bloque de casillas, cámara y ubicación reales se documenta en la [propuesta de E02](../../docs/diseno/plan-acceso-escolar-e02.md#siguiente-bloque--casillas-cámara-y-ubicación-del-dispositivo).
+
 ## Qué está implementado en M1
 
 - Poppins Regular/Medium/SemiBold/Bold empaquetada con licencia OFL (fuente: repositorio oficial google/fonts, ofl/poppins). No hay descargas de fuentes en ejecución. Fallback del sistema y síntesis tipográfica si falta un peso solicitado.
