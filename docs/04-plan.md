@@ -16,7 +16,7 @@ La guía no impone software a todas las propuestas ni limita el producto a 12–
 
 M0/M1: base Flutter, marca inicial, protección de pantalla, contratos y persistencia cifrada con alias/PIN, modelo anterior. Verificación M1 registrada el 5 nov: análisis limpio y 18 pruebas; prueba física pendiente. No hay envío remoto, paneles, acceso nuevo o mesh implementados.
 
-Bloque documental actual: README organizado por contexto, experiencia, modelado, desarrollo y gestión; DFD Kendall y Kendall de atención/transporte, flujo de usuarios y catálogo de recursos web/móvil/backend. Próximo bloque de código pendiente de propuesta y aprobación.
+El 12 de noviembre se incorporó la [bienvenida E01](diseno/plan-arranque-bienvenida-setu.md) como pantalla inicial, con vistas de muestra y marca de arranque Android. Los siguientes bloques conectados y de transporte requieren propuesta y aprobación propias.
 
 ## Decisiones que cambian la solución
 

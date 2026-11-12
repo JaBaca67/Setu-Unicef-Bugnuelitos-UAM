@@ -1,12 +1,18 @@
-# SéTú — Bloque M1: identidad, protección y persistencia local
+# SéTú — App Android y corte M1
 
 > **Aviso (2026-11-09):** partes de este documento quedaron superadas por [ADR 0005](../../docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md): acceso sin cuentas por código del colegio (no alias + PIN), población de 3.º a 11.º grado, tres superficies (alumno, MINED, dirección), envío entre dispositivos con modo sin conexión por red mesh y paleta del Manual de Marca final. Ante conflicto, prevalece ADR 0005.
 
-**Especificación del producto vigente:** [README técnico](../../README.md). Este archivo describe el corte histórico M1 y su ejecución; los contratos por alias no son el diseño actual.
+**Especificación del producto vigente:** [README técnico](../../README.md). Este archivo describe la bienvenida actual y conserva el registro del corte histórico M1.
 
-Aplicación Android 0.2.0+2. M1 implementa la infraestructura de cuentas/casos y una pantalla de verificación de identidad, almacenamiento y privacidad. Los formularios completos E01–E11 y las vistas de atención se integran en fases posteriores: no se presentan como terminados.
+## Bienvenida E01 — 2026-11-12
 
-## Qué está implementado
+La app Android 0.2.0+2 abre la bienvenida estática de campaña. Incluye privacidad y vistas locales de muestra para Colegio, Información y Ayuda. El ícono instalado y el arranque usan el isotipo blanco sobre azul. El arte se empaqueta en `assets/welcome/`, a partir de las capas oficiales de [Redes 3](https://drive.google.com/file/d/1t0T7SdMuuV05Cz1rA3tmCg5vuNbONIko/view) y del mensaje de Redes 1. La flor amarilla está desplazada hacia la derecha para despejar al personaje azul. [Maqueta y alcance](../../docs/diseno/plan-arranque-bienvenida-setu.md).
+
+Desde `apps/mobile/`, `flutter run` y `flutter build apk --debug` abren E01 por defecto. Para abrir directamente la verificación técnica de M1, usar `flutter run --dart-define=SETU_M1_QA=true`. El arranque normal no inicializa el almacén anterior.
+
+El análisis de Flutter y sus 20 pruebas pasaron. Se revisó la captura `build/qa/e01-welcome.png`, se compiló el APK debug y se verificaron el ícono, el arranque en frío y la navegación de E01 en un emulador Pixel 9 Pro con Android API 37 en modo avión. El APK incluye recursos adaptativos y variantes de arranque para versiones anteriores. La verificación en teléfono físico sigue pendiente.
+
+## Qué está implementado en M1
 
 - Poppins Regular/Medium/SemiBold/Bold empaquetada con licencia OFL (fuente: repositorio oficial google/fonts, ofl/poppins). No hay descargas de fuentes en ejecución. Fallback del sistema y síntesis tipográfica si falta un peso solicitado.
 - `CureandoTheme`, isotipo de tres piezas con las proporciones de docs/06, rompecabezas, flor de 12 pétalos y espiral; nombre e icono Android SéTú.
@@ -59,7 +65,7 @@ Para capturas de QA de widgets, con datos ficticios y fuente real:
 flutter test --dart-define=SETU_CAPTURE_QA=true test/app_test.dart
 ```
 
-Se generan `build/qa/m1-home.png` y `m1-controls.png`, fuera de Git. No son capturas de un teléfono.
+Se generan `build/qa/e01-welcome.png`, `m1-home.png` y `m1-controls.png`, fuera de Git. Son capturas del render de widgets.
 
 ## Verificación M1 — 2026-11-05
 

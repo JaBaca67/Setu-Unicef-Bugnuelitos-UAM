@@ -1,6 +1,6 @@
 # Especificación funcional de SéTú
 
-**Revisión:** 2026-11-09. Alcance vigente ADR 0005; contratos técnicos propuestos ADR 0006. Los IDs son referencias de diseño, no pantallas ya implementadas ni marcos oficiales de Figma. Código actual: base M1 local con modelo anterior.
+**Revisión:** 2026-11-12. Alcance vigente ADR 0005 y contratos técnicos propuestos en ADR 0006. E01 abre la app y tiene destinos de muestra para E02, E09 y E10. Los demás recorridos se describen como diseño. [Bienvenida E01](diseno/plan-arranque-bienvenida-setu.md).
 
 [Recorrido integrado de usuarios](diseno/flujos/08-recorrido-usuarios.svg) · [DFD lógico y diccionario](12-modelado-dfd-kendall.md) · [Recursos de app y paneles](13-recursos-tecnicos.md). ADR 0008 propone el cliente React/TypeScript/Vite para M/L/D, con permisos separados; no cambia pantallas o facultades de producto ni autoriza implementarlas.
 
@@ -84,4 +84,4 @@ Los textos de error nunca incluyen relatos, tokens, códigos privados o datos de
 
 ## Aceptación
 
-Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. Identificar qué capa se verificó sin atribuirle evidencia de las otras. Nada de lo aquí descrito, salvo el corte M1 documentado, se presenta como ya implementado.
+Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. El corte Android actual implementa E01 con navegación de muestra y conserva la verificación técnica M1. [Pruebas del corte Android](../apps/mobile/README.md).

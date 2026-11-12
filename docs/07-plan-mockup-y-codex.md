@@ -6,6 +6,8 @@
 
 M1 ofrece infraestructura local cifrada, contratos anteriores, identidad y pantalla de verificación. No implementa recorrido estudiantil completo ni transporte, backend, paneles o chat remoto. Mantener su evidencia técnica en el README móvil y ADR 0004.
 
+E01 abre el corte Android actual y permite recorrer las muestras locales de Colegio, Información y Ayuda. [Bienvenida y marca de arranque](diseno/plan-arranque-bienvenida-setu.md).
+
 ## Entrega prevista
 
 El equipo busca demostrar un caso ficticio entre tres superficies y el tramo sin internet. El modo jurado anterior con conmutador estudiante/orientador en un solo APK no acredita ese objetivo y deja de ser la ruta principal de demostración.

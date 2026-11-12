@@ -23,7 +23,7 @@ Nombre **SéTú**, con tildes. Valores: Valentía, Empatía, Confianza, Respeto 
 
 Poppins para interfaz; Clayful para marca y acentos breves, sin imponerla a relatos extensos. Poppins ya está empaquetada en M1. Clayful no se da por instalada, licenciada o integrada en el código por figurar en el manual.
 
-Propuesta tipográfica: cuerpo 16 sp, títulos 22–24 sp y controles adaptables al escalado del sistema. El código M1 conserva algunos colores anteriores: su actualización es un bloque de código pendiente, no un cambio hecho por editar esta guía.
+Propuesta tipográfica general: cuerpo 16 sp, títulos 22–24 sp y controles adaptables al escalado del sistema. E01 usa la paleta final y títulos de campaña. [Diseño de bienvenida](diseno/plan-arranque-bienvenida-setu.md).
 
 ## Navegación y jerarquía
 
