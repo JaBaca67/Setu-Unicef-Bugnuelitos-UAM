@@ -6,7 +6,7 @@
 
 **Bugñuelitos · Universidad Americana (UAM) · Nicaragua**
 
-**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01 y demostración E02 con cámara y ubicación.
+**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación e inicio estudiantil E03 con vistas de muestra.
 
 **Estado:** definición y prototipado académico; arquitectura ampliada en diseño.
 
@@ -27,7 +27,7 @@ Este README es el documento principal de especificación técnica. Describe el p
 | Área | Qué encontrarás | Accesos directos |
 | --- | --- | --- |
 | **01 · Proyecto** | Problema, alcance, participantes y marca | [Propósito](#problema) · [Actores](#actores) · [Identidad](#identidad) · [Entregables](#entregables) |
-| **02 · Experiencia** | Informarse, pedir apoyo y consultar seguimiento | [Recorrido de usuarios](#usuarios) · [Información y acompañamiento](#informacion) · [Protocolo y estados](#protocolo) |
+| **02 · Experiencia** | Informarse, pedir apoyo y conversar con la escucha | [Recorrido de usuarios](#usuarios) · [Información y acompañamiento](#informacion) · [Protocolo y estados](#protocolo) |
 | **03 · Modelado de datos** | DFD de Kendall y Kendall, datos y transporte | [Contexto y diagrama 0](#dfd) · [Datos privados](#datos) · [DFD mesh](#mesh-logico) · [Ruta física offline](#mesh) |
 | **04 · Desarrollo técnico** | Lenguajes, web, app, backend y verificación | [Arquitectura](#arquitectura) · [Stack completo](#stack) · [Paneles web](#paneles) · [App existente](#app) · [Instalación](#instalacion) · [Seguridad](#seguridad) · [Pruebas](#pruebas) |
 | **05 · Gestión** | Estado del desarrollo, próximos bloques y documentación | [Estado del desarrollo](#decisiones) · [Próximos bloques](#pendientes) · [Biblioteca](#documentacion) · [Colaboración](#colaboracion) |
@@ -60,7 +60,7 @@ SéTú aborda barreras como el temor a represalias, la dificultad para expresar 
 
 El proyecto comprende seis componentes:
 
-1. **App estudiantil:** código escolar, solicitud de apoyo, seguimiento privado y chat humano.
+1. **App estudiantil:** código escolar, solicitud de apoyo, aviso de disponibilidad y chat humano. El estudiante no tiene una sección de seguimiento de casos; el seguimiento interno queda en los roles autorizados ([ADR 0013](docs/decisiones/0013-inicio-estudiantil-e03.md)).
 2. **Información y orientación en la app:** artículos, videos, testimonios editoriales y guías para comprender lo que se está viviendo, conocer opciones de apoyo y acompañar la espera; acceso independiente del reporte.
 3. **Atención y supervisión:** mesa de escucha y panel MINED para fichas, seguimiento y escalamiento.
 4. **Panel de dirección:** avisos mínimos, fichas autorizadas, actuaciones y estadísticas del centro; sin chat.
@@ -87,7 +87,7 @@ Adjuntos y evidencias aparecen en investigación y costos, pero no tienen contra
 
 | Participante | Función prevista | Acceso permitido |
 | --- | --- | --- |
-| Estudiante: víctima o Testigo Solidario | Pedir apoyo y consultar seguimiento | Sus casos y conversación visible mediante un acceso privado aún por definir. |
+| Estudiante: víctima o Testigo Solidario | Pedir apoyo y conversar cuando una persona autorizada está disponible | Su conversación y respuesta visibles mediante un acceso privado aún por definir; sin vista de historial ni de estado interno del caso. |
 | Mesa de escucha | Conversar, valorar nivel y preparar derivación | Relato y chat de casos asignados; notas internas separadas. |
 | Asesor MINED autorizado | Supervisar fichas y solicitar actuaciones | Avisos y fichas dentro de su ámbito; nunca chat ni relato del estudiante. |
 | Dirección/enlace | Recibir avisos y documentar actuaciones | Alerta mínima, ficha autorizada y estadísticas de su colegio; nunca chat. |
@@ -149,7 +149,7 @@ Recorridos previstos; las pantallas citadas se especifican en [docs/08](docs/08-
 6. Sin internet, se intenta llevar el sobre hasta el puente mediante dispositivos cercanos. Recepción local y recepción central se distinguen.
 7. La mesa de escucha conversa por internet cuando está disponible. Sin internet solo se transporta la alerta: no se promete chat por mesh. Las tarjetas rompehielos facilitan escribir. El filtro de vocabulario no decide riesgo ni debe impedir pedir ayuda; su comportamiento debe validarse para no ocultar una revelación de violencia.
 8. El profesional decide acompañamiento, ficha de convivencia o derivación por riesgo grave. Dirección documenta actuaciones sobre la ficha permitida.
-9. El estudiante consulta solo su respuesta y estado visibles; cierre y escalamiento quedan registrados por personal autorizado.
+9. El estudiante recibe, cuando corresponde, un aviso de disponibilidad que abre su conversación y su respuesta visibles; el aviso no lleva datos del caso. Cierre y escalamiento quedan registrados por personal autorizado.
 
 **Sin cuentas visibles no significa acceso compartido a casos.** El código público identifica al centro, no al dueño del reporte. El acceso privado debe resolver continuidad, pérdida de dispositivo y uso compartido. Alternativas en [arquitectura](docs/02-arquitectura.md).
 
@@ -165,7 +165,7 @@ flowchart TD
         A(["Privacidad y ayuda · E01"]) --> B["QR/código público · Confirmar colegio · E02"]
         A --> HELP["Ayuda · E09 · Recursos verificados"]
         A --> INFO["Información · E10 · Sin reporte o QR obligatorio"]
-        B --> C["Inicio · E03 · Acceso privado del caso por resolver"]
+        B --> C["Inicio · E03 · Pedir apoyo, Información, Actividades y Ayuda"]
         C --> D["Tipo, rol, detalles opcionales · Revisar y enviar · E04/E05"]
         C --> INFO
         D --> NET{"¿Internet disponible?"}
@@ -173,7 +173,7 @@ flowchart TD
         NET -->|"No"| Q["Cola cifrada → vecinos → puente"]
         Q --> LOC["Recepción mínima local en dirección · Contrato pendiente"]
         Q -->|"Sincronización posterior"| API
-        D --> TRACK["Entrega y seguimiento propio · E06/E07 · Pendiente/local/central"]
+        D --> TRACK["Estado real de entrega · E06 · Pendiente/local/central"]
         TRACK --> CHAT["Chat humano · E08 · Requiere internet"]
         TRACK -->|"Durante la espera"| INFO
         CHAT -->|"Explorar información"| INFO
@@ -191,17 +191,17 @@ flowchart TD
     MIN -->|"Ficha y requerimientos autorizados"| DIR
     DIR --> ACT["Documentar actuación y proponer cierre"]
     ACT --> CLOSE["MINED verifica y cierra · Escala falta de respuesta"]
-    CLOSE --> FIN(["Estudiante consulta seguimiento y respuesta propios · E07/E08"])
+    CLOSE --> FIN(["Aviso de disponibilidad abre la conversación y respuesta propias · E08"])
     APOYO --> FIN
     URG --> MIN
     DOC["Aviso docente presencial"] -->|"Dirección registra origen institucional"| DIR
 ```
 
-[Vista ampliable](docs/diseno/flujos/08-recorrido-usuarios.svg) · [Fuente editable](docs/diseno/flujos/08-recorrido-usuarios.mmd).
+[Vista ampliable](docs/diseno/flujos/08-recorrido-usuarios.svg) · [Fuente editable](docs/diseno/flujos/08-recorrido-usuarios.mmd). El SVG y la fuente `.mmd` anteceden al ADR 0013 (aún muestran E07 estudiantil) y quedan pendientes de regenerar.
 
 | Usuario | Entrada y tarea principal | Salida y recuperación |
 | --- | --- | --- |
-| Estudiante | Desde privacidad: explorar Información; o confirmar colegio y redactar/revisar/enviar una solicitud | Seguimiento propio; pendiente, recepción local y central diferenciados. Chat solo con internet. Errores de QR o permisos permiten corregir o consultar ayuda. |
+| Estudiante | Desde privacidad: explorar Información; o confirmar colegio y redactar/revisar/enviar una solicitud | Estado real de entrega; pendiente, recepción local y central diferenciados. Chat solo con internet, abierto por el aviso de disponibilidad. Errores de QR o permisos permiten corregir o consultar ayuda. |
 | Mesa de escucha | Acceso autorizado → casos asignados → escucha humana → valoración | Respuesta privada y, si corresponde, ficha mínima o derivación. Sin conexión no se simula conversación. |
 | MINED | Acceso autorizado → cola de su ámbito → ficha/actuaciones | Requerir respuesta, escalar demora y validar cierre. Nunca consultar chat o relato. |
 | Dirección | Acceso privado → centro propio → aviso/ficha → actuación | Documentar y enviar propuesta de cierre al MINED. Puede registrar un aviso docente con origen institucional. |
@@ -219,7 +219,7 @@ El estudiante puede explorarlo por curiosidad, consultar un tema que le resulte 
 | --- | --- | --- |
 | Bienvenida/inicio | Explorar por curiosidad, sin tener que contar un problema | E01/E03 → **E10 Información** → **E11 Recurso**, sin reporte, cuenta o QR obligatorio para leer. |
 | Comprender una situación o emoción | Conocer temas, poner palabras a lo que se siente y explorar opciones de apoyo | Elegir artículo, video explicativo, testimonio editorial o guía adaptados a la etapa escolar. Sin diagnóstico o puntuación automática. |
-| Entrega/seguimiento/espera | Consultar información mientras llega atención humana | E06/E07/E08 → E10/E11 → volver al origen, conservando operación, redacción y estado real. Leer no significa estar atendido. |
+| Entrega/espera | Consultar información mientras llega atención humana | E06/E08 → E10/E11 → volver al origen, conservando operación, redacción y estado real. Leer no significa estar atendido. |
 
 E10 muestra temas, formatos y disponibilidad; E11 permite leer/ver con controles, subtítulos/transcripción y fuente/revisión. Las acciones **Ayuda** y **Pedir apoyo** permanecen disponibles de forma voluntaria; solicitar apoyo valida el colegio si hace falta y no envía automáticamente una alerta. No hay lecturas obligatorias, autoplay o reutilización de casos privados como testimonios.
 
@@ -557,7 +557,7 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Capa | Tecnología/version registrada | Uso actual |
 | --- | --- | --- |
 | Aplicación | Flutter 3.44.5 stable / Dart 3.12.2 | Base Android 0.2.0+2. |
-| Navegación | `go_router` 18.1.3 | E01 abre la demostración escolar E02 y las vistas de muestra de Información y Ayuda. |
+| Navegación | `go_router` 18.1.3 | E01 abre la demostración escolar E02, el inicio E03 y las vistas de muestra de Información, Ayuda, apoyo y recursos. |
 | Criptografía local | `cryptography` 2.9.0 | AES-GCM-256 y derivaciones de credenciales M1. |
 | Custodia de clave | `flutter_secure_storage` 11.2.0 | Almacenamiento seguro del secreto local. |
 | Archivo privado | `path_provider` 2.1.6 | Ruta del almacén cifrado. |
@@ -582,7 +582,9 @@ Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como c
 
 **Acceso escolar E02 (12 nov).** La prueba reconoce `AULA24` por cámara o por seis casillas. La cercanía se calcula localmente usando el pin público del Colegio Centro América como referencia de prueba. El APK de presentación permite simular la cercanía desde otro lugar y tiene habilitadas temporalmente la captura y la grabación. E01 y E02 comparten la barra de estado transparente y respetan movimiento reducido. [Recorrido E02](docs/diseno/plan-acceso-escolar-e02.md) · [Notas de presentación](apps/mobile/README.md#capturas-temporales-para-la-presentación).
 
-**Pendiente:** validación institucional del acceso escolar, continuidad privada del caso, catálogo/lectura/video E10/E11, paneles conectados, escucha remota, recepción central, red mesh, colas de reenvío, puente y servicio local a dirección.
+**Inicio estudiantil E03 (12 nov).** «Continuar» del acceso escolar abre `/inicio`: «Pedir apoyo» como acción principal, franja de racha y XP con valores de ejemplo ligados solo a actividades educativas voluntarias, «Explorá a tu ritmo» con tarjetas de Información, bloque «Actividades» (pregunta del día sobre el contenido y dado de emociones adaptado del material del equipo) y navegación inferior Inicio/Información/Actividades/Ayuda. El avatar es ilustrado y configurable con opciones gráficas, sin fotos, nombres ni cuentas. Pedir apoyo, el chat humano, los recursos E11 y las actividades se presentan como vistas de muestra identificadas; no hay sección estudiantil de seguimiento de casos. [Decisión y alcance](docs/decisiones/0013-inicio-estudiantil-e03.md).
+
+**Pendiente:** validación institucional del acceso escolar, continuidad privada del caso, formulario E04/E05 y envío real, aviso de disponibilidad y chat conectado, catálogo/lectura/video E10/E11, paneles conectados, escucha remota, recepción central, red mesh, colas de reenvío, puente y servicio local a dirección.
 
 Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equivalen a los seis nuevos. Adaptarlos requiere aprobación y pruebas; si cambia el formato local, también una estrategia explícita de migración. No subir automáticamente los datos M1 al futuro backend.
 

@@ -1,6 +1,6 @@
 # Especificación funcional de SéTú
 
-**Revisión:** 2026-11-12. Alcance vigente ADR 0005 y contratos técnicos propuestos en ADR 0006. E01 abre la app y lleva a la demostración escolar E02 o a las vistas de muestra E09/E10. Los demás recorridos se describen como diseño. [Bienvenida E01](diseno/plan-arranque-bienvenida-setu.md).
+**Revisión:** 2026-11-12. Alcance vigente ADR 0005 y contratos técnicos propuestos en ADR 0006. E01 abre la app y lleva a la demostración escolar E02 o a las vistas de muestra E09/E10; E02 conecta con el inicio estudiantil E03 ([ADR 0013](decisiones/0013-inicio-estudiantil-e03.md)). Los demás recorridos se describen como diseño. [Bienvenida E01](diseno/plan-arranque-bienvenida-setu.md).
 
 [Recorrido integrado de usuarios](diseno/flujos/08-recorrido-usuarios.svg) · [DFD lógico y diccionario](12-modelado-dfd-kendall.md) · [Recursos de app y paneles](13-recursos-tecnicos.md). ADR 0008 propone el cliente React/TypeScript/Vite para M/L/D, con permisos separados; no cambia pantallas o facultades de producto ni autoriza implementarlas.
 
@@ -10,21 +10,21 @@
 | --- | --- | --- | --- |
 | E01 | Bienvenida y privacidad | Entender quién recibe qué; entrar, consultar ayuda o información | E02, E09 o E10. Sin promesa de anonimato absoluto. |
 | E02 | Colegio | QR/código público, confirmar centro; pedir cámara solo para escanear | La demo usa QR y GPS con un código de prueba y un punto público local. La simulación de cercanía se identifica en pantalla. Validación institucional y primer ingreso offline pendientes. [Demostración E02](diseno/plan-acceso-escolar-e02.md). |
-| E03 | Inicio | Pedir apoyo, seguimiento privado, información y ayuda | Destinos claros; centro activo sin datos civiles. |
+| E03 | Inicio | Pedir apoyo como acción principal; avatar ilustrado configurable con opciones gráficas; adelantos y accesos a Información, Actividades y Ayuda; navegación inferior de cuatro destinos | Implementado como corte de demostración. Sin sección de seguimiento de casos para el estudiante. Racha y XP solo por actividades educativas voluntarias, con valores de ejemplo; sin rankings ni puntajes emocionales. Centro activo sin datos civiles. |
 | E04 | Solicitud en tres pasos | Tipo de situación; víctima/Testigo Solidario; detalles opcionales | E05. No exigir relato para una alerta mínima válida. |
 | E05 | Revisión y envío | Revisar destinatarios, límites y contenido; editar o confirmar | Operación guardada y protegida; E06 muestra entrega real. |
 | E06 | Estado de entrega | Ver guardado, transferencia, custodia, recepción local/central; comprobar/reintentar; abrir Información mientras espera | Volver conserva operación y estado. No mostrar recibido central por un acuse de vecino ni reenviar al volver. |
-| E07 | Mi seguimiento privado | Abrir solo casos accesibles con mecanismo privado aprobado | E08. El código escolar no lista casos de compañeros. Recuperación pendiente. |
+| E07 | Aviso de disponibilidad | Tras enviar una alerta, recibir un aviso cuando una persona autorizada esté disponible para conversar; el aviso abre E08 | El aviso no incluye datos del caso y no se simula como atención real. El estudiante no tiene vista de historial ni de estado interno del caso: ese seguimiento queda en los roles autorizados (M/L/D). Mecanismo técnico pendiente (ADR 0013). |
 | E08 | Caso y escucha humana | Estado visible, conversación propia por internet y tarjetas rompehielos; solicitar revisión | Sin chat por mesh. Sin notas internas ni datos del personal innecesarios. Horarios reales cuando existan. |
 | E09 | Ayuda | Recursos revisados, territorio, fuente, fecha y horarios; confirmar destino externo | Accesible sin reportar; no presentar contactos de borrador como operativos. |
-| E10 | Información | Catálogo por temas y formatos: artículos, videos, testimonios editoriales y guías; disponibilidad real; entrada desde E01/E03 y espera E06/E07/E08 | E11. Parte confirmada de la solución, sin reporte/QR obligatorio para leer. Catálogo, revisión, derechos y diseño final pendientes. |
+| E10 | Información | Catálogo por temas y formatos: artículos, videos, testimonios editoriales y guías; disponibilidad real; entrada desde E01/E03 y espera E06/E08 | E11. Parte confirmada de la solución, sin reporte/QR obligatorio para leer. Catálogo, revisión, derechos y diseño final pendientes. |
 | E11 | Recurso o guía | Leer/ver voluntariamente con controles, subtítulos/transcripción, fuente y revisión; volver al origen, consultar Ayuda o pedir apoyo | Sin diagnóstico, puntuación emocional o lectura obligatoria. Volver no modifica el caso. Pedir apoyo verifica colegio si hace falta y no envía automáticamente. |
 
 ### Recorrido informativo confirmado
 
 [Origen en Meet, referente Netflix y alcance](14-espacio-informativo-y-referente-netflix.md) · [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md) · [Flujo ampliable](diseno/flujos/13-flujo-informacion.svg).
 
-E01/E03 → E10 → elegir tema/recurso → E11. Desde E06/E07/E08 puede abrirse el mismo espacio durante la espera y regresar sin perder operación, redacción o estado real. También puede explorarse por curiosidad o para comprender situaciones/emociones sin querer recibir atención. No se toma un tema leído como diagnóstico o nivel de alerta.
+E01/E03 → E10 → elegir tema/recurso → E11. Desde E06/E08 puede abrirse el mismo espacio durante la espera y regresar sin perder operación, redacción o estado real. También puede explorarse por curiosidad o para comprender situaciones/emociones sin querer recibir atención. No se toma un tema leído como diagnóstico o nivel de alerta.
 
 Si un video no está disponible sin internet, se indica y se ofrece solo texto/transcripción realmente disponible; no prometer que todo el catálogo está descargado. No autoplay, cuestionarios diagnósticos o publicación de relatos privados como testimonios. La consulta de contenidos es independiente de la autorización privada de los casos.
 
@@ -76,7 +76,7 @@ Reenviar no permite chatear con otros estudiantes. Publicidad de vecinos e inven
 | Acceso | Código vacío/incorrecto, QR no legible, permiso denegado, configuración vencida o desconocida offline. |
 | Redacción | Teclado, texto grande, detalles vacíos válidos, límite de longitud, volver/descartar sin pérdida accidental. |
 | Transporte | Sin vecino, radios apagados, puente offline, acuse perdido, reintento, vencimiento y recepción central tardía. |
-| Seguimiento | Sin casos accesibles, acceso privado perdido, sesión caducada, error, respuesta pendiente y cerrado. |
+| Aviso y chat del estudiante | Sin internet, persona no disponible, aviso perdido o tardío; el aviso nunca lleva datos del caso. El historial y el estado interno del caso son de los roles autorizados. |
 | Personal | Sin permiso, rol revocado, ficha fuera de ámbito, concurrencia y conflicto de interés. |
 | Editorial | Contenido no descargado, sin fuente vigente o contacto pendiente de validar. |
 
@@ -84,4 +84,4 @@ Los textos de error nunca incluyen relatos, tokens, códigos privados o datos de
 
 ## Aceptación
 
-Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. El corte Android actual implementa E01, la demostración escolar E02 y la verificación técnica M1. [Pruebas del corte Android](../apps/mobile/README.md).
+Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. El corte Android actual implementa E01, la demostración escolar E02, el inicio estudiantil E03 con vistas de muestra identificadas y la verificación técnica M1. [Pruebas del corte Android](../apps/mobile/README.md).

@@ -27,7 +27,9 @@ Propuesta tipográfica general: cuerpo 16 sp, títulos 22–24 sp y controles ad
 
 ## Navegación y jerarquía
 
-Entrada: bienvenida → QR/código público → confirmar colegio → inicio. No formularios de alias/PIN. Ayuda y contenidos disponibles sin iniciar una solicitud. Navegación propuesta: Inicio, Mi seguimiento, Información y Ayuda. La organización final necesita validación con primaria y secundaria.
+Entrada: bienvenida → QR/código público → confirmar colegio → inicio. No formularios de alias/PIN. Ayuda y contenidos disponibles sin iniciar una solicitud. Navegación vigente del estudiante ([ADR 0013](decisiones/0013-inicio-estudiantil-e03.md), 2026-11-12): **Inicio, Información, Actividades y Ayuda**. El estudiante no tiene una sección de seguimiento de casos: tras pedir apoyo puede recibir un aviso, sin datos del caso, que abre su chat humano; el historial y el estado interno quedan en los roles autorizados. La organización final necesita validación con primaria y secundaria.
+
+Racha y XP acompañan solo actividades educativas voluntarias (leer una guía, ver un video, responder la pregunta del día sobre el contenido) y en la demo llevan valores de ejemplo etiquetados. Sin rankings públicos, puntajes emocionales ni recompensas por enviar alertas; apoyo, chat, Información y Ayuda disponibles con cualquier progreso. El avatar del estudiante es ilustrado y se configura con opciones gráficas, sin foto, nombre ni cuenta.
 
 E01 y la demostración E02 prolongan la cabecera debajo de la barra de estado. El desplazamiento y fundido entre pantallas se desactivan al pedir movimiento reducido. [Diseño de acceso escolar](diseno/plan-acceso-escolar-e02.md).
 
@@ -37,7 +39,7 @@ Para videos: reproducción voluntaria, controles comprensibles y subtítulos/tra
 
 Reporte: tipo → rol → detalles opcionales → revisión → estado real de entrega. Los pasos pueden agruparse visualmente si no perjudica comprensión. El estudiante decide cuánto narrar; el campo libre vacío no impide un aviso válido con tipo/rol.
 
-Seguimiento privado: mostrar únicamente casos accesibles mediante mecanismo privado aprobado; código escolar no abre una lista común. Estado de entrega separado del estado del caso.
+Seguimiento interno: el historial y el estado interno del caso se muestran solo a los roles autorizados (mesa de escucha, MINED y dirección). El estudiante ve el estado real de entrega (E06) y recibe, cuando corresponda, un aviso de disponibilidad que abre su chat; el aviso no lleva datos del caso. Estado de entrega separado del estado del caso.
 
 MINED y dirección tienen vistas distintas. Dirección y MINED ven aviso mínimo/ficha/actuaciones; nunca burbujas de chat, relato o notas internas. El chat necesita internet. Dirección incluye registro de avisos docentes sin acceso para docentes. La mesa de escucha se identifica como humana y con horario real cuando esté acordado.
 

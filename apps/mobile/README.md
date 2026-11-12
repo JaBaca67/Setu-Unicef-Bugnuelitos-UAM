@@ -16,6 +16,12 @@ El análisis de Flutter y sus 20 pruebas pasaron. Se revisó la captura `build/q
 
 Desde la bienvenida, **Usar código del colegio** abre el escáner por cámara o las seis casillas. Usá `AULA24` o escaneá el [QR de demostración](../../docs/diseno/qr-aula24.png) desde otro dispositivo. **Comprobar cercanía** usa una lectura actual del teléfono y la compara localmente con el pin público del Colegio Centro América, con un radio de prueba de 150 m. **Simular cercanía para la demo** permite presentar desde otro lugar en depuración. Esta opción omite el permiso de ubicación y muestra **Cercanía simulada** antes de continuar. [Recorrido E02](../../docs/diseno/plan-acceso-escolar-e02.md) · [Decisión de implementación](../../docs/decisiones/0012-camara-ubicacion-y-presentacion.md).
 
+## Inicio estudiantil E03 — 2026-11-12
+
+**Continuar** tras confirmar (o simular) la cercanía abre `/inicio`: «Pedir apoyo», franja de racha y XP con valores de ejemplo, «Explorá a tu ritmo» con las tarjetas de Información, bloque «Actividades» y la navegación inferior **Inicio / Información / Actividades / Ayuda**. El avatar de la cabecera es ilustrado y se personaliza con figuras de marca y colores, sin fotos ni cuentas; la elección vive en memoria durante la sesión. «Pedir apoyo» (`/inicio/apoyo`), el chat humano (`/inicio/apoyo/chat`), los recursos (`/inicio/recurso/emociones` y `/inicio/recurso/convivencia`), la pregunta del día y el dado de emociones son **vistas de muestra identificadas**: no hay envío real, aviso real ni catálogo editorial todavía. No existe sección estudiantil de seguimiento de casos. [Decisión y alcance](../../docs/decisiones/0013-inicio-estudiantil-e03.md).
+
+Verificación del 12 nov: `flutter analyze` sin incidencias y 32 pruebas aprobadas (incluyen navegación entre pestañas, muestras identificadas, avatar, texto al 200 % en pantalla de 320 px y movimiento reducido). La captura `build/qa/e03-home.png` se comparó con la imagen aprobada por el equipo.
+
 ### Capturas temporales para la presentación
 
 El APK de presentación que se genera con `flutter build apk --debug` desactiva **temporalmente** la protección contra capturas y grabación. Para obtener un APK de depuración protegido y sin simulación, usar `flutter build apk --debug --dart-define=SETU_DESIGN_CAPTURE=false --dart-define=SETU_DEMO_SIMULATION=false`. Al terminar la presentación, restaurar ambos valores predeterminados a `false` en `lib/main.dart`. Las compilaciones sin depuración conservan la protección.
@@ -70,10 +76,10 @@ APK: `build/app/outputs/flutter-apk/app-debug.apk`, firma debug local, excluido 
 Para capturas de QA de widgets, con datos ficticios y fuente real:
 
 ```powershell
-flutter test --dart-define=SETU_CAPTURE_QA=true test/app_test.dart
+flutter test --dart-define=SETU_CAPTURE_QA=true
 ```
 
-Se generan `build/qa/e01-welcome.png`, `m1-home.png` y `m1-controls.png`, fuera de Git. Son capturas del render de widgets.
+Se generan `build/qa/e01-welcome.png`, `e03-home.png`, `m1-home.png` y `m1-controls.png`, fuera de Git. Son capturas del render de widgets.
 
 ## Verificación M1 — 2026-11-05
 

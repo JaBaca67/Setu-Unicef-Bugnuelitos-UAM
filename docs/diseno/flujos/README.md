@@ -1,6 +1,6 @@
 # Diagramas vigentes de SéTú
 
-**Revisión:** 2026-11-09. Producto según ADR 0005; contratos y transiciones como propuestas de ADR 0006. No son evidencia de implementación. [Especificación técnica](../../../README.md) · [Pantallas](../../08-especificacion-funcional-setu.md) · [Datos y mesh](../../10-flujo-datos-y-red-mesh.md).
+**Revisión:** 2026-11-12. Producto según ADR 0005; contratos y transiciones como propuestas de ADR 0006; navegación estudiantil sin seguimiento de casos según [ADR 0013](../../decisiones/0013-inicio-estudiantil-e03.md) (fuentes `.mmd` 02/08/13 actualizadas; los SVG vigentes `08` y `13` quedan pendientes de regenerar). No son evidencia de implementación. [Especificación técnica](../../../README.md) · [Pantallas](../../08-especificacion-funcional-setu.md) · [Datos y mesh](../../10-flujo-datos-y-red-mesh.md).
 
 Las fuentes Mermaid de esta carpeta son la versión vigente. La entrega local offline conserva la indicación de contrato pendiente; no concede acceso al chat a dirección o puente. Los seis nombres se usan como propuesta de prototipo y necesitan validación institucional. La derivación urgente no fuerza Escalado, que el manual MINED reserva a falta de respuesta. MINED y dirección nunca ven chat/relato; el chat necesita internet.
 
@@ -52,15 +52,15 @@ flowchart TD
 flowchart TD
     A(["E03 · Inicio · Colegio activo"]) --> B{"¿Qué necesita hacer?"}
     B -->|"Pedir apoyo"| C["E04 / E05 · Tipo, rol y detalles opcionales"]
-    B -->|"Mi seguimiento"| D["E07 · Solo casos con acceso privado"]
+    B -->|"Actividades"| ACT["Actividades educativas voluntarias · XP de ejemplo"]
     B -->|"Información"| E["E10 / E11 · Artículos, videos, testimonios y guías"]
     B -->|"Ayuda"| F["E09 · Recursos revisados"]
     C --> G["E06 · Estado real de entrega"]
-    D --> H["E08 · Estado del caso y escucha humana"]
-    G -->|"Acceso privado autorizado"| H
+    G -->|"Aviso de disponibilidad · sin datos del caso"| H["E08 · Escucha humana por internet"]
     G -->|"Información durante la espera"| E
     H -->|"Información voluntaria"| E
-    E -->|"Volver"| R(["Regresar al origen · E03/E06/E07/E08 · Conservar operación y estado"])
+    E -->|"Volver"| R(["Regresar al origen · E03/E06/E08 · Conservar operación y estado"])
+    ACT -->|"Volver"| A
     F -->|"Volver"| A
     H -->|"Volver"| A
     G -->|"Pendiente o incierto: comprobar sin duplicar"| G

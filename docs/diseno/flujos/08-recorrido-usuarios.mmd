@@ -3,7 +3,7 @@ flowchart TD
         A(["Privacidad y ayuda · E01"]) --> B["QR/código público · Confirmar colegio · E02"]
         A --> HELP["Ayuda · E09 · Recursos verificados"]
         A --> INFO["Información · E10 · Sin reporte o QR obligatorio"]
-        B --> C["Inicio · E03 · Acceso privado del caso por resolver"]
+        B --> C["Inicio · E03 · Pedir apoyo, Información, Actividades y Ayuda"]
         C --> D["Tipo, rol, detalles opcionales · Revisar y enviar · E04/E05"]
         C --> INFO
         D --> NET{"¿Internet disponible?"}
@@ -11,7 +11,7 @@ flowchart TD
         NET -->|"No"| Q["Cola cifrada → vecinos → puente"]
         Q --> LOC["Recepción mínima local en dirección · Contrato pendiente"]
         Q -->|"Sincronización posterior"| API
-        D --> TRACK["Entrega y seguimiento propio · E06/E07 · Pendiente/local/central"]
+        D --> TRACK["Estado real de entrega · E06 · Pendiente/local/central"]
         TRACK --> CHAT["Chat humano · E08 · Requiere internet"]
         TRACK -->|"Durante la espera"| INFO
         CHAT -->|"Explorar información"| INFO
@@ -29,7 +29,7 @@ flowchart TD
     MIN -->|"Ficha y requerimientos autorizados"| DIR
     DIR --> ACT["Documentar actuación y proponer cierre"]
     ACT --> CLOSE["MINED verifica y cierra · Escala falta de respuesta"]
-    CLOSE --> FIN(["Estudiante consulta seguimiento y respuesta propios · E07/E08"])
+    CLOSE --> FIN(["Aviso de disponibilidad abre la conversación y respuesta propias · E08"])
     APOYO --> FIN
     URG --> MIN
     DOC["Aviso docente presencial"] -->|"Dirección registra origen institucional"| DIR
