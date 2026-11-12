@@ -1,8 +1,14 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
+import 'school_location.dart';
+import 'school_qr_scanner.dart';
 
 enum SchoolAccessStep {
   method(
@@ -11,7 +17,11 @@ enum SchoolAccessStep {
     'Usá el código público que te dio tu colegio.',
   ),
   scan('qr', 'Escaneá el QR', 'Colocá el código dentro del recuadro.'),
-  manual('codigo', 'Escribí el código', 'Tu colegio te comparte el código.'),
+  manual(
+    'codigo',
+    'Ingresá el código de tu colegio',
+    'Te lo dio tu colegio. No te pedimos nombre ni carné.',
+  ),
   proximity(
     'cercania',
     'Comprobá si estás cerca',
@@ -29,27 +39,33 @@ enum SchoolAccessStep {
   String get location => path.isEmpty ? '/colegio' : '/colegio/$path';
 }
 
-enum SchoolProximity { nearby, unconfirmed }
-
 class SchoolAccessScreen extends StatelessWidget {
   const SchoolAccessScreen({
     super.key,
     required this.step,
-    this.proximity = SchoolProximity.unconfirmed,
+    this.proximity = SchoolProximity.unavailable,
+    this.checkProximity = checkSchoolLocation,
+    this.allowSimulation = false,
   });
 
   final SchoolAccessStep step;
   final SchoolProximity proximity;
+  final Future<SchoolProximity> Function() checkProximity;
+  final bool allowSimulation;
 
   @override
   Widget build(BuildContext context) {
-    final bool confirmed = proximity == SchoolProximity.nearby;
     final List<Widget> content = switch (step) {
       SchoolAccessStep.method => _chooseMethod(context),
       SchoolAccessStep.scan => _scan(context),
       SchoolAccessStep.manual => <Widget>[const _ManualCodeForm()],
-      SchoolAccessStep.proximity => _checkProximity(context),
-      SchoolAccessStep.result => _showResult(context, confirmed),
+      SchoolAccessStep.proximity => <Widget>[
+        _ProximityCheck(
+          check: checkProximity,
+          allowSimulation: allowSimulation,
+        ),
+      ],
+      SchoolAccessStep.result => _showResult(context),
       SchoolAccessStep.home => <Widget>[
         const _SchoolCard(),
         const SizedBox(height: 18),
@@ -60,9 +76,7 @@ class SchoolAccessScreen extends StatelessWidget {
     };
     return CampaignScreen(
       header: _SchoolHeader(
-        title: step == SchoolAccessStep.result && !confirmed
-            ? 'Cercanía sin confirmar'
-            : step.title,
+        title: step == SchoolAccessStep.result ? proximity.title : step.title,
         subtitle: step.subtitle,
       ),
       body: Padding(
@@ -109,61 +123,30 @@ class SchoolAccessScreen extends StatelessWidget {
   ];
 
   List<Widget> _scan(BuildContext context) => <Widget>[
-    const _ScanPreview(),
-    const SizedBox(height: 14),
-    const Text('Vista de demostración', textAlign: TextAlign.center),
-    const SizedBox(height: 20),
-    _SchoolButton(
-      label: 'Simular escaneo',
-      onPressed: () => context.push<void>(
-        SchoolAccessStep.proximity.location,
-        extra: SchoolProximity.nearby,
-      ),
-    ),
-    const SizedBox(height: 12),
-    _SchoolButton(
-      label: 'Escribir código',
-      icon: Icons.keyboard_alt_outlined,
-      outlined: true,
-      onPressed: () =>
-          context.pushReplacement(SchoolAccessStep.manual.location),
+    SchoolQrScanner(
+      onAccepted: () =>
+          context.pushReplacement(SchoolAccessStep.proximity.location),
+      onManual: () => context.pushReplacement(SchoolAccessStep.manual.location),
     ),
   ];
 
-  List<Widget> _checkProximity(BuildContext context) => <Widget>[
-    const _SchoolCard(),
-    const SizedBox(height: 24),
-    const Text(
-      'En la versión real, usaríamos tu ubicación una vez para saber si estás cerca de este colegio. Tu ubicación exacta no se guardaría.',
-    ),
-    const SizedBox(height: 12),
-    const Text('Esta comprobación es simulada.'),
-    const SizedBox(height: 32),
-    _SchoolButton(
-      label: 'Comprobar cercanía',
-      onPressed: () => context.push<void>(
-        SchoolAccessStep.result.location,
-        extra: proximity,
-      ),
-    ),
-    const SizedBox(height: 12),
-    TextButton(
-      onPressed: () => context.go(SchoolAccessStep.method.location),
-      child: const Text('Ahora no'),
-    ),
-  ];
-
-  List<Widget> _showResult(BuildContext context, bool confirmed) => confirmed
+  List<Widget> _showResult(BuildContext context) => proximity.canContinue
       ? <Widget>[
-          const _SchoolBadge(
-            icon: Icons.check_rounded,
-            ink: Color(0xFF057634),
-            background: CureandoTheme.greenSoft,
+          _SchoolBadge(
+            icon: proximity == SchoolProximity.simulated
+                ? Icons.science_outlined
+                : Icons.check_rounded,
+            ink: proximity == SchoolProximity.simulated
+                ? CureandoTheme.blue
+                : const Color(0xFF057634),
+            background: proximity == SchoolProximity.simulated
+                ? CureandoTheme.blueSoft
+                : CureandoTheme.greenSoft,
           ),
           const SizedBox(height: 28),
           const _SchoolCard(),
           const SizedBox(height: 20),
-          const Text('Comprobación simulada', textAlign: TextAlign.center),
+          Text(proximity.message, textAlign: TextAlign.center),
           const SizedBox(height: 32),
           _SchoolButton(
             label: 'Continuar',
@@ -177,14 +160,18 @@ class SchoolAccessScreen extends StatelessWidget {
             background: CureandoTheme.pinkSoft,
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Revisá si estás cerca del colegio y si tu ubicación está disponible.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text('Comprobación simulada', textAlign: TextAlign.center),
+          Text(proximity.message, textAlign: TextAlign.center),
           const SizedBox(height: 24),
           _SchoolButton(label: 'Reintentar', onPressed: () => context.pop()),
+          if (proximity == SchoolProximity.permissionBlocked ||
+              proximity == SchoolProximity.permissionApproximate ||
+              proximity == SchoolProximity.locationDisabled)
+            TextButton(
+              onPressed: proximity == SchoolProximity.locationDisabled
+                  ? Geolocator.openLocationSettings
+                  : Geolocator.openAppSettings,
+              child: const Text('Abrir ajustes'),
+            ),
           const SizedBox(height: 12),
           ..._supportActions(context),
         ];
@@ -201,6 +188,64 @@ class SchoolAccessScreen extends StatelessWidget {
       child: const Text('Ayuda'),
     ),
   ];
+}
+
+class _ProximityCheck extends StatefulWidget {
+  const _ProximityCheck({required this.check, required this.allowSimulation});
+
+  final Future<SchoolProximity> Function() check;
+  final bool allowSimulation;
+
+  @override
+  State<_ProximityCheck> createState() => _ProximityCheckState();
+}
+
+class _ProximityCheckState extends State<_ProximityCheck> {
+  bool _checking = false;
+
+  Future<void> _check() async {
+    if (_checking) return;
+    setState(() => _checking = true);
+    final SchoolProximity result = await widget.check();
+    if (!mounted) return;
+    setState(() => _checking = false);
+    if (ModalRoute.isCurrentOf(context) == true) _openResult(result);
+  }
+
+  void _openResult(SchoolProximity result) =>
+      context.push<void>(SchoolAccessStep.result.location, extra: result);
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      const _SchoolCard(),
+      const SizedBox(height: 24),
+      const Text(
+        'Usamos tu ubicación una vez para saber si estás cerca de este colegio. Tu ubicación exacta no se guarda.',
+      ),
+      const SizedBox(height: 32),
+      _SchoolButton(
+        label: _checking ? 'Comprobando cercanía…' : 'Comprobar cercanía',
+        onPressed: _checking ? null : _check,
+      ),
+      if (widget.allowSimulation) ...<Widget>[
+        const SizedBox(height: 12),
+        _SchoolButton(
+          label: 'Simular cercanía para la demo',
+          outlined: true,
+          onPressed: _checking
+              ? null
+              : () => _openResult(SchoolProximity.simulated),
+        ),
+      ],
+      const SizedBox(height: 12),
+      TextButton(
+        onPressed: () => context.go(SchoolAccessStep.method.location),
+        child: const Text('Ahora no'),
+      ),
+    ],
+  );
 }
 
 class _SchoolHeader extends StatelessWidget {
@@ -271,27 +316,29 @@ class _ManualCodeForm extends StatefulWidget {
 }
 
 class _ManualCodeFormState extends State<_ManualCodeForm> {
+  static const int _codeLength = 6;
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focus = FocusNode();
   String? _error;
 
   void _continue() {
-    final SchoolProximity? result = switch (_controller.text
-        .trim()
-        .toUpperCase()) {
-      'AULA-24' => SchoolProximity.nearby,
-      'AULA-00' => SchoolProximity.unconfirmed,
-      _ => null,
-    };
-    if (result == null) {
-      setState(() => _error = 'Ingresá uno de los códigos de muestra.');
+    final String code = normalizeSchoolCode(_controller.text);
+    if (code != demoSchoolCode) {
+      setState(
+        () => _error = code.length != _codeLength
+            ? 'Ingresá los seis caracteres del código.'
+            : 'Ese código no corresponde a la prueba. Revisá el código e intentá de nuevo.',
+      );
+      _focus.requestFocus();
       return;
     }
-    FocusScope.of(context).unfocus();
-    context.push<void>(SchoolAccessStep.proximity.location, extra: result);
+    _focus.unfocus();
+    context.push<void>(SchoolAccessStep.proximity.location);
   }
 
   @override
   void dispose() {
+    _focus.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -300,48 +347,131 @@ class _ManualCodeFormState extends State<_ManualCodeForm> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: <Widget>[
-      const SizedBox(height: 18),
-      const ExcludeSemantics(
-        child: Text(
-          'Código del colegio',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
+      _codeSlots(context),
       const SizedBox(height: 10),
-      Semantics(
-        label: 'Código del colegio',
-        child: TextField(
-          controller: _controller,
-          textCapitalization: TextCapitalization.characters,
-          textInputAction: TextInputAction.done,
-          autocorrect: false,
-          enableSuggestions: false,
-          onChanged: (_) {
-            if (_error != null) setState(() => _error = null);
-          },
-          onSubmitted: (_) => _continue(),
-          decoration: InputDecoration(
-            hintText: 'AULA-24',
-            helperText: 'Probá AULA-24 o AULA-00',
-            helperMaxLines: 3,
-            errorText: _error,
-            errorMaxLines: 3,
+      if (_error case final String error)
+        Semantics(
+          liveRegion: true,
+          child: Text(
+            error,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
-        ),
+        )
+      else
+        const Text('Código de demostración AULA24'),
+      const SizedBox(height: 24),
+      _SchoolButton(label: 'Entrar', onPressed: _continue),
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Text('o', textAlign: TextAlign.center),
       ),
-      const SizedBox(height: 36),
-      _SchoolButton(label: 'Continuar', onPressed: _continue),
-      const SizedBox(height: 12),
       _SchoolButton(
-        label: 'Escanear QR',
+        label: 'Escanear el QR del colegio',
         icon: Icons.qr_code_scanner_rounded,
         outlined: true,
         onPressed: () {
-          FocusScope.of(context).unfocus();
+          _focus.unfocus();
           context.pushReplacement(SchoolAccessStep.scan.location);
         },
       ),
+      const SizedBox(height: 16),
+      const Card(
+        child: Padding(
+          padding: EdgeInsets.all(14),
+          child: Text(
+            'Podés comprobar la cercanía con tu ubicación. Tu ubicación exacta no se guarda.',
+          ),
+        ),
+      ),
     ],
+  );
+
+  Widget _codeSlots(BuildContext context) => SizedBox(
+    height: math.max(58.0, MediaQuery.textScalerOf(context).scale(22) + 24),
+    child: Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Semantics(
+          label: 'Código del colegio, seis caracteres',
+          child: TextField(
+            controller: _controller,
+            focusNode: _focus,
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            enableSuggestions: false,
+            showCursor: false,
+            style: const TextStyle(color: Colors.transparent),
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+              LengthLimitingTextInputFormatter(_codeLength),
+            ],
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+            onSubmitted: (_) => _continue(),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              filled: false,
+            ),
+          ),
+        ),
+        IgnorePointer(
+          child: ExcludeSemantics(
+            child: ListenableBuilder(
+              listenable: Listenable.merge(<Listenable>[_controller, _focus]),
+              builder: (context, _) {
+                final String value = _controller.text.toUpperCase();
+                final int active = _controller.selection.isValid
+                    ? math.min(
+                        _controller.selection.extentOffset,
+                        _codeLength - 1,
+                      )
+                    : 0;
+                return Row(
+                  children: <Widget>[
+                    for (
+                      int index = 0;
+                      index < _codeLength;
+                      index++
+                    ) ...<Widget>[
+                      if (index > 0) const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(13),
+                            border: Border.all(
+                              width: _focus.hasFocus && index == active
+                                  ? 2.5
+                                  : 1.5,
+                              color: _focus.hasFocus && index == active
+                                  ? CureandoTheme.blue
+                                  : const Color(0xFFC6CDD8),
+                            ),
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              index < value.length ? value[index] : '',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -354,7 +484,7 @@ class _SchoolButton extends StatelessWidget {
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool outlined;
   final IconData? icon;
 
@@ -431,77 +561,21 @@ class _SchoolCard extends StatelessWidget {
         Icon(Icons.school_outlined, color: CureandoTheme.blue),
         SizedBox(width: 12),
         Flexible(
-          child: Text(
-            'Colegio de demostración',
-            style: TextStyle(fontWeight: FontWeight.w600),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'Colegio Centro América',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                'Referencia de prueba',
+                style: TextStyle(color: CureandoTheme.secondaryInk),
+              ),
+            ],
           ),
         ),
       ],
     ),
   );
-}
-
-class _ScanPreview extends StatelessWidget {
-  const _ScanPreview();
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: Container(
-      height: 222,
-      decoration: BoxDecoration(
-        color: const Color(0xFF10244A),
-        borderRadius: BorderRadius.circular(21),
-      ),
-      alignment: Alignment.center,
-      child: const SizedBox.square(
-        dimension: 140,
-        child: CustomPaint(
-          foregroundPainter: _ScanCorners(),
-          child: ColoredBox(
-            color: Color(0xFF172F57),
-            child: Icon(
-              Icons.qr_code_scanner_rounded,
-              size: 62,
-              color: Color(0xFFA6BAE1),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-class _ScanCorners extends CustomPainter {
-  const _ScanCorners();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const double inset = 2;
-    const double length = 22;
-    final double right = size.width - inset;
-    final double bottom = size.height - inset;
-    final Path corners = Path()
-      ..moveTo(inset, inset + length)
-      ..lineTo(inset, inset)
-      ..lineTo(inset + length, inset)
-      ..moveTo(right - length, inset)
-      ..lineTo(right, inset)
-      ..lineTo(right, inset + length)
-      ..moveTo(inset, bottom - length)
-      ..lineTo(inset, bottom)
-      ..lineTo(inset + length, bottom)
-      ..moveTo(right - length, bottom)
-      ..lineTo(right, bottom)
-      ..lineTo(right, bottom - length);
-    canvas.drawPath(
-      corners,
-      Paint()
-        ..color = CureandoTheme.yellow
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_ScanCorners oldDelegate) => false;
 }

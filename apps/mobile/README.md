@@ -14,15 +14,11 @@ El análisis de Flutter y sus 20 pruebas pasaron. Se revisó la captura `build/q
 
 ## Acceso escolar E02 — 2026-11-12
 
-Desde la bienvenida, **Usar código del colegio** abre el visor de QR simulado o el formulario manual. Probá `AULA-24` para cercanía confirmada y `AULA-00` para ver el estado sin confirmar. Se puede reintentar o consultar Información y Ayuda. La demostración funciona con un colegio ficticio y carece de acceso a cámara o GPS. E01 y E02 muestran el fondo detrás de la barra de estado. La navegación usa fundido y desplazamiento breve, con cambios inmediatos al activar movimiento reducido. [Maqueta y alcance de E02](../../docs/diseno/plan-acceso-escolar-e02.md).
-
-Para capturar el diseño localmente, usar `flutter run --dart-define=SETU_DESIGN_CAPTURE=true` desde `apps/mobile/`. También se puede generar un APK de depuración con `flutter build apk --debug --dart-define=SETU_DESIGN_CAPTURE=true`. El APK habitual arranca con protección. Android rechaza desactivar la protección en una compilación que carece de la marca de depuración. [Decisión de implementación](../../docs/decisiones/0011-acceso-escolar-demostracion.md).
-
-Se verificaron análisis sin incidencias y 23 pruebas de Flutter. En un emulador Pixel 9 Pro con Android API 37 y modo avión se recorrieron el QR y el código manual, se revisó la cabecera debajo de la barra de estado y se comprobó la protección de la ventana en los dos APK de depuración. Queda pendiente la prueba en un teléfono físico.
+Desde la bienvenida, **Usar código del colegio** abre el escáner por cámara o las seis casillas. Usá `AULA24` o escaneá el [QR de demostración](../../docs/diseno/qr-aula24.png) desde otro dispositivo. **Comprobar cercanía** usa una lectura actual del teléfono y la compara localmente con el pin público del Colegio Centro América, con un radio de prueba de 150 m. **Simular cercanía para la demo** permite presentar desde otro lugar en depuración. Esta opción omite el permiso de ubicación y muestra **Cercanía simulada** antes de continuar. [Recorrido E02](../../docs/diseno/plan-acceso-escolar-e02.md) · [Decisión de implementación](../../docs/decisiones/0012-camara-ubicacion-y-presentacion.md).
 
 ### Capturas temporales para la presentación
 
-La variante local `setu-debug-capturas.apk`, compilada con `SETU_DESIGN_CAPTURE=true`, desactiva temporalmente la protección contra capturas y grabación para revisar el diseño con Aaron y presentar la demostración con datos ficticios. Para volver a la configuración protegida, reinstalar el APK habitual compilado sin ese argumento. El bloque de casillas, cámara y ubicación reales se documenta en la [propuesta de E02](../../docs/diseno/plan-acceso-escolar-e02.md#siguiente-bloque--casillas-cámara-y-ubicación-del-dispositivo).
+El APK de presentación que se genera con `flutter build apk --debug` desactiva **temporalmente** la protección contra capturas y grabación. Para obtener un APK de depuración protegido y sin simulación, usar `flutter build apk --debug --dart-define=SETU_DESIGN_CAPTURE=false --dart-define=SETU_DEMO_SIMULATION=false`. Al terminar la presentación, restaurar ambos valores predeterminados a `false` en `lib/main.dart`. Las compilaciones sin depuración conservan la protección.
 
 ## Qué está implementado en M1
 

@@ -35,7 +35,7 @@ Con la Fase `M0` verificada físicamente por USB/ADB (instalación del APK, tran
 - **Fuentes offline:** Empaquetar la familia `Poppins` (`Regular`, `Medium`, `SemiBold`, `Bold`) en `apps/mobile/assets/fonts/` para garantizar funcionamiento 100 % offline sin depender de descargas de red en el evento.
 
 ### 2.4. Identidad Visual Fiel al Manual (`ManualDeIdentidad gráfica_cureando.pdf`)
-- Implementar `CureandoTheme` (`lib/shared/theme/app_theme.dart`) con los tokens exactos de `docs/06-guia-diseno.md` (`#0D61EB`, `#FF0091`, `#FFE100`, `#00C642` y superficies suaves `#EEF4FF`, `#FFF0F8`, `#FFFBEB`, `#ECFDF5`, `#F8FAFC`).
+- Implementar `CureandoTheme` (`lib/shared/theme/app_theme.dart`) con los tokens de `docs/06-guia-diseno.md`. **Los valores de marca registrados aquí quedaron superados por el manual final:** usar `#0C62EB`, `#FF0092`, `#FFE000`, `#00C642` (no `#0D61EB`, `#FF0091`, `#FFE100`, que eran del manual inicial). Las superficies suaves `#EEF4FF`, `#FFF0F8`, `#FFFBEB`, `#ECFDF5`, `#F8FAFC` siguen vigentes como derivados de interfaz.
 - Implementar los vectores originales en `lib/shared/widgets/setu_brand_mark.dart` usando las coordenadas matemáticas extraídas del PDF en `docs/06-guia-diseno.md`:
   1. **Isotipo de 3 piezas orgánicas** (`viewBox 87.6853 × 87.6853`, radio `R = 42.734`, canal `G = 2.2173`).
   2. **Pieza de rompecabezas redondeada** (insignia de *Testigo Solidario* y conexión).

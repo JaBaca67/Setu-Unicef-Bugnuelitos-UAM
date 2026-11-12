@@ -16,7 +16,7 @@ La guía no impone software a todas las propuestas ni limita el producto a 12–
 
 M0/M1: base Flutter, marca inicial, protección de pantalla, contratos y persistencia cifrada con alias/PIN, modelo anterior. Verificación M1 registrada el 5 nov: análisis limpio y 18 pruebas; prueba física pendiente. No hay envío remoto, paneles, acceso nuevo o mesh implementados.
 
-El 12 de noviembre se incorporaron la [bienvenida E01](diseno/plan-arranque-bienvenida-setu.md) y el [acceso escolar simulado E02](diseno/plan-acceso-escolar-e02.md). La validación real de QR, ubicación y acceso inicial offline sigue en diseño. Los bloques conectados y de transporte requieren propuesta y aprobación propias.
+El 12 de noviembre se incorporaron la [bienvenida E01](diseno/plan-arranque-bienvenida-setu.md) y el [acceso escolar E02 de demostración](diseno/plan-acceso-escolar-e02.md). E02 usa cámara y ubicación para un código de prueba, con un punto público configurado localmente. El acceso institucional y su primer ingreso offline siguen en diseño. Los bloques conectados y de transporte requieren propuesta y aprobación propias.
 
 ## Decisiones que cambian la solución
 

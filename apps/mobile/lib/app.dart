@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'features/school_access/school_access_screen.dart';
+import 'features/school_access/school_location.dart';
 import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
@@ -16,11 +17,15 @@ class CureandoApp extends StatefulWidget {
     this.screenSecurity,
     this.showM1Verification = false,
     this.allowDesignCapture = false,
+    this.allowSchoolSimulation = false,
+    this.checkSchoolProximity = checkSchoolLocation,
   });
   final CureandoGateway? gateway;
   final ScreenSecurityController? screenSecurity;
   final bool showM1Verification;
   final bool allowDesignCapture;
+  final bool allowSchoolSimulation;
+  final Future<SchoolProximity> Function() checkSchoolProximity;
   @override
   State<CureandoApp> createState() => _CureandoAppState();
 }
@@ -55,9 +60,14 @@ class _CureandoAppState extends State<CureandoApp> {
                         state,
                         SchoolAccessScreen(
                           step: step,
-                          proximity: extra is SchoolProximity
+                          proximity:
+                              extra is SchoolProximity &&
+                                  (extra != SchoolProximity.simulated ||
+                                      widget.allowSchoolSimulation)
                               ? extra
-                              : SchoolProximity.unconfirmed,
+                              : SchoolProximity.unavailable,
+                          checkProximity: widget.checkSchoolProximity,
+                          allowSimulation: widget.allowSchoolSimulation,
                         ),
                       );
                     },

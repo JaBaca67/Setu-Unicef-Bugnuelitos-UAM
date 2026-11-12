@@ -9,7 +9,11 @@ void main() {
     const CureandoApp(
       showM1Verification: kDebugMode && bool.fromEnvironment('SETU_M1_QA'),
       allowDesignCapture:
-          kDebugMode && bool.fromEnvironment('SETU_DESIGN_CAPTURE'),
+          kDebugMode &&
+          bool.fromEnvironment('SETU_DESIGN_CAPTURE', defaultValue: true),
+      allowSchoolSimulation:
+          kDebugMode &&
+          bool.fromEnvironment('SETU_DEMO_SIMULATION', defaultValue: true),
     ),
   );
 }

@@ -32,7 +32,7 @@ El repositorio documentaba al 5 de noviembre una app local con cuenta por alias 
 - El MVP del 17 de noviembre requiere trabajo no iniciado: paneles del MINED y de dirección, envío real entre dispositivos y red mesh. Cada bloque sigue necesitando propuesta y aprobación antes de implementarse (AGENTS.md).
 - Revisión documental del 9 nov: README y docs/01–04, 06–08 ya describen el alcance vigente; docs/09 registra fuentes y discrepancias y docs/10 propone datos/mesh. Las fuentes Mermaid están actualizadas. Los HTML anteriores se retiraron como especificaciones y remiten a las fuentes vigentes. Las imágenes `01`–`04` y el generador anterior son históricos; el bloque documental posterior incorporó SVG nuevos `06` y `08`–`12`, DFD y diccionario en docs/12 y catálogo técnico en docs/13, sin modificar ese generador o implementar producto. [ADR 0008](0008-stack-web-y-modelado-logico-propuesto.md) registra la propuesta web/proximidad pendiente de aprobación. El README móvil conserva la implementación M1, diferenciada del producto nuevo.
 - ADR 0006 documenta alternativas técnicas propuestas, sin aceptación implícita. La recepción mínima local antes de sincronizar y la supervisión central requieren distinguir ámbitos; no entregar relato/chat a dirección.
-- `apps/mobile/lib/shared/theme/app_theme.dart` aún usa la paleta anterior (`#0D61EB`, `#FF0091`, `#FFE100`); cambiarla es una tarea de código pendiente.
+- `apps/mobile/lib/shared/theme/app_theme.dart` ya usa la paleta del manual final (`#0C62EB`, `#FF0092`, `#FFE000`, `#00C642`), corregida el 12 nov 2026 junto con `setu_launcher.xml`. La paleta anterior (`#0D61EB`, `#FF0091`, `#FFE100`) queda descartada y no debe reintroducirse.
 
 ## Puntos abiertos
 

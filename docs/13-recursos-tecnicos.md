@@ -6,7 +6,7 @@
 
 | Superficie o capa | Lenguajes | Recursos | Estado y alcance |
 | --- | --- | --- | --- |
-| App estudiantil Android | Dart; Kotlin para integración nativa | Flutter, `go_router`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Bienvenida E01 y acceso escolar simulado E02 sobre M1. Cámara, GPS, validación escolar, backend, chat remoto y mesh pendientes. |
+| App estudiantil Android | Dart; Kotlin para integración nativa | Flutter, `go_router`, `mobile_scanner` 7.5.0, `geolocator` 14.1.2, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Bienvenida E01 y demostración E02 con QR y GPS local sobre M1. Validación institucional, backend, chat remoto y mesh pendientes. |
 | Información E10/E11 | Dart y recursos JSON/texto/video | Widgets Flutter; catálogo versionado/recursos empaquetados propuestos; `video_player` como candidato; distribución editorial futura separada | Función de producto confirmada por ADR 0009; nada instalado. Entrada sin reporte y durante la espera, con retorno sin cambiar una alerta. |
 | QR escolar | Dart y cámara Android | **Candidato:** `mobile_scanner`; entrada manual como alternativa | No instalado. Probar QR auténtico/configuración, errores, permiso denegado y equipos sin Google Play services según modo del escáner. Escanear no autentica al dueño del caso. |
 | Comprobación de cercanía | Dart y API Android | **Candidato condicionado:** `geolocator` | Intención de producto; no instalar hasta acordar finalidad, permisos, alternativa y uso fuera del centro. No guardar ubicación precisa ni seguimiento continuo. |

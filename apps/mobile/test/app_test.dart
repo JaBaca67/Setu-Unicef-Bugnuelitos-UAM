@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:cureando_mobile/app.dart';
+import 'package:cureando_mobile/features/school_access/school_location.dart';
 import 'package:cureando_mobile/shared/mock/mock_cureando_gateway.dart';
 import 'package:cureando_mobile/shared/platform/screen_security_controller.dart';
 import 'package:cureando_mobile/shared/theme/app_theme.dart';
@@ -88,30 +89,38 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el QR simulado comprueba cercanía y permite continuar', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const CureandoApp());
-    await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Usar código del colegio');
-    expect(find.text('Confirmá tu colegio'), findsOneWidget);
-    final ModalRoute<Object?>? route = ModalRoute.of(
-      tester.element(find.text('Confirmá tu colegio')),
-    );
-    expect(route?.transitionDuration, const Duration(milliseconds: 260));
-    await _tapLabel(tester, 'Escanear QR');
-    expect(find.text('Vista de demostración'), findsOneWidget);
-    await _tapLabel(tester, 'Simular escaneo');
-    expect(find.text('Colegio de demostración'), findsOneWidget);
-    await _tapLabel(tester, 'Comprobar cercanía');
-    expect(find.text('Colegio confirmado'), findsOneWidget);
-    expect(find.text('Comprobación simulada'), findsOneWidget);
-    await _tapLabel(tester, 'Continuar');
-    expect(find.text('Inicio'), findsOneWidget);
-    expect(find.text('Vista de demostración'), findsOneWidget);
-    expect(secure, isTrue);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'las casillas aceptan pegar el código y permiten comprobar cercanía',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
+      );
+      await tester.pumpAndSettle();
+      await _tapLabel(tester, 'Usar código del colegio');
+      expect(find.text('Confirmá tu colegio'), findsOneWidget);
+      final ModalRoute<Object?>? route = ModalRoute.of(
+        tester.element(find.text('Confirmá tu colegio')),
+      );
+      expect(route?.transitionDuration, const Duration(milliseconds: 260));
+      await _tapLabel(tester, 'Escribir código');
+      await tester.enterText(find.byType(TextField), 'aula-24');
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
+        'aula24',
+      );
+      await _tapLabel(tester, 'Entrar');
+      expect(find.text('Colegio Centro América'), findsOneWidget);
+      expect(find.text('Simular cercanía para la demo'), findsNothing);
+      await _tapLabel(tester, 'Comprobar cercanía');
+      expect(find.text('Colegio confirmado'), findsOneWidget);
+      expect(find.text(SchoolProximity.nearby.message), findsOneWidget);
+      await _tapLabel(tester, 'Continuar');
+      expect(find.text('Inicio'), findsOneWidget);
+      expect(find.text('Vista de demostración'), findsOneWidget);
+      expect(secure, isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('el código manual permite corregir, reintentar y volver', (
     WidgetTester tester,
@@ -122,17 +131,24 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    await tester.pumpWidget(const CureandoApp());
+    await tester.pumpWidget(
+      CureandoApp(checkSchoolProximity: () async => SchoolProximity.outside),
+    );
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Usar código del colegio');
-    await _tapLabel(tester, 'Escanear QR');
     await _tapLabel(tester, 'Escribir código');
-    await _tapLabel(tester, 'Continuar');
-    expect(find.text('Ingresá uno de los códigos de muestra.'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), ' aula-00 ');
-    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Entrar');
+    expect(
+      find.text('Ingresá los seis caracteres del código.'),
+      findsOneWidget,
+    );
+    await tester.enterText(find.byType(TextField), 'AULA00');
+    await _tapLabel(tester, 'Entrar');
+    expect(find.textContaining('Ese código no corresponde'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), ' aula-24 ');
+    await _tapLabel(tester, 'Entrar');
     await _tapLabel(tester, 'Comprobar cercanía');
-    expect(find.text('Cercanía sin confirmar'), findsOneWidget);
+    expect(find.text('Fuera de la zona de prueba'), findsOneWidget);
     await _tapLabel(tester, 'Explorar Información');
     expect(find.widgetWithText(AppBar, 'Información'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver'));
@@ -140,13 +156,62 @@ void main() {
     await _tapLabel(tester, 'Reintentar');
     expect(find.text('Comprobar cercanía'), findsOneWidget);
     await _tapLabel(tester, 'Ahora no');
-    await _tapLabel(tester, 'Escribir código');
-    await tester.enterText(find.byType(TextField), 'AULA-24');
-    await _tapLabel(tester, 'Continuar');
-    await _tapLabel(tester, 'Comprobar cercanía');
-    expect(find.text('Colegio confirmado'), findsOneWidget);
+    expect(find.text('Escribir código'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('la presentación simula cercanía sin llamar a ubicación', (
+    WidgetTester tester,
+  ) async {
+    int requests = 0;
+    await tester.pumpWidget(
+      CureandoApp(
+        allowSchoolSimulation: true,
+        checkSchoolProximity: () async {
+          requests++;
+          return SchoolProximity.unavailable;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Usar código del colegio');
+    await _tapLabel(tester, 'Escribir código');
+    await tester.enterText(find.byType(TextField), demoSchoolCode);
+    await _tapLabel(tester, 'Entrar');
+    await _tapLabel(tester, 'Simular cercanía para la demo');
+    expect(find.text('Cercanía simulada'), findsOneWidget);
+    expect(find.text('Colegio confirmado'), findsNothing);
+    expect(requests, 0);
+    await _tapLabel(tester, 'Continuar');
+    expect(find.text('Inicio'), findsOneWidget);
+  });
+
+  test(
+    'la zona se confirma solo cuando el margen de precisión queda adentro',
+    () {
+      expect(normalizeSchoolCode(' aula-24 '), demoSchoolCode);
+      expect(
+        normalizeSchoolCode('https://example.org/AULA24'),
+        isNot(demoSchoolCode),
+      );
+      expect(
+        classifySchoolDistance(distanceMeters: 140, accuracyMeters: 10),
+        SchoolProximity.nearby,
+      );
+      expect(
+        classifySchoolDistance(distanceMeters: 145, accuracyMeters: 10),
+        SchoolProximity.imprecise,
+      );
+      expect(
+        classifySchoolDistance(distanceMeters: 165, accuracyMeters: 10),
+        SchoolProximity.outside,
+      );
+      expect(
+        classifySchoolDistance(distanceMeters: 5, accuracyMeters: 200),
+        SchoolProximity.imprecise,
+      );
+    },
+  );
 
   testWidgets('respeta movimiento reducido y habilita capturas en modo local', (
     WidgetTester tester,

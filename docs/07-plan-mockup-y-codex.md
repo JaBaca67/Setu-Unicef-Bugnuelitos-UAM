@@ -6,7 +6,7 @@
 
 M1 ofrece infraestructura local cifrada, contratos anteriores, identidad y pantalla de verificación. No implementa recorrido estudiantil completo ni transporte, backend, paneles o chat remoto. Mantener su evidencia técnica en el README móvil y ADR 0004.
 
-E01 abre el corte Android actual, con acceso escolar simulado E02 y vistas locales de Información y Ayuda. [Bienvenida y marca de arranque](diseno/plan-arranque-bienvenida-setu.md) · [Demostración E02](diseno/plan-acceso-escolar-e02.md).
+E01 abre el corte Android actual, con acceso escolar E02 por cámara o código manual, una comprobación de cercanía de prueba y vistas locales de Información y Ayuda. [Bienvenida y marca de arranque](diseno/plan-arranque-bienvenida-setu.md) · [Demostración E02](diseno/plan-acceso-escolar-e02.md).
 
 ## Entrega prevista
 

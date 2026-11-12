@@ -2,6 +2,8 @@
 
 **Fecha:** 2026-11-12. **Estado:** aceptado e implementado para la demostración. El usuario revisó la maqueta de E02 y pidió transiciones suaves, además de solicitar una barra de estado integrada y capturas para su revisión local.
 
+La cámara, la cercanía y la configuración temporal de capturas del corte actual se registran en [ADR 0012](0012-camara-ubicacion-y-presentacion.md). Este documento conserva la decisión del primer corte simulado.
+
 ## Contexto y alternativas
 
 La bienvenida abría un único texto de muestra para Colegio. Integrar cámara, ubicación y validación real en este bloque habría requerido decidir permisos, alcance de cercanía y primer acceso desconectado. La demostración permite validar la comprensión de los dos métodos y el estado sin confirmar con datos ficticios.
