@@ -1,0 +1,5 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white" />
+    <item android:drawable="@drawable/setu_launcher"
+        android:width="132dp" android:height="132dp" android:gravity="center" />
+</layer-list>

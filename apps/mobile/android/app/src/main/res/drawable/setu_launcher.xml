@@ -1,10 +1,13 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:pathData="M0,0H108V108H0Z" />
-    <group android:translateX="22" android:translateY="22" android:scaleX="0.729883" android:scaleY="0.729883">
-        <path android:fillColor="#0D61EB" android:pathData="M0,0L42.734,0A42.734,42.734 0,0 1,0 42.734Z" />
-        <path android:fillColor="#0D61EB" android:pathData="M0,87.6853L0,44.9513A42.734,42.734 0,0 1,42.734 87.6853Z" />
-        <path android:fillColor="#0D61EB" android:pathData="M44.9513,0A42.734,42.734 0,0 1,87.6853 42.734L87.6853,87.6853A42.734,42.734 0,0 1,44.9513 44.9513Z" />
+    android:width="132dp" android:height="132dp"
+    android:viewportWidth="160" android:viewportHeight="160">
+    <path android:fillColor="@color/setu_icon_blue"
+        android:pathData="M56,37H104A19,19 0 0 1 123,56V104A19,19 0 0 1 104,123H56A19,19 0 0 1 37,104V56A19,19 0 0 1 56,37Z" />
+    <group android:pivotX="80" android:pivotY="80"
+        android:scaleX="0.58" android:scaleY="0.58"
+        android:translateX="-2.2" android:translateY="0.23">
+        <path android:fillColor="#FFFFFF" android:pathData="M42.29,38.09h40.46c0,11.17-4.53,21.29-11.85,28.61-7.32,7.32-17.44,11.85-28.61,11.85v-40.46Z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M70.9,92.5c7.32,7.32,11.85,17.44,11.85,28.61h-40.46v-40.46c11.17,0,21.29,4.53,28.61,11.85Z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M125.31,78.55v42.56c-22.35,0-40.46-18.11-40.46-40.46v-42.56c11.17,0,21.28,4.53,28.61,11.85,7.32,7.32,11.85,17.44,11.85,28.61Z" />
     </group>
 </vector>
