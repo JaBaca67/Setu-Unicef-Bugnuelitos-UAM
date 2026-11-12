@@ -67,7 +67,6 @@ void main() {
     const Map<String, String> destinations = <String, String>{
       'Explorar Información': 'Información',
       'Ayuda': 'Ayuda',
-      'Usar código del colegio': 'Código del colegio',
     };
     for (final MapEntry<String, String> destination in destinations.entries) {
       final Finder action = find.text(destination.key);
@@ -81,15 +80,89 @@ void main() {
       expect(title, findsOneWidget);
     }
 
-    final Finder privacy = find.text('Cómo cuidamos tu información');
-    await tester.ensureVisible(privacy);
-    await tester.tap(privacy);
-    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Cómo cuidamos tu información');
     expect(find.textContaining('equipo de escucha asignado'), findsOneWidget);
     await tester.tap(find.text('Cerrar'));
     await tester.pumpAndSettle();
     expect(title, findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el QR simulado comprueba cercanía y permite continuar', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const CureandoApp());
+    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Usar código del colegio');
+    expect(find.text('Confirmá tu colegio'), findsOneWidget);
+    final ModalRoute<Object?>? route = ModalRoute.of(
+      tester.element(find.text('Confirmá tu colegio')),
+    );
+    expect(route?.transitionDuration, const Duration(milliseconds: 260));
+    await _tapLabel(tester, 'Escanear QR');
+    expect(find.text('Vista de demostración'), findsOneWidget);
+    await _tapLabel(tester, 'Simular escaneo');
+    expect(find.text('Colegio de demostración'), findsOneWidget);
+    await _tapLabel(tester, 'Comprobar cercanía');
+    expect(find.text('Colegio confirmado'), findsOneWidget);
+    expect(find.text('Comprobación simulada'), findsOneWidget);
+    await _tapLabel(tester, 'Continuar');
+    expect(find.text('Inicio'), findsOneWidget);
+    expect(find.text('Vista de demostración'), findsOneWidget);
+    expect(secure, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el código manual permite corregir, reintentar y volver', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(const CureandoApp());
+    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Usar código del colegio');
+    await _tapLabel(tester, 'Escanear QR');
+    await _tapLabel(tester, 'Escribir código');
+    await _tapLabel(tester, 'Continuar');
+    expect(find.text('Ingresá uno de los códigos de muestra.'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), ' aula-00 ');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Comprobar cercanía');
+    expect(find.text('Cercanía sin confirmar'), findsOneWidget);
+    await _tapLabel(tester, 'Explorar Información');
+    expect(find.widgetWithText(AppBar, 'Información'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Reintentar');
+    expect(find.text('Comprobar cercanía'), findsOneWidget);
+    await _tapLabel(tester, 'Ahora no');
+    await _tapLabel(tester, 'Escribir código');
+    await tester.enterText(find.byType(TextField), 'AULA-24');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Comprobar cercanía');
+    expect(find.text('Colegio confirmado'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('respeta movimiento reducido y habilita capturas en modo local', (
+    WidgetTester tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await tester.pumpWidget(const CureandoApp(allowDesignCapture: true));
+    await tester.pumpAndSettle();
+    expect(secure, isFalse);
+    await _tapLabel(tester, 'Usar código del colegio');
+    final ModalRoute<Object?>? route = ModalRoute.of(
+      tester.element(find.text('Confirmá tu colegio')),
+    );
+    expect(route?.transitionDuration, Duration.zero);
+    expect(route?.reverseTransitionDuration, Duration.zero);
   });
 
   testWidgets('la bienvenida permite abrir privacidad con texto al 200 %', (
@@ -103,10 +176,7 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await tester.pumpWidget(const CureandoApp());
     await tester.pumpAndSettle();
-    final Finder privacy = find.text('Cómo cuidamos tu información');
-    await tester.ensureVisible(privacy);
-    await tester.tap(privacy);
-    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Cómo cuidamos tu información');
     expect(find.textContaining('equipo de escucha asignado'), findsOneWidget);
     final Finder close = find.text('Cerrar');
     await tester.ensureVisible(close);
@@ -228,6 +298,21 @@ void main() {
     expect(controller.busy, isFalse);
     controller.dispose();
   });
+}
+
+Future<void> _tapLabel(WidgetTester tester, String label) async {
+  final Finder finder = find.text(label);
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _capture(WidgetTester tester, Key key, String name) async {

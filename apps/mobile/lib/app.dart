@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'features/school_access/school_access_screen.dart';
 import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
 import 'shared/platform/screen_security_controller.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/setu_brand_mark.dart';
+import 'shared/widgets/student_transition.dart';
 
 class CureandoApp extends StatefulWidget {
   const CureandoApp({
@@ -13,10 +15,12 @@ class CureandoApp extends StatefulWidget {
     this.gateway,
     this.screenSecurity,
     this.showM1Verification = false,
+    this.allowDesignCapture = false,
   });
   final CureandoGateway? gateway;
   final ScreenSecurityController? screenSecurity;
   final bool showM1Verification;
+  final bool allowDesignCapture;
   @override
   State<CureandoApp> createState() => _CureandoAppState();
 }
@@ -32,12 +36,43 @@ class _CureandoAppState extends State<CureandoApp> {
         builder: (BuildContext context, GoRouterState state) =>
             const WelcomeScreen(),
         routes: <RouteBase>[
+          GoRoute(
+            path: 'colegio',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              const SchoolAccessScreen(step: SchoolAccessStep.method),
+            ),
+            routes: <RouteBase>[
+              for (final SchoolAccessStep step in SchoolAccessStep.values)
+                if (step.path.isNotEmpty)
+                  GoRoute(
+                    path: step.path,
+                    pageBuilder: (context, state) {
+                      final Object? extra = state.extra;
+                      return studentTransition(
+                        context,
+                        state,
+                        SchoolAccessScreen(
+                          step: step,
+                          proximity: extra is SchoolProximity
+                              ? extra
+                              : SchoolProximity.unconfirmed,
+                        ),
+                      );
+                    },
+                  ),
+            ],
+          ),
           for (final WelcomeDestination destination
               in WelcomeDestination.values)
             GoRoute(
               path: destination.path,
-              builder: (BuildContext context, GoRouterState state) =>
-                  WelcomePreviewScreen(destination: destination),
+              pageBuilder: (context, state) => studentTransition(
+                context,
+                state,
+                WelcomePreviewScreen(destination: destination),
+              ),
             ),
           if (widget.showM1Verification)
             GoRoute(
@@ -71,6 +106,8 @@ class _CureandoAppState extends State<CureandoApp> {
       _security.addListener(_refresh);
       _security.initialize();
       _open();
+    } else if (widget.allowDesignCapture) {
+      _security.setSecureScreen(false);
     }
   }
 
@@ -103,7 +140,10 @@ class _CureandoAppState extends State<CureandoApp> {
   void dispose() {
     if (widget.showM1Verification) {
       _security.removeListener(_refresh);
-      if (widget.screenSecurity == null) _security.dispose();
+    }
+    if ((widget.showM1Verification || widget.allowDesignCapture) &&
+        widget.screenSecurity == null) {
+      _security.dispose();
     }
     _router.dispose();
     _revision.dispose();

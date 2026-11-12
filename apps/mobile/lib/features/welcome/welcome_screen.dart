@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/campaign_screen.dart';
 
 enum WelcomeDestination {
-  school(
-    'colegio',
-    'Código del colegio',
-    'Tu colegio te comparte un código público. En esta pantalla vas a poder escanear el QR o escribir el código para confirmar tu colegio.',
-  ),
   information(
     'informacion',
     'Información',
@@ -37,6 +32,9 @@ class WelcomeScreen extends StatelessWidget {
       barrierLabel: 'Cerrar privacidad',
       isScrollControlled: true,
       useSafeArea: true,
+      sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
       builder: (BuildContext context) => SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -77,106 +75,65 @@ class WelcomeScreen extends StatelessWidget {
       borderRadius: BorderRadius.circular(15),
     );
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        backgroundColor: CureandoTheme.blue,
-        body: SafeArea(
-          bottom: false,
-          child: ColoredBox(
-            color: Colors.white,
-            child: SizedBox.expand(
-              child: SingleChildScrollView(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        const _CampaignHeader(),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            27,
-                            24,
-                            27,
-                            24 + MediaQuery.viewPaddingOf(context).bottom,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 12),
-                                child: Text(
-                                  'Aquí podés aprender sobre lo que sentís y conocer cómo pedir apoyo en tu colegio.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 17, height: 1.5),
-                                ),
-                              ),
-                              const SizedBox(height: 34),
-                              FilledButton(
-                                style: FilledButton.styleFrom(
-                                  shape: shape,
-                                  textStyle: buttonText,
-                                ),
-                                onPressed: () => context.push(
-                                  '/${WelcomeDestination.school.path}',
-                                ),
-                                child: const Text(
-                                  'Usar código del colegio',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  minimumSize: const Size(48, 52),
-                                  shape: shape,
-                                  side: const BorderSide(
-                                    color: Color(0xFFA5C1EF),
-                                  ),
-                                  textStyle: buttonText,
-                                ),
-                                onPressed: () => context.push(
-                                  '/${WelcomeDestination.information.path}',
-                                ),
-                                child: const Text(
-                                  'Explorar Información',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              TextButton(
-                                onPressed: () => context.push(
-                                  '/${WelcomeDestination.help.path}',
-                                ),
-                                child: const Text('Ayuda'),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  foregroundColor: CureandoTheme.secondaryInk,
-                                ),
-                                onPressed: () => _showPrivacy(context),
-                                child: const Text(
-                                  'Cómo cuidamos tu información',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+    return CampaignScreen(
+      header: const _CampaignHeader(),
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(27, 24, 27, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'Aquí podés aprender sobre lo que sentís y conocer cómo pedir apoyo en tu colegio.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 17, height: 1.5),
               ),
             ),
-          ),
+            const SizedBox(height: 34),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                shape: shape,
+                textStyle: buttonText,
+              ),
+              onPressed: () => context.push('/colegio'),
+              child: const Text(
+                'Usar código del colegio',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(48, 52),
+                shape: shape,
+                side: const BorderSide(color: Color(0xFFA5C1EF)),
+                textStyle: buttonText,
+              ),
+              onPressed: () =>
+                  context.push('/${WelcomeDestination.information.path}'),
+              child: const Text(
+                'Explorar Información',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => context.push('/${WelcomeDestination.help.path}'),
+              child: const Text('Ayuda'),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: CureandoTheme.secondaryInk,
+              ),
+              onPressed: () => _showPrivacy(context),
+              child: const Text(
+                'Cómo cuidamos tu información',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -194,78 +151,63 @@ class _CampaignHeader extends StatelessWidget {
       fontWeight: FontWeight.w700,
       height: 1.2,
     );
-    return ColoredBox(
-      color: CureandoTheme.blue,
-      child: Stack(
-        children: <Widget>[
-          Positioned.fill(
+    return Stack(
+      children: <Widget>[
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: AspectRatio(
+            aspectRatio: 392 / 180,
             child: Image.asset(
-              'assets/welcome/campaign-pattern.png',
+              'assets/welcome/campaign-characters.png',
               fit: BoxFit.fill,
               excludeFromSemantics: true,
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: AspectRatio(
-              aspectRatio: 392 / 180,
-              child: Image.asset(
-                'assets/welcome/campaign-characters.png',
-                fit: BoxFit.fill,
-                excludeFromSemantics: true,
-              ),
-            ),
-          ),
-          Column(
-            children: <Widget>[
-              const SizedBox(height: 24),
-              Image.asset(
-                'assets/welcome/setu-symbol-white.png',
-                width: 45,
-                height: 45,
-                semanticLabel: 'SéTú',
-              ),
-              const SizedBox(height: 23),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Semantics(
-                  header: true,
-                  label: 'Tu salud mental sí importa',
-                  excludeSemantics: true,
-                  child: Column(
-                    children: <Widget>[
-                      const Text(
-                        'Tu salud mental',
-                        style: title,
+        ),
+        Column(
+          children: <Widget>[
+            const SizedBox(height: 24),
+            const CampaignSymbol(size: 45),
+            const SizedBox(height: 23),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Semantics(
+                header: true,
+                label: 'Tu salud mental sí importa',
+                excludeSemantics: true,
+                child: Column(
+                  children: <Widget>[
+                    const Text(
+                      'Tu salud mental',
+                      style: title,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: CureandoTheme.pink,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Text(
+                        'sí importa',
+                        style: title.copyWith(fontSize: 32),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: CureandoTheme.pink,
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        child: Text(
-                          'sí importa',
-                          style: title.copyWith(fontSize: 32),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const AspectRatio(aspectRatio: 392 / 166),
-            ],
-          ),
-        ],
-      ),
+            ),
+            const AspectRatio(aspectRatio: 392 / 166),
+          ],
+        ),
+      ],
     );
   }
 }
