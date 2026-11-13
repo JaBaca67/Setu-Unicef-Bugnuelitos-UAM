@@ -4,11 +4,20 @@
 
 <p align="center"><img src="docs/diseno/setu-logo-azul.svg" alt="Logotipo oficial azul de SéTú" width="180" /></p>
 
-**Bugñuelitos · Universidad Americana (UAM) · Nicaragua**
+<h3 align="center">Bugñuelitos · UAM (Managua)</h3>
 
-**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación, inicio estudiantil E03 con progreso educativo local, *Mi pieza* y recorrido local *Pedir apoyo*.
+<p align="center">
+  <img src="https://img.shields.io/badge/ESTADO-EN_DESARROLLO-0C62EB?style=for-the-badge" alt="Estado: En desarrollo" />
+  <img src="https://img.shields.io/badge/APP_M%C3%93VIL-FLUTTER_%2B_KOTLIN-00C642?style=for-the-badge" alt="App móvil: Flutter + Kotlin" />
+  <img src="https://img.shields.io/badge/BACKEND-SUPABASE_%2B_RLS-FF0092?style=for-the-badge" alt="Backend: Supabase + RLS" />
+  <br />
+  <img src="https://img.shields.io/badge/CONECTIVIDAD-RED_MESH_E2EE-5865F2?style=for-the-badge" alt="Conectividad: Red Mesh E2EE" />
+  <img src="https://img.shields.io/badge/JORNADA-UAM_%C3%97_UNICEF_2026-F59E0B?style=for-the-badge" alt="Jornada UAM x UNICEF 2026" />
+</p>
 
-**Estado:** prototipo Android local en curso y esquema base Supabase/RLS/RPCs implementado; conexión de clientes, paneles web y red mesh pendientes.
+**Revisión:** 13 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación, inicio estudiantil E03 con barra `NavBar-01` y progreso educativo local, *Mi pieza*, recorrido *Pedir apoyo* y red mesh Android (`Nearby Connections` + E2EE).
+
+**Estado:** app Android con cliente Supabase (`supabase_flutter`) y red mesh física probada entre teléfonos reales sin internet; esquema base Supabase/RLS/RPCs implementado; pendientes las RPCs de MINED/Dirección y los paneles web.
 
 [Índice](#indice) · [Diagramas de datos](#dfd) · [Desarrollo técnico](#stack) · [Ejecutar la app](#instalacion)
 
