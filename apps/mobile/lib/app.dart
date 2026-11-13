@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'features/home/learning_progress.dart';
@@ -15,6 +17,9 @@ import 'features/support/support_screens.dart';
 import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
+import 'shared/mesh/mesh_bridge_keys.dart';
+import 'shared/mesh/mesh_relay_service.dart';
+import 'shared/mesh/mesh_transport.dart';
 import 'shared/platform/screen_security_controller.dart';
 import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/theme/app_theme.dart';
@@ -26,6 +31,8 @@ class CureandoApp extends StatefulWidget {
     super.key,
     this.gateway,
     this.remoteGateway,
+    this.meshRelay,
+    this.meshRecipientPublicKey,
     this.learningProgress,
     this.supportFlow,
     this.screenSecurity,
@@ -36,6 +43,8 @@ class CureandoApp extends StatefulWidget {
   });
   final CureandoGateway? gateway;
   final SetuRemoteGateway? remoteGateway;
+  final MeshRelayService? meshRelay;
+  final List<int>? meshRecipientPublicKey;
   final LearningProgress? learningProgress;
   final SupportFlow? supportFlow;
   final ScreenSecurityController? screenSecurity;
@@ -51,8 +60,20 @@ class _CureandoAppState extends State<CureandoApp> {
   late final LearningProgress _learning =
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
+  late final MeshRelayService _meshRelay =
+      widget.meshRelay ??
+      MeshRelayService(
+        transport: NearbyMeshTransport(),
+        remoteGateway: widget.remoteGateway,
+      );
   late final SupportFlow _support =
-      widget.supportFlow ?? SupportFlow(remote: widget.remoteGateway);
+      widget.supportFlow ??
+      SupportFlow(
+        remote: widget.remoteGateway,
+        mesh: _meshRelay,
+        meshRecipientPublicKey: widget.meshRecipientPublicKey,
+        resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+      );
   final ValueNotifier<StudentPiece> _piece = ValueNotifier<StudentPiece>(
     StudentPiece.initial,
   );
@@ -221,8 +242,30 @@ class _CureandoAppState extends State<CureandoApp> {
       _security.addListener(_refresh);
       _security.initialize();
       _open();
-    } else if (widget.allowDesignCapture) {
-      _security.setSecureScreen(false);
+    } else {
+      if (widget.allowDesignCapture) {
+        _security.setSecureScreen(false);
+      }
+      if (widget.supportFlow == null) {
+        unawaited(_bootstrapMesh());
+      }
+    }
+  }
+
+  Future<void> _bootstrapMesh() async {
+    try {
+      await _meshRelay.open();
+      final bool hasPending = _meshRelay.items.any(
+        (MeshQueueItem item) => item.state != MeshPacketState.centrallySynced,
+      );
+      if (!hasPending) return;
+      final bool perms = await _meshRelay.transport.hasRequiredPermissions();
+      final bool btOn = await _meshRelay.transport.isBluetoothEnabled();
+      if (perms && btOn && !_meshRelay.isRunning) {
+        await _meshRelay.start();
+      }
+    } on Object {
+      // En pruebas sin canal nativo o sin radio disponible, conserva la cola.
     }
   }
 
@@ -256,6 +299,7 @@ class _CureandoAppState extends State<CureandoApp> {
     _learningLifecycle.dispose();
     if (widget.learningProgress == null) _learning.dispose();
     if (widget.supportFlow == null) _support.dispose();
+    if (widget.meshRelay == null) _meshRelay.dispose();
     _piece.dispose();
     if (widget.showM1Verification) {
       _security.removeListener(_refresh);

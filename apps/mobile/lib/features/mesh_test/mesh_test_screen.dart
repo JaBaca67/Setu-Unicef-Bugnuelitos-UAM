@@ -5,6 +5,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../shared/mesh/mesh_bridge_keys.dart';
 import '../../shared/mesh/mesh_envelope.dart';
 import '../../shared/mesh/mesh_relay_service.dart';
 import '../../shared/mesh/mesh_transport.dart';
@@ -33,8 +34,6 @@ class MeshTestScreen extends StatefulWidget {
 }
 
 class _MeshTestScreenState extends State<MeshTestScreen> {
-  static final X25519 _x25519 = X25519();
-
   late final MeshTransport _transport =
       widget.transport ?? NearbyMeshTransport();
   MeshRelayService? _relay;
@@ -57,9 +56,7 @@ class _MeshTestScreenState extends State<MeshTestScreen> {
 
   Future<void> _initStateAsync() async {
     // Par X25519 determinístico SOLO para prueba física rápida entre 2+ teléfonos.
-    final SimpleKeyPair pair = await _x25519.newKeyPairFromSeed(
-      utf8.encode('setu-demo-mesh-bridge-key-v1-32b').sublist(0, 32),
-    );
+    final SimpleKeyPair pair = await MeshBridgeKeys.demoBridgeKeyPair();
     final SimplePublicKey pub = await pair.extractPublicKey();
     _demoBridgeKeyPair = pair;
     _demoBridgePublicKey = pub.bytes;

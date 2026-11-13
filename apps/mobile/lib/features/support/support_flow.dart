@@ -90,6 +90,7 @@ class SupportFlow extends ChangeNotifier {
     this.remote,
     this.mesh,
     this.meshRecipientPublicKey,
+    this.resolveMeshRecipientPublicKey,
     this.schoolCode = demoSchoolCode,
     this.ackDelay = const Duration(seconds: 3),
     this.teamDelay = const Duration(seconds: 8),
@@ -108,6 +109,7 @@ class SupportFlow extends ChangeNotifier {
   final SetuRemoteGateway? remote;
   final MeshRelayService? mesh;
   final List<int>? meshRecipientPublicKey;
+  final Future<List<int>?> Function()? resolveMeshRecipientPublicKey;
   final String schoolCode;
   final Duration ackDelay;
   final Duration teamDelay;
@@ -286,7 +288,8 @@ class SupportFlow extends ChangeNotifier {
       // cifrada con su token y clientOperationId; si mesh está activo, se
       // sella la alerta mínima para reenvío oportunista sin relato.
       final MeshRelayService? relay = mesh;
-      final List<int>? recipientKey = meshRecipientPublicKey;
+      final List<int>? recipientKey =
+          meshRecipientPublicKey ?? await resolveMeshRecipientPublicKey?.call();
       if (relay != null && recipientKey != null) {
         try {
           await relay.enqueueMinimalAlert(

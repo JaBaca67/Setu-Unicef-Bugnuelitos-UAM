@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
+import 'package:cureando_mobile/shared/mesh/mesh_bridge_keys.dart';
 import 'package:cureando_mobile/shared/mesh/mesh_envelope.dart';
 import 'package:cureando_mobile/shared/mesh/mesh_relay_service.dart';
 import 'package:cureando_mobile/shared/mesh/mesh_transport.dart';
@@ -295,6 +296,77 @@ void main() {
 
     final bool enabled = await flow.ensureBluetoothForMesh();
     expect(enabled, isTrue);
+    expect(flow.needsBluetoothForMesh, isFalse);
+    expect(relay.isRunning, isTrue);
+
+    await relay.stop();
+    await transport.dispose();
+  });
+
+  test('MeshRelayService conserva la cola cifrada tras cerrar y reabrir', () async {
+    final _MemoryStore sharedStore = _MemoryStore();
+    final _InMemoryMeshBus bus = _InMemoryMeshBus();
+    final _FakeMeshTransport transport1 = _FakeMeshTransport('node1', bus);
+    final MeshRelayService relay1 = MeshRelayService(
+      transport: transport1,
+      openStore: () async => sharedStore,
+    );
+    final List<int> pubKey = await MeshBridgeKeys.resolvePublicKeyBytes();
+    final CaseCapability cap = await CaseCapability.generate();
+    final MeshEnvelope env = await relay1.enqueueMinimalAlert(
+      MeshMinimalAlertPayload(
+        clientOperationId: CaseCapability.newOperationId(prefix: 'persist'),
+        publicSchoolCode: 'AULA24',
+        situationType: 'need_to_talk',
+        studentRole: 'victim',
+        capabilityVerifierHash: cap.verifierHash,
+        declaredAt: DateTime.utc(2026, 11, 13, 12),
+      ),
+      recipientPublicKeyBytes: pubKey,
+    );
+    expect(relay1.items.length, 1);
+    relay1.dispose();
+    await transport1.dispose();
+
+    final _FakeMeshTransport transport2 = _FakeMeshTransport('node2', bus);
+    final MeshRelayService relay2 = MeshRelayService(
+      transport: transport2,
+      openStore: () async => sharedStore,
+    );
+    await relay2.open();
+    expect(relay2.items.length, 1);
+    expect(relay2.items.first.envelope.packetId, env.packetId);
+    expect(relay2.items.first.state, MeshPacketState.queued);
+
+    relay2.dispose();
+    await transport2.dispose();
+  });
+
+  test('SupportFlow resuelve clave del puente asíncronamente sin internet', () async {
+    final _InMemoryMeshBus bus = _InMemoryMeshBus();
+    final _FakeMeshTransport transport = _FakeMeshTransport('emitter', bus)
+      ..bluetoothOn = false;
+    final MeshRelayService relay = MeshRelayService(
+      transport: transport,
+      openStore: () async => _MemoryStore(),
+    );
+    final SupportFlow flow = SupportFlow(
+      openStore: () async => _MemoryStore(),
+      remote: _FailingRemoteGateway(),
+      mesh: relay,
+      resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+    );
+
+    flow.selectSituation(Situation.talk);
+    flow.selectParticipation(Participation.own);
+    final bool saved = await flow.send();
+
+    expect(saved, isTrue);
+    expect(flow.needsBluetoothForMesh, isTrue);
+    expect(relay.items.length, 1);
+
+    final bool btOk = await flow.ensureBluetoothForMesh();
+    expect(btOk, isTrue);
     expect(flow.needsBluetoothForMesh, isFalse);
     expect(relay.isRunning, isTrue);
 
