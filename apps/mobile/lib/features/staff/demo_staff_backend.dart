@@ -32,8 +32,12 @@ class _DemoCase {
     this.status = SetuCaseStatus.received,
     this.level,
     this.chat = false,
+    this.origin = SetuAlertOrigin.online,
+    this.involvesStaff = false,
     List<CaseChatMessageView>? messages,
-  }) : messages = messages ?? <CaseChatMessageView>[];
+    List<CaseActionSheetView>? sheets,
+  }) : messages = messages ?? <CaseChatMessageView>[],
+       sheets = sheets ?? <CaseActionSheetView>[];
 
   final String id;
   final String institutionId;
@@ -54,9 +58,12 @@ class _DemoCase {
   final List<CaseChatMessageView> messages;
   final List<CaseInternalNoteView> notes = <CaseInternalNoteView>[];
 
+  final SetuAlertOrigin origin;
+  final bool involvesStaff;
+
   /// Fichas mínimas emitidas: nivel y orientación, sin relato ni mensajes.
-  final List<({int level, String guidance, bool omitSchool})> sheets =
-      <({int level, String guidance, bool omitSchool})>[];
+  final List<CaseActionSheetView> sheets;
+  final List<SchoolActionRecordView> actions = <SchoolActionRecordView>[];
 
   StaffCaseSummary get summary => StaffCaseSummary(
     id: id,
@@ -64,10 +71,10 @@ class _DemoCase {
     referenceCode: reference,
     situationType: situation,
     studentRole: role,
-    origin: SetuAlertOrigin.online,
+    origin: origin,
     status: status,
     humanLevel: level,
-    involvesStaff: false,
+    involvesStaff: involvesStaff,
     assignedCounselorId: assignedTo,
     chatAvailableNotice: chat,
     urgentReferralTriggered: urgent,
@@ -208,6 +215,36 @@ class DemoStaffBackend implements StaffBackend {
           senderRole: SetuMessageSender.counselingDesk,
           body: 'Podés contarme a tu ritmo.',
           createdAt: DateTime(2026, 11, 12, 15, 53),
+        ),
+      ],
+    ),
+    _DemoCase(
+      id: 'demo-case-030',
+      institutionId: cca.id,
+      reference: 'DEMO-030',
+      situation: SetuSituationType.cyberbullying,
+      role: SetuStudentCaseRole.victim,
+      declaredAt: DateTime(2026, 11, 11, 8, 30),
+      narrative: 'Relato ficticio reservado a Mesa de Escucha.',
+      piece: null,
+      assignedTo: _desk,
+      status: SetuCaseStatus.sheetSent,
+      level: 2,
+      sheets: <CaseActionSheetView>[
+        CaseActionSheetView(
+          id: 'demo-sheet-030',
+          caseId: 'demo-case-030',
+          institutionId: cca.id,
+          version: 1,
+          issuedBy: _desk,
+          humanLevel: 2,
+          summaryType: SetuSituationType.cyberbullying,
+          summaryRole: SetuStudentCaseRole.victim,
+          omitSchoolDueToConflict: false,
+          guidanceNotes:
+              'Orientación ficticia: reforzar los acuerdos de convivencia '
+              'del grupo sin señalar a nadie.',
+          issuedAt: DateTime(2026, 11, 12, 9, 15),
         ),
       ],
     ),
@@ -431,7 +468,8 @@ class DemoStaffBackend implements StaffBackend {
               (_DemoCase found) =>
                   (mined ||
                       found.assignedTo == _user ||
-                      directed.contains(found.institutionId)) &&
+                      (directed.contains(found.institutionId) &&
+                          !found.involvesStaff)) &&
                   (institutionId == null ||
                       found.institutionId == institutionId),
             )
@@ -642,13 +680,186 @@ class DemoStaffBackend implements StaffBackend {
         ..closedReason = assessment.closedReason.trim();
     } else if (assessment.issueSheet) {
       found.status = SetuCaseStatus.sheetSent;
-      found.sheets.add((
-        level: level,
-        guidance: assessment.guidanceNotes.trim(),
-        omitSchool: assessment.omitSchool,
-      ));
+      found.sheets.add(
+        CaseActionSheetView(
+          id: 'demo-sheet-${++_sequence}',
+          caseId: found.id,
+          institutionId: found.institutionId,
+          version: found.sheets.length + 1,
+          issuedBy: _user!,
+          humanLevel: level,
+          summaryType: found.situation,
+          summaryRole: found.role,
+          omitSchoolDueToConflict: assessment.omitSchool,
+          guidanceNotes: assessment.guidanceNotes.trim(),
+          issuedAt: DateTime.now(),
+        ),
+      );
     } else if (found.status == SetuCaseStatus.received) {
       found.status = SetuCaseStatus.inListening;
     }
+  }
+
+  // --- Dirección del centro ------------------------------------------------
+
+  /// Caso del centro que dirige la sesión; error de permiso si no lo es.
+  _DemoCase _directed(String caseId) {
+    final _DemoCase found = _cases.firstWhere(
+      (_DemoCase item) => item.id == caseId,
+      orElse: () => throw const GatewayException('P0002', 'case_not_found'),
+    );
+    if (!_has(SetuStaffRole.schoolDirector, found.institutionId) ||
+        !_scopes().any(
+          (StaffMembershipScope scope) =>
+              scope.role == SetuStaffRole.schoolDirector &&
+              scope.institutionId == found.institutionId,
+        )) {
+      throw const GatewayException(
+        '42501',
+        'forbidden_school_director_required',
+      );
+    }
+    if (found.involvesStaff) {
+      throw const GatewayException('42501', 'restricted_due_to_staff_conflict');
+    }
+    return found;
+  }
+
+  @override
+  Future<List<CaseActionSheetView>> sheets({String? caseId}) async {
+    final List<StaffMembershipScope> scopes = _scopes();
+    final bool mined = scopes.any(
+      (StaffMembershipScope scope) =>
+          scope.role == SetuStaffRole.minedSupervisor,
+    );
+    final Set<String?> directed = <String?>{
+      for (final StaffMembershipScope scope in scopes)
+        if (scope.role == SetuStaffRole.schoolDirector) scope.institutionId,
+    };
+    return <CaseActionSheetView>[
+      for (final _DemoCase found in _cases)
+        if (caseId == null || found.id == caseId)
+          for (final CaseActionSheetView sheet in found.sheets.reversed)
+            if (mined ||
+                found.assignedTo == _user ||
+                (directed.contains(found.institutionId) &&
+                    !found.involvesStaff &&
+                    !sheet.omitSchoolDueToConflict))
+              sheet,
+    ];
+  }
+
+  @override
+  Future<List<SchoolActionRecordView>> schoolActions(String caseId) async {
+    final List<StaffMembershipScope> scopes = _scopes();
+    final _DemoCase? found = _cases
+        .where((_DemoCase item) => item.id == caseId)
+        .firstOrNull;
+    if (found == null) return const <SchoolActionRecordView>[];
+    final bool allowed = scopes.any(
+      (StaffMembershipScope scope) =>
+          scope.role == SetuStaffRole.minedSupervisor ||
+          (scope.role == SetuStaffRole.schoolDirector &&
+              scope.institutionId == found.institutionId &&
+              !found.involvesStaff),
+    );
+    return allowed
+        ? List<SchoolActionRecordView>.of(found.actions)
+        : const <SchoolActionRecordView>[];
+  }
+
+  @override
+  Future<void> recordSchoolAction({
+    required String operationId,
+    required SchoolActionDraft action,
+  }) async {
+    final _DemoCase found = _directed(action.caseId);
+    final String notes = action.notes.trim();
+    if (notes.isEmpty || notes.length > 1500) {
+      throw const GatewayException('22023', 'invalid_action_notes');
+    }
+    if (found.actions.any(
+      (SchoolActionRecordView saved) => saved.clientOperationId == operationId,
+    )) {
+      return;
+    }
+    if (found.version != action.expectedVersion) {
+      throw const GatewayException('40001', 'concurrency_conflict');
+    }
+    final String? sheetId = action.actionSheetId;
+    if (sheetId != null &&
+        !found.sheets.any(
+          (CaseActionSheetView sheet) =>
+              sheet.id == sheetId && !sheet.omitSchoolDueToConflict,
+        )) {
+      throw const GatewayException('42501', 'action_sheet_not_authorized');
+    }
+    // En la demostración la identidad del estudiante siempre está reservada.
+    if (action.step == SetuSchoolActionStep.notifyFamilyOrGroup &&
+        !action.isGroupAction) {
+      throw const GatewayException(
+        '42501',
+        'family_contact_blocked_while_identity_reserved',
+      );
+    }
+    found.actions.add(
+      SchoolActionRecordView(
+        id: 'demo-action-${++_sequence}',
+        caseId: found.id,
+        institutionId: found.institutionId,
+        actionSheetId: sheetId,
+        step: action.step,
+        isGroupAction: action.isGroupAction,
+        actionNotes: notes,
+        proposesClosure: action.proposesClosure,
+        recordedBy: _user!,
+        clientOperationId: operationId,
+        createdAt: DateTime.now(),
+      ),
+    );
+    found.version += 1;
+    if (found.status == SetuCaseStatus.sheetSent) {
+      found.status = SetuCaseStatus.schoolActing;
+    }
+  }
+
+  @override
+  bool get supportsTeacherNotice => true;
+
+  @override
+  Future<void> recordTeacherNotice({
+    required String operationId,
+    required String institutionId,
+    required SetuSituationType situationType,
+    required bool involvesStaff,
+  }) async {
+    final bool director = _scopes().any(
+      (StaffMembershipScope scope) =>
+          scope.role == SetuStaffRole.schoolDirector &&
+          scope.institutionId == institutionId,
+    );
+    if (!director) {
+      throw const GatewayException(
+        '42501',
+        'forbidden_school_director_required',
+      );
+    }
+    if (_cases.any((_DemoCase item) => item.id == 'demo-$operationId')) return;
+    _cases.add(
+      _DemoCase(
+        id: 'demo-$operationId',
+        institutionId: institutionId,
+        reference: 'DEMO-${100 + ++_sequence}',
+        situation: situationType,
+        // El aviso docente no tiene participación del estudiante; las
+        // pantallas muestran «Aviso docente» en su lugar.
+        role: SetuStudentCaseRole.solidarityWitness,
+        declaredAt: DateTime.now(),
+        narrative: '',
+        piece: null,
+        origin: SetuAlertOrigin.teacherNotice,
+        involvesStaff: involvesStaff,
+      ),
+    );
   }
 }

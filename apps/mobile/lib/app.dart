@@ -12,6 +12,7 @@ import 'features/staff/demo_staff_backend.dart';
 import 'features/staff/staff_access_screens.dart';
 import 'features/staff/staff_backend.dart';
 import 'features/staff/staff_case_screens.dart';
+import 'features/staff/staff_director_screens.dart';
 import 'features/staff/staff_inbox_screens.dart';
 import 'features/support/alert_screens.dart';
 import 'features/support/support_flow.dart';
@@ -215,7 +216,17 @@ class _CureandoAppState extends State<CureandoApp> {
           GoRoute(
             path: 'personal/direccion',
             builder: (BuildContext context, GoRouterState state) =>
-                StaffAreaPendingScreen(session: _staff),
+                DirectorInboxScreen(session: _staff),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'caso/:id',
+                builder: (BuildContext context, GoRouterState state) =>
+                    DirectorCaseScreen(
+                      session: _staff,
+                      caseId: state.pathParameters['id'] ?? '',
+                    ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'personal',

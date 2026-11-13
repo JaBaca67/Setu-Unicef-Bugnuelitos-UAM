@@ -672,30 +672,3 @@ class StaffScopeScreen extends StatelessWidget {
     ),
   );
 }
-
-/// Superficie del rol todavía sin contenido: confirma el ingreso y el ámbito.
-class StaffAreaPendingScreen extends StatelessWidget {
-  const StaffAreaPendingScreen({super.key, required this.session});
-
-  final StaffSession session;
-
-  @override
-  Widget build(BuildContext context) => StaffAreaScaffold(
-    session: session,
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Semantics(
-          header: true,
-          child: Text(session.active?.place ?? '', style: _title),
-        ),
-        const SizedBox(height: 12),
-        const StaffNotice(
-          'Ingresaste con tu cuenta institucional. Esta sección todavía se '
-          'está construyendo.',
-          error: false,
-        ),
-      ],
-    ),
-  );
-}

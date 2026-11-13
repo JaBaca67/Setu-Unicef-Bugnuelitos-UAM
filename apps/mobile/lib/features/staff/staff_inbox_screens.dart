@@ -30,7 +30,11 @@ String staffShortDate(DateTime value) {
 }
 
 /// Tipo y participación con las mismas palabras que eligió el estudiante.
-String staffCaseKind(SetuSituationType type, SetuStudentCaseRole role) {
+String staffCaseKind(
+  SetuSituationType type,
+  SetuStudentCaseRole role, {
+  SetuAlertOrigin origin = SetuAlertOrigin.online,
+}) {
   final String situation = switch (type) {
     SetuSituationType.physicalBullying => 'Acoso físico',
     SetuSituationType.verbalBullying => 'Acoso verbal',
@@ -39,10 +43,12 @@ String staffCaseKind(SetuSituationType type, SetuStudentCaseRole role) {
     SetuSituationType.sexualViolence => 'Violencia sexual',
     SetuSituationType.needToTalk => 'Necesito hablar',
   };
-  final String part = switch (role) {
-    SetuStudentCaseRole.victim => 'Me pasó a mí',
-    SetuStudentCaseRole.solidarityWitness => 'Lo vi o supe de alguien',
-  };
+  final String part = origin == SetuAlertOrigin.teacherNotice
+      ? 'Aviso docente'
+      : switch (role) {
+          SetuStudentCaseRole.victim => 'Me pasó a mí',
+          SetuStudentCaseRole.solidarityWitness => 'Lo vi o supe de alguien',
+        };
   return '$situation · $part';
 }
 
@@ -83,7 +89,7 @@ class StaffTag extends StatelessWidget {
 }
 
 /// Carga una lista del servidor con espera, error y reintento visibles.
-abstract class _InboxState<T extends StatefulWidget> extends State<T> {
+abstract class StaffInboxState<T extends StatefulWidget> extends State<T> {
   StaffSession get session;
 
   List<StaffCaseSummary>? cases;
@@ -110,6 +116,7 @@ abstract class _InboxState<T extends StatefulWidget> extends State<T> {
         institutionId: institution,
       );
       final Map<String, String> names = await backend.institutionNames();
+      await loadExtra();
       if (!mounted) return;
       setState(() {
         cases = found;
@@ -121,6 +128,9 @@ abstract class _InboxState<T extends StatefulWidget> extends State<T> {
       if (mounted) setState(() => loading = false);
     }
   }
+
+  /// Datos adicionales de la bandeja; un fallo se informa como el resto.
+  Future<void> loadExtra() async {}
 
   String school(StaffCaseSummary item) =>
       schools[item.institutionId] ??
@@ -165,7 +175,7 @@ class MinedInboxScreen extends StatefulWidget {
   State<MinedInboxScreen> createState() => _MinedInboxScreenState();
 }
 
-class _MinedInboxScreenState extends _InboxState<MinedInboxScreen> {
+class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
   final OperationIds _operations = OperationIds();
 
   @override
@@ -237,7 +247,11 @@ class _MinedInboxScreenState extends _InboxState<MinedInboxScreen> {
           const SizedBox(height: 6),
           Text(school(item), style: const TextStyle(fontSize: 16)),
           Text(
-            staffCaseKind(item.situationType, item.studentRole),
+            staffCaseKind(
+              item.situationType,
+              item.studentRole,
+              origin: item.origin,
+            ),
             style: const TextStyle(fontSize: 16),
           ),
           Text(
@@ -496,7 +510,7 @@ class DeskInboxScreen extends StatefulWidget {
   State<DeskInboxScreen> createState() => _DeskInboxScreenState();
 }
 
-class _DeskInboxScreenState extends _InboxState<DeskInboxScreen> {
+class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
   _DeskFilter _filter = _DeskFilter.review;
 
   @override

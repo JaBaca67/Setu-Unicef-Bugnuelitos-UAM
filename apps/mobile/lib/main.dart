@@ -20,6 +20,8 @@ Future<void> main() async {
         await SupabaseSetuRemoteGateway.initialize();
     staff = RemoteStaffBackend(
       gateway,
+      rpc: (String name, Map<String, Object?> params) =>
+          Supabase.instance.client.rpc<Object?>(name, params: params),
       // Los centros activos son de lectura pública (RLS).
       loadInstitutionNames: () async => <String, String>{
         for (final Map<String, dynamic> row

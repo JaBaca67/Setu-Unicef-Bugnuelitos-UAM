@@ -80,6 +80,55 @@ abstract interface class StaffBackend {
     required String operationId,
     required CaseAssessment assessment,
   });
+
+  // Dirección del centro: avisos mínimos, fichas autorizadas y actuaciones.
+  /// Fichas que el servidor autoriza para la sesión; nunca traen relato.
+  Future<List<CaseActionSheetView>> sheets({String? caseId});
+
+  Future<List<SchoolActionRecordView>> schoolActions(String caseId);
+
+  Future<void> recordSchoolAction({
+    required String operationId,
+    required SchoolActionDraft action,
+  });
+
+  /// Falso mientras el registro de aviso docente no esté conectado.
+  bool get supportsTeacherNotice;
+
+  Future<void> recordTeacherNotice({
+    required String operationId,
+    required String institutionId,
+    required SetuSituationType situationType,
+    required bool involvesStaff,
+  });
+}
+
+/// Actuación escolar por registrar. No lleva nombres ni relato.
+@immutable
+class SchoolActionDraft {
+  const SchoolActionDraft({
+    required this.caseId,
+    required this.step,
+    required this.notes,
+    required this.expectedVersion,
+    this.actionSheetId,
+    this.isGroupAction = false,
+    this.proposesClosure = false,
+  });
+
+  final String caseId;
+  final String? actionSheetId;
+  final SetuSchoolActionStep step;
+  final bool isGroupAction;
+  final String notes;
+  final bool proposesClosure;
+
+  /// Versión del caso que la persona estaba viendo; evita pisar cambios.
+  final int expectedVersion;
+
+  String get fingerprint =>
+      '$caseId|$actionSheetId|${step.wireValue}|$isGroupAction|$notes|'
+      '$proposesClosure|$expectedVersion';
 }
 
 /// Valoración humana de un caso. El nivel lo decide la persona profesional,
@@ -186,6 +235,19 @@ String staffErrorMessage(Object error) {
   }
   if (has('counselor_not_authorized')) {
     return 'Esa persona no está habilitada para atender casos de ese centro.';
+  }
+  if (has('family_contact_blocked')) {
+    return 'Mientras la identidad del estudiante esté reservada, este paso '
+        'solo puede registrarse como acción grupal.';
+  }
+  if (has('restricted_due_to_staff_conflict') ||
+      has('action_sheet_not_authorized')) {
+    return 'Este caso lo sigue la supervisión del MINED. La dirección no '
+        'puede registrar actuaciones en él.';
+  }
+  if (has('teacher_notice_not_connected')) {
+    return 'El registro de aviso docente todavía no está conectado al '
+        'servidor.';
   }
   if (has('membership_revoked') || has('forbidden') || has('42501')) {
     return 'Tu cuenta no tiene permiso para esta acción.';

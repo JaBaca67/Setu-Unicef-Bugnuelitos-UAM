@@ -67,7 +67,7 @@ void main() {
     expect(find.text('Alertas recibidas'), findsOneWidget);
     expect(find.text('DEMO-021'), findsOneWidget);
     expect(find.text('DEMO-014'), findsOneWidget);
-    expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
+    expect(find.text('Colegio Centro América — Demo'), findsNWidgets(2));
     expect(find.text('Sin asignar'), findsOneWidget);
     // El relato y la conversación nunca llegan a la supervisión.
     expect(find.textContaining('Relato ficticio'), findsNothing);
@@ -82,7 +82,7 @@ void main() {
     await _tap(tester, _desk);
     expect(find.text('Caso DEMO-021 asignado.'), findsOneWidget);
     expect(find.text('Sin asignar'), findsNothing);
-    expect(find.text('Asignada'), findsNWidgets(3));
+    expect(find.text('Asignada'), findsNWidgets(4));
 
     backend.offline = true;
     await tester.ensureVisible(find.byTooltip('Actualizar'));
