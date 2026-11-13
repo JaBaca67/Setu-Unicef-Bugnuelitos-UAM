@@ -370,6 +370,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   }
 
   bool _sending = false;
+  bool _sendFailed = false;
 
   Future<void> _send() async {
     final String text = _draft.text;
@@ -377,20 +378,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     setState(() => _sending = true);
     final bool sent = await widget.flow.sendMessage(text);
     if (!mounted) return;
-    setState(() => _sending = false);
-    if (sent) {
-      // Solo se borra lo enviado; lo escrito mientras tanto se conserva.
-      if (_draft.text == text) _draft.clear();
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'No se pudo enviar el mensaje. Tu texto sigue acá; revisá tu '
-          'conexión e intentá de nuevo.',
-        ),
-      ),
-    );
+    setState(() {
+      _sending = false;
+      _sendFailed = !sent;
+    });
+    // Solo se borra lo enviado; lo escrito mientras tanto se conserva.
+    if (sent && _draft.text == text) _draft.clear();
   }
 
   @override
@@ -454,6 +447,27 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                       ],
                     ),
                   ),
+                  if (_sendFailed)
+                    Semantics(
+                      liveRegion: true,
+                      child: const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Icon(Icons.error_outline_rounded),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'No se pudo enviar el mensaje. Tu texto '
+                                'sigue acá; revisá tu conexión e intentá de '
+                                'nuevo.',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   SafeArea(
                     top: false,
                     child: Padding(

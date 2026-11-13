@@ -11,6 +11,7 @@ import 'features/school_access/school_location.dart';
 import 'features/staff/demo_staff_backend.dart';
 import 'features/staff/staff_access_screens.dart';
 import 'features/staff/staff_backend.dart';
+import 'features/staff/staff_case_screens.dart';
 import 'features/staff/staff_inbox_screens.dart';
 import 'features/support/alert_screens.dart';
 import 'features/support/support_flow.dart';
@@ -194,7 +195,20 @@ class _CureandoAppState extends State<CureandoApp> {
               GoRoute(
                 path: 'caso/:id',
                 builder: (BuildContext context, GoRouterState state) =>
-                    StaffAreaPendingScreen(session: _staff),
+                    DeskCaseScreen(
+                      session: _staff,
+                      caseId: state.pathParameters['id'] ?? '',
+                    ),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'chat',
+                    builder: (BuildContext context, GoRouterState state) =>
+                        DeskChatScreen(
+                          session: _staff,
+                          caseId: state.pathParameters['id'] ?? '',
+                        ),
+                  ),
+                ],
               ),
             ],
           ),
