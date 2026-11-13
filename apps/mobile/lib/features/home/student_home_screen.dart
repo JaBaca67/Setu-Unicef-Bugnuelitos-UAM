@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
+import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
 import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
@@ -13,26 +14,8 @@ import 'student_activities.dart';
 import 'student_preview_cards.dart';
 import 'student_resources.dart';
 
-/// Destinos de la navegación inferior del inicio estudiantil (E03).
-enum HomeSection {
-  inicio('Inicio', Icons.home_outlined, Icons.home_rounded),
-  informacion('Información', Icons.menu_book_outlined, Icons.menu_book_rounded),
-  actividades('Actividades', Icons.casino_outlined, Icons.casino_rounded),
-  ayuda('Ayuda', Icons.help_outline_rounded, Icons.help_rounded);
-
-  const HomeSection(this.label, this.icon, this.selectedIcon);
-
-  final String label;
-  final IconData icon;
-  final IconData selectedIcon;
-}
-
-/// Pedido de abrir una pestaña del inicio desde otra pantalla. Cada pedido
-/// es una instancia nueva para que repetir la misma pestaña vuelva a abrirla.
-class HomeSectionRequest {
-  HomeSectionRequest(this.section);
-  final HomeSection section;
-}
+export '../../shared/widgets/setu_bottom_nav.dart'
+    show HomeSection, HomeSectionRequest;
 
 /// Inicio estudiantil E03. Reúne «Pedir apoyo», adelantos de Información y
 /// Actividades, y la navegación inferior. El estudiante no tiene una sección
@@ -106,7 +89,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     bodyRadius: _section == HomeSection.inicio
         ? null
         : const BorderRadius.vertical(top: Radius.circular(28)),
-    bottomNavigationBar: _navigationBar(context),
+    bottomNavigationBar: SetuBottomNav(selected: _section, onSelected: _open),
     header: switch (_section) {
       HomeSection.inicio => _HomeHeader(piece: widget.piece),
       HomeSection.informacion => const _SectionHeader(
@@ -140,41 +123,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         ),
         HomeSection.ayuda => const _AyudaTab(),
       },
-    ),
-  );
-
-  Widget _navigationBar(BuildContext context) => ColoredBox(
-    color: Colors.white,
-    child: SafeArea(
-      top: false,
-      child: NavigationBar(
-        backgroundColor: Colors.white,
-        indicatorColor: Colors.transparent,
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (Set<WidgetState> states) => TextStyle(
-            fontSize: 12,
-            color: states.contains(WidgetState.selected)
-                ? CureandoTheme.blue
-                : CureandoTheme.ink,
-            fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w700
-                : FontWeight.w500,
-          ),
-        ),
-        selectedIndex: _section.index,
-        onDestinationSelected: (int index) => _open(HomeSection.values[index]),
-        destinations: <Widget>[
-          for (final HomeSection section in HomeSection.values)
-            NavigationDestination(
-              icon: Icon(section.icon),
-              selectedIcon: Icon(
-                section.selectedIcon,
-                color: CureandoTheme.blue,
-              ),
-              label: section.label,
-            ),
-        ],
-      ),
     ),
   );
 }

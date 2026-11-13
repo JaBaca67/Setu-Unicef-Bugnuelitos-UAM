@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/setu_bottom_nav.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
 import 'student_preview_cards.dart';
@@ -151,6 +152,11 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
     }
     final TextTheme textTheme = Theme.of(context).textTheme;
     return Scaffold(
+      bottomNavigationBar: SetuBottomNav(
+        selected: HomeSection.informacion,
+        onSelected: (HomeSection section) =>
+            context.go('/inicio', extra: HomeSectionRequest(section)),
+      ),
       appBar: AppBar(
         leading: IconButton(
           icon: const BackButtonIcon(),

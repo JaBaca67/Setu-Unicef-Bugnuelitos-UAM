@@ -13,11 +13,13 @@ class FlowScaffold extends StatelessWidget {
     required this.header,
     required this.body,
     this.bottom,
+    this.bottomNavigationBar,
   });
 
   final Widget header;
   final Widget body;
   final Widget? bottom;
+  final Widget? bottomNavigationBar;
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
@@ -30,6 +32,7 @@ class FlowScaffold extends StatelessWidget {
     ),
     child: Scaffold(
       backgroundColor: Colors.white,
+      bottomNavigationBar: bottomNavigationBar,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
