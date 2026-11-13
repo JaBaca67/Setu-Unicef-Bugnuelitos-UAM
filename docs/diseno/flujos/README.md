@@ -52,7 +52,8 @@ flowchart TD
 flowchart TD
     A(["E03 · Inicio · Colegio activo"]) --> B{"¿Qué necesita hacer?"}
     B -->|"Pedir apoyo"| C["E04 / E05 · Tipo, rol y detalles opcionales"]
-    B -->|"Actividades"| ACT["Actividades educativas voluntarias · XP de ejemplo"]
+    B -->|"Actividades"| ACT["Actividades educativas voluntarias · XP locales"]
+    B -->|"Racha semanal"| CAL["Mi racha · Calendario de aprendizaje"]
     B -->|"Información"| E["E10 / E11 · Artículos, videos, testimonios y guías"]
     B -->|"Ayuda"| F["E09 · Recursos revisados"]
     C --> G["E06 · Estado real de entrega"]

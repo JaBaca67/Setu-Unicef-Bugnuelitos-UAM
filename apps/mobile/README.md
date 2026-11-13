@@ -18,9 +18,11 @@ Desde la bienvenida, **Usar código del colegio** abre el escáner por cámara o
 
 ## Inicio estudiantil E03 — 2026-11-12
 
-**Continuar** tras confirmar (o simular) la cercanía abre `/inicio`: «Pedir apoyo», franja de racha y XP con valores de ejemplo, «Explorá a tu ritmo» con las tarjetas de Información, bloque «Actividades» y la navegación inferior **Inicio / Información / Actividades / Ayuda**. El avatar de la cabecera es ilustrado y se personaliza con figuras de marca y colores, sin fotos ni cuentas; la elección vive en memoria durante la sesión. «Pedir apoyo» (`/inicio/apoyo`), el chat humano (`/inicio/apoyo/chat`), los recursos (`/inicio/recurso/emociones` y `/inicio/recurso/convivencia`), la pregunta del día y el dado de emociones son **vistas de muestra identificadas**: no hay envío real, aviso real ni catálogo editorial todavía. No existe sección estudiantil de seguimiento de casos. [Decisión y alcance](../../docs/decisiones/0013-inicio-estudiantil-e03.md).
+**Continuar** tras confirmar (o simular) la cercanía abre `/inicio`: «Pedir apoyo», tarjeta semanal de racha y XP, «Explorá a tu ritmo» con las tarjetas de Información, bloque «Actividades» y la navegación inferior **Inicio / Información / Actividades / Ayuda**. La tarjeta semanal abre `/inicio/racha`, con calendario mensual. El avatar ilustrado se personaliza durante la sesión. «Pedir apoyo» y el chat humano siguen como vistas de muestra. Las actividades y los recursos usan contenido de muestra con progreso educativo real. [Inicio](../../docs/decisiones/0013-inicio-estudiantil-e03.md) · [Progreso educativo](../../docs/decisiones/0014-progreso-educativo-local.md).
 
-Verificación del 12 nov: `flutter analyze` sin incidencias y 32 pruebas aprobadas (incluyen navegación entre pestañas, muestras identificadas, avatar, texto al 200 % en pantalla de 320 px y movimiento reducido). La captura `build/qa/e03-home.png` se comparó con la imagen aprobada por el equipo.
+El registro de progreso usa `setu_learning_progress.enc` y una clave de Android separada del archivo de casos. Empieza en cero por instalación y se conserva al cerrar la app. Para probarlo, completá la pregunta del día o marcá la lectura al final de un recurso y volvé a Inicio para ver el cambio.
+
+Verificación: `flutter analyze --no-pub` sin incidencias, 35 pruebas aprobadas y APK debug compilado. Las pruebas cubren navegación, texto al 200 % en pantalla de 320 px, calendario, reapertura cifrada, escrituras repetidas, fallo de guardado y cambio de fecha. Se revisaron las capturas `build/qa/e03-home.png` y `build/qa/e03-streak.png`.
 
 ### Capturas temporales para la presentación
 
@@ -79,7 +81,7 @@ Para capturas de QA de widgets, con datos ficticios y fuente real:
 flutter test --dart-define=SETU_CAPTURE_QA=true
 ```
 
-Se generan `build/qa/e01-welcome.png`, `e03-home.png`, `m1-home.png` y `m1-controls.png`, fuera de Git. Son capturas del render de widgets.
+Se generan `build/qa/e01-welcome.png`, `e03-home.png`, `e03-streak.png`, `m1-home.png` y `m1-controls.png`, fuera de Git. Son capturas del render de widgets.
 
 ## Verificación M1 — 2026-11-05
 

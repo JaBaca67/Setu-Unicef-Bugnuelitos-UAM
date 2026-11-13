@@ -32,12 +32,9 @@ conserva para los roles autorizados (mesa de escucha, MINED y dirección).
    transporte. El historial y el estado interno del caso quedan solo en las
    vistas de los roles autorizados (M/L/D).
 4. **Gamificación limitada:** racha y XP se vinculan únicamente a
-   actividades educativas voluntarias (leer una guía, ver un video,
-   responder la pregunta del día sobre el contenido). Los «3 días»,
-   «120 XP» y «+10 XP» son valores de ejemplo y se etiquetan así. Sin
-   rankings públicos, puntajes emocionales ni recompensas por enviar
-   alertas. Apoyo, chat, Información y Ayuda disponibles con cualquier
-   progreso.
+   actividades educativas voluntarias. La [decisión de progreso local](0014-progreso-educativo-local.md)
+   reemplaza los valores de ejemplo por un registro cifrado real.
+   Apoyo, chat, Información y Ayuda siguen disponibles con cualquier progreso.
 5. **Avatar ilustrado configurable** mediante opciones gráficas (figuras de
    marca y colores de la paleta). No pide foto, nombre, iniciales, contacto
    ni cuenta; la elección vive en memoria durante la sesión.
@@ -58,8 +55,8 @@ conserva para los roles autorizados (mesa de escucha, MINED y dirección).
   del equipo; expone estado interno del caso al dispositivo estudiantil.
 - Pestañas como rutas separadas de go_router: pospuesto; el estado interno
   de pestañas basta para la demo y no fija contratos de navegación.
-- Persistir avatar y XP localmente: descartado por anticipado; no se crean
-  almacenes ni contratos nuevos antes de aprobarse.
+- Persistir el avatar: pospuesto. El progreso educativo sí se guarda localmente
+  desde [ADR 0014](0014-progreso-educativo-local.md).
 
 ## Consecuencias
 

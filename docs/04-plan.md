@@ -18,6 +18,8 @@ M0/M1: base Flutter, marca inicial, protección de pantalla, contratos y persist
 
 El 12 de noviembre se incorporaron la [bienvenida E01](diseno/plan-arranque-bienvenida-setu.md) y el [acceso escolar E02 de demostración](diseno/plan-acceso-escolar-e02.md). E02 usa cámara y ubicación para un código de prueba, con un punto público configurado localmente. El acceso institucional y su primer ingreso offline siguen en diseño. Los bloques conectados y de transporte requieren propuesta y aprobación propias.
 
+El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual y XP educativos con persistencia local cifrada. El contenido disponible sigue siendo de muestra y el video todavía se ofrece como resumen en texto. [ADR 0014](decisiones/0014-progreso-educativo-local.md).
+
 ## Decisiones que cambian la solución
 
 | Prioridad | Decisión | Estado |
