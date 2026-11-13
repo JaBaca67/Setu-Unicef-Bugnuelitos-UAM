@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:cureando_mobile/app.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/student_activities.dart';
+import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:cureando_mobile/features/school_access/school_location.dart';
 import 'package:flutter/material.dart';
@@ -160,7 +161,93 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Pedir apoyo abre la muestra con aviso y chat identificado', (
+  testWidgets('Pedir apoyo recorre alerta, acuse, aviso y chat humano', (
+    WidgetTester tester,
+  ) async {
+    _useTallView(tester);
+    final MemoryProgressStore alerts = MemoryProgressStore();
+    await tester.pumpWidget(_app(alertStore: alerts));
+    await tester.pumpAndSettle();
+    await _goHome(tester);
+    await _tapLabel(tester, 'Pedir apoyo');
+    expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
+    expect(find.textContaining('Te avisamos aquí cuando'), findsOneWidget);
+    await _tapLabel(tester, 'Enviar una alerta');
+    expect(find.text('Paso 1 de 3'), findsOneWidget);
+    expect(_button(tester, 'Continuar').onPressed, isNull);
+    for (final String option in <String>[
+      'Acoso físico',
+      'Acoso verbal',
+      'Acoso social',
+      'Ciberacoso',
+      'Violencia sexual',
+    ]) {
+      expect(find.text(option), findsOneWidget);
+    }
+    await _tapLabel(tester, 'Necesito hablar');
+    await _tapLabel(tester, 'Continuar');
+    expect(find.text('¿Cómo te relacionás con lo que pasó?'), findsOneWidget);
+    expect(find.text('Testigo solidario'), findsOneWidget);
+    expect(_button(tester, 'Continuar').onPressed, isNull);
+    await _tapLabel(tester, 'Lo vi o supe de alguien');
+    await _tapLabel(tester, 'Continuar');
+    expect(find.text('Podés dejar este espacio en blanco.'), findsOneWidget);
+    await _tapLabel(tester, 'Revisar alerta');
+    expect(find.text('Necesito hablar'), findsOneWidget);
+    expect(find.text('Lo vi o supe de alguien'), findsOneWidget);
+    expect(find.text('Sin detalles'), findsOneWidget);
+    expect(
+      find.textContaining('reciben solo datos limitados'),
+      findsOneWidget,
+    );
+    await _tapLabel(tester, 'Editar');
+    expect(find.text('Paso 1 de 3'), findsOneWidget);
+    await _tapLabel(tester, 'Acoso verbal');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Continuar');
+    await tester.enterText(find.byType(TextField), 'Relato ficticio');
+    await _tapLabel(tester, 'Revisar alerta');
+    expect(find.text('Relato ficticio'), findsOneWidget);
+    await _tapLabel(tester, 'Enviar alerta');
+    expect(find.text('Guardada en este teléfono'), findsOneWidget);
+    expect(find.text('Falta confirmar la entrega.'), findsOneWidget);
+    expect(find.text('Alerta recibida'), findsNothing);
+    expect((await alerts.load())?['received'], isFalse);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('Alerta recibida'), findsOneWidget);
+    expect((await alerts.load())?['received'], isTrue);
+    await _tapLabel(tester, 'Volver a Pedir apoyo');
+    expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 8));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('El equipo de escucha puede conversar con vos'),
+      findsOneWidget,
+    );
+    await _tapLabel(tester, 'Abrir chat');
+    expect(find.text('Chat privado'), findsOneWidget);
+    expect(find.text('Hola. Soy parte del equipo de escucha.'), findsOneWidget);
+    await _tapLabel(tester, 'Quiero contar algo');
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      'Quiero contar algo',
+    );
+    expect(find.text('Ideas para empezar'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'Quiero contar algo hoy');
+    await tester.tap(find.byTooltip('Enviar mensaje'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quiero contar algo hoy'), findsOneWidget);
+    expect(find.text('Ideas para empezar'), findsNothing);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('desde Pedir apoyo se abre Ayuda e Información del inicio', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
@@ -168,27 +255,20 @@ void main() {
     await tester.pumpAndSettle();
     await _goHome(tester);
     await _tapLabel(tester, 'Pedir apoyo');
-    expect(find.text('Cuéntanos lo que quieras compartir'), findsOneWidget);
-    expect(find.text('Vista de muestra'), findsOneWidget);
-    expect(
-      find.textContaining('una persona autorizada esté disponible'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('no incluye detalles de lo que contaste'),
-      findsOneWidget,
-    );
-    await _tapLabel(tester, 'Ver cómo será el chat');
-    expect(
-      find.textContaining('nadie está conectado en esta demostración'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('No es un chat automático'), findsOneWidget);
-    await tester.tap(find.byTooltip('Volver'));
+    await _tapLabel(tester, 'Ver recursos de ayuda');
+    expect(find.textContaining('Los contactos y horarios'), findsOneWidget);
+    await _tapLabel(tester, 'Pedir apoyo');
+    await _tapLabel(tester, 'Enviar una alerta');
+    await _tapLabel(tester, 'Ciberacoso');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Me pasó a mí');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Revisar alerta');
+    await _tapLabel(tester, 'Enviar alerta');
+    await _tapLabel(tester, 'Explorar Información');
+    expect(find.text('Catálogo de muestra'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 12));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Volver'));
-    await tester.pumpAndSettle();
-    expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -239,7 +319,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el avatar se personaliza con opciones gráficas, sin foto', (
+  testWidgets('Mi pieza se arma con forma, color y accesorios, sin foto', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
@@ -247,16 +327,29 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
-    await tester.tap(find.byTooltip('Personalizar tu avatar'));
+    await tester.tap(find.byTooltip('Personalizar tu pieza'));
     await tester.pumpAndSettle();
-    expect(find.text('Tu avatar virtual'), findsOneWidget);
-    expect(find.textContaining('No usamos fotos'), findsOneWidget);
-    await _tapLabel(tester, 'Espiral');
-    await _tapLabel(tester, 'Verde');
-    await _tapLabel(tester, 'Guardar avatar');
-    expect(find.text('Tu avatar virtual'), findsNothing);
+    expect(find.text('Mi pieza'), findsOneWidget);
+    expect(find.text('Todas las piezas tienen un lugar.'), findsOneWidget);
+    await _tapLabel(tester, 'Al azar');
+    await _tapTooltip(tester, 'Estrella');
+    await _tapLabel(tester, 'Color');
+    await _tapTooltip(tester, 'Rosa');
+    await _tapLabel(tester, 'Guardar mi pieza');
+    expect(find.text('Mi pieza'), findsNothing);
     expect(
-      find.bySemanticsLabel(RegExp('Espiral de color verde')),
+      find.bySemanticsLabel(RegExp('Tu pieza: Estrella de color rosa')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byTooltip('Personalizar tu pieza'));
+    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Accesorios');
+    await _tapTooltip(tester, 'Corbatín');
+    await _tapLabel(tester, 'Forma');
+    await _tapTooltip(tester, 'Flor');
+    await _tapLabel(tester, 'Ahora no');
+    expect(
+      find.bySemanticsLabel(RegExp('Tu pieza: Estrella de color rosa')),
       findsOneWidget,
     );
     semantics.dispose();
@@ -283,14 +376,35 @@ void main() {
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Pedir apoyo');
-    expect(find.text('Cuéntanos lo que quieras compartir'), findsOneWidget);
+    expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
+    await tester.tap(find.byTooltip('Personalizar tu pieza'));
+    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Accesorios');
+    await _tapLabel(tester, 'Guardar mi pieza');
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     await _tapNav(tester, 'Actividades');
     expect(find.text('Actividades de muestra'), findsOneWidget);
     await _tapNav(tester, 'Ayuda');
     await _tapLabel(tester, 'Pedir apoyo');
-    expect(find.text('Cuéntanos lo que quieras compartir'), findsOneWidget);
+    await _tapLabel(tester, 'Enviar una alerta');
+    await _tapLabel(tester, 'Violencia sexual');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Me pasó a mí');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Revisar alerta');
+    await _tapLabel(tester, 'Enviar alerta');
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('Alerta recibida'), findsOneWidget);
+    await _tapLabel(tester, 'Volver a Pedir apoyo');
+    await tester.pump(const Duration(seconds: 8));
+    await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Abrir chat');
+    await _tapLabel(tester, 'No sé por dónde empezar');
+    await tester.tap(find.byTooltip('Enviar mensaje'));
+    await tester.pumpAndSettle();
+    expect(find.text('No sé por dónde empezar'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -312,9 +426,16 @@ void main() {
   });
 }
 
-CureandoApp _app({MemoryProgressStore? store, DateTime Function()? now}) =>
+CureandoApp _app({
+  MemoryProgressStore? store,
+  MemoryProgressStore? alertStore,
+  DateTime Function()? now,
+}) =>
     CureandoApp(
       checkSchoolProximity: () async => SchoolProximity.nearby,
+      supportFlow: SupportFlow(
+        openStore: () async => alertStore ?? MemoryProgressStore(),
+      ),
       learningProgress: LearningProgress(
         openStore: () async => store ?? MemoryProgressStore(),
         now: now ?? () => DateTime(2026, 11, 12),
@@ -345,6 +466,17 @@ Future<void> _goHome(WidgetTester tester) async {
   await _tapLabel(tester, 'Entrar');
   await _tapLabel(tester, 'Comprobar cercanía');
   await _tapLabel(tester, 'Continuar');
+}
+
+FilledButton _button(WidgetTester tester, String label) =>
+    tester.widget<FilledButton>(find.widgetWithText(FilledButton, label));
+
+Future<void> _tapTooltip(WidgetTester tester, String tooltip) async {
+  final Finder finder = find.byTooltip(tooltip);
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _tapNav(WidgetTester tester, String label) async {

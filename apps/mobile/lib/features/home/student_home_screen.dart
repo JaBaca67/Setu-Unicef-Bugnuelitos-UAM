@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_card.dart';
+import '../piece/student_piece.dart';
+import '../support/alert_screens.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
 import 'student_activities.dart';
-import 'student_avatar.dart';
 import 'student_preview_cards.dart';
 import 'student_resources.dart';
 
@@ -25,14 +26,28 @@ enum HomeSection {
   final IconData selectedIcon;
 }
 
+/// Pedido de abrir una pestaña del inicio desde otra pantalla. Cada pedido
+/// es una instancia nueva para que repetir la misma pestaña vuelva a abrirla.
+class HomeSectionRequest {
+  HomeSectionRequest(this.section);
+  final HomeSection section;
+}
+
 /// Inicio estudiantil E03. Reúne «Pedir apoyo», adelantos de Información y
 /// Actividades, y la navegación inferior. El estudiante no tiene una sección
 /// de seguimiento de casos: tras pedir apoyo puede recibir un aviso que abre
 /// su chat cuando una persona autorizada esté disponible.
 class StudentHomeScreen extends StatefulWidget {
-  const StudentHomeScreen({super.key, required this.progress});
+  const StudentHomeScreen({
+    super.key,
+    required this.progress,
+    required this.piece,
+    this.sectionRequest,
+  });
 
   final LearningProgress progress;
+  final ValueNotifier<StudentPiece> piece;
+  final HomeSectionRequest? sectionRequest;
 
   @override
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
@@ -40,7 +55,6 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   HomeSection _section = HomeSection.inicio;
-  StudentAvatar _avatar = StudentAvatar.initial;
   final GlobalKey _diceKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
 
@@ -61,9 +75,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     if (mounted && openActivities == true) _open(HomeSection.actividades);
   }
 
-  Future<void> _editAvatar() async {
-    final StudentAvatar? updated = await showAvatarEditor(context, _avatar);
-    if (updated != null && mounted) setState(() => _avatar = updated);
+  @override
+  void didUpdateWidget(StudentHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final HomeSectionRequest? request = widget.sectionRequest;
+    if (request != null && !identical(request, oldWidget.sectionRequest)) {
+      _section = request.section;
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    }
   }
 
   void _open(HomeSection section) {
@@ -88,7 +107,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         : const BorderRadius.vertical(top: Radius.circular(28)),
     bottomNavigationBar: _navigationBar(context),
     header: switch (_section) {
-      HomeSection.inicio => _HomeHeader(avatar: _avatar, onAvatar: _editAvatar),
+      HomeSection.inicio => _HomeHeader(piece: widget.piece),
       HomeSection.informacion => const _SectionHeader(
         title: 'Información',
         subtitle: 'Leé y mirá a tu ritmo. No hace falta reportar.',
@@ -160,10 +179,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.avatar, required this.onAvatar});
+  const _HomeHeader({required this.piece});
 
-  final StudentAvatar avatar;
-  final VoidCallback onAvatar;
+  final ValueNotifier<StudentPiece> piece;
 
   @override
   Widget build(BuildContext context) {
@@ -220,43 +238,7 @@ class _HomeHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              Tooltip(
-                message: 'Personalizar tu avatar',
-                child: Semantics(
-                  button: true,
-                  label:
-                      'Tu avatar virtual: ${avatar.description}. Tocá para personalizarlo.',
-                  child: Material(
-                    color: Colors.transparent,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      onTap: onAvatar,
-                      customBorder: const CircleBorder(),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: <Widget>[
-                          StudentAvatarBadge(avatar: avatar, size: 50),
-                          Positioned(
-                            top: -2,
-                            right: -2,
-                            child: ExcludeSemantics(
-                              child: CircleAvatar(
-                                radius: 10,
-                                backgroundColor: CureandoTheme.yellow,
-                                child: const Icon(
-                                  Icons.edit_rounded,
-                                  size: 12,
-                                  color: CureandoTheme.ink,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              PieceHeaderButton(piece: piece),
             ],
           ),
           const SizedBox(height: 6),

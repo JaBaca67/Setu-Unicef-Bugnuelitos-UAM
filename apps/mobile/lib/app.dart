@@ -4,9 +4,13 @@ import 'features/home/learning_progress.dart';
 import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
-import 'features/home/support_preview_screen.dart';
+import 'features/piece/piece_editor_screen.dart';
+import 'features/piece/student_piece.dart';
 import 'features/school_access/school_access_screen.dart';
 import 'features/school_access/school_location.dart';
+import 'features/support/alert_screens.dart';
+import 'features/support/support_flow.dart';
+import 'features/support/support_screens.dart';
 import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
@@ -20,6 +24,7 @@ class CureandoApp extends StatefulWidget {
     super.key,
     this.gateway,
     this.learningProgress,
+    this.supportFlow,
     this.screenSecurity,
     this.showM1Verification = false,
     this.allowDesignCapture = false,
@@ -28,6 +33,7 @@ class CureandoApp extends StatefulWidget {
   });
   final CureandoGateway? gateway;
   final LearningProgress? learningProgress;
+  final SupportFlow? supportFlow;
   final ScreenSecurityController? screenSecurity;
   final bool showM1Verification;
   final bool allowDesignCapture;
@@ -41,6 +47,10 @@ class _CureandoAppState extends State<CureandoApp> {
   late final LearningProgress _learning =
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
+  late final SupportFlow _support = widget.supportFlow ?? SupportFlow();
+  final ValueNotifier<StudentPiece> _piece = ValueNotifier<StudentPiece>(
+    StudentPiece.initial,
+  );
   late final ScreenSecurityController _security =
       widget.screenSecurity ?? ScreenSecurityController();
   late final GoRouter _router = GoRouter(
@@ -89,7 +99,13 @@ class _CureandoAppState extends State<CureandoApp> {
             pageBuilder: (context, state) => studentTransition(
               context,
               state,
-              StudentHomeScreen(progress: _learning),
+              StudentHomeScreen(
+                progress: _learning,
+                piece: _piece,
+                sectionRequest: state.extra is HomeSectionRequest
+                    ? state.extra! as HomeSectionRequest
+                    : null,
+              ),
             ),
             routes: <RouteBase>[
               GoRoute(
@@ -101,21 +117,39 @@ class _CureandoAppState extends State<CureandoApp> {
                 ),
               ),
               GoRoute(
+                path: 'pieza',
+                pageBuilder: (context, state) => studentTransition(
+                  context,
+                  state,
+                  PieceEditorScreen(piece: _piece),
+                ),
+              ),
+              GoRoute(
                 path: 'apoyo',
                 pageBuilder: (context, state) => studentTransition(
                   context,
                   state,
-                  const SupportPreviewScreen(),
+                  SupportHomeScreen(flow: _support, piece: _piece),
                 ),
                 routes: <RouteBase>[
-                  GoRoute(
-                    path: 'chat',
-                    pageBuilder: (context, state) => studentTransition(
-                      context,
-                      state,
-                      const ChatPreviewScreen(),
+                  for (final MapEntry<String, Widget Function()> step
+                      in <String, Widget Function()>{
+                        'alerta': () =>
+                            AlertSituationScreen(flow: _support, piece: _piece),
+                        'rol': () =>
+                            AlertRoleScreen(flow: _support, piece: _piece),
+                        'detalles': () =>
+                            AlertDetailsScreen(flow: _support, piece: _piece),
+                        'revisar': () => AlertReviewScreen(flow: _support),
+                        'recibida': () => AlertReceivedScreen(flow: _support),
+                        'chat': () =>
+                            SupportChatScreen(flow: _support, piece: _piece),
+                      }.entries)
+                    GoRoute(
+                      path: step.key,
+                      pageBuilder: (context, state) =>
+                          studentTransition(context, state, step.value()),
                     ),
-                  ),
                 ],
               ),
               GoRoute(
@@ -208,6 +242,8 @@ class _CureandoAppState extends State<CureandoApp> {
   void dispose() {
     _learningLifecycle.dispose();
     if (widget.learningProgress == null) _learning.dispose();
+    if (widget.supportFlow == null) _support.dispose();
+    _piece.dispose();
     if (widget.showM1Verification) {
       _security.removeListener(_refresh);
     }
