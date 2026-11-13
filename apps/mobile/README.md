@@ -6,7 +6,7 @@
 
 ## Bienvenida E01 — 2026-11-12
 
-La app Android 0.2.0+2 abre la bienvenida estática de campaña. Incluye privacidad y vistas locales de muestra para Colegio, Información y Ayuda. El ícono instalado y el arranque usan el isotipo blanco sobre azul. El arte se empaqueta en `assets/welcome/`, a partir de las capas oficiales de [Redes 3](https://drive.google.com/file/d/1t0T7SdMuuV05Cz1rA3tmCg5vuNbONIko/view) y del mensaje de Redes 1. La flor amarilla está desplazada hacia la derecha para despejar al personaje azul. [Maqueta y alcance](../../docs/diseno/plan-arranque-bienvenida-setu.md).
+La app Android 0.2.0+2 abre la bienvenida estática de campaña. Incluye privacidad, la vista local de muestra de Ayuda y el acceso de personal autorizado. El ícono instalado y el arranque usan el isotipo blanco sobre azul. El arte se empaqueta en `assets/welcome/`, a partir de las capas oficiales de [Redes 3](https://drive.google.com/file/d/1t0T7SdMuuV05Cz1rA3tmCg5vuNbONIko/view) y del mensaje de Redes 1. La flor amarilla está desplazada hacia la derecha para despejar al personaje azul. [Maqueta y alcance](../../docs/diseno/plan-arranque-bienvenida-setu.md).
 
 Desde `apps/mobile/`, `flutter run` y `flutter build apk --debug` abren E01 por defecto. Para abrir directamente la verificación técnica de M1, usar `flutter run --dart-define=SETU_M1_QA=true`. El arranque normal no inicializa el almacén anterior.
 
@@ -23,6 +23,20 @@ Desde la bienvenida, **Usar código del colegio** abre el escáner por cámara o
 El registro de progreso usa `setu_learning_progress.enc` y una clave de Android separada del archivo de casos. Empieza en cero por instalación y se conserva al cerrar la app. Para probarlo, completá la pregunta del día o marcá la lectura al final de un recurso y volvé a Inicio para ver el cambio.
 
 Verificación: `flutter analyze --no-pub` sin incidencias, 35 pruebas aprobadas y APK debug compilado. Las pruebas cubren navegación, texto al 200 % en pantalla de 320 px, calendario, reapertura cifrada, escrituras repetidas, fallo de guardado y cambio de fecha. Se revisaron las capturas `build/qa/e03-home.png` y `build/qa/e03-streak.png`.
+
+## Personal autorizado y entrega real — 2026-11-13
+
+En la bienvenida, **Personal autorizado** abre `/personal`. El primer ingreso se hace en **Activar mi cuenta**: código de activación, «Colegio asignado», contraseña nueva, confirmación del correo institucional y canje. Después, cada persona entra a la superficie de su rol:
+
+- **MINED** (`/personal/mined`): alertas del ámbito con datos mínimos y asignación a Mesa de Escucha.
+- **Mesa de Escucha** (`/personal/mesa`): «Mis casos», aviso «Tenés una alerta asignada», detalle con relato y pieza, chat humano, nota interna aparte y valoración con ficha mínima.
+- **Dirección** (`/personal/direccion`): avisos y fichas autorizadas del centro y registro de los cinco pasos.
+
+`lib/main.dart` conecta la app con Supabase. Si el cliente remoto no puede prepararse, la app usa la demostración en memoria y lo indica en la pantalla de ingreso. Las cuentas e invitaciones ficticias del servidor están en `supabase/seed.sql`. La alerta estudiantil se envía al colegio `AULA24`; para otro centro, compilar con `--dart-define=SETU_SCHOOL_CODE=AULA26`.
+
+«Pedir apoyo» guarda la alerta cifrada, muestra «Alerta recibida» solo con el acuse de la plataforma y, sin conexión, reintenta la misma operación. Decisiones, límites y pendientes en [ADR 0017](../../docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md).
+
+Verificación: `flutter analyze` sin incidencias y 65 pruebas aprobadas. Las pruebas de personal usan la demostración en memoria y cubren ingreso, activación, selector de centro, guía de rutas por rol, asignación, aviso, chat, nota interna, valoración, ficha, actuaciones, falta de conexión y texto al 200 % en pantalla de 320 px. **No se probó todavía contra Supabase desde un teléfono.** Capturas en `build/qa/p01`–`p12` con `flutter test --dart-define=SETU_CAPTURE_QA=true`.
 
 ### Capturas temporales para la presentación
 

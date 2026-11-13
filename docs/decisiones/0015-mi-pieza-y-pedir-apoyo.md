@@ -16,10 +16,10 @@ El usuario entregó la maqueta de «Mi pieza» y ocho pantallas numeradas del re
 
 ## Simulación de la demostración
 
-El acuse de entrega (3 s) y el aviso de disponibilidad (8 s después) se simulan con temporizadores en `SupportFlow`, y el saludo del equipo es un mensaje fijo. Nada sale del teléfono. Solo datos ficticios. Al conectar el backend, estos temporizadores se reemplazan por el acuse real de la plataforma y el aviso real de la mesa de escucha.
+El acuse de entrega (3 s) y el aviso de disponibilidad (8 s después) se simulan con temporizadores en `SupportFlow`, y el saludo del equipo es un mensaje fijo. Solo datos ficticios. **Actualización 13 nov 2026 ([ADR 0017](0017-activacion-personal-mesa-y-cliente-remoto.md)):** la simulación pasó a `SimulatedSupportBackend`, que se usa en las pruebas y cuando el cliente remoto no está disponible. Con Supabase conectado, el acuse viene de `submit_student_alert` y el aviso de la Mesa de Escucha.
 
 ## Consecuencias y pendientes
 
-- Los mensajes del chat no se guardan ni se envían. La pieza no persiste entre aperturas.
+- Los mensajes del chat no se guardan en el teléfono; con el backend conectado se envían y se leen de la plataforma. La pieza viaja con la alerta, pero no persiste entre aperturas de la app.
 - Las pantallas no llevan la etiqueta «Vista de muestra» para respetar la maqueta; la condición de demostración queda en este documento y en el código.
 - Pendiente: entrega real, modo sin conexión (mesh), límites de confidencialidad con revisión profesional del copy, y validación de las ilustraciones con diseño.

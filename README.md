@@ -6,7 +6,7 @@
 
 **Bugñuelitos · Universidad Americana (UAM) · Nicaragua**
 
-**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación, inicio estudiantil E03 con progreso educativo local, *Mi pieza* y recorrido local *Pedir apoyo*.
+**Revisión:** 13 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación, inicio estudiantil E03 con progreso educativo local, *Mi pieza*, recorrido *Pedir apoyo* conectado al cliente remoto y superficies móviles de personal autorizado (`/personal/*`).
 
 **Estado:** prototipo Android local en curso y esquema base Supabase/RLS/RPCs implementado; conexión de clientes, paneles web y red mesh pendientes.
 
@@ -42,7 +42,7 @@ Este README es el documento principal de especificación técnica. Describe el p
 - **Arquitectura y ruta física:** componentes, lenguajes, SDK, dispositivos y conectividad.
 - **Implementado:** existe en el corte actual. **En diseño:** describe el sistema objetivo. **Candidato:** tecnología por evaluar. **Pendiente:** aspecto técnico u operativo por resolver.
 
-Los modelos nuevos documentan el sistema objetivo. **El corte actual ofrece E01, demostración local E02, inicio E03, *Mi pieza* y recorrido local *Pedir apoyo* sobre Android M1, además del esquema base Supabase/RLS/RPCs (`supabase/migrations/`). Falta conectar los clientes, construir los paneles web y validar el transporte mesh.**
+Los modelos nuevos documentan el sistema objetivo. **El corte actual ofrece E01, demostración local E02, inicio E03, *Mi pieza*, *Pedir apoyo* y las superficies móviles de MINED, Mesa de Escucha y Dirección sobre Android M1, además del esquema Supabase/RLS/RPCs (`supabase/migrations/`). La interfaz usa el cliente remoto mediante adaptadores; falta probar el recorrido completo contra Supabase en un teléfono, construir los paneles web y validar el transporte mesh ([ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)).**
 
 </details>
 
@@ -477,7 +477,7 @@ Las flechas representan destinos lógicos, no acceso a tablas completas. La rama
 
 | Componente | Función | Estado |
 | --- | --- | --- |
-| App Flutter y `go_router` | APK Android y navegación | E01, demo E02, inicio E03, *Mi pieza* y recorrido local *Pedir apoyo* implementados; falta conectar al backend. |
+| App Flutter y `go_router` | APK Android y navegación | E01, demo E02, inicio E03, *Mi pieza*, *Pedir apoyo* y superficies de personal (`/personal/*`) implementados sobre puertos con adaptador a Supabase; falta la prueba de extremo a extremo en teléfono. |
 | Almacén AES-GCM-256 | Proteger datos ficticios al reiniciar | Implementado M1; adaptación como cola pendiente. |
 | API de aplicación | Validación, recepción idempotente y permisos | RPCs implementados para estudiante, activación individual de personal, asignación MINED, chat previo a valoración, notas internas, valoración/ficha y actuaciones ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); falta conectar las vistas de UI. |
 | PostgreSQL y RLS | Aislamiento por institución y recurso | Esquema (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, Realtime autorizado y semillas demo (`AULA24`, `AULA25` y `AULA26` Colegio Centro América) implementados en `supabase/` ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)). |
@@ -557,7 +557,7 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Capa | Tecnología/version registrada | Uso actual |
 | --- | --- | --- |
 | Aplicación | Flutter 3.44.5 stable / Dart 3.12.2 | Base Android 0.2.0+2. |
-| Navegación | `go_router` 18.1.3 | E01 abre la demostración escolar E02, el inicio E03 y las vistas de muestra de Información, Ayuda, apoyo y recursos. |
+| Navegación | `go_router` 18.1.3 | E01 abre la demostración escolar E02, el inicio E03, la vista de muestra de Ayuda y el ingreso de personal autorizado, que lleva a la superficie de cada rol. |
 | Criptografía local | `cryptography` 2.9.0 | AES-GCM-256 y derivaciones de credenciales M1. |
 | Custodia de clave | `flutter_secure_storage` 11.2.0 | Almacenamiento seguro del secreto local. |
 | Archivo privado | `path_provider` 2.1.6 | Ruta del almacén cifrado. |
@@ -596,6 +596,8 @@ apps/mobile/                 Aplicación Flutter Android
   lib/features/school_access/ Acceso escolar E02 simulado
   lib/features/home/         Inicio estudiantil E03 y progreso educativo local
   lib/features/piece/        Mi pieza (avatar modular local)
+  lib/features/support/      Pedir apoyo, puerto SupportBackend y adaptador remoto
+  lib/features/staff/        Acceso de personal, MINED, Mesa de Escucha y Dirección
   lib/features/support/      Recorrido local Pedir apoyo (pantallas 1–8)
   lib/shared/                Contratos, modelos, almacén, remote/ (Supabase), tema y widgets
   test/                      Pruebas locales, cliente remoto, inicio, progreso e interfaz
@@ -609,7 +611,7 @@ docs/                        Producto, arquitectura, operación y diseño
 
 Los paneles operativos web y la integración `supabase_flutter` en móvil quedan para sus bloques aprobados.
 
-`lib/main.dart` inicia la app y `lib/app.dart` define el router. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Las pruebas están en `test/local_gateway_test.dart`, `test/app_test.dart`, `test/home_test.dart` y `test/learning_progress_test.dart`. Poppins y su licencia se incluyen en `assets/fonts/` y el arte de E01 y E03 en `assets/welcome/` y `assets/home/`.
+`lib/main.dart` inicia la app y `lib/app.dart` define el router. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Las pruebas están en `test/local_gateway_test.dart`, `test/app_test.dart`, `test/home_test.dart`, `test/learning_progress_test.dart`, `test/support_flow_test.dart`, `test/setu_remote_gateway_test.dart` y `test/staff_*_test.dart`. Poppins y su licencia se incluyen en `assets/fonts/` y el arte de E01 y E03 en `assets/welcome/` y `assets/home/`.
 
 [↑ Volver al índice](#indice)
 
@@ -731,8 +733,8 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | Área | Estado actual |
 | --- | --- |
 | Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
-| Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS local, inicio E03 con progreso educativo local, *Mi pieza* y recorrido local *Pedir apoyo* (pantallas 1–8). E09/E10 son vistas de muestra; catálogo, lector, validación institucional y conexión remota pendientes. |
-| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo (`AULA24`–`AULA26`), RPCs de activación/MINED/Mesa y capa cliente remota en `lib/shared/remote/` implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); faltan paneles web y el cableado en UI móvil. |
+| Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS local, inicio E03 con progreso educativo local, *Mi pieza* y *Pedir apoyo* (pantallas 1–8) con entrega y chat por el cliente remoto, y simulación local cuando no está disponible. E09/E10 son vistas de muestra; catálogo, lector y validación institucional del código escolar pendientes. |
+| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo (`AULA24`–`AULA26`), RPCs de activación/MINED/Mesa y capa cliente remota en `lib/shared/remote/` implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); la interfaz móvil de personal (`/personal/*`) ya los consume; faltan los paneles web, la prueba de extremo a extremo y alinear los contratos de Dirección indicados en ADR 0017. |
 | Red mesh y entrega local | Protocolo y transporte en evaluación; requieren implementación y pruebas físicas. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
 

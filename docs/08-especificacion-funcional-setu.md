@@ -1,6 +1,6 @@
 # Especificación funcional de SéTú
 
-**Revisión:** 2026-11-12. Alcance vigente ADR 0005 y contratos técnicos propuestos en ADR 0006. E01 abre la app y lleva a la demostración escolar E02 o a las vistas de muestra E09/E10; E02 conecta con el inicio estudiantil E03 ([ADR 0013](decisiones/0013-inicio-estudiantil-e03.md)). Los demás recorridos se describen como diseño. [Bienvenida E01](diseno/plan-arranque-bienvenida-setu.md).
+**Revisión:** 2026-11-13. Alcance vigente ADR 0005 y contratos técnicos propuestos en ADR 0006. E01 abre la app y lleva a la demostración escolar E02, a la vista de muestra E09 o al ingreso de personal autorizado M01 ([ADR 0017](decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); E02 conecta con el inicio estudiantil E03 ([ADR 0013](decisiones/0013-inicio-estudiantil-e03.md)). Los demás recorridos se describen como diseño. [Bienvenida E01](diseno/plan-arranque-bienvenida-setu.md).
 
 [Recorrido integrado de usuarios](diseno/flujos/08-recorrido-usuarios.svg) · [DFD lógico y diccionario](12-modelado-dfd-kendall.md) · [Recursos de app y paneles](13-recursos-tecnicos.md). ADR 0008 propone el cliente React/TypeScript/Vite para M/L/D, con permisos separados; no cambia pantallas o facultades de producto ni autoriza implementarlas.
 
@@ -8,7 +8,7 @@
 
 | ID | Pantalla y finalidad | Entradas y acciones | Salida y límites |
 | --- | --- | --- | --- |
-| E01 | Bienvenida y privacidad | Entender quién recibe qué; entrar, consultar ayuda o información | E02, E09 o E10. Sin promesa de anonimato absoluto. |
+| E01 | Bienvenida y privacidad | Entender quién recibe qué; entrar con el código del colegio, consultar ayuda o ingresar como personal autorizado | E02, E09 o M01. Información (E10) se abre desde E03. Sin promesa de anonimato absoluto. |
 | E02 | Colegio | QR/código público, confirmar centro; pedir cámara solo para escanear | La demo usa QR y GPS con un código de prueba y un punto público local. La simulación de cercanía se identifica en pantalla. Validación institucional y primer ingreso offline pendientes. [Demostración E02](diseno/plan-acceso-escolar-e02.md). |
 | E03 | Inicio y Mi racha | Pedir apoyo como acción principal; avatar ilustrado configurable; adelantos de Información, Actividades y Ayuda; tarjeta semanal que abre el calendario mensual | Racha y XP educativos cifrados por instalación, desde cero. Una pregunta correcta al día da 10 XP y la primera lectura confirmada de cada recurso, 5 XP. Repetir una lectura otro día marca el día sin otorgar XP adicionales. Sin puntajes emocionales ni seguimiento estudiantil de casos. [ADR 0014](decisiones/0014-progreso-educativo-local.md). |
 | E04 | Solicitud en tres pasos | Tipo de situación; víctima/Testigo Solidario; detalles opcionales | E05. No exigir relato para una alerta mínima válida. |
@@ -54,7 +54,7 @@ La ficha deriva de valoración profesional y solo lleva tipo, rol, hora y nivel;
 
 | ID | Vista | Acciones | Límites |
 | --- | --- | --- | --- |
-| D01 | Acceso privado | Validar/canjear código privado conforme al mecanismo aprobado | Sin guardarlo en claro; alta, rotación, revocación y atribución por definir. |
+| D01 | Acceso privado | En la app móvil, cuenta institucional activada por invitación individual, igual que M01 ([ADR 0017](decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)) | El código privado del centro sigue guardado solo como hash; rotación y revocación por definir. |
 | D02 | Avisos y fichas del centro | Ver alerta mínima, recepción local/central, fichas y pendientes | Nunca chat/relato/notas; ruta por conflicto puede restringir destinatarios. |
 | D03 | Actuación escolar | Registrar los cinco pasos y proponer cierre con “Documentar y enviar al MINED” | No definir nivel clínico ni cerrar globalmente. Contacto familiar sujeto al procedimiento validado de reserva/autorización. |
 | D04 | Registrar alerta de docente | Dirección registra el aviso con origen docente y actor institucional | Docentes fuera de la app; no crear una conversación o identidad estudiantil ficticia. Formulario y campos mínimos por aprobar. |
@@ -84,4 +84,4 @@ Los textos de error nunca incluyen relatos, tokens, códigos privados o datos de
 
 ## Aceptación
 
-Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. El corte Android actual implementa E01, la demostración escolar E02, el inicio estudiantil E03 con vistas de muestra identificadas y la verificación técnica M1. [Pruebas del corte Android](../apps/mobile/README.md).
+Ver matriz de aceptación del README. Una maqueta prueba navegación/comprensión; integración prueba permisos y duplicados; equipos físicos prueban radio. El corte Android actual implementa E01, la demostración escolar E02, el inicio estudiantil E03 con vistas de muestra identificadas, E04–E08 sobre el cliente remoto, las superficies móviles M01, M02 (lista y asignación), L01, L02 y D02–D04, y la verificación técnica M1. En la app, M03 queda pendiente y D04 funciona solo en la demostración en memoria. [Pruebas del corte Android](../apps/mobile/README.md).
