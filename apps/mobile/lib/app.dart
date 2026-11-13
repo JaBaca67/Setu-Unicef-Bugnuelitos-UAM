@@ -4,6 +4,7 @@ import 'features/home/learning_progress.dart';
 import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
+import 'features/mesh_test/mesh_test_screen.dart';
 import 'features/piece/piece_editor_screen.dart';
 import 'features/piece/student_piece.dart';
 import 'features/school_access/school_access_screen.dart';

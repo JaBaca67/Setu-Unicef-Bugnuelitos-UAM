@@ -138,6 +138,9 @@ class SupportFlow extends ChangeNotifier {
   bool _chatAvailable = false;
   bool get chatAvailable => _chatAvailable;
 
+  bool _needsBluetoothForMesh = false;
+  bool get needsBluetoothForMesh => _needsBluetoothForMesh;
+
   List<ChatMessage> get messages {
     final List<ChatMessage>? synced = _remoteMessages;
     if (synced != null) {

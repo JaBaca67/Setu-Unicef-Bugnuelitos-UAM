@@ -26,7 +26,7 @@ Future<bool> initializeSupabaseIfConfigured([SupabaseConfig? config]) async {
   }
   await Supabase.initialize(
     url: resolved.url.trim(),
-    anonKey: resolved.anonKey.trim(),
+    publishableKey: resolved.anonKey.trim(),
   );
   return true;
 }

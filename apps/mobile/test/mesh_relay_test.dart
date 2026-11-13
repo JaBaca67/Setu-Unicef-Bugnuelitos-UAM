@@ -52,9 +52,19 @@ class _FakeMeshTransport implements MeshTransport {
   final StreamController<MeshTransportEvent> _controller =
       StreamController<MeshTransportEvent>.broadcast();
   final Set<String> _peers = <String>{};
+  bool bluetoothOn = true;
 
   @override
   Stream<MeshTransportEvent> get events => _controller.stream;
+
+  @override
+  Future<bool> isBluetoothEnabled() async => bluetoothOn;
+
+  @override
+  Future<bool> requestEnableBluetooth() async {
+    bluetoothOn = true;
+    return true;
+  }
 
   @override
   Future<bool> hasRequiredPermissions() async => true;
