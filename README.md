@@ -479,8 +479,8 @@ Las flechas representan destinos lógicos, no acceso a tablas completas. La rama
 | --- | --- | --- |
 | App Flutter y `go_router` | APK Android y navegación | E01, demo E02, inicio E03, *Mi pieza* y recorrido local *Pedir apoyo* implementados; falta conectar al backend. |
 | Almacén AES-GCM-256 | Proteger datos ficticios al reiniciar | Implementado M1; adaptación como cola pendiente. |
-| API de aplicación | Validación, recepción idempotente y permisos | RPCs iniciales implementados (`resolve_public_school`, `submit_student_alert`, chat privado por caso, avisos y actuaciones); faltan RPCs de MINED/Mesa y conexión de clientes. |
-| PostgreSQL y RLS | Aislamiento por institución y recurso | Esquema (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY` y semillas demo (`AULA24`/`AULA25`) implementados en `supabase/` ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md)). |
+| API de aplicación | Validación, recepción idempotente y permisos | RPCs implementados para estudiante, activación individual de personal, asignación MINED, chat previo a valoración, notas internas, valoración/ficha y actuaciones ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); falta conectar las vistas de UI. |
+| PostgreSQL y RLS | Aislamiento por institución y recurso | Esquema (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, Realtime autorizado y semillas demo (`AULA24`, `AULA25` y `AULA26` Colegio Centro América) implementados en `supabase/` ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)). |
 | Paneles y mesa | React/TypeScript/Vite propuestos; vistas por función | Diseñados; no implementados. |
 | Transporte de proximidad | Canal Dart–Kotlin → Nearby Connections/Cluster propuesto | Candidato, sin instalación o prueba. |
 | Protocolo de reenvío | Colas, caducidad, deduplicación y acuses | Propuesta técnica. |
@@ -504,8 +504,8 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 | Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Stack en evaluación; avisos, fichas y supervisión sin chat. |
 | Mesa de escucha | TypeScript/TSX + HTML + CSS | Mismo cliente web, vistas y contratos del rol de escucha | Propuesto; chat humano conectado y casos asignados. |
 | Panel de instituciones | TypeScript/TSX + HTML + CSS | Mismo cliente web, proyecciones del centro y tokens de marca | Propuesto; actuaciones y propuesta de cierre sin relato/chat. |
-| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema base, `FORCE ROW LEVEL SECURITY` y RPCs iniciales implementados (`supabase/migrations/`); faltan RPCs de MINED/Mesa y conexión desde clientes. |
-| SDK móvil de backend | Dart | `supabase_flutter` | Propuesto; no presente en M1. Acceso privado estudiantil por decidir. |
+| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema completo, activación por invitación individual, RLS estricta y RPCs de estudiante/MINED/Mesa/Dirección implementados en `supabase/migrations/`. |
+| SDK móvil de backend | Dart | `supabase_flutter` (`^2.18.3`) | Instalado en `apps/mobile` junto a la capa cliente remota en `lib/shared/remote/` ([ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); pendiente cablear en pantallas UI. |
 | Operaciones confiables | **TypeScript / Deno** | Supabase Edge Functions solo cuando sean necesarias | Propuesto; no servidor Node adicional. |
 | Actualizaciones y chat | Dart/TypeScript + SQL | Realtime autorizado y mensajes persistidos, reintentos idempotentes | Propuesto; internet obligatorio, sin relato en avisos. |
 | Transporte entre vecinos | **Dart + Kotlin** | Canal de plataforma Flutter → Google Play services Nearby Connections/Cluster | Candidato a experimento; falta protocolo multisalto propio. |
@@ -564,7 +564,7 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Análisis y pruebas | `flutter_lints` 6.0.0 / `flutter_test` del SDK | Casts, inferencia y tipos genéricos estrictos; pruebas de lógica/widgets. |
 | Android registrado | SDK 36.1.0; APK M1 mínimo API 24, target 36 | La configuración Gradle obtiene niveles del SDK Flutter; comprobar manifiesto del APK al recompilar. |
 | Java de construcción | JDK 21 de Android Studio; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
-| Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs base implementados en `supabase/`; en `apps/mobile` falta integrar `supabase_flutter` (Oleada 2). |
+| Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs completos en `supabase/`; dependencia `supabase_flutter` y cliente remoto implementados en `apps/mobile/lib/shared/remote/`. |
 
 Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. Para los paneles se evalúa React/TypeScript/Vite, pendiente de validación técnica e implementación.
 
@@ -597,11 +597,11 @@ apps/mobile/                 Aplicación Flutter Android
   lib/features/home/         Inicio estudiantil E03 y progreso educativo local
   lib/features/piece/        Mi pieza (avatar modular local)
   lib/features/support/      Recorrido local Pedir apoyo (pantallas 1–8)
-  lib/shared/                Contratos, modelos, almacén, tema y widgets
-  test/                      Pruebas locales, de inicio, progreso e interfaz
+  lib/shared/                Contratos, modelos, almacén, remote/ (Supabase), tema y widgets
+  test/                      Pruebas locales, cliente remoto, inicio, progreso e interfaz
 supabase/                    Backend Supabase / PostgreSQL
-  migrations/                Esquema D1–D4/D8, RLS y RPCs transaccionales
-  seed.sql                   Semillas ficticias (AULA24/AULA25 y usuarios demo)
+  migrations/                Esquema D1–D4/D8, activación, RLS y RPCs transaccionales
+  seed.sql                   Semillas ficticias (AULA24, AULA25, AULA26 y personal demo)
 docs/                        Producto, arquitectura, operación y diseño
   decisiones/                ADR y propuestas identificadas
   diseno/flujos/             Diagramas
@@ -732,7 +732,7 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | --- | --- |
 | Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
 | Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS local, inicio E03 con progreso educativo local, *Mi pieza* y recorrido local *Pedir apoyo* (pantallas 1–8). E09/E10 son vistas de muestra; catálogo, lector, validación institucional y conexión remota pendientes. |
-| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo y primeros RPCs implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md)); faltan RPCs de MINED/Mesa, paneles web y conexión desde clientes. |
+| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo (`AULA24`–`AULA26`), RPCs de activación/MINED/Mesa y capa cliente remota en `lib/shared/remote/` implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); faltan paneles web y el cableado en UI móvil. |
 | Red mesh y entrega local | Protocolo y transporte en evaluación; requieren implementación y pruebas físicas. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
 
@@ -777,6 +777,7 @@ Antes de desarrollar paneles, aprobar o ajustar React/TypeScript/Vite, el acceso
 | [Recursos técnicos](docs/13-recursos-tecnicos.md) | Lenguajes, SDK, web, backend, proximidad y fuentes oficiales. |
 | [Espacio informativo](docs/14-espacio-informativo-y-referente-netflix.md) | Diseño del apartado Información y referente editorial. |
 | [Esquema Supabase (ADR 0016)](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md) | Esquema `D1`–`D4`/`D8`, RLS estricta y RPCs iniciales. |
+| [Activación, Mesa y cliente remoto (ADR 0017)](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md) | Invitaciones individuales, escucha previa a valoración y `shared/remote/`. |
 | [Diagramas vigentes](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. |
 | [Fichas de pantalla](docs/diseno/pantallas-explicadas.md) | Acciones, entradas, salidas y variantes. |
 

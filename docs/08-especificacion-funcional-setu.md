@@ -42,11 +42,11 @@ Son funciones diferenciadas de atención y supervisión dentro de la segunda sup
 
 | ID | Vista | Acciones autorizadas propuestas | Límites |
 | --- | --- | --- | --- |
-| M01 | Acceso de personal | Sesión institucional con rol/ámbito dados por vía confiable | No alta pública con rol editable. Método por cerrar. |
-| M02 | Bandeja MINED | Avisos/fichas del ámbito, filtros por nivel, tipo y colegio, rastreador y agregados | No mostrar relato/chat en listados ni detalle. Nivel ausente hasta valoración humana. |
+| M01 | Acceso de personal | Correo institucional, contraseña y código de activación individual (`CCA-DIR-2026`, etc.) | No alta pública con rol editable. Activación de un solo uso con verificación de correo y bloqueo tras intentos fallidos ([ADR 0017](decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)). |
+| M02 | Bandeja MINED | Avisos/fichas del ámbito, filtros por nivel, tipo y colegio, asignación manual a Mesa de Escucha y supervisión | No mostrar relato/chat/notas en listados ni detalle. Nivel ausente hasta valoración humana. |
 | M03 | Ficha y supervisión | Pedir y exigir actuaciones, escalar por falta de respuesta y revisar el cierre enviado por dirección | MINED cierra según manual; plazos e instancia de escalamiento pendientes. No cierre automático por timeout. |
-| L01 | Bandeja de escucha | Casos asignados y disponibilidad del profesional | Practicantes bajo supervisión por definir. |
-| L02 | Conversación profesional | Chat humano, valoración de nivel, nota interna, emisión de ficha/derivación | Mensaje visible, nota y ficha son acciones distintas. |
+| L01 | Bandeja de escucha | «Por revisar» (llega «Sin valorar»), «En conversación» y aviso en vivo dentro de la app («Tenés una alerta asignada») | Practicantes bajo supervisión por definir. La asignación permanece en bandeja aunque falle el aviso. |
+| L02 | Conversación profesional | Leer relato opcional y pieza estudiantil; habilitar chat humano antes o después de valorar; nota interna aparte; valorar (1/2/3) y emitir ficha mínima | Conversar primero permite reunir contexto y clasificar después. Mensaje visible, nota interna y ficha son acciones distintas. |
 
 La ficha deriva de valoración profesional y solo lleva tipo, rol, hora y nivel; no relato ni capturas. Nivel 1 se resuelve en escucha sin ficha, con facultad de cierre por conciliar; nivel 2 genera ficha; nivel 3 registra derivación urgente sin esperar los pasos del colegio. Esa derivación no es el estado Escalado, reservado en el manual a falta de respuesta institucional. Transiciones propuestas en docs/02.
 
