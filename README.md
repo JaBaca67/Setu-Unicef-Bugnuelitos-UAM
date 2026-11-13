@@ -405,31 +405,31 @@ Esta es una **vista lógica independiente del subsistema de transporte**: tiene 
 
 ## 10. Red mesh y funcionamiento físico sin internet
 
-La red mesh de SéTú transporta alertas cifradas entre celulares hasta un teléfono puente. El diseño técnico plantea almacenamiento y reenvío oportunista: cada dispositivo conserva sobres y los transfiere cuando encuentra un vecino apto, sin exigir todos los eslabones conectados simultáneamente. Este transporte todavía requiere implementación y pruebas físicas.
+La red mesh de SéTú transporta alertas cifradas entre celulares hasta un teléfono puente. El diseño técnico implementa almacenamiento y reenvío oportunista: cada dispositivo conserva sobres y los transfiere cuando encuentra un vecino apto, sin exigir todos los eslabones conectados simultáneamente. El transporte base (`NearbyMeshChannel.kt` + `MeshRelayService`) ya está implementado y probado físicamente entre teléfonos Android reales sin internet.
 
-Sin internet se necesitan app compatible, permisos, radios Bluetooth/Wi-Fi según el transporte, batería y encuentros dentro del alcance real. Sin vecinos o puente accesible, el reporte permanece pendiente. No se promete cobertura de todo el colegio ni entrega inmediata.
+Sin internet se necesitan app compatible, permisos, radios Bluetooth/Wi-Fi/Ubicación encendidos según el transporte, batería y encuentros dentro del alcance real. Sin vecinos o puente accesible, el reporte permanece pendiente en cola cifrada. No se promete cobertura de todo el colegio ni entrega inmediata.
 
-### Ruta prevista
+### Ruta implementada y prevista
 
-1. La app dispone de configuración y claves públicas auténticas antes de quedar sin conexión. El primer ingreso totalmente desconectado requiere resolver aprovisionamiento confiable.
-2. Genera la operación, cifra para sus destinatarios y guarda la cola protegida.
-3. Busca vecinos y transfiere el sobre. El retransmisor no interpreta la situación ni lee el relato.
-4. Cada receptor valida formato, tamaño, caducidad y duplicados y guarda antes de confirmar custodia.
-5. El puente conserva el sobre y, con un contrato local aprobado, lo entrega al receptor institucional. Puente y dirección son funciones distintas aunque compartan equipo de demo.
-6. Con internet restablecido, sube el sobre; el servidor verifica emisor, centro, integridad y unicidad.
-7. Un acuse central autenticado puede regresar por internet o por la red oportunista. Sin recibirlo, el emisor mantiene confirmación pendiente aunque el servidor ya tenga el caso.
+1. La app dispone de la clave pública del puente (`MeshBridgeKeys`: inyectada vía `--dart-define=SETU_MESH_BRIDGE_PUBKEY` o clave demo en pruebas).
+2. Al fallar el envío en línea, `SupportFlow` sella la alerta mínima en un sobre E2EE (`MeshEnvelope`) y lo guarda en `EncryptedLocalStore` (`setu_mesh_queue.enc`); si el Bluetooth está apagado, muestra una tarjeta para activarlo.
+3. Busca vecinos cercanos por `Nearby Connections` (`Strategy.P2P_CLUSTER`) y transfiere el sobre. El retransmisor no posee la clave privada del puente y no puede descifrar el contenido.
+4. Cada receptor valida formato, versión, tamaño (`<= 4096 B`), TTL y duplicados (`packetId`), y persiste antes de confirmar custodia (`ack`).
+5. El puente conserva el sobre y, si tiene `bridgeKeyPair` + `SetuRemoteGateway`, descifra y sube la alerta con `origin='mesh'` al servidor (en demo manual mediante `Sincronizar a Supabase` en `/prueba-mesh`; la entrega directa LAN a dirección sin internet sigue como extensión pendiente).
+6. Con internet restablecido, el servidor verifica emisor, centro, integridad y unicidad (`clientOperationId`).
+7. Un acuse (`centrallySynced`) puede regresar por la red oportunista; la auto-sincronización al recuperar red en segundo plano queda para el siguiente bloque.
 
 ### Cifrado y destinatarios
 
-El cifrado local M1 y el cifrado del enlace inalámbrico no bastan para una cadena de intermediarios. Hace falta un **sobre cifrado de extremo a extremo hasta su destinatario autorizado**. Retransmisores y puente no tienen la clave para leer relato/chat. Si dirección debe leer una alerta mínima offline, necesita un destinatario y claves distintos de los del circuito de escucha.
+El cifrado local M1 y el cifrado del enlace inalámbrico no bastan para una cadena de intermediarios. Por eso `MeshEnvelope` implementa un **sobre cifrado de extremo a extremo (X25519 + HKDF-SHA256 + AES-GCM-256)** hasta el destinatario puente. Retransmisores sin clave privada solo validan versión, tamaño, `packetId` y `ttl`.
 
-No se incluye una clave común en todos los APK ni se usa el código del colegio como clave de cifrado. Distribución de claves públicas, rotación, revocación, autenticación de acuses y recuperación están pendientes. El cifrado no oculta por completo proximidad, horarios, tamaños y patrones de tráfico.
+No se usa el código del colegio como clave de cifrado. Para producción, la distribución/rotación de claves públicas institucionales mediante `--dart-define` y la entrega LAN directa a dirección sin internet siguen abiertas. El cifrado no oculta por completo proximidad, horarios, tamaños y patrones de tráfico.
 
-### Transporte candidato
+### Transporte implementado (`Nearby Connections`)
 
-[Nearby Connections](https://developers.google.com/nearby/connections/overview) permite conexiones cercanas sin internet usando Bluetooth/BLE/Wi-Fi; [Cluster](https://developers.google.com/nearby/connections/strategies) admite varios vecinos. Se propone evaluarlo. La conexión entre vecinos no sustituye el protocolo de retransmisión, deduplicación y acuses de SéTú.
+[Nearby Connections](https://developers.google.com/nearby/connections/overview) (`com.google.android.gms:play-services-nearby:19.5.1`) permite conexiones cercanas sin internet usando Bluetooth/BLE y Wi-Fi Direct/Hotspot temporal; [Cluster](https://developers.google.com/nearby/connections/strategies) (`Strategy.P2P_CLUSTER`) admite varios vecinos simultáneos. La conexión entre vecinos se integra mediante el canal nativo Kotlin [`NearbyMeshChannel.kt`](apps/mobile/android/app/src/main/kotlin/dev/cureando/cureando_mobile/NearbyMeshChannel.kt) y el protocolo de retransmisión, deduplicación y acuses [`MeshRelayService`](apps/mobile/lib/shared/mesh/mesh_relay_service.dart).
 
-Los [permisos necesarios](https://developers.google.com/nearby/connections/android/get-started) dependen de versión y transporte. Android aplica [restricciones en segundo plano](https://developer.android.com/develop/connectivity/bluetooth/ble/background). Primero se probarán equipos concretos con apps visibles; no se promete reenvío continuo con la app cerrada. La integración candidata utiliza un canal nativo Kotlin desde Flutter hacia Nearby Connections/Cluster. Google Play services, consumo, compatibilidad y versiones requieren pruebas; no se ha elegido o instalado un plugin.
+Los [permisos necesarios](https://developers.google.com/nearby/connections/android/get-started) dependen de la versión de Android (y Google Play Services exige tener encendida la Ubicación del sistema). Android aplica [restricciones en segundo plano](https://developer.android.com/develop/connectivity/bluetooth/ble/background), por lo que la demo física opera con las apps activas; no se promete reenvío continuo con la app cerrada.
 
 Ver [flujo de datos y red mesh](docs/10-flujo-datos-y-red-mesh.md) para sobres, estados, colas, retorno, sincronización y pruebas.
 
@@ -498,18 +498,18 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 
 | Capa o superficie | Lenguajes | Recursos a integrar o conservar | Estado |
 | --- | --- | --- | --- |
-| App Android | **Dart**, Kotlin nativo cuando haga falta | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base M1, E01, demo E02, inicio E03, *Mi pieza* y recorrido local *Pedir apoyo*. |
+| App Android | **Dart**, Kotlin nativo | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `cryptography`, `flutter_secure_storage`, `path_provider`, `supabase_flutter`, `NavBar-01`, Poppins local | E01, demo E02, inicio E03, *Mi pieza*, *Pedir apoyo*, `/prueba-mesh` y respaldo offline/mesh implementados. |
 | Información E10/E11 | **Dart + JSON**; texto y medios editoriales | Widgets Flutter; catálogo y recursos empaquetados; `video_player` candidato para reproducción local o de red | Catálogo, lector y reproducción pendientes de implementación; contenido, versiones y derechos por definir. |
 | QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | Demo local E02 implementada; validación institucional y primer ingreso offline pendientes. |
 | Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Stack en evaluación; avisos, fichas y supervisión sin chat. |
 | Mesa de escucha | TypeScript/TSX + HTML + CSS | Mismo cliente web, vistas y contratos del rol de escucha | Propuesto; chat humano conectado y casos asignados. |
 | Panel de instituciones | TypeScript/TSX + HTML + CSS | Mismo cliente web, proyecciones del centro y tokens de marca | Propuesto; actuaciones y propuesta de cierre sin relato/chat. |
-| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema base, `FORCE ROW LEVEL SECURITY` y RPCs iniciales implementados (`supabase/migrations/`); faltan RPCs de MINED/Mesa y conexión desde clientes. |
-| SDK móvil de backend | Dart | `supabase_flutter` | Propuesto; no presente en M1. Acceso privado estudiantil por decidir. |
+| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema base, `FORCE ROW LEVEL SECURITY` y RPCs de estudiante/acciones escolares implementados (`supabase/migrations/`); faltan RPCs de MINED/Mesa y acceso sin cuentas para Dirección. |
+| SDK móvil de backend | Dart | `supabase_flutter` 2.18.1 | Integrado en `apps/mobile/lib/shared/remote/` (`SetuRemoteGateway`, `CaseCapability`); falta compilar el APK con credenciales reales. |
 | Operaciones confiables | **TypeScript / Deno** | Supabase Edge Functions solo cuando sean necesarias | Propuesto; no servidor Node adicional. |
-| Actualizaciones y chat | Dart/TypeScript + SQL | Realtime autorizado y mensajes persistidos, reintentos idempotentes | Propuesto; internet obligatorio, sin relato en avisos. |
-| Transporte entre vecinos | **Dart + Kotlin** | Canal de plataforma Flutter → Google Play services Nearby Connections/Cluster | Candidato a experimento; falta protocolo multisalto propio. |
-| Cola y sobre mesh | Dart/Kotlin; formato por aprobar | Persistencia protegida, sello por destinatario, deduplicación y acuses | Diseño pendiente de claves/biblioteca de sobre. AES local no acredita E2EE. |
+| Actualizaciones y chat | Dart/TypeScript + SQL | Realtime autorizado y mensajes persistidos, reintentos idempotentes | Parcial en móvil (`getStudentChatSession`, `sendStudentChatMessage`); falta UI de escucha y auto-reintento al volver red. |
+| Transporte entre vecinos | **Dart + Kotlin** | Canal nativo `NearbyMeshChannel.kt` → `play-services-nearby` (`P2P_CLUSTER`) | Implementado y probado físicamente entre teléfonos Android reales sin internet. |
+| Cola y sobre mesh | Dart | `MeshEnvelope` (X25519 + HKDF-SHA256 + AES-GCM-256), `MeshRelayService` y `EncryptedLocalStore` (`setu_mesh_queue.enc`) | Implementado y persistido localmente; faltan rotación de claves institucionales y entrega LAN directa sin internet. |
 | Puente → dirección local | Por decidir según receptor | Vista nativa autorizada **o** servicio LAN seguro con cliente disponible offline | Decisión abierta; web cloud insuficiente para esa entrega. |
 | Web alojada | HTML/CSS/JS del build | Cloudflare Pages estático; backend en Supabase | Propuesto; sin publicación o dominio configurado. |
 | Construcción | CLI; configuración según herramienta | Flutter/Android/JDK actuales; Node.js compatible con Vite + npm/lockfile propuestos | Node es herramienta de build web. No hay proyecto npm creado. |
@@ -651,24 +651,25 @@ flutter build apk --debug
 
 [README móvil](apps/mobile/README.md) detalla herramientas, almacenamiento y comprobaciones físicas. Documenta `C:\flutter\bin\flutter.bat` para esta computadora. Conservar `pubspec.lock`; esta revisión no actualiza paquetes. Al iniciar otro bloque, verificar compatibilidad en documentación oficial.
 
-APK en `build/app/outputs/flutter-apk/app-debug.apk`, excluido de Git. Instalación USB con dispositivo autorizado. Compilar el corte local no prueba el sistema conectado.
+APK en `build/app/outputs/flutter-apk/app-debug.apk`, excluido de Git. También se compila automáticamente en GitHub Actions (`.github/workflows/build-apk.yml`) generando el artefacto descargable `setu-debug-apk`.
 
 | Comando | Finalidad |
 | --- | --- |
 | `flutter analyze` | Análisis estático según `analysis_options.yaml`. |
 | `flutter test test/local_gateway_test.dart` | Persistencia, permisos locales, integridad e idempotencia M1. |
 | `flutter test test/app_test.dart` | Widgets y comportamiento del canal simulado. |
+| `flutter test test/mesh_relay_test.dart` | Sobres E2EE, reenvío multisalto, Bluetooth sin internet y persistencia. |
+| `flutter test test/remote_gateway_test.dart` | Capacidad privada de caso y contrato remoto. |
 | `dart format --output=none --set-exit-if-changed lib test` | Comprobar formato sin escribir. |
-| `flutter test --dart-define=SETU_CAPTURE_QA=true test/app_test.dart` | QA de widgets documentada en el README móvil; capturas bajo `build/qa/`. |
-| `flutter build apk --debug` | Compilar la demo local con firma de depuración. |
+| `flutter build apk --debug --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...` | Compilar APK conectado a Supabase (opcional `--dart-define=SETU_MESH_BRIDGE_PUBKEY=...`). |
 
 ### Configuración, secretos y archivos locales
 
-El corte actual no tiene `.env` obligatorio, `firebase_options.dart`, claves de mapas ni credenciales de backend. Las futuras integraciones deben documentar su configuración y mantener los secretos fuera del código y de los clientes publicados.
+Sin `--dart-define=SUPABASE_URL` ni `--dart-define=SUPABASE_PUBLISHABLE_KEY`, la app funciona en modo local + mesh demo sin enviar casos a la nube. Los secretos reales nunca se guardan en el código ni en Git.
 
-El archivo `setu_local_store.enc` es dato privado de ejecución y no se distribuye con el repositorio. Android excluye copias cloud/transferencias del corte actual. `android/local.properties`, cachés, APK y credenciales de firma son locales; `.gitignore` los protege según su finalidad. La compilación `release` conserva firma debug provisional en Gradle: no es una configuración de publicación lista para tiendas.
+Los archivos `setu_local_store.enc`, `setu_support_alert.enc` y `setu_mesh_queue.enc` son datos privados cifrados de ejecución y no se distribuyen con el repositorio. `android/local.properties`, cachés, APK y credenciales de firma son locales; `.gitignore` los protege según su finalidad. La compilación `release` conserva firma debug provisional en Gradle: no es una configuración de publicación lista para tiendas.
 
-El manifiesto principal todavía no pide cámara, Bluetooth, proximidad o ubicación. Los manifiestos debug/profile incluyen internet para desarrollo; eso no demuestra envío de casos ni backend. Los permisos nuevos se diseñarán y aprobarán con su funcionalidad.
+`AndroidManifest.xml` declara permisos de cámara (solo para QR), ubicación aproximada/precisa (requerida por Nearby Connections y cercanía escolar), Bluetooth (`BLUETOOTH_SCAN`, `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`) y Wi-Fi cercano (`NEARBY_WIFI_DEVICES`).
 
 ### Solución de problemas
 
@@ -751,16 +752,15 @@ El [producto](docs/01-producto.md) define el alcance, la [especificación funcio
 
 ## 19. Próximos bloques y pendientes
 
-Secuencia propuesta, con aprobación previa de cada bloque:
+Secuencia vigente hacia la demostración del **17 de noviembre de 2026**, con aprobación previa de cada bloque:
 
-1. Resolver destinatarios offline, acceso privado por caso, códigos institucionales e ingreso inicial desconectado.
-2. Probar físicamente transporte y dos saltos: entrega, permisos, reinicio y batería.
-3. Aprobar contratos mínimos y autorización; probar aislamiento e idempotencia.
-4. Desarrollar el recorrido vertical y tres superficies con datos ficticios.
-5. Integrar cola, puente, recepción central y acuses; mostrar fallas y recuperación.
-6. Completar interfaz y guion de demo, declarando lo funcional y lo simulado.
+1. Agregar las RPCs faltantes en Supabase para la mesa de escucha del **MINED** (nivel 1–3, 6 estados, chat humano, ficha de acción) y acceso sin cuentas de **Dirección** por código privado del colegio.
+2. Implementar los **paneles web** (MINED/Mesa y Dirección) en React/TypeScript/Vite y compilar el APK con credenciales reales de Supabase (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`).
+3. Añadir auto-sincronización al recuperar conexión a internet en móvil y completar el salto de 3 teléfonos (`Emisor → Retransmisor → Puente → Supabase`) y la rotación de claves institucionales.
+4. Completar contenido y lector del espacio **Información** (E10/E11) y depurar accesos técnicos (como `/prueba-mesh`) para la vista del jurado.
+5. Grabar el **video de respaldo** (lunes 16 nov), finalizar el guion del pitch cronometrado y preparar la demo en vivo de las tres superficies + modo sin conexión (martes 17 nov).
 
-Antes de desarrollar paneles, aprobar o ajustar React/TypeScript/Vite, el acceso del personal y contratos por superficie. Antes de mesh, resolver claves, primer ingreso offline, receptor local y experimento físico. El [plan vigente](docs/04-plan.md) conserva todas las decisiones que condicionan la implementación.
+Antes de desarrollar los paneles web, aprobar su contrato y estructura de proyecto. El [plan vigente](docs/04-plan.md) conserva todas las decisiones que condicionan la implementación.
 
 [↑ Volver al índice](#indice)
 
