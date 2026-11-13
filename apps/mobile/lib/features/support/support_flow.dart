@@ -140,12 +140,16 @@ class SupportFlow extends ChangeNotifier {
       'details': details.trim(),
     };
     try {
-      await store.save(_snapshot(alert, received: false));
+      await store.save(
+        _snapshot(alert, received: false, chatAvailable: false),
+      );
     } on Object {
       return false;
     }
     _alert = alert;
     _delivery = AlertDelivery.pending;
+    _chatAvailable = false;
+    _sent.clear();
     situation = null;
     participation = null;
     details = '';
@@ -157,11 +161,12 @@ class SupportFlow extends ChangeNotifier {
   Map<String, Object?> _snapshot(
     Map<String, Object?>? alert, {
     required bool received,
+    bool? chatAvailable,
   }) => <String, Object?>{
     'version': 1,
     'alert': alert,
     'received': received,
-    'chatAvailable': _chatAvailable,
+    'chatAvailable': chatAvailable ?? _chatAvailable,
   };
 
   void _schedule() {

@@ -13,9 +13,9 @@ import 'support_flow.dart';
 
 const Color _blueTint = Color(0xFFDCE9FB);
 
-/// Pantallas 1 y 7 · «Pedir apoyo». Mientras nadie esté disponible muestra
-/// la entrada con «Enviar una alerta»; cuando llega el aviso de
-/// disponibilidad ofrece abrir el chat humano.
+/// Pantallas 1 y 7 · «Pedir apoyo». Conserva siempre la pantalla inicial con
+/// «Enviar una alerta» y «Ver recursos de ayuda»; cuando llega el aviso de
+/// disponibilidad habilita «Abrir chat» dentro de la tarjeta del equipo.
 class SupportHomeScreen extends StatefulWidget {
   const SupportHomeScreen({super.key, required this.flow, required this.piece});
 
@@ -38,202 +38,173 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: Listenable.merge(<Listenable>[widget.flow, widget.piece]),
-    builder: (BuildContext context, _) =>
-        widget.flow.chatAvailable ? _available(context) : _entry(context),
+    builder: (BuildContext context, _) => _entry(context),
   );
 
-  Widget _entry(BuildContext context) => FlowScaffold(
-    header: FlowHeader(
-      title: 'Pedir apoyo',
-      showBrand: true,
-      brandTrailing: PieceHeaderButton(piece: widget.piece),
-    ),
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        ExcludeSemantics(
-          child: SizedBox(
-            height: 196,
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: <Widget>[
-                const Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 30,
-                  child: DashedWave(color: CureandoTheme.pink, height: 44),
-                ),
-                Positioned(
-                  bottom: 0,
-                  child: Container(
-                    width: 130,
-                    height: 18,
-                    decoration: const BoxDecoration(
-                      color: _blueTint,
-                      borderRadius: BorderRadius.all(Radius.elliptical(65, 9)),
-                    ),
+  Widget _entry(BuildContext context) {
+    final bool chatAvailable = widget.flow.chatAvailable;
+    return FlowScaffold(
+      header: FlowHeader(
+        title: 'Pedir apoyo',
+        showBrand: true,
+        brandTrailing: PieceHeaderButton(piece: widget.piece),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          ExcludeSemantics(
+            child: SizedBox(
+              height: 196,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: <Widget>[
+                  const Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 30,
+                    child: DashedWave(color: CureandoTheme.pink, height: 44),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: PieceFigure(
-                    piece: widget.piece.value,
-                    height: 186,
-                    sparks: true,
-                  ),
-                ),
-                Align(
-                  alignment: const Alignment(.78, -.55),
-                  child: Container(
-                    width: 74,
-                    height: 62,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: CureandoTheme.blue, width: 3),
-                    ),
-                    child: const Icon(
-                      Icons.favorite_rounded,
-                      color: CureandoTheme.pink,
-                      size: 34,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Semantics(
-          header: true,
-          child: const Text(
-            '¿En qué te podemos ayudar?',
-            style: TextStyle(
-              fontSize: 27,
-              height: 1.2,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 18),
-        FilledButton.icon(
-          style: flowPrimaryStyle(),
-          onPressed: _alert,
-          icon: const Icon(Icons.notifications_active_outlined, size: 28),
-          label: const Text('Enviar una alerta'),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE6E9FA),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: MergeSemantics(
-            child: Row(
-              children: <Widget>[
-                const ExcludeSemantics(
-                  child: Icon(
-                    Icons.sms_outlined,
-                    color: Color(0xFF0B3FA8),
-                    size: 46,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const Text(
-                        'Chat con el equipo de escucha',
-                        style: TextStyle(
-                          fontSize: 19,
-                          height: 1.25,
-                          fontWeight: FontWeight.w700,
+                  Positioned(
+                    bottom: 0,
+                    child: Container(
+                      width: 130,
+                      height: 18,
+                      decoration: const BoxDecoration(
+                        color: _blueTint,
+                        borderRadius: BorderRadius.all(
+                          Radius.elliptical(65, 9),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(switch (widget.flow.delivery) {
-                        AlertDelivery.pending =>
-                          'Tu alerta está guardada en este teléfono. Falta '
-                              'confirmar la entrega.',
-                        _ =>
-                          'Te avisamos aquí cuando alguien pueda conversar '
-                              'con vos.',
-                      }),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: PieceFigure(
+                      piece: widget.piece.value,
+                      height: 186,
+                      sparks: true,
+                    ),
+                  ),
+                  Align(
+                    alignment: const Alignment(.78, -.55),
+                    child: Container(
+                      width: 74,
+                      height: 62,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: CureandoTheme.blue, width: 3),
+                      ),
+                      child: const Icon(
+                        Icons.favorite_rounded,
+                        color: CureandoTheme.pink,
+                        size: 34,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Semantics(
+            header: true,
+            child: const Text(
+              '¿En qué te podemos ayudar?',
+              style: TextStyle(
+                fontSize: 27,
+                height: 1.2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            style: flowPrimaryStyle(),
+            onPressed: _alert,
+            icon: const Icon(Icons.notifications_active_outlined, size: 28),
+            label: const Text('Enviar una alerta'),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: chatAvailable ? _blueTint : const Color(0xFFE6E9FA),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                MergeSemantics(
+                  child: Row(
+                    children: <Widget>[
+                      const ExcludeSemantics(
+                        child: Icon(
+                          Icons.sms_outlined,
+                          color: Color(0xFF0B3FA8),
+                          size: 46,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const Text(
+                              'Chat con el equipo de escucha',
+                              style: TextStyle(
+                                fontSize: 19,
+                                height: 1.25,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            if (chatAvailable)
+                              Semantics(
+                                liveRegion: true,
+                                child: const Text(
+                                  'El equipo de escucha puede conversar con vos',
+                                ),
+                              )
+                            else
+                              Text(switch (widget.flow.delivery) {
+                                AlertDelivery.pending =>
+                                  'Tu alerta está guardada en este teléfono. '
+                                      'Falta confirmar la entrega.',
+                                _ =>
+                                  'Te avisamos aquí cuando alguien pueda '
+                                      'conversar con vos.',
+                              }),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
+                if (chatAvailable) ...<Widget>[
+                  const SizedBox(height: 14),
+                  FilledButton(
+                    style: flowPrimaryStyle(),
+                    onPressed: () => context.push<void>('/inicio/apoyo/chat'),
+                    child: const Text('Abrir chat'),
+                  ),
+                ],
               ],
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        OutlinedButton(
-          style: flowSecondaryStyle(),
-          onPressed: () => context.go(
-            '/inicio',
-            extra: HomeSectionRequest(HomeSection.ayuda),
+          const SizedBox(height: 16),
+          OutlinedButton(
+            style: flowSecondaryStyle(),
+            onPressed: () => context.go(
+              '/inicio',
+              extra: HomeSectionRequest(HomeSection.ayuda),
+            ),
+            child: const Text('Ver recursos de ayuda'),
           ),
-          child: const Text('Ver recursos de ayuda'),
-        ),
-      ],
-    ),
-  );
-
-  Widget _available(BuildContext context) => FlowScaffold(
-    header: const FlowHeader(title: 'Pedir apoyo'),
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 26, 20, 24),
-          decoration: BoxDecoration(
-            color: _blueTint,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              const ExcludeSemantics(
-                child: Icon(
-                  Icons.sms_outlined,
-                  color: CureandoTheme.blue,
-                  size: 84,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Semantics(
-                header: true,
-                liveRegion: true,
-                child: const Text(
-                  'El equipo de escucha puede conversar con vos',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 23,
-                    height: 1.25,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              FilledButton(
-                style: flowPrimaryStyle(),
-                onPressed: () => context.push<void>('/inicio/apoyo/chat'),
-                child: const Text('Abrir chat'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        OutlinedButton(
-          style: flowSecondaryStyle(),
-          onPressed: _alert,
-          child: const Text('Enviar una alerta'),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 /// Pantalla 6: acuse de la alerta. Distingue «guardada en este teléfono»

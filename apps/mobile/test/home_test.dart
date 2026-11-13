@@ -221,6 +221,7 @@ void main() {
     expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
     await tester.pump(const Duration(seconds: 8));
     await tester.pumpAndSettle();
+    expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
     expect(
       find.text('El equipo de escucha puede conversar con vos'),
       findsOneWidget,
@@ -244,6 +245,23 @@ void main() {
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
+    await _tapLabel(tester, 'Pedir apoyo');
+    expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
+    expect(find.text('Abrir chat'), findsOneWidget);
+    await _tapLabel(tester, 'Enviar una alerta');
+    await _tapLabel(tester, 'Acoso físico');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Me pasó a mí');
+    await _tapLabel(tester, 'Continuar');
+    await _tapLabel(tester, 'Revisar alerta');
+    await _tapLabel(tester, 'Enviar alerta');
+    expect(find.text('Guardada en este teléfono'), findsOneWidget);
+    expect((await alerts.load())?['chatAvailable'], isFalse);
+    await _tapLabel(tester, 'Volver a Pedir apoyo');
+    expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
+    expect(find.text('Abrir chat'), findsNothing);
+    await tester.pump(const Duration(seconds: 12));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
