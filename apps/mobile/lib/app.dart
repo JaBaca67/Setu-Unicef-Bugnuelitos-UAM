@@ -15,6 +15,7 @@ import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
 import 'shared/platform/screen_security_controller.dart';
+import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/setu_brand_mark.dart';
 import 'shared/widgets/student_transition.dart';
@@ -23,6 +24,7 @@ class CureandoApp extends StatefulWidget {
   const CureandoApp({
     super.key,
     this.gateway,
+    this.remoteGateway,
     this.learningProgress,
     this.supportFlow,
     this.screenSecurity,
@@ -32,6 +34,7 @@ class CureandoApp extends StatefulWidget {
     this.checkSchoolProximity = checkSchoolLocation,
   });
   final CureandoGateway? gateway;
+  final SetuRemoteGateway? remoteGateway;
   final LearningProgress? learningProgress;
   final SupportFlow? supportFlow;
   final ScreenSecurityController? screenSecurity;
@@ -47,7 +50,8 @@ class _CureandoAppState extends State<CureandoApp> {
   late final LearningProgress _learning =
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
-  late final SupportFlow _support = widget.supportFlow ?? SupportFlow();
+  late final SupportFlow _support =
+      widget.supportFlow ?? SupportFlow(remote: widget.remoteGateway);
   final ValueNotifier<StudentPiece> _piece = ValueNotifier<StudentPiece>(
     StudentPiece.initial,
   );
