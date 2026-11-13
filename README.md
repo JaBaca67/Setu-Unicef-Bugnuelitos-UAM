@@ -6,9 +6,9 @@
 
 **Bugñuelitos · Universidad Americana (UAM) · Nicaragua**
 
-**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación e inicio estudiantil E03 con progreso educativo local.
+**Revisión:** 12 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación, inicio estudiantil E03 con progreso educativo local, *Mi pieza* y recorrido local *Pedir apoyo*.
 
-**Estado:** definición y prototipado académico; arquitectura ampliada en diseño.
+**Estado:** prototipo Android local en curso y esquema base Supabase/RLS/RPCs implementado; conexión de clientes, paneles web y red mesh pendientes.
 
 [Índice](#indice) · [Diagramas de datos](#dfd) · [Desarrollo técnico](#stack) · [Ejecutar la app](#instalacion)
 
@@ -40,9 +40,9 @@ Este README es el documento principal de especificación técnica. Describe el p
 - **Flujo de usuario:** acciones, pantallas, decisiones y recuperación ante errores.
 - **DFD lógico:** entidades, procesos, almacenes y datos; enfoque Kendall y Kendall. No describe clics ni radios.
 - **Arquitectura y ruta física:** componentes, lenguajes, SDK, dispositivos y conectividad.
-- **Implementado:** existe en el corte Android actual. **En diseño:** describe el sistema objetivo. **Candidato:** tecnología por evaluar. **Pendiente:** aspecto técnico u operativo por resolver.
+- **Implementado:** existe en el corte actual. **En diseño:** describe el sistema objetivo. **Candidato:** tecnología por evaluar. **Pendiente:** aspecto técnico u operativo por resolver.
 
-Los modelos nuevos documentan el sistema objetivo. **El corte actual ofrece E01 y una demostración local E02 con cámara y ubicación sobre la base Android M1. Paneles, backend conectado y mesh siguen en diseño.**
+Los modelos nuevos documentan el sistema objetivo. **El corte actual ofrece E01, demostración local E02, inicio E03, *Mi pieza* y recorrido local *Pedir apoyo* sobre Android M1, además del esquema base Supabase/RLS/RPCs (`supabase/migrations/`). Falta conectar los clientes, construir los paneles web y validar el transporte mesh.**
 
 </details>
 
@@ -477,10 +477,10 @@ Las flechas representan destinos lógicos, no acceso a tablas completas. La rama
 
 | Componente | Función | Estado |
 | --- | --- | --- |
-| App Flutter y `go_router` | APK Android y navegación | Base implementada; nuevo recorrido pendiente. |
+| App Flutter y `go_router` | APK Android y navegación | E01, demo E02, inicio E03, *Mi pieza* y recorrido local *Pedir apoyo* implementados; falta conectar al backend. |
 | Almacén AES-GCM-256 | Proteger datos ficticios al reiniciar | Implementado M1; adaptación como cola pendiente. |
-| API de aplicación | Validación, recepción idempotente y permisos | Propuesta; sin backend conectado. |
-| PostgreSQL y RLS | Aislamiento por institución y recurso | Backend objetivo; esquema y políticas pendientes de implementación. |
+| API de aplicación | Validación, recepción idempotente y permisos | RPCs iniciales implementados (`resolve_public_school`, `submit_student_alert`, chat privado por caso, avisos y actuaciones); faltan RPCs de MINED/Mesa y conexión de clientes. |
+| PostgreSQL y RLS | Aislamiento por institución y recurso | Esquema (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY` y semillas demo (`AULA24`/`AULA25`) implementados en `supabase/` ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md)). |
 | Paneles y mesa | React/TypeScript/Vite propuestos; vistas por función | Diseñados; no implementados. |
 | Transporte de proximidad | Canal Dart–Kotlin → Nearby Connections/Cluster propuesto | Candidato, sin instalación o prueba. |
 | Protocolo de reenvío | Colas, caducidad, deduplicación y acuses | Propuesta técnica. |
@@ -498,13 +498,13 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 
 | Capa o superficie | Lenguajes | Recursos a integrar o conservar | Estado |
 | --- | --- | --- | --- |
-| App Android | **Dart**, Kotlin nativo cuando haga falta | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base M1, bienvenida E01 y demostración E02 con cámara y ubicación local. |
+| App Android | **Dart**, Kotlin nativo cuando haga falta | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `cryptography`, `flutter_secure_storage`, `path_provider`, Poppins local | Base M1, E01, demo E02, inicio E03, *Mi pieza* y recorrido local *Pedir apoyo*. |
 | Información E10/E11 | **Dart + JSON**; texto y medios editoriales | Widgets Flutter; catálogo y recursos empaquetados; `video_player` candidato para reproducción local o de red | Catálogo, lector y reproducción pendientes de implementación; contenido, versiones y derechos por definir. |
-| QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | No instalados. GPS no guarda ubicación precisa; finalidad/alternativas por resolver. |
+| QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | Demo local E02 implementada; validación institucional y primer ingreso offline pendientes. |
 | Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Stack en evaluación; avisos, fichas y supervisión sin chat. |
 | Mesa de escucha | TypeScript/TSX + HTML + CSS | Mismo cliente web, vistas y contratos del rol de escucha | Propuesto; chat humano conectado y casos asignados. |
 | Panel de instituciones | TypeScript/TSX + HTML + CSS | Mismo cliente web, proyecciones del centro y tokens de marca | Propuesto; actuaciones y propuesta de cierre sin relato/chat. |
-| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Backend objetivo; contratos, esquema y políticas en diseño. |
+| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema base, `FORCE ROW LEVEL SECURITY` y RPCs iniciales implementados (`supabase/migrations/`); faltan RPCs de MINED/Mesa y conexión desde clientes. |
 | SDK móvil de backend | Dart | `supabase_flutter` | Propuesto; no presente en M1. Acceso privado estudiantil por decidir. |
 | Operaciones confiables | **TypeScript / Deno** | Supabase Edge Functions solo cuando sean necesarias | Propuesto; no servidor Node adicional. |
 | Actualizaciones y chat | Dart/TypeScript + SQL | Realtime autorizado y mensajes persistidos, reintentos idempotentes | Propuesto; internet obligatorio, sin relato en avisos. |
@@ -564,7 +564,7 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Análisis y pruebas | `flutter_lints` 6.0.0 / `flutter_test` del SDK | Casts, inferencia y tipos genéricos estrictos; pruebas de lógica/widgets. |
 | Android registrado | SDK 36.1.0; APK M1 mínimo API 24, target 36 | La configuración Gradle obtiene niveles del SDK Flutter; comprobar manifiesto del APK al recompilar. |
 | Java de construcción | JDK 21 de Android Studio; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
-| Backend objetivo | Supabase / PostgreSQL | No hay `supabase_flutter`, esquema, políticas o servidor conectado en el corte actual. |
+| Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs base implementados en `supabase/`; en `apps/mobile` falta integrar `supabase_flutter` (Oleada 2). |
 
 Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. Para los paneles se evalúa React/TypeScript/Vite, pendiente de validación técnica e implementación.
 
@@ -584,7 +584,7 @@ Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como c
 
 **Inicio estudiantil E03 (12 nov).** «Continuar» del acceso escolar abre `/inicio`: «Pedir apoyo» como acción principal, tarjeta semanal de racha y XP que abre «Mi racha», «Explorá a tu ritmo» con tarjetas de Información, bloque «Actividades» y navegación inferior Inicio/Información/Actividades/Ayuda. El progreso educativo empieza en cero y se conserva cifrado por instalación sin internet. «Mi pieza» se arma con forma, color y accesorios, sin fotos, nombres ni cuentas. Los recursos y las actividades usan contenidos de muestra. «Pedir apoyo» recorre alerta en tres pasos, revisión, acuse y chat humano; la alerta se guarda cifrada en el teléfono y el acuse y el aviso de disponibilidad están simulados ([ADR 0015](docs/decisiones/0015-mi-pieza-y-pedir-apoyo.md)). El estudiante no tiene una sección de seguimiento de casos. [Inicio](docs/decisiones/0013-inicio-estudiantil-e03.md) · [Progreso local](docs/decisiones/0014-progreso-educativo-local.md).
 
-**Pendiente:** validación institucional del acceso escolar, continuidad privada del caso, formulario E04/E05 y envío real, aviso de disponibilidad y chat conectado, catálogo/lectura/video E10/E11, paneles conectados, escucha remota, recepción central, red mesh, colas de reenvío, puente y servicio local a dirección.
+**Pendiente:** validación institucional del acceso escolar, conexión real a Supabase (`supabase_flutter`), continuidad privada del caso en línea, aviso de disponibilidad y chat conectado, catálogo/lectura/video E10/E11, paneles web conectados, RPCs de MINED/Mesa, red mesh, colas de reenvío, puente y servicio local a dirección.
 
 Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equivalen a los seis nuevos. Adaptarlos requiere aprobación y pruebas; si cambia el formato local, también una estrategia explícita de migración. No subir automáticamente los datos M1 al futuro backend.
 
@@ -592,18 +592,24 @@ Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equ
 
 ```text
 apps/mobile/                 Aplicación Flutter Android
-  lib/features/welcome/      Bienvenida y vistas locales de muestra
-  lib/features/school_access/ Acceso escolar simulado
+  lib/features/welcome/      Bienvenida E01 y vistas locales de muestra
+  lib/features/school_access/ Acceso escolar E02 simulado
+  lib/features/home/         Inicio estudiantil E03 y progreso educativo local
+  lib/features/piece/        Mi pieza (avatar modular local)
+  lib/features/support/      Recorrido local Pedir apoyo (pantallas 1–8)
   lib/shared/                Contratos, modelos, almacén, tema y widgets
-  test/                      Pruebas locales y de interfaz
+  test/                      Pruebas locales, de inicio, progreso e interfaz
+supabase/                    Backend Supabase / PostgreSQL
+  migrations/                Esquema D1–D4/D8, RLS y RPCs transaccionales
+  seed.sql                   Semillas ficticias (AULA24/AULA25 y usuarios demo)
 docs/                        Producto, arquitectura, operación y diseño
   decisiones/                ADR y propuestas identificadas
   diseno/flujos/             Diagramas
 ```
 
-Las migraciones Supabase y los paneles operativos quedan para sus bloques aprobados.
+Los paneles operativos web y la integración `supabase_flutter` en móvil quedan para sus bloques aprobados.
 
-`lib/main.dart` inicia la app y `lib/app.dart` define el router. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Las pruebas están en `test/local_gateway_test.dart` y `test/app_test.dart`. Poppins y su licencia se incluyen en `assets/fonts/` y el arte de E01 en `assets/welcome/`.
+`lib/main.dart` inicia la app y `lib/app.dart` define el router. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Las pruebas están en `test/local_gateway_test.dart`, `test/app_test.dart`, `test/home_test.dart` y `test/learning_progress_test.dart`. Poppins y su licencia se incluyen en `assets/fonts/` y el arte de E01 y E03 en `assets/welcome/` y `assets/home/`.
 
 [↑ Volver al índice](#indice)
 
@@ -725,8 +731,8 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | Área | Estado actual |
 | --- | --- |
 | Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
-| Recorrido estudiantil e Información | E01 y demo E02 con cámara y GPS local. E09/E10 son vistas de muestra. La validación institucional, catálogo, lector y resto del recorrido siguen en diseño. |
-| Paneles y backend | Arquitectura y contratos en diseño; sin conexión operativa entre dispositivos. |
+| Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS local, inicio E03 con progreso educativo local, *Mi pieza* y recorrido local *Pedir apoyo* (pantallas 1–8). E09/E10 son vistas de muestra; catálogo, lector, validación institucional y conexión remota pendientes. |
+| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo y primeros RPCs implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md)); faltan RPCs de MINED/Mesa, paneles web y conexión desde clientes. |
 | Red mesh y entrega local | Protocolo y transporte en evaluación; requieren implementación y pruebas físicas. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
 
@@ -769,6 +775,8 @@ Antes de desarrollar paneles, aprobar o ajustar React/TypeScript/Vite, el acceso
 | [Datos y mesh](docs/10-flujo-datos-y-red-mesh.md) | Protocolo de transporte propuesto y pruebas. |
 | [DFD Kendall y Kendall](docs/12-modelado-dfd-kendall.md) | Método, diccionario, contexto/diagrama 0 y balance de atención/transporte. |
 | [Recursos técnicos](docs/13-recursos-tecnicos.md) | Lenguajes, SDK, web, backend, proximidad y fuentes oficiales. |
+| [Espacio informativo](docs/14-espacio-informativo-y-referente-netflix.md) | Diseño del apartado Información y referente editorial. |
+| [Esquema Supabase (ADR 0016)](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md) | Esquema `D1`–`D4`/`D8`, RLS estricta y RPCs iniciales. |
 | [Diagramas vigentes](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. |
 | [Fichas de pantalla](docs/diseno/pantallas-explicadas.md) | Acciones, entradas, salidas y variantes. |
 
