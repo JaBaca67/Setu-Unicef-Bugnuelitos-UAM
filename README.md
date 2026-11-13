@@ -564,7 +564,9 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Análisis y pruebas | `flutter_lints` 6.0.0 / `flutter_test` del SDK | Casts, inferencia y tipos genéricos estrictos; pruebas de lógica/widgets. |
 | Android registrado | SDK 36.1.0; APK M1 mínimo API 24, target 36 | La configuración Gradle obtiene niveles del SDK Flutter; comprobar manifiesto del APK al recompilar. |
 | Java de construcción | JDK 21 de Android Studio; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
-| Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs base implementados en `supabase/`; en `apps/mobile` falta integrar `supabase_flutter` (Oleada 2). |
+| Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs de estudiante/acciones escolares en `supabase/`; cliente `supabase_flutter` 2.18.1 conectado en `apps/mobile/lib/shared/remote/` mediante `--dart-define`. |
+| Red mesh offline | `play-services-nearby` 19.5.1 + X25519 / AES-GCM-256 | Canal nativo Android (`NearbyMeshChannel.kt`, `Strategy.P2P_CLUSTER`), sobres E2EE, cola cifrada persistida (`MeshRelayService`), aviso de Bluetooth sin internet y pantalla de prueba `/prueba-mesh`. |
+| CI / APK | GitHub Actions (`.github/workflows/build-apk.yml`) | Ejecuta `flutter analyze`, `flutter test` y `flutter build apk --debug` generando el artefacto `setu-debug-apk`. |
 
 Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. Para los paneles se evalúa React/TypeScript/Vite, pendiente de validación técnica e implementación.
 
@@ -582,9 +584,11 @@ Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como c
 
 **Acceso escolar E02 (12 nov).** La prueba reconoce `AULA24` por cámara o por seis casillas. La cercanía se calcula localmente usando el pin público del Colegio Centro América como referencia de prueba. El APK de presentación permite simular la cercanía desde otro lugar y tiene habilitadas temporalmente la captura y la grabación. E01 y E02 comparten la barra de estado transparente y respetan movimiento reducido. [Recorrido E02](docs/diseno/plan-acceso-escolar-e02.md) · [Notas de presentación](apps/mobile/README.md#capturas-temporales-para-la-presentación).
 
-**Inicio estudiantil E03 (12 nov).** «Continuar» del acceso escolar abre `/inicio`: «Pedir apoyo» como acción principal, tarjeta semanal de racha y XP que abre «Mi racha», «Explorá a tu ritmo» con tarjetas de Información, bloque «Actividades» y navegación inferior Inicio/Información/Actividades/Ayuda. El progreso educativo empieza en cero y se conserva cifrado por instalación sin internet. «Mi pieza» se arma con forma, color y accesorios, sin fotos, nombres ni cuentas. Los recursos y las actividades usan contenidos de muestra. «Pedir apoyo» recorre alerta en tres pasos, revisión, acuse y chat humano; la alerta se guarda cifrada en el teléfono y el acuse y el aviso de disponibilidad están simulados ([ADR 0015](docs/decisiones/0015-mi-pieza-y-pedir-apoyo.md)). El estudiante no tiene una sección de seguimiento de casos. [Inicio](docs/decisiones/0013-inicio-estudiantil-e03.md) · [Progreso local](docs/decisiones/0014-progreso-educativo-local.md).
+**Inicio estudiantil E03, `NavBar-01` y Pedir apoyo (12–13 nov).** «Continuar» del acceso escolar abre `/inicio`: «Pedir apoyo» como acción principal, tarjeta semanal de racha y XP que abre «Mi racha», «Explorá a tu ritmo» con tarjetas de Información, bloque «Actividades» y barra de navegación inferior vectorial `NavBar-01` (`setu_bottom_nav.dart`) para Inicio/Información/Actividades/Ayuda. El progreso educativo empieza en cero y se conserva cifrado por instalación sin internet. «Mi pieza» se arma con forma, color y accesorios, sin fotos, nombres ni cuentas. «Pedir apoyo» recorre alerta en tres pasos, revisión, acuse y chat humano conectados a `SetuRemoteGateway` (Supabase cuando hay credenciales y red) y con respaldo automático hacia la cola cifrada `MeshRelayService` + solicitud de activación de Bluetooth cuando no hay internet ([ADR 0015](docs/decisiones/0015-mi-pieza-y-pedir-apoyo.md)). El estudiante no tiene una sección de seguimiento de casos. [Inicio](docs/decisiones/0013-inicio-estudiantil-e03.md) · [Progreso local](docs/decisiones/0014-progreso-educativo-local.md).
 
-**Pendiente:** validación institucional del acceso escolar, conexión real a Supabase (`supabase_flutter`), continuidad privada del caso en línea, aviso de disponibilidad y chat conectado, catálogo/lectura/video E10/E11, paneles web conectados, RPCs de MINED/Mesa, red mesh, colas de reenvío, puente y servicio local a dirección.
+**Red mesh Android (13 nov).** Implementado el canal nativo Kotlin `NearbyMeshChannel.kt` (`P2P_CLUSTER`), sobres E2EE X25519 + HKDF-SHA256 + AES-GCM-256 (`MeshEnvelope`), persistencia cifrada en `EncryptedLocalStore` (`setu_mesh_queue.enc`), conectividad con el flujo principal en `app.dart`/`SupportFlow` y pantalla de prueba física `/prueba-mesh` (`MeshTestScreen`) probada entre teléfonos Android reales sin internet.
+
+**Pendiente:** validación institucional del acceso escolar, RPCs de MINED/Mesa y acceso sin cuentas para Dirección por código privado, paneles web conectados, auto-sincronización al recuperar red en móvil, catálogo/lectura/video E10/E11 y compilación del APK con credenciales reales de Supabase (`SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`).
 
 Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equivalen a los seis nuevos. Adaptarlos requiere aprobación y pruebas; si cambia el formato local, también una estrategia explícita de migración. No subir automáticamente los datos M1 al futuro backend.
 
@@ -592,24 +596,27 @@ Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equ
 
 ```text
 apps/mobile/                 Aplicación Flutter Android
+  android/                   Canal nativo Kotlin (`NearbyMeshChannel.kt`, Nearby Connections)
   lib/features/welcome/      Bienvenida E01 y vistas locales de muestra
   lib/features/school_access/ Acceso escolar E02 simulado
   lib/features/home/         Inicio estudiantil E03 y progreso educativo local
   lib/features/piece/        Mi pieza (avatar modular local)
-  lib/features/support/      Recorrido local Pedir apoyo (pantallas 1–8)
-  lib/shared/                Contratos, modelos, almacén, tema y widgets
-  test/                      Pruebas locales, de inicio, progreso e interfaz
+  lib/features/support/      Recorrido Pedir apoyo (pantallas 1–8) + respaldo offline/Bluetooth
+  lib/features/mesh_test/    Pantalla de prueba física de red mesh (`/prueba-mesh`)
+  lib/shared/                Contratos, modelos, `local/`, `mesh/`, `remote/`, `platform/`, `theme/`, `widgets/`
+  test/                      Pruebas locales, inicio, progreso, `remote_gateway_test.dart`, `mesh_relay_test.dart`
 supabase/                    Backend Supabase / PostgreSQL
   migrations/                Esquema D1–D4/D8, RLS y RPCs transaccionales
   seed.sql                   Semillas ficticias (AULA24/AULA25 y usuarios demo)
+.github/workflows/           Workflow CI `build-apk.yml` (análisis, pruebas y APK debug)
 docs/                        Producto, arquitectura, operación y diseño
   decisiones/                ADR y propuestas identificadas
   diseno/flujos/             Diagramas
 ```
 
-Los paneles operativos web y la integración `supabase_flutter` en móvil quedan para sus bloques aprobados.
+Los paneles operativos web quedan para su bloque aprobado.
 
-`lib/main.dart` inicia la app y `lib/app.dart` define el router. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Las pruebas están en `test/local_gateway_test.dart`, `test/app_test.dart`, `test/home_test.dart` y `test/learning_progress_test.dart`. Poppins y su licencia se incluyen en `assets/fonts/` y el arte de E01 y E03 en `assets/welcome/` y `assets/home/`.
+`lib/main.dart` inicia la app (incluyendo `SupabaseConfig.initializeIfConfigured`) y `lib/app.dart` define el router, `MeshRelayService` y `SupportFlow`. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `mesh/`, `remote/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Poppins y su licencia se incluyen en `assets/fonts/` y el arte de E01 y E03 en `assets/welcome/` y `assets/home/`.
 
 [↑ Volver al índice](#indice)
 
@@ -731,9 +738,9 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | Área | Estado actual |
 | --- | --- |
 | Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
-| Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS local, inicio E03 con progreso educativo local, *Mi pieza* y recorrido local *Pedir apoyo* (pantallas 1–8). E09/E10 son vistas de muestra; catálogo, lector, validación institucional y conexión remota pendientes. |
-| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo y primeros RPCs implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md)); faltan RPCs de MINED/Mesa, paneles web y conexión desde clientes. |
-| Red mesh y entrega local | Protocolo y transporte en evaluación; requieren implementación y pruebas físicas. |
+| Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS local, inicio E03 con barra `NavBar-01` y progreso educativo local, *Mi pieza* y *Pedir apoyo* (pantallas 1–8) conectados a `SetuRemoteGateway` y respaldo offline/mesh. E09/E10 son vistas de muestra; catálogo real y lector E10/E11 pendientes. |
+| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo y RPCs de estudiante/acciones escolares implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md)); cliente móvil `supabase_flutter` integrado; faltan RPCs de MINED/Mesa, acceso sin cuentas para Dirección y paneles web. |
+| Red mesh y entrega local | Canal nativo Android Nearby Connections (`P2P_CLUSTER`), sobres E2EE X25519 + AES-GCM-256, cola cifrada persistida (`MeshRelayService`), solicitud de Bluetooth sin internet y pantalla `/prueba-mesh` implementados y probados físicamente entre teléfonos Android reales sin internet. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
 
 El [producto](docs/01-producto.md) define el alcance, la [especificación funcional](docs/08-especificacion-funcional-setu.md) describe las pantallas y la [arquitectura](docs/02-arquitectura.md) desarrolla datos, permisos y contratos. El [catálogo técnico](docs/13-recursos-tecnicos.md) distingue recursos existentes y candidatos a integrar. El historial de análisis y alternativas se conserva en la documentación de apoyo.
