@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:cureando_mobile/shared/mesh/mesh_envelope.dart';
 import 'package:cureando_mobile/shared/mesh/mesh_relay_service.dart';
@@ -251,4 +252,81 @@ void main() {
     await tB.dispose();
     await tC.dispose();
   });
+
+  test('SupportFlow solicita activar Bluetooth si falla envío sin internet', () async {
+    final X25519 x25519 = X25519();
+    final SimpleKeyPair bridgePair = await x25519.newKeyPair();
+    final SimplePublicKey bridgePub = await bridgePair.extractPublicKey();
+
+    final _InMemoryMeshBus bus = _InMemoryMeshBus();
+    final _FakeMeshTransport transport = _FakeMeshTransport('E', bus)
+      ..bluetoothOn = false;
+    final MeshRelayService relay = MeshRelayService(
+      transport: transport,
+      openStore: () async => _MemoryStore(),
+    );
+
+    final _FailingRemoteGateway offlineRemote = _FailingRemoteGateway();
+    final SupportFlow flow = SupportFlow(
+      openStore: () async => _MemoryStore(),
+      remote: offlineRemote,
+      mesh: relay,
+      meshRecipientPublicKey: bridgePub.bytes,
+    );
+
+    flow.selectSituation(Situation.talk);
+    flow.selectParticipation(Participation.own);
+    final bool saved = await flow.send();
+
+    expect(saved, isTrue);
+    expect(flow.delivery, AlertDelivery.pending);
+    expect(flow.needsBluetoothForMesh, isTrue);
+    expect(relay.items.length, 1);
+
+    final bool enabled = await flow.ensureBluetoothForMesh();
+    expect(enabled, isTrue);
+    expect(flow.needsBluetoothForMesh, isFalse);
+    expect(relay.isRunning, isTrue);
+
+    await relay.stop();
+    await transport.dispose();
+  });
+}
+
+class _FailingRemoteGateway implements SetuRemoteGateway {
+  @override
+  Future<RemoteSchoolInfo> resolvePublicSchool(String publicCode) =>
+      throw StateError('offline');
+
+  @override
+  Future<RemoteAlertReceipt> submitStudentAlert({
+    required String clientOperationId,
+    required String publicSchoolCode,
+    required String situationType,
+    required String studentRole,
+    required String capabilityVerifierHash,
+    String origin = 'online',
+    bool involvesStaff = false,
+    DateTime? declaredAt,
+    String? narrativeText,
+    String locationText = '',
+    String approxDateText = '',
+  }) =>
+      throw StateError('offline');
+
+  @override
+  Future<RemoteChatSession> getStudentChatSession({
+    required String caseId,
+    required String capabilityToken,
+  }) =>
+      throw StateError('offline');
+
+  @override
+  Future<RemoteChatMessage> sendStudentChatMessage({
+    required String caseId,
+    required String capabilityToken,
+    required String clientOperationId,
+    required String body,
+  }) =>
+      throw StateError('offline');
 }

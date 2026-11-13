@@ -56,4 +56,16 @@ class MainActivity : FlutterActivity() {
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: android.content.Intent?,
+    ) {
+        if (nearbyMeshChannel?.onActivityResult(requestCode, resultCode) == true) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
 }

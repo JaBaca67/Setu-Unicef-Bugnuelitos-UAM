@@ -38,6 +38,8 @@ class MeshStatusChanged extends MeshTransportEvent {
 /// Contrato de transporte de proximidad (Bluetooth/Wi-Fi P2P) para SéTú.
 abstract class MeshTransport {
   Stream<MeshTransportEvent> get events;
+  Future<bool> isBluetoothEnabled();
+  Future<bool> requestEnableBluetooth();
   Future<bool> hasRequiredPermissions();
   Future<bool> requestPermissions();
   Future<void> startNode({String endpointName = 'setu-node'});
@@ -76,6 +78,14 @@ class NearbyMeshTransport implements MeshTransport {
       _ => null,
     };
   }
+
+  @override
+  Future<bool> isBluetoothEnabled() async =>
+      await _method.invokeMethod<bool>('isBluetoothEnabled') ?? false;
+
+  @override
+  Future<bool> requestEnableBluetooth() async =>
+      await _method.invokeMethod<bool>('requestEnableBluetooth') ?? false;
 
   @override
   Future<bool> hasRequiredPermissions() async =>

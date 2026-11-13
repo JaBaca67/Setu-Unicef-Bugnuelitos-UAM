@@ -169,6 +169,14 @@ class _CureandoAppState extends State<CureandoApp> {
               ),
             ],
           ),
+          GoRoute(
+            path: 'prueba-mesh',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              MeshTestScreen(remoteGateway: widget.remoteGateway),
+            ),
+          ),
           for (final WelcomeDestination destination
               in WelcomeDestination.values)
             GoRoute(

@@ -2,6 +2,9 @@ package dev.cureando.cureando_mobile
 
 import android.Manifest
 import android.app.Activity
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
@@ -43,6 +46,7 @@ class NearbyMeshChannel(
         const val EVENT_CHANNEL = "setu/mesh_nearby/events"
         private const val SERVICE_ID = "dev.cureando.setu.mesh.v1"
         private const val PERMISSION_REQUEST_CODE = 4207
+        private const val ENABLE_BLUETOOTH_REQUEST_CODE = 4208
     }
 
     private val methodChannel = MethodChannel(messenger, METHOD_CHANNEL)
@@ -54,6 +58,7 @@ class NearbyMeshChannel(
 
     private var eventSink: EventChannel.EventSink? = null
     private var pendingPermissionResult: MethodChannel.Result? = null
+    private var pendingBluetoothResult: MethodChannel.Result? = null
     private var localEndpointName: String = "setu-node"
     private val connectedEndpoints = mutableSetOf<String>()
     private val pendingEndpoints = mutableSetOf<String>()
@@ -76,6 +81,13 @@ class NearbyMeshChannel(
             eventSink?.success(payload)
         }
     }
+
+    private fun bluetoothAdapter(): BluetoothAdapter? {
+        val manager = activity.getSystemService(BluetoothManager::class.java)
+        return manager?.adapter
+    }
+
+    private fun isBluetoothOn(): Boolean = bluetoothAdapter()?.isEnabled == true
 
     private fun requiredPermissions(): Array<String> {
         val list = mutableListOf<String>()
@@ -110,8 +122,43 @@ class NearbyMeshChannel(
         return true
     }
 
+    fun onActivityResult(requestCode: Int, resultCode: Int): Boolean {
+        if (requestCode != ENABLE_BLUETOOTH_REQUEST_CODE) return false
+        pendingBluetoothResult?.success(resultCode == Activity.RESULT_OK || isBluetoothOn())
+        pendingBluetoothResult = null
+        return true
+    }
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
+            "isBluetoothEnabled" -> result.success(isBluetoothOn())
+            "requestEnableBluetooth" -> {
+                if (isBluetoothOn()) {
+                    result.success(true)
+                    return
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    ContextCompat.checkSelfPermission(
+                        activity,
+                        Manifest.permission.BLUETOOTH_CONNECT,
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    result.error(
+                        "missing_bluetooth_connect",
+                        "Se requiere permiso BLUETOOTH_CONNECT antes de activar Bluetooth",
+                        null,
+                    )
+                    return
+                }
+                if (pendingBluetoothResult != null) {
+                    result.error("bluetooth_in_progress", "Solicitud de Bluetooth en curso", null)
+                    return
+                }
+                pendingBluetoothResult = result
+                val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                @Suppress("DEPRECATION")
+                activity.startActivityForResult(intent, ENABLE_BLUETOOTH_REQUEST_CODE)
+            }
             "hasRequiredPermissions" -> result.success(hasAllPermissions())
             "requestPermissions" -> {
                 if (hasAllPermissions()) {

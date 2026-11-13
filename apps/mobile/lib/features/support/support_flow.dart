@@ -297,6 +297,11 @@ class SupportFlow extends ChangeNotifier {
             ),
             recipientPublicKeyBytes: recipientKey,
           );
+          final bool btOn = await relay.transport.isBluetoothEnabled();
+          _needsBluetoothForMesh = !btOn;
+          if (btOn && !relay.isRunning) {
+            await relay.start();
+          }
         } on Object {
           // Permanece en la cola local cifrada.
         }
@@ -305,6 +310,31 @@ class SupportFlow extends ChangeNotifier {
 
     _notify();
     return true;
+  }
+
+  /// Solicita permisos y activación de Bluetooth cuando no hay internet y
+  /// existe una alerta pendiente por enviar vía red mesh.
+  Future<bool> ensureBluetoothForMesh() async {
+    final MeshRelayService? relay = mesh;
+    if (relay == null) return false;
+    try {
+      final bool granted = await relay.transport.requestPermissions();
+      if (!granted) return false;
+      final bool enabled = await relay.transport.requestEnableBluetooth();
+      if (!enabled) {
+        _needsBluetoothForMesh = true;
+        _notify();
+        return false;
+      }
+      _needsBluetoothForMesh = false;
+      if (!relay.isRunning) {
+        await relay.start();
+      }
+      _notify();
+      return true;
+    } on Object {
+      return false;
+    }
   }
 
   /// Sincroniza el estado de disponibilidad del chat y los mensajes desde Supabase.
