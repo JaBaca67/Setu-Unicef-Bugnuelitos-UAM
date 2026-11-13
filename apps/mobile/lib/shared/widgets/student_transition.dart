@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-Page<void> studentTransition(
+Page<T> studentTransition<T>(
   BuildContext context,
   GoRouterState state,
   Widget child,
 ) {
   if (MediaQuery.disableAnimationsOf(context)) {
-    return NoTransitionPage<void>(key: state.pageKey, child: child);
+    return NoTransitionPage<T>(key: state.pageKey, child: child);
   }
-  return CustomTransitionPage<void>(
+  return CustomTransitionPage<T>(
     key: state.pageKey,
     transitionDuration: const Duration(milliseconds: 260),
     reverseTransitionDuration: const Duration(milliseconds: 220),

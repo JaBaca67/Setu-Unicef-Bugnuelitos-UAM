@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:cureando_mobile/app.dart';
+import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/student_activities.dart';
+import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:cureando_mobile/features/school_access/school_location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -50,23 +52,15 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     const ValueKey<String> captureKey = ValueKey<String>('home-capture');
-    await tester.pumpWidget(
-      RepaintBoundary(
-        key: captureKey,
-        child: CureandoApp(
-          checkSchoolProximity: () async => SchoolProximity.nearby,
-        ),
-      ),
-    );
+    await tester.pumpWidget(RepaintBoundary(key: captureKey, child: _app()));
     await tester.pumpAndSettle();
     await _goHome(tester);
 
-    expect(find.text('¡Hola! 👋'), findsOneWidget);
+    expect(find.text('¡Hola!'), findsOneWidget);
     expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
     expect(find.text('Pedir apoyo'), findsOneWidget);
-    expect(find.text('3 días'), findsOneWidget);
-    expect(find.text('120 XP'), findsOneWidget);
-    expect(find.text('Ejemplo'), findsOneWidget);
+    expect(find.text('Racha de 0 días'), findsOneWidget);
+    expect(find.text('0 XP'), findsOneWidget);
     expect(find.text('Explorá a tu ritmo'), findsOneWidget);
     expect(find.text('Ver todo'), findsNWidgets(2));
     expect(find.text('Entendé tus emociones'), findsOneWidget);
@@ -93,13 +87,84 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('calendario y racha reflejan pregunta y lecturas al reabrir', (
+    WidgetTester tester,
+  ) async {
+    _useTallView(tester);
+    final MemoryProgressStore store = MemoryProgressStore();
+    DateTime now = DateTime(2026, 11, 12, 14);
+    const ValueKey<String> captureKey = ValueKey<String>('streak-capture');
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: captureKey,
+        child: _app(store: store, now: () => now),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _goHome(tester);
+
+    await _tapLabel(tester, 'Racha de 0 días');
+    expect(find.text('Mi racha'), findsOneWidget);
+    expect(find.text('Noviembre 2026'), findsOneWidget);
+    await _capture(tester, captureKey, 'e03-streak');
+    await tester.tap(find.byTooltip('Mes anterior'));
+    await tester.pumpAndSettle();
+    expect(find.text('Octubre 2026'), findsOneWidget);
+    await tester.tap(find.byTooltip('Mes siguiente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Noviembre 2026'), findsOneWidget);
+    await _tapLabel(tester, 'Ir a Actividades');
+    expect(find.text('Actividades de muestra'), findsOneWidget);
+    await _tapLabel(
+      tester,
+      'Todas las emociones son válidas; lo importante es cómo las expresamos.',
+    );
+    await _tapNav(tester, 'Inicio');
+    expect(find.text('Racha de 1 día'), findsOneWidget);
+    expect(find.text('10 XP'), findsOneWidget);
+
+    await _tapLabel(tester, 'Entendé tus emociones');
+    expect(find.text('Marcar como leída'), findsOneWidget);
+    await _tapLabel(tester, 'Marcar como leída');
+    expect(find.text('Lectura registrada'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('15 XP'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    now = DateTime(2026, 11, 13, 9);
+    await tester.pumpWidget(_app(store: store, now: () => now));
+    await tester.pumpAndSettle();
+    await _goHome(tester);
+    expect(find.text('Racha de 1 día'), findsOneWidget);
+    expect(find.text('15 XP'), findsOneWidget);
+    await _tapLabel(tester, 'Entendé tus emociones');
+    await _tapLabel(tester, 'Marcar como leída');
+    expect(find.text('Marcaste un día de aprendizaje.'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('Racha de 2 días'), findsOneWidget);
+    expect(find.text('15 XP'), findsOneWidget);
+    final SemanticsHandle semantics = tester.ensureSemantics();
+    try {
+      await _tapLabel(tester, 'Racha de 2 días');
+      expect(
+        find.bySemanticsLabel(
+          'viernes 13 de noviembre, hoy, actividad completada',
+        ),
+        findsOneWidget,
+      );
+    } finally {
+      semantics.dispose();
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Pedir apoyo abre la muestra con aviso y chat identificado', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
-    await tester.pumpWidget(
-      CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
-    );
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
     await _tapLabel(tester, 'Pedir apoyo');
@@ -131,9 +196,7 @@ void main() {
     WidgetTester tester,
   ) async {
     _useTallView(tester);
-    await tester.pumpWidget(
-      CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
-    );
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
     await _tapLabel(tester, 'Entendé tus emociones');
@@ -142,10 +205,7 @@ void main() {
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Convivencia escolar');
-    expect(
-      find.textContaining('todavía no está empaquetado'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('todavía no está empaquetado'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -153,9 +213,7 @@ void main() {
     WidgetTester tester,
   ) async {
     _useTallView(tester);
-    await tester.pumpWidget(
-      CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
-    );
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
     await _tapNav(tester, 'Actividades');
@@ -168,12 +226,13 @@ void main() {
       tester,
       'Todas las emociones son válidas; lo importante es cómo las expresamos.',
     );
-    expect(find.textContaining('Sumaste 10 XP de ejemplo'), findsOneWidget);
+    expect(find.text('¡Así es! Sumaste 10 XP.'), findsOneWidget);
     await _tapLabel(tester, 'Lanzar el dado');
     expect(find.text('Lanzar de nuevo'), findsOneWidget);
     final int emotionsShown = diceEmotions
         .where(
-          (DiceEmotion emotion) => find.text(emotion.name).evaluate().isNotEmpty,
+          (DiceEmotion emotion) =>
+              find.text(emotion.name).evaluate().isNotEmpty,
         )
         .length;
     expect(emotionsShown, 1);
@@ -185,9 +244,7 @@ void main() {
   ) async {
     _useTallView(tester);
     final SemanticsHandle semantics = tester.ensureSemantics();
-    await tester.pumpWidget(
-      CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
-    );
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
     await tester.tap(find.byTooltip('Personalizar tu avatar'));
@@ -215,11 +272,16 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    await tester.pumpWidget(
-      CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
-    );
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
+    await _tapLabel(tester, 'Racha de 0 días');
+    expect(find.text('Mi racha'), findsOneWidget);
+    await tester.tap(find.byTooltip('Mes anterior'));
+    await tester.pumpAndSettle();
+    expect(find.text('Octubre 2026'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
     await _tapLabel(tester, 'Pedir apoyo');
     expect(find.text('Cuéntanos lo que quieras compartir'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver'));
@@ -239,9 +301,7 @@ void main() {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         const FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await tester.pumpWidget(
-      CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
-    );
+    await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
     final ModalRoute<Object?>? route = ModalRoute.of(
@@ -250,6 +310,25 @@ void main() {
     expect(route?.transitionDuration, Duration.zero);
     expect(tester.takeException(), isNull);
   });
+}
+
+CureandoApp _app({MemoryProgressStore? store, DateTime Function()? now}) =>
+    CureandoApp(
+      checkSchoolProximity: () async => SchoolProximity.nearby,
+      learningProgress: LearningProgress(
+        openStore: () async => store ?? MemoryProgressStore(),
+        now: now ?? () => DateTime(2026, 11, 12),
+      ),
+    );
+
+class MemoryProgressStore implements LocalStorePersistence {
+  Map<String, Object?>? _data;
+
+  @override
+  Future<Map<String, Object?>?> load() async => _data;
+
+  @override
+  Future<void> save(Map<String, Object?> value) async => _data = value;
 }
 
 void _useTallView(WidgetTester tester) {
@@ -300,6 +379,10 @@ Future<void> _capture(WidgetTester tester, Key key, String name) async {
     matching: find.byType(Image),
   );
   await tester.runAsync<void>(() async {
+    await precacheImage(
+      const AssetImage('assets/welcome/campaign-pattern.png'),
+      tester.element(capture),
+    );
     for (final Element element in images.evaluate()) {
       await precacheImage((element.widget as Image).image, element);
     }

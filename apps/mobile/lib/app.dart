@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'features/home/learning_progress.dart';
+import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
 import 'features/home/support_preview_screen.dart';
@@ -17,6 +19,7 @@ class CureandoApp extends StatefulWidget {
   const CureandoApp({
     super.key,
     this.gateway,
+    this.learningProgress,
     this.screenSecurity,
     this.showM1Verification = false,
     this.allowDesignCapture = false,
@@ -24,6 +27,7 @@ class CureandoApp extends StatefulWidget {
     this.checkSchoolProximity = checkSchoolLocation,
   });
   final CureandoGateway? gateway;
+  final LearningProgress? learningProgress;
   final ScreenSecurityController? screenSecurity;
   final bool showM1Verification;
   final bool allowDesignCapture;
@@ -34,6 +38,9 @@ class CureandoApp extends StatefulWidget {
 }
 
 class _CureandoAppState extends State<CureandoApp> {
+  late final LearningProgress _learning =
+      widget.learningProgress ?? LearningProgress();
+  late final AppLifecycleListener _learningLifecycle;
   late final ScreenSecurityController _security =
       widget.screenSecurity ?? ScreenSecurityController();
   late final GoRouter _router = GoRouter(
@@ -79,9 +86,20 @@ class _CureandoAppState extends State<CureandoApp> {
           ),
           GoRoute(
             path: 'inicio',
-            pageBuilder: (context, state) =>
-                studentTransition(context, state, const StudentHomeScreen()),
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              StudentHomeScreen(progress: _learning),
+            ),
             routes: <RouteBase>[
+              GoRoute(
+                path: 'racha',
+                pageBuilder: (context, state) => studentTransition<bool>(
+                  context,
+                  state,
+                  StreakScreen(progress: _learning),
+                ),
+              ),
               GoRoute(
                 path: 'apoyo',
                 pageBuilder: (context, state) => studentTransition(
@@ -107,6 +125,7 @@ class _CureandoAppState extends State<CureandoApp> {
                   state,
                   ResourcePreviewScreen(
                     resourceId: state.pathParameters['id'] ?? '',
+                    progress: _learning,
                   ),
                 ),
               ),
@@ -150,6 +169,7 @@ class _CureandoAppState extends State<CureandoApp> {
   @override
   void initState() {
     super.initState();
+    _learningLifecycle = AppLifecycleListener(onResume: _learning.refreshDay);
     if (widget.showM1Verification) {
       _security.addListener(_refresh);
       _security.initialize();
@@ -186,6 +206,8 @@ class _CureandoAppState extends State<CureandoApp> {
 
   @override
   void dispose() {
+    _learningLifecycle.dispose();
+    if (widget.learningProgress == null) _learning.dispose();
     if (widget.showM1Verification) {
       _security.removeListener(_refresh);
     }

@@ -3,20 +3,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
+import '../../shared/widgets/setu_card.dart';
+import 'learning_progress.dart';
+import 'streak_screen.dart';
 import 'student_activities.dart';
 import 'student_avatar.dart';
+import 'student_preview_cards.dart';
 import 'student_resources.dart';
 
 /// Destinos de la navegación inferior del inicio estudiantil (E03).
 enum HomeSection {
   inicio('Inicio', Icons.home_outlined, Icons.home_rounded),
   informacion('Información', Icons.menu_book_outlined, Icons.menu_book_rounded),
-  actividades('Actividades', Icons.extension_outlined, Icons.extension_rounded),
-  ayuda(
-    'Ayuda',
-    Icons.volunteer_activism_outlined,
-    Icons.volunteer_activism_rounded,
-  );
+  actividades('Actividades', Icons.casino_outlined, Icons.casino_rounded),
+  ayuda('Ayuda', Icons.help_outline_rounded, Icons.help_rounded);
 
   const HomeSection(this.label, this.icon, this.selectedIcon);
 
@@ -30,7 +30,9 @@ enum HomeSection {
 /// de seguimiento de casos: tras pedir apoyo puede recibir un aviso que abre
 /// su chat cuando una persona autorizada esté disponible.
 class StudentHomeScreen extends StatefulWidget {
-  const StudentHomeScreen({super.key});
+  const StudentHomeScreen({super.key, required this.progress});
+
+  final LearningProgress progress;
 
   @override
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
@@ -39,17 +41,51 @@ class StudentHomeScreen extends StatefulWidget {
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   HomeSection _section = HomeSection.inicio;
   StudentAvatar _avatar = StudentAvatar.initial;
+  final GlobalKey _diceKey = GlobalKey();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.progress.open();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _showStreak() async {
+    final bool? openActivities = await context.push<bool>('/inicio/racha');
+    if (mounted && openActivities == true) _open(HomeSection.actividades);
+  }
 
   Future<void> _editAvatar() async {
     final StudentAvatar? updated = await showAvatarEditor(context, _avatar);
     if (updated != null && mounted) setState(() => _avatar = updated);
   }
 
-  void _open(HomeSection section) => setState(() => _section = section);
+  void _open(HomeSection section) {
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    setState(() => _section = section);
+  }
+
+  void _openDice() {
+    _open(HomeSection.actividades);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final BuildContext? dice = _diceKey.currentContext;
+      if (dice != null) Scrollable.ensureVisible(dice);
+    });
+  }
 
   @override
   Widget build(BuildContext context) => CampaignScreen(
-    bodyRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+    scrollController: _scrollController,
+    bodyRadius: _section == HomeSection.inicio
+        ? null
+        : const BorderRadius.vertical(top: Radius.circular(28)),
     bottomNavigationBar: _navigationBar(context),
     header: switch (_section) {
       HomeSection.inicio => _HomeHeader(avatar: _avatar, onAvatar: _editAvatar),
@@ -67,11 +103,21 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ),
     },
     body: Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      padding: _section == HomeSection.inicio
+          ? const EdgeInsets.fromLTRB(12, 14, 12, 16)
+          : const EdgeInsets.all(20),
       child: switch (_section) {
-        HomeSection.inicio => _InicioTab(onOpenSection: _open),
+        HomeSection.inicio => _InicioTab(
+          onOpenSection: _open,
+          progress: widget.progress,
+          onOpenStreak: _showStreak,
+          onOpenDice: _openDice,
+        ),
         HomeSection.informacion => const _InformacionTab(),
-        HomeSection.actividades => const ActivitiesTab(),
+        HomeSection.actividades => ActivitiesTab(
+          progress: widget.progress,
+          diceKey: _diceKey,
+        ),
         HomeSection.ayuda => const _AyudaTab(),
       },
     ),
@@ -83,15 +129,28 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       top: false,
       child: NavigationBar(
         backgroundColor: Colors.white,
-        indicatorColor: CureandoTheme.blueSoft,
+        indicatorColor: Colors.transparent,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (Set<WidgetState> states) => TextStyle(
+            fontSize: 12,
+            color: states.contains(WidgetState.selected)
+                ? CureandoTheme.blue
+                : CureandoTheme.ink,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+          ),
+        ),
         selectedIndex: _section.index,
-        onDestinationSelected: (int index) =>
-            _open(HomeSection.values[index]),
+        onDestinationSelected: (int index) => _open(HomeSection.values[index]),
         destinations: <Widget>[
           for (final HomeSection section in HomeSection.values)
             NavigationDestination(
               icon: Icon(section.icon),
-              selectedIcon: Icon(section.selectedIcon, color: CureandoTheme.blue),
+              selectedIcon: Icon(
+                section.selectedIcon,
+                color: CureandoTheme.blue,
+              ),
               label: section.label,
             ),
         ],
@@ -107,96 +166,122 @@ class _HomeHeader extends StatelessWidget {
   final VoidCallback onAvatar;
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: <Widget>[
-      const SizedBox(height: 10),
-      const CampaignSymbol(size: 30),
-      const SizedBox(height: 16),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Semantics(
-                header: true,
-                label: '¡Hola! ¿Qué querés hacer hoy?',
-                excludeSemantics: true,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const <Widget>[
-                    Text(
-                      '¡Hola! 👋',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '¿Qué querés hacer hoy?',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+  Widget build(BuildContext context) {
+    final bool largeText = MediaQuery.textScalerOf(context).scale(16) > 22;
+    final Widget greeting = Semantics(
+      header: true,
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '¡Hola!',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 40,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
             ),
-            const SizedBox(width: 16),
-            Tooltip(
-              message: 'Personalizar tu avatar',
-              child: Semantics(
-                button: true,
-                label: 'Tu avatar virtual: ${avatar.description}. '
-                    'Tocá para personalizarlo.',
-                child: InkWell(
-                  onTap: onAvatar,
-                  customBorder: const CircleBorder(),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: <Widget>[
-                      StudentAvatarBadge(avatar: avatar, size: 56),
-                      Positioned(
-                        right: -2,
-                        bottom: -2,
-                        child: ExcludeSemantics(
-                          child: CircleAvatar(
-                            radius: 11,
-                            backgroundColor: CureandoTheme.yellow,
-                            child: const Icon(
-                              Icons.edit_rounded,
-                              size: 13,
-                              color: CureandoTheme.ink,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+          ),
+          SizedBox(height: 4),
+          Text(
+            '¿Qué querés hacer hoy?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+    final Widget characters = Image.asset(
+      'assets/welcome/campaign-characters.png',
+      fit: BoxFit.contain,
+      excludeFromSemantics: true,
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 8, 12, 12),
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const CampaignSymbol(size: 32),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: ExcludeSemantics(
+                  child: Text(
+                    'SéTú',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 25,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 10),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 52),
-        child: AspectRatio(
-          aspectRatio: 392 / 180,
-          child: Image.asset(
-            'assets/welcome/campaign-characters.png',
-            fit: BoxFit.fill,
-            excludeFromSemantics: true,
+              Tooltip(
+                message: 'Personalizar tu avatar',
+                child: Semantics(
+                  button: true,
+                  label:
+                      'Tu avatar virtual: ${avatar.description}. Tocá para personalizarlo.',
+                  child: Material(
+                    color: Colors.transparent,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      onTap: onAvatar,
+                      customBorder: const CircleBorder(),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: <Widget>[
+                          StudentAvatarBadge(avatar: avatar, size: 50),
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: ExcludeSemantics(
+                              child: CircleAvatar(
+                                radius: 10,
+                                backgroundColor: CureandoTheme.yellow,
+                                child: const Icon(
+                                  Icons.edit_rounded,
+                                  size: 12,
+                                  color: CureandoTheme.ink,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: 6),
+          if (largeText)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                greeting,
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(width: 156, child: characters),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: <Widget>[
+                Expanded(flex: 52, child: greeting),
+                Expanded(flex: 48, child: characters),
+              ],
+            ),
+        ],
       ),
-    ],
-  );
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -229,7 +314,11 @@ class _SectionHeader extends StatelessWidget {
         Text(
           subtitle,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            height: 1.4,
+          ),
         ),
       ],
     ),
@@ -237,9 +326,17 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _InicioTab extends StatelessWidget {
-  const _InicioTab({required this.onOpenSection});
+  const _InicioTab({
+    required this.onOpenSection,
+    required this.progress,
+    required this.onOpenStreak,
+    required this.onOpenDice,
+  });
 
   final ValueChanged<HomeSection> onOpenSection;
+  final LearningProgress progress;
+  final VoidCallback onOpenStreak;
+  final VoidCallback onOpenDice;
 
   @override
   Widget build(BuildContext context) {
@@ -249,7 +346,7 @@ class _InicioTab extends StatelessWidget {
       children: <Widget>[
         FilledButton.icon(
           style: FilledButton.styleFrom(
-            backgroundColor: CureandoTheme.pink,
+            backgroundColor: CureandoTheme.blue,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(60),
             textStyle: textTheme.labelLarge?.copyWith(
@@ -261,11 +358,20 @@ class _InicioTab extends StatelessWidget {
             ),
           ),
           onPressed: () => context.push<void>('/inicio/apoyo'),
-          icon: const Icon(Icons.favorite_rounded),
-          label: const Text('Pedir apoyo'),
+          icon: const Icon(Icons.chat_outlined),
+          label: const Row(
+            children: <Widget>[
+              Expanded(child: Text('Pedir apoyo')),
+              Icon(Icons.chevron_right_rounded),
+            ],
+          ),
         ),
         const SizedBox(height: 14),
-        const _StreakStrip(),
+        ListenableBuilder(
+          listenable: progress,
+          builder: (context, child) =>
+              WeeklyStreakCard(progress: progress, onTap: onOpenStreak),
+        ),
         const SizedBox(height: 22),
         _SectionTitle(
           title: 'Explorá a tu ritmo',
@@ -275,7 +381,12 @@ class _InicioTab extends StatelessWidget {
         _AdaptiveRow(
           children: <Widget>[
             for (final SampleResource resource in sampleResources)
-              _ResourcePreviewCard(resource: resource),
+              StudentPreviewCard(
+                cover: resource.cover,
+                title: resource.title,
+                detail: resource.format,
+                onTap: () => context.push<void>(resource.route),
+              ),
           ],
         ),
         const SizedBox(height: 22),
@@ -286,102 +397,29 @@ class _InicioTab extends StatelessWidget {
         const SizedBox(height: 10),
         _AdaptiveRow(
           children: <Widget>[
-            _ActivityPreviewCard(
-              icon: Icons.quiz_outlined,
-              iconColor: CureandoTheme.blue,
-              tint: CureandoTheme.blueSoft,
-              title: 'Pregunta del día',
-              detail: '+10 XP · ejemplo',
-              onTap: () => onOpenSection(HomeSection.actividades),
+            ListenableBuilder(
+              listenable: progress,
+              builder: (context, child) => StudentPreviewCard(
+                cover: StudentCover.question,
+                compact: true,
+                title: 'Pregunta del día',
+                detail: progress.answeredToday
+                    ? 'Completada'
+                    : '+${LearningProgress.questionXp} XP',
+                onTap: () => onOpenSection(HomeSection.actividades),
+              ),
             ),
-            _ActivityPreviewCard(
-              icon: Icons.casino_outlined,
-              iconColor: CureandoTheme.pink,
-              tint: CureandoTheme.pinkSoft,
+            StudentPreviewCard(
+              cover: StudentCover.dice,
+              compact: true,
               title: 'Dado de emociones',
-              detail: 'Jugá sin registrar nada',
-              onTap: () => onOpenSection(HomeSection.actividades),
+              onTap: onOpenDice,
             ),
           ],
-        ),
-        const SizedBox(height: 18),
-        Text(
-          'Pedir apoyo, el chat, Información y Ayuda están siempre '
-          'disponibles, con o sin XP.',
-          style: textTheme.bodyMedium?.copyWith(
-            color: CureandoTheme.secondaryInk,
-          ),
         ),
       ],
     );
   }
-}
-
-/// Franja compacta de racha y XP. Valores de ejemplo: la demo no registra
-/// progreso real y los XP solo acompañan actividades educativas voluntarias.
-class _StreakStrip extends StatelessWidget {
-  const _StreakStrip();
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    label: 'Racha de 3 días y 120 XP. Valores de ejemplo por actividades '
-        'educativas voluntarias.',
-    excludeSemantics: true,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: CureandoTheme.yellowSoft,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: const <Widget>[
-          _StreakItem(
-            icon: Icons.local_fire_department_rounded,
-            color: CureandoTheme.pink,
-            text: '3 días',
-          ),
-          _StreakItem(
-            icon: Icons.star_rounded,
-            color: CureandoTheme.blue,
-            text: '120 XP',
-          ),
-          Text(
-            'Ejemplo',
-            style: TextStyle(
-              color: CureandoTheme.secondaryInk,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _StreakItem extends StatelessWidget {
-  const _StreakItem({
-    required this.icon,
-    required this.color,
-    required this.text,
-  });
-
-  final IconData icon;
-  final Color color;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: <Widget>[
-      Icon(icon, color: color, size: 20),
-      const SizedBox(width: 6),
-      Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
-    ],
-  );
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -448,103 +486,6 @@ class _AdaptiveRow extends StatelessWidget {
   }
 }
 
-class _ResourcePreviewCard extends StatelessWidget {
-  const _ResourcePreviewCard({required this.resource});
-
-  final SampleResource resource;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: () => context.push<void>(resource.route),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: resource.tint,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(resource.icon, color: resource.inkColor),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              resource.format,
-              style: const TextStyle(
-                color: CureandoTheme.secondaryInk,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              resource.title,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-class _ActivityPreviewCard extends StatelessWidget {
-  const _ActivityPreviewCard({
-    required this.icon,
-    required this.iconColor,
-    required this.tint,
-    required this.title,
-    required this.detail,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final Color tint;
-  final String title;
-  final String detail;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: tint,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor),
-            ),
-            const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 2),
-            Text(
-              detail,
-              style: const TextStyle(
-                color: CureandoTheme.secondaryInk,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
 class _InformacionTab extends StatelessWidget {
   const _InformacionTab();
 
@@ -588,61 +529,55 @@ class _InformacionTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         for (final SampleResource resource in sampleResources) ...<Widget>[
-          Card(
-            margin: EdgeInsets.zero,
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => context.push<void>(resource.route),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: resource.tint,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(resource.icon, color: resource.inkColor),
+          SetuCard(
+            onTap: () => context.push<void>(resource.route),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: resource.tint,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            '${resource.format} · ${resource.topic}',
-                            style: const TextStyle(
+                    child: Icon(resource.icon, color: resource.inkColor),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          '${resource.format} · ${resource.topic}',
+                          style: const TextStyle(
+                            color: CureandoTheme.secondaryInk,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          resource.title,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(resource.summary),
+                        if (resource.format == 'Video') ...<Widget>[
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Video pendiente de empaquetar · resumen en '
+                            'texto disponible',
+                            style: TextStyle(
                               color: CureandoTheme.secondaryInk,
                               fontSize: 14,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            resource.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(resource.summary),
-                          if (resource.format == 'Video') ...<Widget>[
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Video pendiente de empaquetar · resumen en '
-                              'texto disponible',
-                              style: TextStyle(
-                                color: CureandoTheme.secondaryInk,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

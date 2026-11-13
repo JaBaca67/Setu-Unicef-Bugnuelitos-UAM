@@ -11,7 +11,9 @@ abstract class KeyVault {
 }
 
 class AndroidKeyVault implements KeyVault {
-  static const String _name = 'setu.local.master.v1';
+  AndroidKeyVault([this._name = 'setu.local.master.v1']);
+
+  final String _name;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   @override
   Future<String?> read() => _storage.read(key: _name);
@@ -33,11 +35,14 @@ class EncryptedLocalStore implements LocalStorePersistence {
   final AesGcm _cipher = AesGcm.with256bits();
   static final List<int> _aad = utf8.encode('setu-local-store:v1');
 
-  static Future<EncryptedLocalStore> onDevice() async {
+  static Future<EncryptedLocalStore> onDevice({
+    String fileName = 'setu_local_store.enc',
+    String keyName = 'setu.local.master.v1',
+  }) async {
     final Directory dir = await getApplicationSupportDirectory();
     return EncryptedLocalStore(
-      file: File('${dir.path}/setu_local_store.enc'),
-      vault: AndroidKeyVault(),
+      file: File('${dir.path}/$fileName'),
+      vault: AndroidKeyVault(keyName),
     );
   }
 

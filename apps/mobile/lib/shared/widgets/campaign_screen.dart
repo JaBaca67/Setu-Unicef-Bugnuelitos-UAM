@@ -10,12 +10,14 @@ class CampaignScreen extends StatelessWidget {
     required this.body,
     this.bodyRadius,
     this.bottomNavigationBar,
+    this.scrollController,
   });
 
   final Widget header;
   final Widget body;
   final BorderRadius? bodyRadius;
   final Widget? bottomNavigationBar;
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
@@ -43,19 +45,11 @@ class CampaignScreen extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: SizedBox.expand(
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    color: CureandoTheme.blue,
-                    image: DecorationImage(
-                      image: AssetImage('assets/welcome/campaign-pattern.png'),
-                      fit: BoxFit.fitWidth,
-                      alignment: Alignment.topCenter,
-                      repeat: ImageRepeat.repeatY,
-                    ),
-                  ),
+                child: CampaignBackground(
                   child: SafeArea(
                     bottom: false,
                     child: CustomScrollView(
+                      controller: scrollController,
                       slivers: <Widget>[
                         SliverToBoxAdapter(child: header),
                         SliverToBoxAdapter(
@@ -81,6 +75,26 @@ class CampaignScreen extends StatelessWidget {
         ],
       ),
     ),
+  );
+}
+
+class CampaignBackground extends StatelessWidget {
+  const CampaignBackground({super.key, this.child});
+
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: const BoxDecoration(
+      color: CureandoTheme.blue,
+      image: DecorationImage(
+        image: AssetImage('assets/welcome/campaign-pattern.png'),
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.topCenter,
+        repeat: ImageRepeat.repeatY,
+      ),
+    ),
+    child: child,
   );
 }
 

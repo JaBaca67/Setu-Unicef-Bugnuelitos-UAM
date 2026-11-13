@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import 'learning_progress.dart';
+import 'streak_screen.dart';
+import 'student_preview_cards.dart';
 
 /// Recurso editorial de muestra para el espacio Información (E10/E11).
 /// Contenido propio identificado como muestra; el catálogo real, su revisión
@@ -31,6 +34,8 @@ class SampleResource {
   final Color inkColor;
 
   String get route => '/inicio/recurso/$id';
+  bool get isVideo => format == 'Video';
+  StudentCover get cover => isVideo ? StudentCover.video : StudentCover.guide;
 }
 
 const List<SampleResource> sampleResources = <SampleResource>[
@@ -89,15 +94,61 @@ SampleResource? sampleResourceById(String? id) {
 
 /// Vista de muestra de un recurso (E11). Identifica el contenido como
 /// material propio sin revisión editorial final.
-class ResourcePreviewScreen extends StatelessWidget {
-  const ResourcePreviewScreen({super.key, required this.resourceId});
+class ResourcePreviewScreen extends StatefulWidget {
+  const ResourcePreviewScreen({
+    super.key,
+    required this.resourceId,
+    required this.progress,
+  });
 
   final String resourceId;
+  final LearningProgress progress;
+
+  @override
+  State<ResourcePreviewScreen> createState() => _ResourcePreviewScreenState();
+}
+
+class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
+  bool _saving = false;
+  String? _message;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.progress.open();
+  }
+
+  Future<void> _complete(SampleResource resource) async {
+    if (_saving || !widget.progress.canCompleteResource(resource.id)) return;
+    setState(() {
+      _saving = true;
+      _message = null;
+    });
+    try {
+      final int xp = await widget.progress.completeResource(resource.id);
+      if (!mounted) return;
+      setState(() {
+        _message = xp > 0
+            ? 'Sumaste $xp XP.'
+            : 'Marcaste un día de aprendizaje.';
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() => _message = 'No se pudo guardar. Probá de nuevo.');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final SampleResource resource =
-        sampleResourceById(resourceId) ?? sampleResources.first;
+    final SampleResource? resource = sampleResourceById(widget.resourceId);
+    if (resource == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text('Este recurso no está disponible.')),
+      );
+    }
     final TextTheme textTheme = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
@@ -130,10 +181,13 @@ class ResourcePreviewScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Semantics(
                     header: true,
-                    child: Text(resource.title, style: textTheme.headlineMedium),
+                    child: Text(
+                      resource.title,
+                      style: textTheme.headlineMedium,
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  if (resource.format == 'Video') ...<Widget>[
+                  if (resource.isVideo) ...<Widget>[
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -164,11 +218,41 @@ class ResourcePreviewScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Leer una guía o ver un video suma XP de ejemplo si después '
-                    'respondés la pregunta del día. Leer no cambia ningún caso '
-                    'ni significa estar en atención.',
-                    style: TextStyle(color: CureandoTheme.secondaryInk),
+                  ListenableBuilder(
+                    listenable: widget.progress,
+                    builder: (context, child) {
+                      final LearningProgress progress = widget.progress;
+                      if (!progress.ready) {
+                        return LearningProgressStatus(progress: progress);
+                      }
+                      final bool canComplete = progress.canCompleteResource(
+                        resource.id,
+                      );
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          FilledButton(
+                            onPressed: _saving || !canComplete
+                                ? null
+                                : () => _complete(resource),
+                            child: Text(
+                              !canComplete
+                                  ? 'Lectura registrada'
+                                  : resource.isVideo
+                                  ? 'Marcar resumen leído'
+                                  : 'Marcar como leída',
+                            ),
+                          ),
+                          if (_message != null || _saving)
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                _saving ? 'Guardando tu progreso…' : _message!,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
