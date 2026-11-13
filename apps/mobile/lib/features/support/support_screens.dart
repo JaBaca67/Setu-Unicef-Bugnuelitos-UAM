@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
+import '../../shared/widgets/setu_card.dart';
 import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'alert_screens.dart';
@@ -206,6 +207,12 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
             ),
             child: const Text('Ver recursos de ayuda'),
           ),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () => context.push<void>('/prueba-mesh'),
+            icon: const Icon(Icons.bluetooth_searching_rounded),
+            label: const Text('Prueba de red Mesh (2+ celulares)'),
+          ),
         ],
       ),
     );
@@ -293,6 +300,49 @@ class AlertReceivedScreen extends StatelessWidget {
                 ],
               ),
             ),
+            if (!received && flow.needsBluetoothForMesh) ...<Widget>[
+              const SizedBox(height: 20),
+              SetuCard(
+                color: const Color(0xFFEAF2FF),
+                borderColor: CureandoTheme.blue,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    const Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.bluetooth_rounded,
+                          color: CureandoTheme.blue,
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Sin internet: activá Bluetooth',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: CureandoTheme.blue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Para intentar enviar tu alerta por dispositivos cercanos sin internet, necesitamos que activés Bluetooth.',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      style: flowPrimaryStyle(),
+                      onPressed: flow.ensureBluetoothForMesh,
+                      icon: const Icon(Icons.bluetooth_searching_rounded),
+                      label: const Text('Activar Bluetooth'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 32),
             FilledButton(
               style: flowPrimaryStyle(),
