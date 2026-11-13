@@ -35,3 +35,9 @@ setu_local_store.enc*
 
 # Browser export contains account/session metadata; use the text reference instead
 *Google Gemini.html
+
+# Heavy local design/campaign exports from Google Drive (source of truth in Drive)
+docs/diseno/campana/
+docs/diseno/kit-escolar/
+docs/diseno/marca/
+docs/diseno/referencias-locales/

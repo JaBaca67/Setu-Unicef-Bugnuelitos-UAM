@@ -2,17 +2,33 @@ import 'package:flutter/material.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/setu_card.dart';
-import '../../shared/widgets/setu_brand_mark.dart';
 
 enum StudentCover {
-  guide(CureandoTheme.yellow, Icons.sentiment_very_satisfied_rounded),
-  video(Color(0xFFFF8AC7), Icons.forum_rounded),
-  question(Color(0xFFEAE0FE), Icons.contact_support_outlined),
-  dice(Color(0xFFD8FBE9), Icons.casino_rounded);
+  guide(
+    CureandoTheme.yellow,
+    Icons.sentiment_very_satisfied_rounded,
+    'assets/home/guia-emociones.png',
+  ),
+  video(
+    Color(0xFFFF8AC7),
+    Icons.forum_rounded,
+    'assets/home/video-convivencia.png',
+  ),
+  question(
+    Color(0xFFE9E0FD),
+    Icons.contact_support_outlined,
+    'assets/home/pregunta-del-dia.png',
+  ),
+  dice(
+    Color(0xFFDBFBE3),
+    Icons.casino_rounded,
+    'assets/home/dado-de-emociones.png',
+  );
 
-  const StudentCover(this.color, this.icon);
+  const StudentCover(this.color, this.icon, this.assetPath);
   final Color color;
   final IconData icon;
+  final String assetPath;
 }
 
 class StudentPreviewCard extends StatelessWidget {
@@ -55,11 +71,11 @@ class StudentPreviewCard extends StatelessWidget {
       color: compact ? cover.color : Colors.white,
       child: compact
           ? Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               child: Row(
                 children: <Widget>[
-                  _CoverIcon(cover: cover, size: 37),
-                  const SizedBox(width: 6),
+                  _CoverIcon(cover: cover, size: 44),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -67,7 +83,7 @@ class StudentPreviewCard extends StatelessWidget {
                       children: <Widget>[
                         label,
                         if (caption != null) ...<Widget>[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           caption,
                         ],
                       ],
@@ -106,50 +122,19 @@ class _ResourceArtwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
-    child: ColoredBox(
-      color: cover.color,
-      child: SizedBox(
-        height: 100,
-        child: Stack(
-          clipBehavior: Clip.hardEdge,
-          alignment: Alignment.center,
-          children: <Widget>[
-            Positioned(
-              top: -24,
-              left: -22,
-              child: BrandDecoration(
-                motif: BrandMotif.spiral,
-                color: Colors.white.withValues(alpha: .45),
-                size: 80,
-              ),
-            ),
-            Positioned(
-              bottom: -24,
-              right: -15,
-              child: BrandDecoration(
-                motif: BrandMotif.flower,
-                color: cover == StudentCover.video
-                    ? const Color(0xFFE8007E)
-                    : const Color(0xFFFFA800),
-                size: 82,
-              ),
-            ),
-            _CoverIcon(cover: cover, size: 55),
-            if (cover == StudentCover.video)
-              const Positioned(
-                right: 8,
-                bottom: 8,
-                child: CircleAvatar(
-                  radius: 14,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.play_arrow_rounded,
-                    size: 19,
-                    color: CureandoTheme.blue,
-                  ),
-                ),
-              ),
-          ],
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(6, 6, 6, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: AspectRatio(
+          aspectRatio: 291 / 153,
+          child: Image.asset(
+            cover.assetPath,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.medium,
+            excludeFromSemantics: true,
+          ),
         ),
       ),
     ),
@@ -164,54 +149,18 @@ class _CoverIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
-    child: switch (cover) {
-      StudentCover.video => SizedBox(
-        width: size * 1.4,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        width: size,
         height: size,
-        child: Stack(
-          children: <Widget>[
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Icon(
-                Icons.chat_bubble_rounded,
-                color: CureandoTheme.blue,
-                size: size * .84,
-              ),
-            ),
-            Positioned(
-              left: 0,
-              top: 0,
-              child: Icon(Icons.chat_rounded, color: Colors.white, size: size),
-            ),
-            Positioned(
-              left: size * .13,
-              top: size * .14,
-              child: Icon(
-                Icons.more_horiz_rounded,
-                color: CureandoTheme.pink,
-                size: size * .73,
-              ),
-            ),
-          ],
+        child: Image.asset(
+          cover.assetPath,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.medium,
+          excludeFromSemantics: true,
         ),
       ),
-      StudentCover.dice => Transform.rotate(
-        angle: -.18,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: CureandoTheme.blue, width: 2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(cover.icon, size: size * .85, color: CureandoTheme.pink),
-        ),
-      ),
-      _ => Icon(
-        cover.icon,
-        size: size,
-        color: cover == StudentCover.guide ? Colors.white : CureandoTheme.blue,
-      ),
-    },
+    ),
   );
 }
