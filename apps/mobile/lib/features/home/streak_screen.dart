@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
+import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
 import 'learning_progress.dart';
 
@@ -222,6 +223,11 @@ class _StreakScreenState extends State<StreakScreen> {
       final DateTime month = _selectedMonth ?? currentMonth;
       return CampaignScreen(
         bodyRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        bottomNavigationBar: SetuBottomNav(
+          selected: HomeSection.inicio,
+          onSelected: (HomeSection section) =>
+              context.go('/inicio', extra: HomeSectionRequest(section)),
+        ),
         header: Padding(
           padding: const EdgeInsets.fromLTRB(8, 8, 14, 16),
           child: Row(

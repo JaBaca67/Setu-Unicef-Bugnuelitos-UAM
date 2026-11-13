@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
 import '../home/student_home_screen.dart';
 import '../piece/campaign_characters.dart';
@@ -45,6 +46,11 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
   Widget _entry(BuildContext context) {
     final bool chatAvailable = widget.flow.chatAvailable;
     return FlowScaffold(
+      bottomNavigationBar: SetuBottomNav(
+        selected: HomeSection.ayuda,
+        onSelected: (HomeSection section) =>
+            context.go('/inicio', extra: HomeSectionRequest(section)),
+      ),
       header: FlowHeader(
         title: 'Pedir apoyo',
         showBrand: true,
@@ -227,6 +233,11 @@ class AlertReceivedScreen extends StatelessWidget {
     builder: (BuildContext context, _) {
       final bool received = flow.delivery == AlertDelivery.received;
       return FlowScaffold(
+        bottomNavigationBar: SetuBottomNav(
+          selected: HomeSection.ayuda,
+          onSelected: (HomeSection section) =>
+              context.go('/inicio', extra: HomeSectionRequest(section)),
+        ),
         header: FlowHeader(
           title: 'Pedir apoyo',
           showBrand: true,
