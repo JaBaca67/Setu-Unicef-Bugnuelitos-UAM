@@ -134,7 +134,7 @@ void main() {
     await _capture(tester, 'p04-ambito');
     await _tap(tester, 'Colegio de prueba A');
     expect(find.text('Mesa de Escucha'), findsOneWidget);
-    expect(find.text('Colegio de prueba A'), findsOneWidget);
+    expect(find.text('Mis casos'), findsOneWidget);
 
     router.go('/personal/direccion');
     await tester.pumpAndSettle();

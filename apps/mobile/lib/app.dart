@@ -11,6 +11,7 @@ import 'features/school_access/school_location.dart';
 import 'features/staff/demo_staff_backend.dart';
 import 'features/staff/staff_access_screens.dart';
 import 'features/staff/staff_backend.dart';
+import 'features/staff/staff_inbox_screens.dart';
 import 'features/support/alert_screens.dart';
 import 'features/support/support_flow.dart';
 import 'features/support/support_screens.dart';
@@ -180,12 +181,28 @@ class _CureandoAppState extends State<CureandoApp> {
               ),
             ],
           ),
-          for (final SetuStaffRole role in SetuStaffRole.values)
-            GoRoute(
-              path: role.path.substring(1),
-              builder: (BuildContext context, GoRouterState state) =>
-                  StaffAreaPendingScreen(session: _staff),
-            ),
+          GoRoute(
+            path: 'personal/mined',
+            builder: (BuildContext context, GoRouterState state) =>
+                MinedInboxScreen(session: _staff),
+          ),
+          GoRoute(
+            path: 'personal/mesa',
+            builder: (BuildContext context, GoRouterState state) =>
+                DeskInboxScreen(session: _staff),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'caso/:id',
+                builder: (BuildContext context, GoRouterState state) =>
+                    StaffAreaPendingScreen(session: _staff),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'personal/direccion',
+            builder: (BuildContext context, GoRouterState state) =>
+                StaffAreaPendingScreen(session: _staff),
+          ),
           GoRoute(
             path: 'personal',
             builder: (BuildContext context, GoRouterState state) =>

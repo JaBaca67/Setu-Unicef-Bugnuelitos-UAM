@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../shared/models/cureando_models.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import 'staff_backend.dart';
@@ -14,6 +16,68 @@ class _Account {
   final String password;
   bool confirmed;
   final List<StaffMembershipScope> memberships = <StaffMembershipScope>[];
+}
+
+class _DemoCase {
+  _DemoCase({
+    required this.id,
+    required this.institutionId,
+    required this.reference,
+    required this.situation,
+    required this.role,
+    required this.declaredAt,
+    required this.narrative,
+    required this.piece,
+    this.assignedTo,
+    this.status = SetuCaseStatus.received,
+    this.level,
+    this.chat = false,
+    List<CaseChatMessageView>? messages,
+  }) : messages = messages ?? <CaseChatMessageView>[];
+
+  final String id;
+  final String institutionId;
+  final String reference;
+  final SetuSituationType situation;
+  final SetuStudentCaseRole role;
+  final DateTime declaredAt;
+  final String narrative;
+  final StudentPieceSnapshot? piece;
+  String? assignedTo;
+  SetuCaseStatus status;
+  int? level;
+  bool chat;
+  bool urgent = false;
+  int version = 1;
+  DateTime? closedAt;
+  String? closedReason;
+  final List<CaseChatMessageView> messages;
+  final List<CaseInternalNoteView> notes = <CaseInternalNoteView>[];
+
+  /// Fichas mínimas emitidas: nivel y orientación, sin relato ni mensajes.
+  final List<({int level, String guidance, bool omitSchool})> sheets =
+      <({int level, String guidance, bool omitSchool})>[];
+
+  StaffCaseSummary get summary => StaffCaseSummary(
+    id: id,
+    institutionId: institutionId,
+    referenceCode: reference,
+    situationType: situation,
+    studentRole: role,
+    origin: SetuAlertOrigin.online,
+    status: status,
+    humanLevel: level,
+    involvesStaff: false,
+    assignedCounselorId: assignedTo,
+    chatAvailableNotice: chat,
+    urgentReferralTriggered: urgent,
+    concurrencyVersion: version,
+    declaredAt: declaredAt,
+    receivedCentrallyAt: declaredAt,
+    closedAt: closedAt,
+    closedReason: closedReason,
+    studentPiece: piece,
+  );
 }
 
 /// DEMOSTRACIÓN: personal autorizado en memoria, con datos ficticios que no
@@ -89,6 +153,79 @@ class DemoStaffBackend implements StaffBackend {
     ),
   };
   String? _user;
+
+  static const String _desk = 'escucha.demo@setu.test';
+
+  final StreamController<SetuAssignmentNotice> _notices =
+      StreamController<SetuAssignmentNotice>.broadcast();
+  int _sequence = 0;
+
+  final List<_DemoCase> _cases = <_DemoCase>[
+    _DemoCase(
+      id: 'demo-case-014',
+      institutionId: schoolA.id,
+      reference: 'DEMO-014',
+      situation: SetuSituationType.verbalBullying,
+      role: SetuStudentCaseRole.victim,
+      declaredAt: DateTime(2026, 11, 13, 10, 24),
+      narrative: 'Se burlan de mí durante el recreo.',
+      piece: const StudentPieceSnapshot(
+        shape: 'puzzle',
+        color: 'green',
+        accessories: <String>[],
+      ),
+      assignedTo: _desk,
+      status: SetuCaseStatus.inListening,
+    ),
+    _DemoCase(
+      id: 'demo-case-009',
+      institutionId: schoolA.id,
+      reference: 'DEMO-009',
+      situation: SetuSituationType.socialBullying,
+      role: SetuStudentCaseRole.solidarityWitness,
+      declaredAt: DateTime(2026, 11, 12, 15, 40),
+      narrative: '',
+      piece: const StudentPieceSnapshot(
+        shape: 'flower',
+        color: 'yellow',
+        accessories: <String>['bowTie'],
+      ),
+      assignedTo: _desk,
+      status: SetuCaseStatus.inListening,
+      level: 2,
+      chat: true,
+      messages: <CaseChatMessageView>[
+        CaseChatMessageView(
+          id: 'demo-msg-1',
+          caseId: 'demo-case-009',
+          senderRole: SetuMessageSender.student,
+          body: 'Me cuesta hablar de esto.',
+          createdAt: DateTime(2026, 11, 12, 15, 52),
+        ),
+        CaseChatMessageView(
+          id: 'demo-msg-2',
+          caseId: 'demo-case-009',
+          senderRole: SetuMessageSender.counselingDesk,
+          body: 'Podés contarme a tu ritmo.',
+          createdAt: DateTime(2026, 11, 12, 15, 53),
+        ),
+      ],
+    ),
+    _DemoCase(
+      id: 'demo-case-021',
+      institutionId: cca.id,
+      reference: 'DEMO-021',
+      situation: SetuSituationType.needToTalk,
+      role: SetuStudentCaseRole.victim,
+      declaredAt: DateTime(2026, 11, 13, 9, 5),
+      narrative: 'Relato ficticio de demostración.',
+      piece: const StudentPieceSnapshot(
+        shape: 'star',
+        color: 'blue',
+        accessories: <String>['glasses'],
+      ),
+    ),
+  ];
 
   /// Simula una caída de conexión en las pruebas.
   bool offline = false;
@@ -229,5 +366,289 @@ class DemoStaffBackend implements StaffBackend {
       throw const GatewayException('42501', 'authentication_required');
     }
     return List<StaffMembershipScope>.unmodifiable(account.memberships);
+  }
+
+  // --- Casos: imita las reglas de acceso del servidor -----------------------
+
+  List<StaffMembershipScope> _scopes() {
+    _online();
+    final _Account? account = _accounts[_user];
+    if (account == null) {
+      throw const GatewayException('42501', 'authentication_required');
+    }
+    return account.memberships;
+  }
+
+  bool _has(SetuStaffRole role, [String? institutionId]) => _scopes().any(
+    (StaffMembershipScope scope) =>
+        scope.role == role &&
+        (institutionId == null ||
+            scope.institutionId == null ||
+            scope.institutionId == institutionId),
+  );
+
+  /// Caso asignado a la sesión; error de permiso si no lo está.
+  _DemoCase _assigned(String caseId) {
+    _scopes();
+    return _cases.firstWhere(
+      (_DemoCase found) => found.id == caseId && found.assignedTo == _user,
+      orElse: () => throw const GatewayException(
+        '42501',
+        'forbidden_assigned_counselor_required',
+      ),
+    );
+  }
+
+  _DemoCase? _assignedOrNull(String caseId) {
+    _scopes();
+    return _cases
+        .where(
+          (_DemoCase found) => found.id == caseId && found.assignedTo == _user,
+        )
+        .firstOrNull;
+  }
+
+  @override
+  Future<Map<String, String>> institutionNames() async {
+    _online();
+    return <String, String>{cca.id: cca.name, schoolA.id: schoolA.name};
+  }
+
+  @override
+  Future<List<StaffCaseSummary>> cases({String? institutionId}) async {
+    final List<StaffMembershipScope> scopes = _scopes();
+    final bool mined = scopes.any(
+      (StaffMembershipScope scope) =>
+          scope.role == SetuStaffRole.minedSupervisor,
+    );
+    final Set<String?> directed = <String?>{
+      for (final StaffMembershipScope scope in scopes)
+        if (scope.role == SetuStaffRole.schoolDirector) scope.institutionId,
+    };
+    final List<_DemoCase> visible =
+        _cases
+            .where(
+              (_DemoCase found) =>
+                  (mined ||
+                      found.assignedTo == _user ||
+                      directed.contains(found.institutionId)) &&
+                  (institutionId == null ||
+                      found.institutionId == institutionId),
+            )
+            .toList()
+          ..sort(
+            (_DemoCase a, _DemoCase b) => b.declaredAt.compareTo(a.declaredAt),
+          );
+    return <StaffCaseSummary>[
+      for (final _DemoCase found in visible) found.summary,
+    ];
+  }
+
+  @override
+  Future<List<AssignableCounselor>> counselors({String? institutionId}) async {
+    if (!_has(SetuStaffRole.minedSupervisor)) {
+      throw const GatewayException(
+        '42501',
+        'forbidden_mined_supervisor_required',
+      );
+    }
+    return <AssignableCounselor>[
+      for (final MapEntry<String, _Account> entry in _accounts.entries)
+        for (final StaffMembershipScope scope in entry.value.memberships)
+          if (scope.role == SetuStaffRole.counselingDesk &&
+              (institutionId == null || scope.institutionId == institutionId))
+            AssignableCounselor(
+              userId: entry.key,
+              email: entry.key,
+              institutionId: scope.institutionId,
+            ),
+    ];
+  }
+
+  @override
+  Future<void> assignCounselor({
+    required String operationId,
+    required String caseId,
+    required String counselorUserId,
+  }) async {
+    if (!_has(SetuStaffRole.minedSupervisor)) {
+      throw const GatewayException(
+        '42501',
+        'forbidden_mined_supervisor_required',
+      );
+    }
+    final _DemoCase found = _cases.firstWhere(
+      (_DemoCase item) => item.id == caseId,
+      orElse: () => throw const GatewayException('P0002', 'case_not_found'),
+    );
+    final bool authorized =
+        _accounts[counselorUserId]?.memberships.any(
+          (StaffMembershipScope scope) =>
+              scope.role == SetuStaffRole.counselingDesk &&
+              scope.institutionId == found.institutionId,
+        ) ??
+        false;
+    if (!authorized) {
+      throw const GatewayException(
+        '42501',
+        'counselor_not_authorized_for_institution',
+      );
+    }
+    _applyAssignment(found, counselorUserId);
+  }
+
+  /// Simula que MINED asignó un caso mientras otra persona tiene la sesión
+  /// abierta. Solo para pruebas y demostración.
+  void simulateAssignment(String caseId, String counselorUserId) =>
+      _applyAssignment(
+        _cases.firstWhere((_DemoCase item) => item.id == caseId),
+        counselorUserId,
+      );
+
+  void _applyAssignment(_DemoCase found, String counselorUserId) {
+    final bool changed = found.assignedTo != counselorUserId;
+    found
+      ..assignedTo = counselorUserId
+      ..version += 1;
+    if (found.status == SetuCaseStatus.received) {
+      found.status = SetuCaseStatus.inListening;
+    }
+    if (changed) {
+      _notices.add(
+        SetuAssignmentNotice(
+          caseId: found.id,
+          referenceCode: found.reference,
+          institutionId: found.institutionId,
+          assignedCounselorId: counselorUserId,
+        ),
+      );
+    }
+  }
+
+  @override
+  Stream<SetuAssignmentNotice> assignmentNotices() {
+    final String? user = _user;
+    return _notices.stream.where(
+      (SetuAssignmentNotice notice) => notice.assignedCounselorId == user,
+    );
+  }
+
+  @override
+  Future<CaseNarrativeView?> narrative(String caseId) async {
+    final _DemoCase? found = _assignedOrNull(caseId);
+    if (found == null || found.narrative.isEmpty) return null;
+    return CaseNarrativeView(
+      caseId: found.id,
+      narrativeText: found.narrative,
+      locationText: '',
+      approxDateText: '',
+      createdAt: found.declaredAt,
+    );
+  }
+
+  @override
+  Future<List<CaseChatMessageView>> messages(String caseId) async =>
+      List<CaseChatMessageView>.of(
+        _assignedOrNull(caseId)?.messages ?? const <CaseChatMessageView>[],
+      );
+
+  @override
+  Future<List<CaseInternalNoteView>> notes(String caseId) async =>
+      List<CaseInternalNoteView>.of(
+        _assignedOrNull(caseId)?.notes.reversed ??
+            const <CaseInternalNoteView>[],
+      );
+
+  @override
+  Future<void> enableChat({
+    required String operationId,
+    required String caseId,
+  }) async {
+    _assigned(caseId)
+      ..chat = true
+      ..version += 1;
+  }
+
+  @override
+  Future<void> sendMessage({
+    required String operationId,
+    required String caseId,
+    required String body,
+  }) async {
+    final _DemoCase found = _assigned(caseId);
+    if (!found.chat) {
+      throw const GatewayException('P0001', 'chat_not_available');
+    }
+    found.messages.add(
+      CaseChatMessageView(
+        id: 'demo-msg-${++_sequence}-$operationId',
+        caseId: caseId,
+        senderRole: SetuMessageSender.counselingDesk,
+        body: body.trim(),
+        createdAt: DateTime.now(),
+      ),
+    );
+  }
+
+  @override
+  Future<void> saveNote({
+    required String operationId,
+    required String caseId,
+    required String body,
+  }) async {
+    _assigned(caseId).notes.add(
+      CaseInternalNoteView(
+        id: 'demo-note-${++_sequence}',
+        caseId: caseId,
+        authorUserId: _user,
+        noteBody: body.trim(),
+        clientOperationId: operationId,
+        createdAt: DateTime.now(),
+      ),
+    );
+  }
+
+  @override
+  Future<void> assess({
+    required String operationId,
+    required CaseAssessment assessment,
+  }) async {
+    final _DemoCase found = _assigned(assessment.caseId);
+    final int level = assessment.level;
+    if (level < 1 || level > 3) {
+      throw const GatewayException('22023', 'invalid_human_level');
+    }
+    if (level == 1 && assessment.issueSheet) {
+      throw const GatewayException(
+        '22023',
+        'level_1_cannot_issue_school_sheet',
+      );
+    }
+    if (assessment.issueSheet && assessment.guidanceNotes.trim().isEmpty) {
+      throw const GatewayException('22023', 'invalid_guidance_notes');
+    }
+    if (assessment.closeCase &&
+        (level != 1 || assessment.closedReason.trim().isEmpty)) {
+      throw const GatewayException('22023', 'closed_reason_required');
+    }
+    found
+      ..level = level
+      ..urgent = found.urgent || (level == 3 && assessment.urgentReferral)
+      ..version += 1;
+    if (assessment.closeCase) {
+      found
+        ..status = SetuCaseStatus.closed
+        ..closedAt = DateTime.now()
+        ..closedReason = assessment.closedReason.trim();
+    } else if (assessment.issueSheet) {
+      found.status = SetuCaseStatus.sheetSent;
+      found.sheets.add((
+        level: level,
+        guidance: assessment.guidanceNotes.trim(),
+        omitSchool: assessment.omitSchool,
+      ));
+    } else if (found.status == SetuCaseStatus.received) {
+      found.status = SetuCaseStatus.inListening;
+    }
   }
 }

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../shared/models/cureando_models.dart';
+import '../../shared/remote/case_capability_crypto.dart';
 import '../../shared/remote/setu_remote_models.dart';
 
 /// Puerto de la interfaz de personal autorizado. Las pantallas solo conocen
@@ -29,7 +32,109 @@ abstract interface class StaffBackend {
   Future<StaffActivationRedemption> redeemActivation(String code);
 
   Future<List<StaffMembershipScope>> memberships();
+
+  /// Nombres de los centros activos, por identificador.
+  Future<Map<String, String>> institutionNames();
+
+  /// Casos que el servidor autoriza para la sesión. Nunca traen relato ni
+  /// mensajes.
+  Future<List<StaffCaseSummary>> cases({String? institutionId});
+
+  // Supervisión MINED
+  Future<List<AssignableCounselor>> counselors({String? institutionId});
+
+  Future<void> assignCounselor({
+    required String operationId,
+    required String caseId,
+    required String counselorUserId,
+  });
+
+  // Mesa de Escucha: solo la persona asignada al caso.
+  /// Avisos en vivo de casos recién asignados a la sesión actual.
+  Stream<SetuAssignmentNotice> assignmentNotices();
+
+  Future<CaseNarrativeView?> narrative(String caseId);
+
+  Future<List<CaseChatMessageView>> messages(String caseId);
+
+  Future<List<CaseInternalNoteView>> notes(String caseId);
+
+  Future<void> enableChat({
+    required String operationId,
+    required String caseId,
+  });
+
+  Future<void> sendMessage({
+    required String operationId,
+    required String caseId,
+    required String body,
+  });
+
+  Future<void> saveNote({
+    required String operationId,
+    required String caseId,
+    required String body,
+  });
+
+  Future<void> assess({
+    required String operationId,
+    required CaseAssessment assessment,
+  });
 }
+
+/// Valoración humana de un caso. El nivel lo decide la persona profesional,
+/// nunca la app.
+@immutable
+class CaseAssessment {
+  const CaseAssessment({
+    required this.caseId,
+    required this.level,
+    this.urgentReferral = false,
+    this.issueSheet = false,
+    this.guidanceNotes = '',
+    this.omitSchool = false,
+    this.closeCase = false,
+    this.closedReason = '',
+  });
+
+  final String caseId;
+  final int level;
+  final bool urgentReferral;
+  final bool issueSheet;
+  final String guidanceNotes;
+  final bool omitSchool;
+  final bool closeCase;
+  final String closedReason;
+
+  /// Huella del contenido, para reutilizar la operación si se reintenta.
+  String get fingerprint =>
+      '$caseId|$level|$urgentReferral|$issueSheet|$guidanceNotes|$omitSchool|'
+      '$closeCase|$closedReason';
+}
+
+/// Conserva el identificador de operación mientras se reintenta el mismo
+/// contenido, para que un reintento no duplique la acción en el servidor.
+class OperationIds {
+  String? _key;
+  String? _id;
+
+  String idFor(String key) {
+    if (_key != key || _id == null) {
+      _key = key;
+      _id = CaseCapabilityCrypto.generateClientOperationId(prefix: 'staff');
+    }
+    return _id!;
+  }
+
+  void done() => _key = _id = null;
+}
+
+/// Niveles de la valoración profesional, con texto además del número.
+const Map<int, String> humanLevelLabels = <int, String>{
+  1: 'Acompañamiento',
+  2: 'Convivencia',
+  3: 'Riesgo grave',
+};
 
 extension StaffRolePath on SetuStaffRole {
   /// Ruta de la superficie móvil de cada rol.
@@ -68,6 +173,19 @@ String staffErrorMessage(Object error) {
   if (has('rate_limit')) {
     return 'Hubo demasiados intentos. Esperá unos minutos antes de probar '
         'otra vez.';
+  }
+  if (has('concurrency_conflict')) {
+    return 'Otra persona actualizó este caso. Volvé a abrirlo antes de '
+        'continuar.';
+  }
+  if (has('chat_not_available')) {
+    return 'El chat de este caso todavía no está habilitado.';
+  }
+  if (has('case_not_found')) {
+    return 'Ese caso no está disponible para tu cuenta.';
+  }
+  if (has('counselor_not_authorized')) {
+    return 'Esa persona no está habilitada para atender casos de ese centro.';
   }
   if (has('membership_revoked') || has('forbidden') || has('42501')) {
     return 'Tu cuenta no tiene permiso para esta acción.';
@@ -135,7 +253,15 @@ class StaffSession extends ChangeNotifier {
     try {
       final List<StaffMembershipScope> found = await backend.memberships();
       _memberships = found;
-      _active = found.length == 1 ? found.single : null;
+      final String? keep = _active?.membershipId;
+      _active = found.length == 1
+          ? found.single
+          : found
+                .where(
+                  (StaffMembershipScope scope) => scope.membershipId == keep,
+                )
+                .firstOrNull;
+      _watchAssignments();
       notifyListeners();
       if (found.isEmpty) {
         return 'Tu cuenta todavía no tiene un acceso activo. Si es tu primer '
@@ -150,12 +276,46 @@ class StaffSession extends ChangeNotifier {
   void choose(StaffMembershipScope scope) {
     if (!_memberships.contains(scope)) return;
     _active = scope;
+    _watchAssignments();
     notifyListeners();
+  }
+
+  StreamSubscription<SetuAssignmentNotice>? _notices;
+  bool _assignmentPending = false;
+
+  /// Verdadero cuando llegó una asignación que la persona todavía no abrió.
+  /// El aviso no lleva datos del caso.
+  bool get assignmentPending => _assignmentPending;
+
+  void clearAssignment() {
+    if (!_assignmentPending) return;
+    _assignmentPending = false;
+    notifyListeners();
+  }
+
+  void _watchAssignments() {
+    _notices?.cancel();
+    _notices = null;
+    if (_active?.role != SetuStaffRole.counselingDesk) {
+      _assignmentPending = false;
+      return;
+    }
+    _notices = backend.assignmentNotices().listen((_) {
+      _assignmentPending = true;
+      notifyListeners();
+    }, onError: (Object _) {});
+  }
+
+  @override
+  void dispose() {
+    _notices?.cancel();
+    super.dispose();
   }
 
   Future<void> signOut() async {
     _memberships = const <StaffMembershipScope>[];
     _active = null;
+    _watchAssignments();
     notifyListeners();
     try {
       await backend.signOut();

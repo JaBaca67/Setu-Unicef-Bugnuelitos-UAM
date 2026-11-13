@@ -5,9 +5,12 @@ import 'staff_backend.dart';
 /// Adaptador del puerto de personal hacia Supabase. No agrega reglas: cada
 /// llamada la autoriza el servidor.
 class RemoteStaffBackend implements StaffBackend {
-  RemoteStaffBackend(this._gateway);
+  RemoteStaffBackend(this._gateway, {this.loadInstitutionNames});
 
   final SetuRemoteGateway _gateway;
+
+  /// Lectura pública de los centros activos; null si no está disponible.
+  final Future<Map<String, String>> Function()? loadInstitutionNames;
 
   @override
   bool get isDemo => false;
@@ -42,4 +45,95 @@ class RemoteStaffBackend implements StaffBackend {
   @override
   Future<List<StaffMembershipScope>> memberships() =>
       _gateway.getMyStaffMemberships();
+
+  @override
+  Future<Map<String, String>> institutionNames() async =>
+      await loadInstitutionNames?.call() ?? const <String, String>{};
+
+  @override
+  Future<List<StaffCaseSummary>> cases({String? institutionId}) =>
+      _gateway.listCasesForScope(institutionId: institutionId);
+
+  @override
+  Future<List<AssignableCounselor>> counselors({String? institutionId}) =>
+      _gateway.listAssignableCounselors(institutionId: institutionId);
+
+  @override
+  Future<void> assignCounselor({
+    required String operationId,
+    required String caseId,
+    required String counselorUserId,
+  }) => _gateway.assignCaseCounselor(
+    clientOperationId: operationId,
+    caseId: caseId,
+    counselorUserId: counselorUserId,
+  );
+
+  @override
+  Stream<SetuAssignmentNotice> assignmentNotices() {
+    final String? user = _gateway.currentStaffUserId;
+    return user == null
+        ? const Stream<SetuAssignmentNotice>.empty()
+        : _gateway.watchAssignedCaseNotices(counselorUserId: user);
+  }
+
+  @override
+  Future<CaseNarrativeView?> narrative(String caseId) =>
+      _gateway.getCaseNarrative(caseId);
+
+  @override
+  Future<List<CaseChatMessageView>> messages(String caseId) =>
+      _gateway.listCaseMessages(caseId);
+
+  @override
+  Future<List<CaseInternalNoteView>> notes(String caseId) =>
+      _gateway.listCaseInternalNotes(caseId);
+
+  @override
+  Future<void> enableChat({
+    required String operationId,
+    required String caseId,
+  }) => _gateway.enableCaseChat(clientOperationId: operationId, caseId: caseId);
+
+  @override
+  Future<void> sendMessage({
+    required String operationId,
+    required String caseId,
+    required String body,
+  }) => _gateway.sendCounselorChatMessage(
+    caseId: caseId,
+    clientOperationId: operationId,
+    body: body,
+  );
+
+  @override
+  Future<void> saveNote({
+    required String operationId,
+    required String caseId,
+    required String body,
+  }) => _gateway.saveCaseInternalNote(
+    caseId: caseId,
+    clientOperationId: operationId,
+    noteBody: body,
+  );
+
+  @override
+  Future<void> assess({
+    required String operationId,
+    required CaseAssessment assessment,
+  }) => _gateway.assessCaseAndIssueSheet(
+    clientOperationId: operationId,
+    caseId: assessment.caseId,
+    humanLevel: assessment.level,
+    triggerUrgentReferral: assessment.urgentReferral,
+    issueSheet: assessment.issueSheet,
+    guidanceNotes: assessment.guidanceNotes.isEmpty
+        ? null
+        : assessment.guidanceNotes,
+    omitSchoolDueToConflict: assessment.omitSchool,
+    closeCase: assessment.closeCase,
+    closedReason: assessment.closedReason.isEmpty
+        ? null
+        : assessment.closedReason,
+  );
 }
