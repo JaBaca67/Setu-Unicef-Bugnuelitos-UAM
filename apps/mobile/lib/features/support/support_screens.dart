@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../home/student_home_screen.dart';
+import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'alert_screens.dart';
 import 'support_flow.dart';
@@ -251,11 +252,7 @@ class AlertReceivedScreen extends StatelessWidget {
         header: FlowHeader(
           title: 'Pedir apoyo',
           showBrand: true,
-          trailing: Image.asset(
-            'assets/welcome/campaign-characters.png',
-            width: 132,
-            excludeFromSemantics: true,
-          ),
+          trailing: const SizedBox(width: 132, child: CampaignCharacters()),
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

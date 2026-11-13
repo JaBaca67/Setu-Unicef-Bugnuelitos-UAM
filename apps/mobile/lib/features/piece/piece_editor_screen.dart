@@ -358,7 +358,11 @@ class _OptionTile extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 12,
                     backgroundColor: CureandoTheme.blue,
-                    child: Icon(Icons.check_rounded, size: 17, color: Colors.white),
+                    child: Icon(
+                      Icons.check_rounded,
+                      size: 17,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
             ],

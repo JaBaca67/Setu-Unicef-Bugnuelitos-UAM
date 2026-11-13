@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_card.dart';
+import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import '../support/alert_screens.dart';
 import 'learning_progress.dart';
@@ -213,11 +214,7 @@ class _HomeHeader extends StatelessWidget {
         ],
       ),
     );
-    final Widget characters = Image.asset(
-      'assets/welcome/campaign-characters.png',
-      fit: BoxFit.contain,
-      excludeFromSemantics: true,
-    );
+    const Widget characters = CampaignCharacters();
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 8, 12, 12),
       child: Column(

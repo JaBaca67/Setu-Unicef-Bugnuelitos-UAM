@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'support_flow.dart';
 
@@ -12,7 +13,11 @@ Widget _question(BuildContext context, String text) => Semantics(
   header: true,
   child: Text(
     text,
-    style: const TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w700),
+    style: const TextStyle(
+      fontSize: 26,
+      height: 1.2,
+      fontWeight: FontWeight.w700,
+    ),
   ),
 );
 
@@ -498,11 +503,7 @@ class _AlertReviewScreenState extends State<AlertReviewScreen> {
       header: FlowHeader(
         title: 'Revisá tu alerta',
         showBrand: true,
-        trailing: Image.asset(
-          'assets/welcome/campaign-characters.png',
-          width: 132,
-          excludeFromSemantics: true,
-        ),
+        trailing: const SizedBox(width: 132, child: CampaignCharacters()),
       ),
       bottom: FilledButton(
         style: flowPrimaryStyle(),

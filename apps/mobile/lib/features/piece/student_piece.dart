@@ -72,8 +72,7 @@ class StudentPiece {
   );
 
   String get description {
-    final String base =
-        '${shape.label} de color ${color.label.toLowerCase()}';
+    final String base = '${shape.label} de color ${color.label.toLowerCase()}';
     if (accessories.isEmpty) return base;
     final String extras = PieceAccessory.values
         .where(accessories.contains)
@@ -107,6 +106,7 @@ class PieceFigure extends StatelessWidget {
     this.height = 120,
     this.sparks = false,
     this.face = true,
+    this.smile = true,
     this.legs = true,
   });
 
@@ -114,6 +114,7 @@ class PieceFigure extends StatelessWidget {
   final double height;
   final bool sparks;
   final bool face;
+  final bool smile;
   final bool legs;
 
   @override
@@ -122,7 +123,13 @@ class PieceFigure extends StatelessWidget {
       width: height * 100 / 124,
       height: height,
       child: CustomPaint(
-        painter: _PiecePainter(piece, sparks: sparks, face: face, legs: legs),
+        painter: _PiecePainter(
+          piece,
+          sparks: sparks,
+          face: face,
+          smile: smile,
+          legs: legs,
+        ),
       ),
     ),
   );
@@ -159,24 +166,23 @@ class _PiecePainter extends CustomPainter {
     this.piece, {
     required this.sparks,
     required this.face,
+    required this.smile,
     required this.legs,
   });
 
   final StudentPiece piece;
   final bool sparks;
   final bool face;
+  final bool smile;
   final bool legs;
 
   static Path _circle(double x, double y, double r) =>
       Path()..addOval(Rect.fromCircle(center: Offset(x, y), radius: r));
 
   static Path _rrect(double l, double t, double r, double b, double radius) =>
-      Path()..addRRect(
-        RRect.fromLTRBR(l, t, r, b, Radius.circular(radius)),
-      );
+      Path()..addRRect(RRect.fromLTRBR(l, t, r, b, Radius.circular(radius)));
 
-  static Path _union(Path a, Path b) =>
-      Path.combine(PathOperation.union, a, b);
+  static Path _union(Path a, Path b) => Path.combine(PathOperation.union, a, b);
 
   static Path _petals(int count, double reach, double radius, double core) {
     Path path = _circle(50, 52, core);
@@ -273,17 +279,19 @@ class _PiecePainter extends CustomPainter {
           black,
         );
       }
-      canvas.drawArc(
-        Rect.fromCenter(center: const Offset(50, 60), width: 12, height: 10),
-        .25,
-        math.pi - .5,
-        false,
-        Paint()
-          ..color = Colors.black
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.4
-          ..strokeCap = StrokeCap.round,
-      );
+      if (smile) {
+        canvas.drawArc(
+          Rect.fromCenter(center: const Offset(50, 60), width: 12, height: 10),
+          .25,
+          math.pi - .5,
+          false,
+          Paint()
+            ..color = Colors.black
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.4
+            ..strokeCap = StrokeCap.round,
+        );
+      }
     }
 
     if (piece.accessories.contains(PieceAccessory.glasses)) {
@@ -364,6 +372,7 @@ class _PiecePainter extends CustomPainter {
       old.piece.color != piece.color ||
       old.sparks != sparks ||
       old.face != face ||
+      old.smile != smile ||
       old.legs != legs ||
       old.piece.accessories.length != piece.accessories.length ||
       !old.piece.accessories.containsAll(piece.accessories);
