@@ -41,12 +41,25 @@ VALUES
     150,
     1,
     true
+  ),
+  (
+    '11111111-1111-4111-8111-000000000026',
+    'AULA26',
+    'Colegio Centro América — Demo',
+    'Managua',
+    'Managua',
+    12.104500,
+    -86.259800,
+    150,
+    1,
+    true
   )
 ON CONFLICT (public_code) DO NOTHING;
 
 -- Códigos privados de prueba únicamente para hash de demostración:
 --   AULA24 -> 'DIR-AULA24-DEMO'
 --   AULA25 -> 'DIR-AULA25-DEMO'
+--   AULA26 -> 'DIR-AULA26-DEMO'
 INSERT INTO public.institution_access_verifiers (
   institution_id,
   verifier_hash,
@@ -69,6 +82,11 @@ FROM (
       '11111111-1111-4111-8111-000000000025'::uuid,
       encode(sha256('DIR-AULA25-DEMO'::bytea), 'hex'),
       'Código privado demo AULA25'
+    ),
+    (
+      '11111111-1111-4111-8111-000000000026'::uuid,
+      encode(sha256('DIR-AULA26-DEMO'::bytea), 'hex'),
+      'Código privado demo AULA26'
     )
 ) AS v(institution_id, verifier_hash, label)
 WHERE NOT EXISTS (
@@ -88,6 +106,7 @@ INSERT INTO auth.users (
   aud,
   role,
   email,
+  email_confirmed_at,
   raw_app_meta_data,
   raw_user_meta_data,
   is_sso_user,
@@ -102,6 +121,7 @@ VALUES
     'authenticated',
     'authenticated',
     'mined.demo@setu.test',
+    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"mined_supervisor"}'::jsonb,
     false,
@@ -115,8 +135,23 @@ VALUES
     'authenticated',
     'authenticated',
     'escucha.demo@setu.test',
+    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"counseling_desk"}'::jsonb,
+    false,
+    false,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000103',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'psicologia.cca@setu.test',
+    now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"demo_role":"counseling_desk","school":"AULA26"}'::jsonb,
     false,
     false,
     now(),
@@ -128,6 +163,7 @@ VALUES
     'authenticated',
     'authenticated',
     'direccion.aula24@setu.test',
+    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"school_director","school":"AULA24"}'::jsonb,
     false,
@@ -141,14 +177,44 @@ VALUES
     'authenticated',
     'authenticated',
     'direccion.aula25@setu.test',
+    now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"school_director","school":"AULA25"}'::jsonb,
     false,
     false,
     now(),
     now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000203',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'direccion.cca@setu.test',
+    now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"demo_role":"school_director","school":"AULA26"}'::jsonb,
+    false,
+    false,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000301',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'invitada.cca@setu.test',
+    now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    '{"demo_role":"pending_invite","school":"AULA26"}'::jsonb,
+    false,
+    false,
+    now(),
+    now()
   )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET email_confirmed_at = COALESCE(auth.users.email_confirmed_at, EXCLUDED.email_confirmed_at);
 
 INSERT INTO public.staff_memberships (user_id, role, institution_id, active)
 SELECT m.user_id, m.role, m.institution_id, true
@@ -156,8 +222,10 @@ FROM (
   VALUES
     ('00000000-0000-0000-0000-000000000101'::uuid, 'mined_supervisor'::public.staff_role, NULL::uuid),
     ('00000000-0000-0000-0000-000000000102'::uuid, 'counseling_desk'::public.staff_role, NULL::uuid),
+    ('00000000-0000-0000-0000-000000000103'::uuid, 'counseling_desk'::public.staff_role, '11111111-1111-4111-8111-000000000026'::uuid),
     ('00000000-0000-0000-0000-000000000201'::uuid, 'school_director'::public.staff_role, '11111111-1111-4111-8111-000000000024'::uuid),
-    ('00000000-0000-0000-0000-000000000202'::uuid, 'school_director'::public.staff_role, '11111111-1111-4111-8111-000000000025'::uuid)
+    ('00000000-0000-0000-0000-000000000202'::uuid, 'school_director'::public.staff_role, '11111111-1111-4111-8111-000000000025'::uuid),
+    ('00000000-0000-0000-0000-000000000203'::uuid, 'school_director'::public.staff_role, '11111111-1111-4111-8111-000000000026'::uuid)
 ) AS m(user_id, role, institution_id)
 WHERE NOT EXISTS (
   SELECT 1
@@ -166,6 +234,64 @@ WHERE NOT EXISTS (
     AND existing.role = m.role
     AND existing.institution_id IS NOT DISTINCT FROM m.institution_id
 );
+
+-- Invitaciones individuales ficticias de activación (solo SHA-256 del código normalizado):
+--   'CCA-DIR-2026'  -> invitada.cca@setu.test (activa, Dirección en Colegio Centro América — Demo)
+--   'CCA-MESA-2026' -> practicante.cca@setu.test (activa, Mesa de Escucha en Colegio Centro América — Demo)
+--   'CCA-EXP-2026'  -> expirada.cca@setu.test (vencida para pruebas)
+--   'CCA-REV-2026'  -> revocada.cca@setu.test (revocada para pruebas)
+INSERT INTO public.staff_activation_invites (
+  institutional_email,
+  role,
+  institution_id,
+  scope_label,
+  verifier_hash,
+  expires_at,
+  revoked_at,
+  issued_by
+)
+VALUES
+  (
+    'invitada.cca@setu.test',
+    'school_director',
+    '11111111-1111-4111-8111-000000000026',
+    'Colegio Centro América — Demo (Dirección)',
+    encode(sha256(convert_to(public.normalize_activation_code('CCA-DIR-2026'), 'UTF8')), 'hex'),
+    now() + interval '14 days',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'
+  ),
+  (
+    'practicante.cca@setu.test',
+    'counseling_desk',
+    '11111111-1111-4111-8111-000000000026',
+    'Colegio Centro América — Demo (Mesa de Escucha)',
+    encode(sha256(convert_to(public.normalize_activation_code('CCA-MESA-2026'), 'UTF8')), 'hex'),
+    now() + interval '14 days',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'
+  ),
+  (
+    'expirada.cca@setu.test',
+    'school_director',
+    '11111111-1111-4111-8111-000000000026',
+    'Colegio Centro América — Demo (Vencida)',
+    encode(sha256(convert_to(public.normalize_activation_code('CCA-EXP-2026'), 'UTF8')), 'hex'),
+    now() - interval '1 day',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'
+  ),
+  (
+    'revocada.cca@setu.test',
+    'school_director',
+    '11111111-1111-4111-8111-000000000026',
+    'Colegio Centro América — Demo (Revocada)',
+    encode(sha256(convert_to(public.normalize_activation_code('CCA-REV-2026'), 'UTF8')), 'hex'),
+    now() + interval '14 days',
+    now() - interval '1 hour',
+    '00000000-0000-0000-0000-000000000101'
+  )
+ON CONFLICT (verifier_hash) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- 3. Catálogo público D8 (Información ADR 0009 y líneas de ayuda)
@@ -314,8 +440,11 @@ DO $$
 DECLARE
   v_receipt_a24 jsonb;
   v_receipt_a25 jsonb;
+  v_receipt_a26 jsonb;
+  v_receipt_unassessed jsonb;
   v_receipt_conflict jsonb;
   v_case_a24 uuid;
+  v_case_unassessed uuid;
   v_case_a24_conflict uuid;
   v_counselor_id constant uuid := '00000000-0000-0000-0000-000000000102';
 BEGIN
@@ -456,4 +585,46 @@ BEGIN
     'Ficha ficticia retenida para supervisión MINED por conflicto institucional.'
   )
   ON CONFLICT (case_id, version) DO NOTHING;
+
+  -- Caso ficticio pendiente de asignación en Colegio Centro América — Demo (AULA26) con student_piece
+  v_receipt_a26 := public.submit_student_alert(
+    'seed-op-aula26-demo-0001',
+    'AULA26',
+    'verbal_bullying'::public.case_situation_type,
+    'victim'::public.student_case_role,
+    'online'::public.alert_origin,
+    false,
+    now() - interval '20 minutes',
+    encode(sha256('demo-capability-token-aula26-00000000000000000000000000000004'::bytea), 'hex'),
+    'Relato ficticio en Colegio Centro América — Demo para asignación por MINED y conversación inicial.',
+    'Pasillo de secundaria (dato ficticio)',
+    'Hoy por la mañana',
+    '{"displayName":"Pulgin Azul","variant":"pulgin","paletteKey":"blue","accessoryKey":"star"}'::jsonb
+  );
+
+  -- Caso ficticio ya asignado a Mesa de Escucha pero todavía "Sin valorar" (human_level IS NULL)
+  v_receipt_unassessed := public.submit_student_alert(
+    'seed-op-aula24-unassessed-0001',
+    'AULA24',
+    'physical_bullying'::public.case_situation_type,
+    'solidarity_witness'::public.student_case_role,
+    'online'::public.alert_origin,
+    false,
+    now() - interval '15 minutes',
+    encode(sha256('demo-capability-token-aula24-unassessed-000000000000000000000005'::bytea), 'hex'),
+    'Relato ficticio asignado en AULA24 esperando escucha previa antes de valorar nivel.',
+    'Cancha norte (dato ficticio)',
+    'Hoy en el recreo',
+    '{"displayName":"Tapudín Rosa","variant":"tapudin","paletteKey":"magenta","accessoryKey":"leaf"}'::jsonb
+  );
+  v_case_unassessed := (v_receipt_unassessed ->> 'case_id')::uuid;
+
+  UPDATE public.cases
+  SET assigned_counselor_id = v_counselor_id,
+      status = 'in_listening',
+      human_level = NULL,
+      chat_available_notice = false,
+      concurrency_version = 2
+  WHERE id = v_case_unassessed
+    AND assigned_counselor_id IS NULL;
 END $$;
