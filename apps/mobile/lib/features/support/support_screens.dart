@@ -290,6 +290,20 @@ class AlertReceivedScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 18),
                   ),
+                  if (flow.deliveryFailed) ...<Widget>[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'No pudimos confirmar la entrega. Revisá tu conexión a '
+                      'internet. Tu alerta sigue guardada y se vuelve a '
+                      'intentar sola.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    TextButton(
+                      onPressed: flow.retryDelivery,
+                      child: const Text('Reintentar ahora'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -355,9 +369,28 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     _focus.requestFocus();
   }
 
-  void _send() {
-    widget.flow.sendMessage(_draft.text);
-    _draft.clear();
+  bool _sending = false;
+
+  Future<void> _send() async {
+    final String text = _draft.text;
+    if (_sending || text.trim().isEmpty) return;
+    setState(() => _sending = true);
+    final bool sent = await widget.flow.sendMessage(text);
+    if (!mounted) return;
+    setState(() => _sending = false);
+    if (sent) {
+      // Solo se borra lo enviado; lo escrito mientras tanto se conserva.
+      if (_draft.text == text) _draft.clear();
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'No se pudo enviar el mensaje. Tu texto sigue acá; revisá tu '
+          'conexión e intentá de nuevo.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -450,7 +483,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                           const SizedBox(width: 10),
                           IconButton.filled(
                             tooltip: 'Enviar mensaje',
-                            onPressed: open ? _send : null,
+                            onPressed: open && !_sending ? _send : null,
                             style: IconButton.styleFrom(
                               backgroundColor: CureandoTheme.blue,
                               foregroundColor: Colors.white,

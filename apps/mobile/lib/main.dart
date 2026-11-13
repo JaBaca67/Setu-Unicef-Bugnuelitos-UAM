@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'app.dart';
 import 'features/staff/remote_staff_backend.dart';
 import 'features/staff/staff_backend.dart';
+import 'features/support/remote_support_backend.dart';
+import 'features/support/support_flow.dart';
 import 'shared/remote/setu_remote_gateway.dart';
 
 Future<void> main() async {
@@ -11,14 +13,27 @@ Future<void> main() async {
   // Si el cliente remoto no puede prepararse, la app abre con la demostración
   // en memoria, que se identifica en pantalla como datos ficticios.
   StaffBackend? staff;
+  SupportFlow? support;
   try {
-    staff = RemoteStaffBackend(await SupabaseSetuRemoteGateway.initialize());
+    final SetuRemoteGateway gateway =
+        await SupabaseSetuRemoteGateway.initialize();
+    staff = RemoteStaffBackend(gateway);
+    support = SupportFlow(
+      backend: RemoteSupportBackend(gateway),
+      // El acceso escolar de la demostración valida un único código local.
+      schoolCode: const String.fromEnvironment(
+        'SETU_SCHOOL_CODE',
+        defaultValue: 'AULA24',
+      ),
+    );
   } on Object {
     staff = null;
+    support = null;
   }
   runApp(
     CureandoApp(
       staffBackend: staff,
+      supportFlow: support,
       showM1Verification: kDebugMode && bool.fromEnvironment('SETU_M1_QA'),
       allowDesignCapture:
           kDebugMode &&

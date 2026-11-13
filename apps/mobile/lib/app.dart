@@ -154,7 +154,8 @@ class _CureandoAppState extends State<CureandoApp> {
                             AlertRoleScreen(flow: _support, piece: _piece),
                         'detalles': () =>
                             AlertDetailsScreen(flow: _support, piece: _piece),
-                        'revisar': () => AlertReviewScreen(flow: _support),
+                        'revisar': () =>
+                            AlertReviewScreen(flow: _support, piece: _piece),
                         'recibida': () => AlertReceivedScreen(flow: _support),
                         'chat': () =>
                             SupportChatScreen(flow: _support, piece: _piece),

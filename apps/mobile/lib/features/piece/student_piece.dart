@@ -81,6 +81,40 @@ class StudentPiece {
     return '$base con $extras';
   }
 
+  /// Forma serializable que viaja con la alerta. No lleva nombres ni fotos.
+  Map<String, Object?> toJson() => <String, Object?>{
+    'shape': shape.name,
+    'color': color.name,
+    'accessories': <String>[
+      for (final PieceAccessory accessory in PieceAccessory.values)
+        if (accessories.contains(accessory)) accessory.name,
+    ],
+  };
+
+  /// Reconstruye la pieza recibida; null si falta la forma o el color, o si
+  /// no son valores conocidos.
+  static StudentPiece? tryParse({
+    String? shape,
+    String? color,
+    Iterable<String> accessories = const <String>[],
+  }) {
+    final PieceShape? parsedShape = PieceShape.values
+        .where((PieceShape value) => value.name == shape)
+        .firstOrNull;
+    final PieceColor? parsedColor = PieceColor.values
+        .where((PieceColor value) => value.name == color)
+        .firstOrNull;
+    if (parsedShape == null || parsedColor == null) return null;
+    return StudentPiece(
+      shape: parsedShape,
+      color: parsedColor,
+      accessories: <PieceAccessory>{
+        for (final PieceAccessory accessory in PieceAccessory.values)
+          if (accessories.contains(accessory.name)) accessory,
+      },
+    );
+  }
+
   StudentPiece copyWith({
     PieceShape? shape,
     PieceColor? color,

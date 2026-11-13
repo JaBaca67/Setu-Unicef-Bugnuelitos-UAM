@@ -465,9 +465,12 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
 
 /// Pantalla 5: revisar la alerta y leer quién recibe cada dato.
 class AlertReviewScreen extends StatefulWidget {
-  const AlertReviewScreen({super.key, required this.flow});
+  const AlertReviewScreen({super.key, required this.flow, required this.piece});
 
   final SupportFlow flow;
+
+  /// Pieza actual del estudiante; viaja con la alerta.
+  final ValueNotifier<StudentPiece> piece;
 
   @override
   State<AlertReviewScreen> createState() => _AlertReviewScreenState();
@@ -478,7 +481,7 @@ class _AlertReviewScreenState extends State<AlertReviewScreen> {
 
   Future<void> _send() async {
     setState(() => _sending = true);
-    final bool saved = await widget.flow.send();
+    final bool saved = await widget.flow.send(piece: widget.piece.value);
     if (!mounted) return;
     if (saved) {
       context.go('/inicio/apoyo/recibida');
