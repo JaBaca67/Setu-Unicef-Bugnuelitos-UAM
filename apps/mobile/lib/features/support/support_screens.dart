@@ -7,7 +7,6 @@ import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
-import '../home/student_home_screen.dart';
 import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'alert_screens.dart';
