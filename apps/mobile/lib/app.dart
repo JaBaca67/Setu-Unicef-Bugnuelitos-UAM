@@ -8,6 +8,9 @@ import 'features/piece/piece_editor_screen.dart';
 import 'features/piece/student_piece.dart';
 import 'features/school_access/school_access_screen.dart';
 import 'features/school_access/school_location.dart';
+import 'features/staff/demo_staff_backend.dart';
+import 'features/staff/staff_access_screens.dart';
+import 'features/staff/staff_backend.dart';
 import 'features/support/alert_screens.dart';
 import 'features/support/support_flow.dart';
 import 'features/support/support_screens.dart';
@@ -15,6 +18,7 @@ import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
 import 'shared/platform/screen_security_controller.dart';
+import 'shared/remote/setu_remote_models.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/setu_brand_mark.dart';
 import 'shared/widgets/student_transition.dart';
@@ -25,6 +29,7 @@ class CureandoApp extends StatefulWidget {
     this.gateway,
     this.learningProgress,
     this.supportFlow,
+    this.staffBackend,
     this.screenSecurity,
     this.showM1Verification = false,
     this.allowDesignCapture = false,
@@ -34,6 +39,10 @@ class CureandoApp extends StatefulWidget {
   final CureandoGateway? gateway;
   final LearningProgress? learningProgress;
   final SupportFlow? supportFlow;
+
+  /// Puerto de personal autorizado. Sin valor se usa la demostración en
+  /// memoria; `main.dart` inyecta el adaptador de Supabase.
+  final StaffBackend? staffBackend;
   final ScreenSecurityController? screenSecurity;
   final bool showM1Verification;
   final bool allowDesignCapture;
@@ -48,6 +57,9 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
   late final SupportFlow _support = widget.supportFlow ?? SupportFlow();
+  late final StaffSession _staff = StaffSession(
+    widget.staffBackend ?? DemoStaffBackend(),
+  );
   final ValueNotifier<StudentPiece> _piece = ValueNotifier<StudentPiece>(
     StudentPiece.initial,
   );
@@ -55,6 +67,8 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.screenSecurity ?? ScreenSecurityController();
   late final GoRouter _router = GoRouter(
     initialLocation: widget.showM1Verification ? '/verificacion-m1' : '/',
+    refreshListenable: _staff,
+    redirect: _staffRedirect,
     routes: <RouteBase>[
       GoRoute(
         path: '/',
@@ -165,6 +179,29 @@ class _CureandoAppState extends State<CureandoApp> {
               ),
             ],
           ),
+          for (final SetuStaffRole role in SetuStaffRole.values)
+            GoRoute(
+              path: role.path.substring(1),
+              builder: (BuildContext context, GoRouterState state) =>
+                  StaffAreaPendingScreen(session: _staff),
+            ),
+          GoRoute(
+            path: 'personal',
+            builder: (BuildContext context, GoRouterState state) =>
+                StaffLoginScreen(session: _staff),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'activar',
+                builder: (BuildContext context, GoRouterState state) =>
+                    StaffActivationScreen(session: _staff),
+              ),
+              GoRoute(
+                path: 'ambito',
+                builder: (BuildContext context, GoRouterState state) =>
+                    StaffScopeScreen(session: _staff),
+              ),
+            ],
+          ),
           for (final WelcomeDestination destination
               in WelcomeDestination.values)
             GoRoute(
@@ -190,6 +227,21 @@ class _CureandoAppState extends State<CureandoApp> {
     ],
   );
   final ValueNotifier<int> _revision = ValueNotifier<int>(0);
+
+  /// Guía de navegación del personal. No es control de acceso: los permisos
+  /// los aplica el servidor en cada consulta.
+  String? _staffRedirect(BuildContext context, GoRouterState state) {
+    final String location = state.matchedLocation;
+    if (!location.startsWith('/personal')) return null;
+    final StaffMembershipScope? active = _staff.active;
+    if (location == '/personal/activar') return null;
+    if (location == '/personal/ambito') {
+      return _staff.memberships.length > 1 ? null : '/personal';
+    }
+    if (active == null) return location == '/personal' ? null : '/personal';
+    return location.startsWith(active.role.path) ? null : active.role.path;
+  }
+
   void _update(VoidCallback action) {
     setState(action);
     _revision.value++;
@@ -252,6 +304,7 @@ class _CureandoAppState extends State<CureandoApp> {
       _security.dispose();
     }
     _router.dispose();
+    _staff.dispose();
     _revision.dispose();
     super.dispose();
   }

@@ -65,10 +65,7 @@ void main() {
     expect(title, findsOneWidget);
     await _capture(tester, captureKey, 'e01-welcome');
 
-    const Map<String, String> destinations = <String, String>{
-      'Explorar Información': 'Información',
-      'Ayuda': 'Ayuda',
-    };
+    const Map<String, String> destinations = <String, String>{'Ayuda': 'Ayuda'};
     for (final MapEntry<String, String> destination in destinations.entries) {
       final Finder action = find.text(destination.key);
       await tester.ensureVisible(action);

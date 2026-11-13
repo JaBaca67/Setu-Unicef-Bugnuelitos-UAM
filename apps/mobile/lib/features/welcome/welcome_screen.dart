@@ -103,17 +103,17 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton(
+            OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(48, 52),
                 shape: shape,
                 side: const BorderSide(color: Color(0xFFA5C1EF)),
                 textStyle: buttonText,
               ),
-              onPressed: () =>
-                  context.push('/${WelcomeDestination.information.path}'),
-              child: const Text(
-                'Explorar Información',
+              onPressed: () => context.push('/personal'),
+              icon: const Icon(Icons.badge_outlined),
+              label: const Text(
+                'Personal autorizado',
                 textAlign: TextAlign.center,
               ),
             ),
