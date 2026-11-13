@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../shared/local/encrypted_local_store.dart';
+import '../../shared/mesh/mesh_envelope.dart';
+import '../../shared/mesh/mesh_relay_service.dart';
 import '../../shared/remote/case_capability.dart';
 import '../../shared/remote/setu_remote_gateway.dart';
 import '../../shared/theme/app_theme.dart';
@@ -80,11 +82,14 @@ class ChatMessage {
 /// Cuando [remote] es nulo opera en modo demostración local con temporizadores
 /// ([ackDelay], [teamDelay]). Cuando [remote] está configurado envía la alerta
 /// y consulta el chat humano contra Supabase (ADR 0016), conservando respaldo
-/// cifrado en el dispositivo si no hay conexión. Solo deben usarse datos ficticios.
+/// cifrado en el dispositivo (y envío por [mesh] si está disponible) si no hay
+/// conexión. Solo deben usarse datos ficticios.
 class SupportFlow extends ChangeNotifier {
   SupportFlow({
     Future<LocalStorePersistence> Function()? openStore,
     this.remote,
+    this.mesh,
+    this.meshRecipientPublicKey,
     this.schoolCode = demoSchoolCode,
     this.ackDelay = const Duration(seconds: 3),
     this.teamDelay = const Duration(seconds: 8),
@@ -101,6 +106,8 @@ class SupportFlow extends ChangeNotifier {
 
   final Future<LocalStorePersistence> Function() _openStore;
   final SetuRemoteGateway? remote;
+  final MeshRelayService? mesh;
+  final List<int>? meshRecipientPublicKey;
   final String schoolCode;
   final Duration ackDelay;
   final Duration teamDelay;
@@ -273,7 +280,27 @@ class SupportFlow extends ChangeNotifier {
       );
     } on Object {
       // Sin conexión o ante fallo temporal, la alerta queda en cola local
-      // cifrada con su token y clientOperationId para reintento idempotente.
+      // cifrada con su token y clientOperationId; si mesh está activo, se
+      // sella la alerta mínima para reenvío oportunista sin relato.
+      final MeshRelayService? relay = mesh;
+      final List<int>? recipientKey = meshRecipientPublicKey;
+      if (relay != null && recipientKey != null) {
+        try {
+          await relay.enqueueMinimalAlert(
+            MeshMinimalAlertPayload(
+              clientOperationId: opId!,
+              publicSchoolCode: schoolCode,
+              situationType: type.rpcValue,
+              studentRole: role.rpcValue,
+              capabilityVerifierHash: capability!.verifierHash,
+              declaredAt: DateTime.now().toUtc(),
+            ),
+            recipientPublicKeyBytes: recipientKey,
+          );
+        } on Object {
+          // Permanece en la cola local cifrada.
+        }
+      }
     }
 
     _notify();
