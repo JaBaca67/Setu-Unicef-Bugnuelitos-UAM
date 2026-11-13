@@ -125,9 +125,9 @@ Usar los activos oficiales sin deformarlos ni reconstruirlos si hay una variante
 
 ## 4. Entregables y estimaciones
 
-La [guía oficial](<Guía Prototipado y Presentación UAM - UNICEF 2026.docx>) fija Reporte Pautado el **10 nov 2026 (50 %)** y Pitch/Prototipo el **17 nov 2026 (20 % / 30 %)**. Prevé **pitch en vivo**, con **3 minutos de pitch, 2 de demo y hasta 1 de preguntas**, sujetos a validación organizativa. SéTú presenta una demo en APK; la guía admite otros tipos de prototipo según el proyecto.
+La [guía oficial](<Guía Prototipado y Presentación UAM - UNICEF 2026.docx>) fija Reporte Pautado el **10 nov 2026 (50 %)** y Pitch/Prototipo el **17 nov 2026 (20 % / 30 %)**. Prevé **pitch en vivo**, con **3 minutos de pitch, 2 de demo y hasta 1 de preguntas**, sujetos a validación organizativa. En Drive (corte 12 nov 2026) ya constan el Reporte Pautado (7/7 apartados + anexos), el Manual de Marca, el Manual de Especificaciones Técnicas, los manuales operativos (Colegio, MINED, Mesa de Escucha y Actividades) y el empaque físico del kit escolar **«Pieza a Pieza»** de la iniciativa **«Todos Podemos Encajar»**.
 
-[SeTu_Costos_App](https://docs.google.com/spreadsheets/d/1t4idB2KwksaVkriVMrovDxuk8UW-88fA3H6XVb04cSA/edit) estima **USD 25.93/mes**, **USD 311.16/año** recurrentes y **USD 1,336.16** el primer año, incluidos cinco puentes de USD 200 y una cuenta de publicación de USD 25. Estas estimaciones requieren actualizar precios y no incluyen personal de escucha. El presupuesto operativo completo y la financiación están por definir.
+Según el *Resumen General y Avance* (12 nov 2026) y [SeTu_Costos_App](https://docs.google.com/spreadsheets/d/1t4idB2KwksaVkriVMrovDxuk8UW-88fA3H6XVb04cSA/edit), el piloto de 5 colegios (1,750 estudiantes) opera con el **plan gratuito de Supabase** (**USD 0.93/mes** de dominio Cloudflare = **USD 11.16/año**) más **USD 82.50** de arranque único (Google Play Console + 5 kits «Pieza a Pieza»), totalizando **USD 93.66 en el Año 1**. Al escalar por encima de 10,000 usuarios se contempla Supabase Pro (**USD 25.93/mes** / **USD 311.16/año**). Estas estimaciones no incluyen personal de escucha.
 
 [↑ Volver al índice](#indice)
 
