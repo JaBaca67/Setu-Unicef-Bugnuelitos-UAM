@@ -30,12 +30,6 @@ class WelcomeScreen extends StatelessWidget {
   /// ingreso estudiantil entra directo al inicio.
   final bool Function()? hasSchool;
 
-  static const TextStyle _caption = TextStyle(
-    fontSize: 14,
-    height: 1.35,
-    color: CureandoTheme.secondaryInk,
-  );
-
   void _showPrivacy(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -114,13 +108,7 @@ class WelcomeScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Entrás con el código de tu colegio, sin nombre ni correo.',
-              textAlign: TextAlign.center,
-              style: _caption,
-            ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(48, 52),
@@ -134,12 +122,6 @@ class WelcomeScreen extends StatelessWidget {
                 'Personal autorizado',
                 textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Para Dirección, Mesa de Escucha y MINED.',
-              textAlign: TextAlign.center,
-              style: _caption,
             ),
             const SizedBox(height: 12),
             TextButton(
