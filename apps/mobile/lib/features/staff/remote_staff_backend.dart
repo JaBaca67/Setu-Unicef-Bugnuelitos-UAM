@@ -1,4 +1,3 @@
-import '../../shared/models/cureando_models.dart';
 import '../../shared/remote/setu_remote_gateway.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import 'staff_backend.dart';
@@ -6,16 +5,9 @@ import 'staff_backend.dart';
 /// Adaptador del puerto de personal hacia Supabase. No agrega reglas: cada
 /// llamada la autoriza el servidor.
 class RemoteStaffBackend implements StaffBackend {
-  RemoteStaffBackend(this._gateway, {this.loadInstitutionNames, this.rpc});
+  RemoteStaffBackend(this._gateway);
 
   final SetuRemoteGateway _gateway;
-
-  /// Lectura pública de los centros activos; null si no está disponible.
-  final Future<Map<String, String>> Function()? loadInstitutionNames;
-
-  /// Llamada directa a una función del servidor. Se usa solo donde el
-  /// contrato del cliente remoto todavía no coincide con la función SQL.
-  final Future<Object?> Function(String name, Map<String, Object?> params)? rpc;
 
   @override
   bool get isDemo => false;
@@ -52,8 +44,8 @@ class RemoteStaffBackend implements StaffBackend {
       _gateway.getMyStaffMemberships();
 
   @override
-  Future<Map<String, String>> institutionNames() async =>
-      await loadInstitutionNames?.call() ?? const <String, String>{};
+  Future<Map<String, String>> institutionNames() =>
+      _gateway.listActiveInstitutionNames();
 
   @override
   Future<List<StaffCaseSummary>> cases({String? institutionId}) =>
@@ -154,37 +146,19 @@ class RemoteStaffBackend implements StaffBackend {
   Future<void> recordSchoolAction({
     required String operationId,
     required SchoolActionDraft action,
-  }) async {
-    final Future<Object?> Function(String, Map<String, Object?>)? call = rpc;
-    if (call == null) {
-      throw const GatewayException('remote_error', 'rpc_unavailable');
-    }
-    // PENDIENTE: `SetuRemoteGateway.recordSchoolAction` envía parámetros que
-    // la función SQL `record_school_action` no tiene. Hasta que se alinee,
-    // se llama a la función con su firma real.
-    try {
-      await call('record_school_action', <String, Object?>{
-        'p_client_operation_id': operationId,
-        'p_case_id': action.caseId,
-        'p_action_sheet_id': action.actionSheetId,
-        'p_step': action.step.wireValue,
-        'p_is_group_action': action.isGroupAction,
-        'p_action_notes': action.notes,
-        'p_proposes_closure': action.proposesClosure,
-        'p_expected_concurrency_version': action.expectedVersion,
-      });
-    } on GatewayException {
-      rethrow;
-    } on Object catch (error) {
-      throw GatewayException('remote_error', error.toString());
-    }
-  }
+  }) => _gateway.recordSchoolAction(
+    clientOperationId: operationId,
+    caseId: action.caseId,
+    actionSheetId: action.actionSheetId,
+    step: action.step,
+    isGroupAction: action.isGroupAction,
+    actionNotes: action.notes,
+    proposesClosure: action.proposesClosure,
+    expectedConcurrencyVersion: action.expectedVersion,
+  );
 
-  // PENDIENTE: un aviso docente no tiene participación del estudiante y el
-  // listado de casos del cliente remoto todavía no acepta ese valor vacío.
-  // Registrarlo hoy dejaría las bandejas sin poder cargar.
   @override
-  bool get supportsTeacherNotice => false;
+  bool get supportsTeacherNotice => true;
 
   @override
   Future<void> recordTeacherNotice({
@@ -192,8 +166,10 @@ class RemoteStaffBackend implements StaffBackend {
     required String institutionId,
     required SetuSituationType situationType,
     required bool involvesStaff,
-  }) => throw const GatewayException(
-    'remote_error',
-    'teacher_notice_not_connected',
+  }) => _gateway.recordTeacherNotice(
+    clientOperationId: operationId,
+    institutionId: institutionId,
+    situationType: situationType,
+    involvesStaff: involvesStaff,
   );
 }

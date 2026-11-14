@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'features/staff/remote_staff_backend.dart';
@@ -18,19 +17,7 @@ Future<void> main() async {
   try {
     final SetuRemoteGateway gateway =
         await SupabaseSetuRemoteGateway.initialize();
-    staff = RemoteStaffBackend(
-      gateway,
-      rpc: (String name, Map<String, Object?> params) =>
-          Supabase.instance.client.rpc<Object?>(name, params: params),
-      // Los centros activos son de lectura pública (RLS).
-      loadInstitutionNames: () async => <String, String>{
-        for (final Map<String, dynamic> row
-            in await Supabase.instance.client
-                .from('institutions')
-                .select('id,name'))
-          '${row['id']}': '${row['name']}',
-      },
-    );
+    staff = RemoteStaffBackend(gateway);
     support = SupportFlow(
       backend: RemoteSupportBackend(gateway),
       // El acceso escolar de la demostración valida un único código local.

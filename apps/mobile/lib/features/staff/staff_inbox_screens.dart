@@ -32,7 +32,7 @@ String staffShortDate(DateTime value) {
 /// Tipo y participación con las mismas palabras que eligió el estudiante.
 String staffCaseKind(
   SetuSituationType type,
-  SetuStudentCaseRole role, {
+  SetuStudentCaseRole? role, {
   SetuAlertOrigin origin = SetuAlertOrigin.online,
 }) {
   final String situation = switch (type) {
@@ -43,9 +43,11 @@ String staffCaseKind(
     SetuSituationType.sexualViolence => 'Violencia sexual',
     SetuSituationType.needToTalk => 'Necesito hablar',
   };
+  // Un aviso docente no tiene participación del estudiante (rol nulo).
   final String part = origin == SetuAlertOrigin.teacherNotice
       ? 'Aviso docente'
       : switch (role) {
+          null => 'Aviso docente',
           SetuStudentCaseRole.victim => 'Me pasó a mí',
           SetuStudentCaseRole.solidarityWitness => 'Lo vi o supe de alguien',
         };

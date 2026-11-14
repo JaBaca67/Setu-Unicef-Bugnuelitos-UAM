@@ -155,22 +155,25 @@ abstract interface class SetuRemoteGateway {
 
   Future<Map<String, Object?>> recordTeacherNotice({
     required String clientOperationId,
-    required String publicSchoolCode,
-    required String directorAccessCode,
+    required String institutionId,
     required SetuSituationType situationType,
-    required String summaryNote,
     bool involvesStaff = false,
+    DateTime? declaredAt,
   });
 
   Future<Map<String, Object?>> recordSchoolAction({
     required String clientOperationId,
     required String caseId,
-    required String directorAccessCode,
+    required String? actionSheetId,
     required SetuSchoolActionStep step,
-    required bool isGroupAction,
-    required String actionNotes,
+    bool isGroupAction = false,
+    String actionNotes = '',
     bool proposesClosure = false,
+    int expectedConcurrencyVersion = 1,
   });
+
+  /// Nombres de los centros activos por id (lectura pública por RLS).
+  Future<Map<String, String>> listActiveInstitutionNames();
 
   // Aviso en vivo dentro de la app (Realtime)
   Stream<SetuAssignmentNotice> watchAssignedCaseNotices({
@@ -720,22 +723,21 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
   @override
   Future<Map<String, Object?>> recordTeacherNotice({
     required String clientOperationId,
-    required String publicSchoolCode,
-    required String directorAccessCode,
+    required String institutionId,
     required SetuSituationType situationType,
-    required String summaryNote,
     bool involvesStaff = false,
+    DateTime? declaredAt,
   }) async {
     try {
       final Object? response = await _client.rpc<Object?>(
         'record_teacher_notice',
         params: <String, Object?>{
           'p_client_operation_id': clientOperationId,
-          'p_public_school_code': publicSchoolCode,
-          'p_director_access_code': directorAccessCode,
+          'p_institution_id': institutionId,
           'p_situation_type': situationType.wireValue,
-          'p_summary_note': summaryNote,
           'p_involves_staff': involvesStaff,
+          // Sin fecha, el servidor aplica su `DEFAULT now()`.
+          'p_declared_at': ?declaredAt?.toUtc().toIso8601String(),
         },
       );
       return _requireMap(response);
@@ -748,11 +750,12 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
   Future<Map<String, Object?>> recordSchoolAction({
     required String clientOperationId,
     required String caseId,
-    required String directorAccessCode,
+    required String? actionSheetId,
     required SetuSchoolActionStep step,
-    required bool isGroupAction,
-    required String actionNotes,
+    bool isGroupAction = false,
+    String actionNotes = '',
     bool proposesClosure = false,
+    int expectedConcurrencyVersion = 1,
   }) async {
     try {
       final Object? response = await _client.rpc<Object?>(
@@ -760,14 +763,31 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
         params: <String, Object?>{
           'p_client_operation_id': clientOperationId,
           'p_case_id': caseId,
-          'p_director_access_code': directorAccessCode,
+          'p_action_sheet_id': actionSheetId,
           'p_step': step.wireValue,
           'p_is_group_action': isGroupAction,
           'p_action_notes': actionNotes,
           'p_proposes_closure': proposesClosure,
+          'p_expected_concurrency_version': expectedConcurrencyVersion,
         },
       );
       return _requireMap(response);
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<Map<String, String>> listActiveInstitutionNames() async {
+    try {
+      final List<Map<String, dynamic>> rows = await _client
+          .from('institutions')
+          .select('id,name')
+          .eq('active', true);
+      return Map<String, String>.unmodifiable(<String, String>{
+        for (final Map<String, dynamic> row in rows)
+          '${row['id']}': '${row['name']}',
+      });
     } catch (error) {
       throw _mapError(error);
     }

@@ -546,7 +546,9 @@ class StaffCaseSummary {
   final String institutionId;
   final String referenceCode;
   final SetuSituationType situationType;
-  final SetuStudentCaseRole studentRole;
+
+  /// Nulo en los avisos docentes (`origin = teacher_notice`).
+  final SetuStudentCaseRole? studentRole;
   final SetuAlertOrigin origin;
   final SetuCaseStatus status;
   final int? humanLevel;
@@ -569,6 +571,7 @@ class StaffCaseSummary {
 
   factory StaffCaseSummary.fromJson(Map<String, Object?> json) {
     final Map<String, Object?>? pieceMap = _readNullableMap(json, 'student_piece');
+    final String? roleStr = _readNullableString(json, 'student_role');
     return StaffCaseSummary(
       id: _readString(json, 'id'),
       institutionId: _readString(json, 'institution_id'),
@@ -576,9 +579,9 @@ class StaffCaseSummary {
       situationType: SetuSituationType.fromWire(
         _readString(json, 'situation_type'),
       ),
-      studentRole: SetuStudentCaseRole.fromWire(
-        _readString(json, 'student_role'),
-      ),
+      studentRole: roleStr == null
+          ? null
+          : SetuStudentCaseRole.fromWire(roleStr),
       origin: SetuAlertOrigin.fromWire(_readString(json, 'origin')),
       status: SetuCaseStatus.fromWire(_readString(json, 'status')),
       humanLevel: _readNullableInt(json, 'human_level'),
@@ -678,12 +681,15 @@ class CaseActionSheetView {
   final String issuedBy;
   final int humanLevel;
   final SetuSituationType summaryType;
-  final SetuStudentCaseRole summaryRole;
+
+  /// Nulo cuando la ficha nace de un aviso docente (`summary_role` nulo).
+  final SetuStudentCaseRole? summaryRole;
   final bool omitSchoolDueToConflict;
   final String guidanceNotes;
   final DateTime issuedAt;
 
   factory CaseActionSheetView.fromJson(Map<String, Object?> json) {
+    final String? roleStr = _readNullableString(json, 'summary_role');
     return CaseActionSheetView(
       id: _readString(json, 'id'),
       caseId: _readString(json, 'case_id'),
@@ -692,9 +698,9 @@ class CaseActionSheetView {
       issuedBy: _readString(json, 'issued_by'),
       humanLevel: _readInt(json, 'human_level', fallback: 2),
       summaryType: SetuSituationType.fromWire(_readString(json, 'summary_type')),
-      summaryRole: SetuStudentCaseRole.fromWire(
-        _readString(json, 'summary_role'),
-      ),
+      summaryRole: roleStr == null
+          ? null
+          : SetuStudentCaseRole.fromWire(roleStr),
       omitSchoolDueToConflict: _readBool(json, 'omit_school_due_to_conflict'),
       guidanceNotes: _readString(json, 'guidance_notes'),
       issuedAt: _readDateTime(json, 'issued_at'),
