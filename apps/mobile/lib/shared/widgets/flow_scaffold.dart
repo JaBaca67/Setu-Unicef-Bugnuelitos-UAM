@@ -21,17 +21,23 @@ class FlowScaffold extends StatelessWidget {
   final Widget? bottom;
   final Widget? bottomNavigationBar;
 
+  /// La barra flota sobre el contenido solo si no hay una acción fija abajo.
+  bool get _floatingNav => bottomNavigationBar != null && bottom == null;
+
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
-    value: const SystemUiOverlayStyle(
+    value: SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
+      systemNavigationBarColor: _floatingNav
+          ? Colors.transparent
+          : Colors.white,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
     child: Scaffold(
       backgroundColor: Colors.white,
+      extendBody: _floatingNav,
       bottomNavigationBar: bottomNavigationBar,
       body: Center(
         child: ConstrainedBox(
@@ -45,9 +51,21 @@ class FlowScaffold extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                  child: body,
+                // Con la barra flotante, `extendBody` informa su alto como
+                // margen inferior: el último elemento no queda tapado.
+                child: Builder(
+                  builder: (BuildContext inner) => SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      20,
+                      20,
+                      16 +
+                          (_floatingNav
+                              ? MediaQuery.paddingOf(inner).bottom
+                              : 0),
+                    ),
+                    child: body,
+                  ),
                 ),
               ),
               if (bottom != null)

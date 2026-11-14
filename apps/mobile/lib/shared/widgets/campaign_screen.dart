@@ -21,15 +21,21 @@ class CampaignScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
-    value: const SystemUiOverlayStyle(
+    value: SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
+      systemNavigationBarColor: bottomNavigationBar == null
+          ? Colors.white
+          : Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
     child: Scaffold(
       backgroundColor: Colors.white,
+      // La barra flota: el cuerpo se extiende por detrás y recibe el alto de
+      // la barra como margen inferior de `MediaQuery`, que el `SafeArea` del
+      // cuerpo convierte en espacio libre al final del desplazamiento.
+      extendBody: bottomNavigationBar != null,
       bottomNavigationBar: bottomNavigationBar,
       body: Stack(
         fit: StackFit.expand,
