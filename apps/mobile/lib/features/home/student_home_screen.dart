@@ -5,6 +5,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
+import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import '../support/alert_screens.dart';
 import 'learning_progress.dart';
@@ -143,9 +144,9 @@ class _HomeHeader extends StatelessWidget {
             '¡Hola!',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 42,
+              fontSize: 40,
               fontWeight: FontWeight.w700,
-              height: 1.05,
+              height: 1.1,
             ),
           ),
           SizedBox(height: 4),
@@ -154,63 +155,57 @@ class _HomeHeader extends StatelessWidget {
             style: TextStyle(
               color: Colors.white,
               fontSize: 14,
-              fontWeight: FontWeight.w700,
-              height: 1.25,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
             ),
           ),
         ],
       ),
     );
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 192),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/home/fondo-homepage-banner.png'),
-            fit: BoxFit.cover,
-            alignment: Alignment.centerRight,
-          ),
-        ),
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: <Color>[
-                Color(0xD80C62EB),
-                Color(0x660C62EB),
-                Color(0x000C62EB),
-              ],
-              stops: <double>[0, 0.48, 0.85],
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 12, 14, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    const CampaignSymbol(size: 28),
-                    const Spacer(),
-                    PieceHeaderButton(piece: piece),
-                  ],
-                ),
-                const SizedBox(height: 22),
-                if (largeText)
-                  greeting
-                else
-                  Row(
-                    children: <Widget>[
-                      Expanded(flex: 6, child: greeting),
-                      const Spacer(flex: 4),
-                    ],
+    const Widget characters = CampaignCharacters();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 8, 12, 12),
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const CampaignSymbol(size: 32),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: ExcludeSemantics(
+                  child: Text(
+                    'SéTú',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 25,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                ),
+              ),
+              PieceHeaderButton(piece: piece),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (largeText)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                greeting,
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(width: 156, child: characters),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: <Widget>[
+                Expanded(flex: 52, child: greeting),
+                Expanded(flex: 48, child: characters),
               ],
             ),
-          ),
-        ),
+        ],
       ),
     );
   }
