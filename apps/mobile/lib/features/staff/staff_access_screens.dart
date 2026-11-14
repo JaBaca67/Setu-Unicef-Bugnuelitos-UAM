@@ -81,7 +81,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              CampaignSymbol(size: 54),
+              CampaignSymbol(size: 54, showUnicef: false),
               SizedBox(width: 12),
               Text(
                 'SéTú',

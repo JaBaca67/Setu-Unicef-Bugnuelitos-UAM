@@ -113,18 +113,10 @@ class FlowHeader extends StatelessWidget {
               padding: const EdgeInsets.only(left: 14, bottom: 2),
               child: Row(
                 children: <Widget>[
-                  const CampaignSymbol(size: 28),
-                  const SizedBox(width: 8),
                   const Expanded(
-                    child: ExcludeSemantics(
-                      child: Text(
-                        'SéTú',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: CampaignSymbol(size: 28),
                     ),
                   ),
                   ?brandTrailing,

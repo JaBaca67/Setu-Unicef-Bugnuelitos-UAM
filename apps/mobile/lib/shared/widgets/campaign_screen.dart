@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
+import 'unicef_logo.dart';
 
 class CampaignScreen extends StatelessWidget {
   const CampaignScreen({
@@ -105,15 +106,30 @@ class CampaignBackground extends StatelessWidget {
 }
 
 class CampaignSymbol extends StatelessWidget {
-  const CampaignSymbol({super.key, required this.size});
+  const CampaignSymbol({super.key, required this.size, this.showUnicef = true});
 
   final double size;
+  final bool showUnicef;
 
   @override
-  Widget build(BuildContext context) => Image.asset(
-    'assets/welcome/setu-symbol-white.png',
-    width: size,
-    height: size,
-    semanticLabel: 'SéTú',
-  );
+  Widget build(BuildContext context) {
+    final Widget symbol = Image.asset(
+      'assets/welcome/setu-symbol-white.png',
+      width: size,
+      height: size,
+      semanticLabel: 'SéTú',
+    );
+    if (!showUnicef) return symbol;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        symbol,
+        SizedBox(width: size * 0.34),
+        Container(width: 1, height: size * 0.68, color: Colors.white54),
+        SizedBox(width: size * 0.34),
+        UnicefLogo(height: size * 0.72),
+      ],
+    );
+  }
 }

@@ -253,7 +253,7 @@ class StaffAreaScaffold extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 10, 10, 12),
       child: Row(
         children: <Widget>[
-          const CampaignSymbol(size: 30),
+          const CampaignSymbol(size: 30, showUnicef: false),
           const SizedBox(width: 8),
           const ExcludeSemantics(
             child: Text(
