@@ -10,10 +10,7 @@ import 'setu_remote_models.dart';
 /// Solo contiene URL del proyecto y llave pública (`publishable` / `anon`).
 /// Nunca incluye llaves privilegiadas (`service_role`).
 class SetuSupabaseConfig {
-  const SetuSupabaseConfig({
-    required this.url,
-    required this.anonKey,
-  });
+  const SetuSupabaseConfig({required this.url, required this.anonKey});
 
   static const String defaultUrl = 'https://rliiwzovgpnxhrkdkmus.supabase.co';
   static const String defaultPublishableKey =
@@ -179,6 +176,27 @@ abstract interface class SetuRemoteGateway {
   Stream<SetuAssignmentNotice> watchAssignedCaseNotices({
     required String counselorUserId,
   });
+
+  // Despacho multi-psicólogo (Opción A: toma sin colisiones, declinación e historial MINED)
+  Future<CaseClaimResult> claimCaseCounselor({
+    required String clientOperationId,
+    required String caseId,
+  });
+
+  Future<CaseDeclineResult> declineCaseDispatch({
+    required String clientOperationId,
+    required String caseId,
+    String? reason,
+  });
+
+  Future<List<CaseDispatchRecord>> listCaseDispatchHistory({
+    String? institutionId,
+    String? caseId,
+  });
+
+  Stream<CaseDispatchRecord> watchIncomingDispatches({
+    required String counselorUserId,
+  });
 }
 
 /// Implementación oficial contra Supabase (`supabase_flutter`).
@@ -287,7 +305,8 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
   }
 
   @override
-  Future<List<EditorialResourceRecord>> listPublishedEditorialResources() async {
+  Future<List<EditorialResourceRecord>>
+  listPublishedEditorialResources() async {
     try {
       final List<Map<String, dynamic>> rows = await _client
           .from('editorial_resources')
@@ -523,7 +542,9 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
     try {
       final Map<String, dynamic>? row = await _client
           .from('case_narratives')
-          .select('case_id,narrative_text,location_text,approx_date_text,created_at')
+          .select(
+            'case_id,narrative_text,location_text,approx_date_text,created_at',
+          )
           .eq('case_id', caseId)
           .maybeSingle();
       if (row == null) return null;
@@ -559,7 +580,9 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
     try {
       final List<Map<String, dynamic>> rows = await _client
           .from('case_internal_notes')
-          .select('id,case_id,author_user_id,note_body,client_operation_id,created_at')
+          .select(
+            'id,case_id,author_user_id,note_body,client_operation_id,created_at',
+          )
           .eq('case_id', caseId)
           .order('created_at', ascending: false);
       return List<CaseInternalNoteView>.unmodifiable(
@@ -825,6 +848,114 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
                     oldCounselor != counselorUserId &&
                     !controller.isClosed) {
                   controller.add(SetuAssignmentNotice.fromCaseRow(row));
+                }
+              },
+            )
+            .subscribe();
+      },
+      onCancel: () async {
+        final RealtimeChannel? active = channel;
+        if (active != null) {
+          await _client.removeChannel(active);
+        }
+      },
+    );
+
+    return controller.stream;
+  }
+
+  @override
+  Future<CaseClaimResult> claimCaseCounselor({
+    required String clientOperationId,
+    required String caseId,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'claim_case_counselor',
+        params: <String, Object?>{
+          'p_client_operation_id': clientOperationId,
+          'p_case_id': caseId,
+        },
+      );
+      return CaseClaimResult.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<CaseDeclineResult> declineCaseDispatch({
+    required String clientOperationId,
+    required String caseId,
+    String? reason,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'decline_case_dispatch',
+        params: <String, Object?>{
+          'p_client_operation_id': clientOperationId,
+          'p_case_id': caseId,
+          'p_reason': reason,
+        },
+      );
+      return CaseDeclineResult.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<List<CaseDispatchRecord>> listCaseDispatchHistory({
+    String? institutionId,
+    String? caseId,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'list_case_dispatch_history',
+        params: <String, Object?>{
+          'p_institution_id': institutionId,
+          'p_case_id': caseId,
+        },
+      );
+      final List<Object?> rows = _requireList(response);
+      return List<CaseDispatchRecord>.unmodifiable(<CaseDispatchRecord>[
+        for (final Object? entry in rows)
+          if (entry is Map<dynamic, dynamic>)
+            CaseDispatchRecord.fromJson(_normalizeDynamicMap(entry)),
+      ]);
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Stream<CaseDispatchRecord> watchIncomingDispatches({
+    required String counselorUserId,
+  }) {
+    late final StreamController<CaseDispatchRecord> controller;
+    RealtimeChannel? channel;
+
+    controller = StreamController<CaseDispatchRecord>(
+      onListen: () {
+        channel = _client
+            .channel('counselor-dispatches-$counselorUserId')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.all,
+              schema: 'public',
+              table: 'case_counselor_dispatches',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'counselor_user_id',
+                value: counselorUserId,
+              ),
+              callback: (PostgresChangePayload payload) {
+                if (payload.newRecord.isEmpty) return;
+                final Map<String, Object?> row = _normalizeDynamicMap(
+                  payload.newRecord,
+                );
+                if (row['counselor_user_id'] == counselorUserId &&
+                    !controller.isClosed) {
+                  controller.add(CaseDispatchRecord.fromJson(row));
                 }
               },
             )

@@ -160,6 +160,44 @@ enum SetuMessageSender {
   }
 }
 
+/// Nivel de despacho automático hacia psicólogos de Mesa de Escucha.
+enum CaseDispatchTier {
+  schoolPlant('school_plant', 'Equipo de planta del colegio'),
+  externalPool('external_pool', 'Red externa disponible');
+
+  const CaseDispatchTier(this.wireValue, this.label);
+
+  final String wireValue;
+  final String label;
+
+  static CaseDispatchTier fromWire(String value) {
+    for (final CaseDispatchTier item in values) {
+      if (item.wireValue == value) return item;
+    }
+    throw FormatException('Nivel de despacho no reconocido: $value');
+  }
+}
+
+/// Estado de atención de una alerta despachada a un psicólogo.
+enum CaseDispatchStatus {
+  pending('pending', 'Pendiente'),
+  claimed('claimed', 'Atendida'),
+  takenByOther('taken_by_other', 'Tomada por otro'),
+  declined('declined', 'Declinada');
+
+  const CaseDispatchStatus(this.wireValue, this.label);
+
+  final String wireValue;
+  final String label;
+
+  static CaseDispatchStatus fromWire(String value) {
+    for (final CaseDispatchStatus item in values) {
+      if (item.wireValue == value) return item;
+    }
+    throw FormatException('Estado de despacho no reconocido: $value');
+  }
+}
+
 /// Instantánea serializable de la pieza simbólica elegida por el estudiante (ADR 0015).
 class StudentPieceSnapshot {
   const StudentPieceSnapshot({
@@ -190,9 +228,11 @@ class StudentPieceSnapshot {
     }
 
     return StudentPieceSnapshot(
-      shape: _readNullableString(json, 'shape') ??
+      shape:
+          _readNullableString(json, 'shape') ??
           _readNullableString(json, 'variant'),
-      color: _readNullableString(json, 'color') ??
+      color:
+          _readNullableString(json, 'color') ??
           _readNullableString(json, 'paletteKey'),
       accessories: List<String>.unmodifiable(parsedAccessories),
       displayName: _readNullableString(json, 'displayName'),
@@ -302,7 +342,10 @@ class StudentAlertReceipt {
   final StudentPieceSnapshot? studentPiece;
 
   factory StudentAlertReceipt.fromJson(Map<String, Object?> json) {
-    final Map<String, Object?>? pieceMap = _readNullableMap(json, 'student_piece');
+    final Map<String, Object?>? pieceMap = _readNullableMap(
+      json,
+      'student_piece',
+    );
     return StudentAlertReceipt(
       caseId: _readString(json, 'case_id'),
       referenceCode: _readString(json, 'reference_code'),
@@ -358,7 +401,10 @@ class StudentChatSessionView {
   final List<CaseChatMessageView> messages;
 
   factory StudentChatSessionView.fromJson(Map<String, Object?> json) {
-    final Map<String, Object?>? pieceMap = _readNullableMap(json, 'student_piece');
+    final Map<String, Object?>? pieceMap = _readNullableMap(
+      json,
+      'student_piece',
+    );
     final List<Object?> rawMessages = _readList(json, 'messages');
     final List<CaseChatMessageView> parsedMessages = <CaseChatMessageView>[];
     for (final Object? entry in rawMessages) {
@@ -570,7 +616,10 @@ class StaffCaseSummary {
   bool get isInConversation => chatAvailableNotice;
 
   factory StaffCaseSummary.fromJson(Map<String, Object?> json) {
-    final Map<String, Object?>? pieceMap = _readNullableMap(json, 'student_piece');
+    final Map<String, Object?>? pieceMap = _readNullableMap(
+      json,
+      'student_piece',
+    );
     final String? roleStr = _readNullableString(json, 'student_role');
     return StaffCaseSummary(
       id: _readString(json, 'id'),
@@ -697,7 +746,9 @@ class CaseActionSheetView {
       version: _readInt(json, 'version', fallback: 1),
       issuedBy: _readString(json, 'issued_by'),
       humanLevel: _readInt(json, 'human_level', fallback: 2),
-      summaryType: SetuSituationType.fromWire(_readString(json, 'summary_type')),
+      summaryType: SetuSituationType.fromWire(
+        _readString(json, 'summary_type'),
+      ),
       summaryRole: roleStr == null
           ? null
           : SetuStudentCaseRole.fromWire(roleStr),
@@ -888,6 +939,154 @@ class SetuAssignmentNotice {
   }
 }
 
+/// Resultado de intentar tomar un caso disponible en Mesa de Escucha.
+class CaseClaimResult {
+  const CaseClaimResult({
+    required this.ok,
+    required this.claimed,
+    required this.alreadyAssignedToYou,
+    required this.caseId,
+    required this.assignedCounselorId,
+    this.error,
+    this.status,
+    this.humanLevel,
+    this.concurrencyVersion,
+  });
+
+  final bool ok;
+  final bool claimed;
+  final bool alreadyAssignedToYou;
+  final String? error;
+  final String caseId;
+  final String assignedCounselorId;
+  final SetuCaseStatus? status;
+  final int? humanLevel;
+  final int? concurrencyVersion;
+
+  bool get isAlreadyTaken => !claimed && error == 'case_already_taken';
+
+  factory CaseClaimResult.fromJson(Map<String, Object?> json) {
+    final String? rawStatus = _readNullableString(json, 'status');
+    return CaseClaimResult(
+      ok: _readBool(json, 'ok'),
+      claimed: _readBool(json, 'claimed'),
+      alreadyAssignedToYou: _readBool(json, 'already_assigned_to_you'),
+      error: _readNullableString(json, 'error'),
+      caseId: _readString(json, 'case_id'),
+      assignedCounselorId: _readString(json, 'assigned_counselor_id'),
+      status: rawStatus == null || rawStatus.isEmpty
+          ? null
+          : SetuCaseStatus.fromWire(rawStatus),
+      humanLevel: _readNullableInt(json, 'human_level'),
+      concurrencyVersion: _readNullableInt(json, 'concurrency_version'),
+    );
+  }
+}
+
+/// Resultado de declinar una alerta despachada y posible derivación al pool externo.
+class CaseDeclineResult {
+  const CaseDeclineResult({
+    required this.ok,
+    required this.caseId,
+    required this.dispatchStatus,
+    this.fallbackTier,
+    this.fallbackDispatchedCount,
+  });
+
+  final bool ok;
+  final String caseId;
+  final CaseDispatchStatus dispatchStatus;
+  final CaseDispatchTier? fallbackTier;
+  final int? fallbackDispatchedCount;
+
+  factory CaseDeclineResult.fromJson(Map<String, Object?> json) {
+    final Map<String, Object?>? fallback = _readNullableMap(json, 'fallback');
+    final String? rawFallbackTier = fallback == null
+        ? null
+        : _readNullableString(fallback, 'dispatch_tier');
+    return CaseDeclineResult(
+      ok: _readBool(json, 'ok'),
+      caseId: _readString(json, 'case_id'),
+      dispatchStatus: CaseDispatchStatus.fromWire(
+        _readString(json, 'dispatch_status'),
+      ),
+      fallbackTier: rawFallbackTier == null || rawFallbackTier.isEmpty
+          ? null
+          : CaseDispatchTier.fromWire(rawFallbackTier),
+      fallbackDispatchedCount: fallback == null
+          ? null
+          : _readNullableInt(fallback, 'dispatched_count'),
+    );
+  }
+}
+
+/// Registro del historial de despacho multi-psicólogo o evento en vivo en `case_counselor_dispatches`.
+class CaseDispatchRecord {
+  const CaseDispatchRecord({
+    required this.id,
+    required this.caseId,
+    required this.institutionId,
+    required this.counselorUserId,
+    required this.dispatchTier,
+    required this.dispatchStatus,
+    required this.notifiedAt,
+    this.referenceCode,
+    this.institutionName,
+    this.situationType,
+    this.caseStatus,
+    this.assignedCounselorId,
+    this.counselorEmail,
+    this.respondedAt,
+    this.declineReason,
+  });
+
+  final String id;
+  final String caseId;
+  final String institutionId;
+  final String counselorUserId;
+  final CaseDispatchTier dispatchTier;
+  final CaseDispatchStatus dispatchStatus;
+  final DateTime notifiedAt;
+  final String? referenceCode;
+  final String? institutionName;
+  final SetuSituationType? situationType;
+  final SetuCaseStatus? caseStatus;
+  final String? assignedCounselorId;
+  final String? counselorEmail;
+  final DateTime? respondedAt;
+  final String? declineReason;
+
+  factory CaseDispatchRecord.fromJson(Map<String, Object?> json) {
+    final String? rawSituation = _readNullableString(json, 'situation_type');
+    final String? rawCaseStatus = _readNullableString(json, 'case_status');
+    return CaseDispatchRecord(
+      id: _readString(json, 'id'),
+      caseId: _readString(json, 'case_id'),
+      institutionId: _readString(json, 'institution_id'),
+      counselorUserId: _readString(json, 'counselor_user_id'),
+      dispatchTier: CaseDispatchTier.fromWire(
+        _readString(json, 'dispatch_tier'),
+      ),
+      dispatchStatus: CaseDispatchStatus.fromWire(
+        _readString(json, 'dispatch_status'),
+      ),
+      notifiedAt: _readDateTime(json, 'notified_at'),
+      referenceCode: _readNullableString(json, 'reference_code'),
+      institutionName: _readNullableString(json, 'institution_name'),
+      situationType: rawSituation == null || rawSituation.isEmpty
+          ? null
+          : SetuSituationType.fromWire(rawSituation),
+      caseStatus: rawCaseStatus == null || rawCaseStatus.isEmpty
+          ? null
+          : SetuCaseStatus.fromWire(rawCaseStatus),
+      assignedCounselorId: _readNullableString(json, 'assigned_counselor_id'),
+      counselorEmail: _readNullableString(json, 'counselor_email'),
+      respondedAt: _readNullableDateTime(json, 'responded_at'),
+      declineReason: _readNullableString(json, 'decline_reason'),
+    );
+  }
+}
+
 Map<String, Object?> _castMap(Map<dynamic, dynamic> raw) {
   final Map<String, Object?> result = <String, Object?>{};
   raw.forEach((Object? key, Object? value) {
@@ -914,11 +1113,7 @@ String? _readNullableString(Map<String, Object?> json, String key) {
   return value.toString();
 }
 
-bool _readBool(
-  Map<String, Object?> json,
-  String key, {
-  bool fallback = false,
-}) {
+bool _readBool(Map<String, Object?> json, String key, {bool fallback = false}) {
   final Object? value = json[key];
   if (value is bool) return value;
   return fallback;
