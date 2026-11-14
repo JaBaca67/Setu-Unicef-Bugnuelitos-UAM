@@ -126,9 +126,13 @@ void main() {
     expect(find.text('Mis casos'), findsOneWidget);
     expect(find.text('DEMO-021'), findsNothing);
 
+    // Para trabajar con otro centro hay que cerrar sesión e ingresar de nuevo.
     await tester.tap(find.byTooltip('Mi sesión'));
     await tester.pumpAndSettle();
-    await _tap(tester, 'Cambiar de centro');
+    await _tap(tester, 'Cerrar sesión');
+    await _type(tester, 'Correo institucional', _desk);
+    await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
+    await _tap(tester, 'Ingresar');
     await _tap(tester, 'Colegio Centro América — Demo');
     expect(find.text('DEMO-021'), findsOneWidget);
     expect(find.text('Sin valorar'), findsOneWidget);

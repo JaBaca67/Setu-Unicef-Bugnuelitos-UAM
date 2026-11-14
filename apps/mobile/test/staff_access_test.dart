@@ -140,10 +140,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Mesa de Escucha'), findsOneWidget);
 
+    // Elegido el centro, no se cambia sin cerrar sesión.
+    router.go('/personal/ambito');
+    await tester.pumpAndSettle();
+    expect(find.text('Mis casos'), findsOneWidget);
     await tester.tap(find.byTooltip('Mi sesión'));
     await tester.pumpAndSettle();
-    await _tap(tester, 'Cambiar de centro');
-    expect(find.text('¿Dónde vas a trabajar?'), findsOneWidget);
+    expect(find.text('Cambiar de centro'), findsNothing);
+    await _tap(tester, 'Cerrar sesión');
+    expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
