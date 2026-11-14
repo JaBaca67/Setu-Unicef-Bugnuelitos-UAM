@@ -22,10 +22,7 @@ class CampaignScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
-    value: SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
+    value: CureandoTheme.statusBarOverlayLight.copyWith(
       systemNavigationBarColor: bottomNavigationBar == null
           ? Colors.white
           : Colors.transparent,
@@ -38,48 +35,35 @@ class CampaignScreen extends StatelessWidget {
       // cuerpo convierte en espacio libre al final del desplazamiento.
       extendBody: bottomNavigationBar != null,
       bottomNavigationBar: bottomNavigationBar,
-      body: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: MediaQuery.paddingOf(context).top,
-            child: const ColoredBox(color: CureandoTheme.blue),
-          ),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: SizedBox.expand(
-                child: CampaignBackground(
-                  child: SafeArea(
-                    bottom: false,
-                    child: CustomScrollView(
-                      controller: scrollController,
-                      slivers: <Widget>[
-                        SliverToBoxAdapter(child: header),
-                        SliverToBoxAdapter(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: bodyRadius,
-                            ),
-                            child: SafeArea(top: false, child: body),
-                          ),
-                        ),
-                        const SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: ColoredBox(color: Colors.white),
-                        ),
-                      ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: SizedBox.expand(
+            child: CampaignBackground(
+              child: CustomScrollView(
+                controller: scrollController,
+                slivers: <Widget>[
+                  SliverToBoxAdapter(
+                    child: SafeArea(bottom: false, child: header),
+                  ),
+                  SliverToBoxAdapter(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: bodyRadius,
+                      ),
+                      child: SafeArea(top: false, child: body),
                     ),
                   ),
-                ),
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: ColoredBox(color: Colors.white),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     ),
   );

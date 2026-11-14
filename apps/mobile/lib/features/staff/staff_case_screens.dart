@@ -740,7 +740,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
         item.chatAvailableNotice &&
         item.status != SetuCaseStatus.closed;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: CureandoTheme.statusBarOverlayLight,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Center(

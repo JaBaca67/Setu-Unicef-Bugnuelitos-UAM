@@ -178,12 +178,12 @@ class _HomeHeader extends StatelessWidget {
           ),
         ),
         ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 192),
+          constraints: const BoxConstraints(minHeight: 196),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 10, 14, 24),
+            padding: const EdgeInsets.fromLTRB(18, 8, 14, 54),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Row(
                   children: <Widget>[
@@ -192,14 +192,24 @@ class _HomeHeader extends StatelessWidget {
                     PieceHeaderButton(piece: piece),
                   ],
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 6),
                 if (largeText)
                   greeting
                 else
                   Row(
                     children: <Widget>[
-                      Expanded(flex: 58, child: greeting),
-                      const Spacer(flex: 42),
+                      Expanded(
+                        flex: 49,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 24, right: 6),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: greeting,
+                          ),
+                        ),
+                      ),
+                      const Spacer(flex: 51),
                     ],
                   ),
               ],

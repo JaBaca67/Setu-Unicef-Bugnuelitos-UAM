@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'features/home/learning_progress.dart';
 import 'features/home/streak_screen.dart';
@@ -652,14 +653,17 @@ class _CureandoAppState extends State<CureandoApp> {
     debugShowCheckedModeBanner: false,
     theme: CureandoTheme.light,
     routerConfig: _router,
-    builder: (BuildContext context, Widget? child) => MediaQuery(
-      data: MediaQuery.of(context).copyWith(
-        textScaler: CureandoTheme.readingScale(
-          MediaQuery.textScalerOf(context),
-          large: _large,
+    builder: (BuildContext context, Widget? child) => AnnotatedRegion<SystemUiOverlayStyle>(
+      value: CureandoTheme.statusBarOverlayLight,
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: CureandoTheme.readingScale(
+            MediaQuery.textScalerOf(context),
+            large: _large,
+          ),
         ),
+        child: child ?? const SizedBox.shrink(),
       ),
-      child: child ?? const SizedBox.shrink(),
     ),
   );
 }

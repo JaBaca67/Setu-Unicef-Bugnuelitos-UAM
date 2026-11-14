@@ -431,7 +431,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   @override
   Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
-    value: SystemUiOverlayStyle.light,
+    value: CureandoTheme.statusBarOverlayLight,
     child: Scaffold(
       backgroundColor: Colors.white,
       body: Center(

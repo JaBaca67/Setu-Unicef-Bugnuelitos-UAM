@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 abstract final class CureandoTheme {
+  static const SystemUiOverlayStyle statusBarOverlayLight = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+    systemStatusBarContrastEnforced: false,
+  );
+
+  static const SystemUiOverlayStyle statusBarOverlayDark = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    systemStatusBarContrastEnforced: false,
+  );
+
   static const Color blue = Color(0xFF0C62EB);
   static const Color pink = Color(0xFFFF0092);
   static const Color yellow = Color(0xFFFFE000);
@@ -26,6 +41,12 @@ abstract final class CureandoTheme {
       onSurface: ink,
     ),
     scaffoldBackgroundColor: background,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+      systemOverlayStyle: statusBarOverlayDark,
+    ),
     textTheme: const TextTheme(
       headlineMedium: TextStyle(
         fontSize: 24,
