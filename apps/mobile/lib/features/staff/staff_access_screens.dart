@@ -125,6 +125,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
             StaffField(
               label: 'Correo institucional',
               controller: _email,
+              hint: 'nombre@colegio.edu.ni',
               keyboardType: TextInputType.emailAddress,
               autofillHints: const <String>[AutofillHints.username],
             ),
@@ -132,6 +133,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
             StaffField(
               label: 'Contraseña',
               controller: _password,
+              hint: 'Ingresá tu contraseña',
               obscure: _hidden,
               onToggleObscure: () => setState(() => _hidden = !_hidden),
               autofillHints: const <String>[AutofillHints.password],
@@ -448,7 +450,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
       StaffField(
         label: 'Código de activación',
         controller: _code,
-        hint: 'Código de activación',
+        hint: 'Ej. CCA-DIR-2026',
         capitalization: TextCapitalization.characters,
         textInputAction: TextInputAction.done,
         onChanged: (_) {
@@ -475,6 +477,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     StaffField(
       label: 'Correo institucional',
       controller: _email,
+      hint: 'nombre@colegio.edu.ni',
       keyboardType: TextInputType.emailAddress,
       autofillHints: const <String>[AutofillHints.email],
     ),
@@ -491,6 +494,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     StaffField(
       label: 'Repetí la contraseña',
       controller: _repeat,
+      hint: 'Escribí la misma contraseña',
       obscure: _hidden,
       textInputAction: TextInputAction.done,
       onSubmitted: (_) => _run(_createAccount),

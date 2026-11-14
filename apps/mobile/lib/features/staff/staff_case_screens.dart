@@ -317,6 +317,8 @@ class _DeskCaseScreenState extends State<DeskCaseScreen> {
         StaffField(
           label: 'Motivo del cierre',
           controller: _reason,
+          hint:
+              'Explicá brevemente cómo se acompañó y por qué se cierra el caso',
           maxLines: 3,
           maxLength: 500,
           capitalization: TextCapitalization.sentences,
@@ -376,7 +378,11 @@ class _DeskCaseScreenState extends State<DeskCaseScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  staffCaseKind(item.situationType, item.studentRole),
+                  staffCaseKind(
+                    item.situationType,
+                    item.studentRole,
+                    origin: item.origin,
+                  ),
                   style: _text,
                 ),
                 Text(
@@ -531,7 +537,7 @@ class _ReviewSheet extends StatelessWidget {
             ),
             _row(
               'Contenido de la ficha',
-              '${staffCaseKind(item.situationType, item.studentRole)}\n'
+              '${staffCaseKind(item.situationType, item.studentRole, origin: item.origin)}\n'
                   '${staffLevelLabel(assessment.level)}',
             ),
             _row('Orientación', assessment.guidanceNotes),
@@ -985,6 +991,9 @@ class _NotesSheetState extends State<_NotesSheet> {
           StaffField(
             label: 'Nota nueva',
             controller: _note,
+            hint:
+                'Anotá observaciones privadas de escucha (solo visibles para '
+                'vos)...',
             maxLines: 3,
             maxLength: 2000,
             capitalization: TextCapitalization.sentences,

@@ -82,6 +82,13 @@ class StaffField extends StatelessWidget {
           style: const TextStyle(fontSize: 16),
           decoration: InputDecoration(
             hintText: hint,
+            // Más suave que el texto ingresado, con contraste 5:1 sobre blanco.
+            hintStyle: const TextStyle(
+              color: Color(0xFF5F6F8A),
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+            ),
+            hintMaxLines: maxLines > 1 ? maxLines : 1,
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(

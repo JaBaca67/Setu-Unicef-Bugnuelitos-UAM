@@ -680,6 +680,9 @@ class _ActionSheetState extends State<_ActionSheet> {
           StaffField(
             label: 'Qué hizo el centro',
             controller: _notes,
+            hint:
+                'Describí la actuación realizada por el colegio (sin datos '
+                'clínicos)...',
             maxLines: 4,
             maxLength: 1500,
             capitalization: TextCapitalization.sentences,
