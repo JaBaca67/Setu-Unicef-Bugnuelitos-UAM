@@ -5,7 +5,6 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
-import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import '../support/alert_screens.dart';
 import 'learning_progress.dart';
@@ -132,6 +131,10 @@ class _HomeHeader extends StatelessWidget {
 
   final ValueNotifier<StudentPiece> piece;
 
+  static const List<Shadow> _textShadows = <Shadow>[
+    Shadow(color: Color(0x40002B7A), blurRadius: 8, offset: Offset(0, 1)),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final bool largeText = MediaQuery.textScalerOf(context).scale(16) > 22;
@@ -144,9 +147,10 @@ class _HomeHeader extends StatelessWidget {
             '¡Hola!',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 40,
+              fontSize: 42,
               fontWeight: FontWeight.w700,
-              height: 1.1,
+              height: 1.05,
+              shadows: _textShadows,
             ),
           ),
           SizedBox(height: 4),
@@ -155,58 +159,54 @@ class _HomeHeader extends StatelessWidget {
             style: TextStyle(
               color: Colors.white,
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+              shadows: _textShadows,
             ),
           ),
         ],
       ),
     );
-    const Widget characters = CampaignCharacters();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 12, 12),
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const CampaignSymbol(size: 32),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: ExcludeSemantics(
-                  child: Text(
-                    'SéTú',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              PieceHeaderButton(piece: piece),
-            ],
+    return Stack(
+      children: <Widget>[
+        Positioned.fill(
+          child: Image.asset(
+            'assets/home/home-header-girl.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.bottomRight,
+            excludeFromSemantics: true,
           ),
-          const SizedBox(height: 6),
-          if (largeText)
-            Column(
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 192),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 10, 14, 24),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                greeting,
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: SizedBox(width: 156, child: characters),
+                Row(
+                  children: <Widget>[
+                    const CampaignSymbol(size: 28),
+                    const Spacer(),
+                    PieceHeaderButton(piece: piece),
+                  ],
                 ),
-              ],
-            )
-          else
-            Row(
-              children: <Widget>[
-                Expanded(flex: 52, child: greeting),
-                Expanded(flex: 48, child: characters),
+                const SizedBox(height: 22),
+                if (largeText)
+                  greeting
+                else
+                  Row(
+                    children: <Widget>[
+                      Expanded(flex: 58, child: greeting),
+                      const Spacer(flex: 42),
+                    ],
+                  ),
               ],
             ),
-        ],
-      ),
+          ),
+        ),
+      ],
     );
   }
 }
