@@ -113,7 +113,7 @@ void main() {
     expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
 
     await _tap(tester, 'Volver a la bienvenida');
-    expect(find.text('Tu salud mental'), findsOneWidget);
+    expect(find.bySemanticsLabel('Simplemente #SoloSéTú'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

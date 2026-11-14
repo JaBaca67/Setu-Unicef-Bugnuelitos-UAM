@@ -22,6 +22,7 @@ class SampleResource {
     required this.icon,
     required this.tint,
     required this.inkColor,
+    this.detailBannerAsset,
   });
 
   final String id;
@@ -33,6 +34,7 @@ class SampleResource {
   final IconData icon;
   final Color tint;
   final Color inkColor;
+  final String? detailBannerAsset;
 
   String get route => '/inicio/recurso/$id';
   bool get isVideo => format == 'Video';
@@ -49,6 +51,7 @@ const List<SampleResource> sampleResources = <SampleResource>[
     icon: Icons.menu_book_rounded,
     tint: CureandoTheme.blueSoft,
     inkColor: CureandoTheme.blue,
+    detailBannerAsset: 'assets/home/banner-actividad-1.png',
     body: <String>[
       'Las emociones son señales del cuerpo y de la mente. Todas son '
           'válidas: nos avisan que algo nos importa.',
@@ -67,6 +70,7 @@ const List<SampleResource> sampleResources = <SampleResource>[
     icon: Icons.ondemand_video_rounded,
     tint: CureandoTheme.pinkSoft,
     inkColor: CureandoTheme.pink,
+    detailBannerAsset: 'assets/home/banner-actividad-2.png',
     body: <String>[
       'Convivir bien no es no tener conflictos: es resolverlos sin '
           'humillar ni excluir a nadie.',
@@ -182,6 +186,7 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
                     children: <Widget>[
                       _Tag(text: 'Tema: ${resource.topic}'),
                       _Tag(text: 'Formato: ${resource.format}'),
+                      const _Tag(text: '+${LearningProgress.resourceXp} XP'),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -192,6 +197,20 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
                       style: textTheme.headlineMedium,
                     ),
                   ),
+                  if (resource.detailBannerAsset != null) ...<Widget>[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: AspectRatio(
+                        aspectRatio: 342 / 164,
+                        child: Image.asset(
+                          resource.detailBannerAsset!,
+                          fit: BoxFit.cover,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   if (resource.isVideo) ...<Widget>[
                     Container(

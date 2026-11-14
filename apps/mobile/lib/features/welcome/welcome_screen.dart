@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,26 +44,54 @@ class WelcomeScreen extends StatelessWidget {
       builder: (BuildContext context) => SafeArea(
         top: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              ExcludeSemantics(
+                child: Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Semantics(
                 header: true,
                 child: Text(
                   'Cómo cuidamos tu información',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               const Text(
                 'Si pedís apoyo, solo vos y el equipo de escucha asignado pueden leer tu relato y tu chat. El MINED y tu colegio reciben datos limitados para dar seguimiento. Lo que escribás puede revelar quién sos.',
+                style: TextStyle(fontSize: 16, height: 1.5),
               ),
               const SizedBox(height: 8),
-              const Text('Esta es una prueba de navegación.'),
+              const Text(
+                'Esta es una prueba de navegación.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: CureandoTheme.secondaryInk,
+                ),
+              ),
               const SizedBox(height: 12),
               TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(88, 48),
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
+                ),
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text('Cerrar'),
               ),
@@ -97,6 +127,7 @@ class WelcomeScreen extends StatelessWidget {
             const SizedBox(height: 34),
             FilledButton(
               style: FilledButton.styleFrom(
+                minimumSize: const Size(48, 52),
                 shape: shape,
                 textStyle: buttonText,
               ),
@@ -109,7 +140,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
+            OutlinedButton(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(48, 52),
                 shape: shape,
@@ -117,14 +148,16 @@ class WelcomeScreen extends StatelessWidget {
                 textStyle: buttonText,
               ),
               onPressed: () => context.push('/personal'),
-              icon: const Icon(Icons.badge_outlined),
-              label: const Text(
+              child: const Text(
                 'Personal autorizado',
                 textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 12),
             TextButton(
+              style: TextButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
               onPressed: () => context.push('/${WelcomeDestination.help.path}'),
               child: const Text('Ayuda'),
             ),
@@ -132,6 +165,7 @@ class WelcomeScreen extends StatelessWidget {
             TextButton(
               style: TextButton.styleFrom(
                 foregroundColor: CureandoTheme.secondaryInk,
+                minimumSize: const Size.fromHeight(48),
               ),
               onPressed: () => _showPrivacy(context),
               child: const Text(
@@ -150,72 +184,61 @@ class _CampaignHeader extends StatelessWidget {
   const _CampaignHeader();
 
   @override
-  Widget build(BuildContext context) {
-    const TextStyle title = TextStyle(
-      color: Colors.white,
-      fontSize: 29,
-      fontWeight: FontWeight.w700,
-      height: 1.2,
-    );
-    return Stack(
-      children: <Widget>[
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: AspectRatio(
-            aspectRatio: 392 / 180,
-            child: Image.asset(
-              'assets/welcome/campaign-characters.png',
-              fit: BoxFit.fill,
-              excludeFromSemantics: true,
-            ),
+  Widget build(BuildContext context) => Stack(
+    children: <Widget>[
+      Positioned(
+        left: 0,
+        right: 0,
+        bottom: 0,
+        child: AspectRatio(
+          aspectRatio: 392 / 180,
+          child: Image.asset(
+            'assets/welcome/campaign-characters.png',
+            fit: BoxFit.fill,
+            excludeFromSemantics: true,
           ),
         ),
-        Column(
-          children: <Widget>[
-            const SizedBox(height: 24),
-            const CampaignSymbol(size: 45),
-            const SizedBox(height: 23),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Semantics(
-                header: true,
-                label: 'Tu salud mental sí importa',
-                excludeSemantics: true,
-                child: Column(
-                  children: <Widget>[
-                    const Text(
-                      'Tu salud mental',
-                      style: title,
-                      textAlign: TextAlign.center,
+      ),
+      Column(
+        children: <Widget>[
+          const SizedBox(height: 20),
+          const CampaignSymbol(size: 38),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Semantics(
+              header: true,
+              label: 'Simplemente #SoloSéTú',
+              excludeSemantics: true,
+              child: Column(
+                children: <Widget>[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 270),
+                    child: Image.asset(
+                      'assets/welcome/campaign-simplemente.png',
+                      fit: BoxFit.contain,
                     ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: CureandoTheme.pink,
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      child: Text(
-                        'sí importa',
-                        style: title.copyWith(fontSize: 32),
-                        textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Transform.rotate(
+                    angle: 0.95 * math.pi / 180,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      child: Image.asset(
+                        'assets/welcome/campaign-solosetu.png',
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const AspectRatio(aspectRatio: 392 / 166),
-          ],
-        ),
-      ],
-    );
-  }
+          ),
+          const AspectRatio(aspectRatio: 392 / 168),
+        ],
+      ),
+    ],
+  );
 }
 
 class WelcomePreviewScreen extends StatelessWidget {

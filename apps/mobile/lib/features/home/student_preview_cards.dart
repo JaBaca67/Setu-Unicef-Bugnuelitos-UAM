@@ -7,12 +7,12 @@ enum StudentCover {
   guide(
     CureandoTheme.yellow,
     Icons.sentiment_very_satisfied_rounded,
-    'assets/home/guia-emociones.png',
+    'assets/home/banner-actividad-3.png',
   ),
   video(
     Color(0xFFFF8AC7),
     Icons.forum_rounded,
-    'assets/home/video-convivencia.png',
+    'assets/home/banner-actividad-2.png',
   ),
   question(
     Color(0xFFE9E0FD),

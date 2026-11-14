@@ -5,7 +5,6 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
-import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import '../support/alert_screens.dart';
 import 'learning_progress.dart';
@@ -144,9 +143,9 @@ class _HomeHeader extends StatelessWidget {
             '¡Hola!',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 40,
+              fontSize: 42,
               fontWeight: FontWeight.w700,
-              height: 1.1,
+              height: 1.05,
             ),
           ),
           SizedBox(height: 4),
@@ -155,57 +154,63 @@ class _HomeHeader extends StatelessWidget {
             style: TextStyle(
               color: Colors.white,
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
             ),
           ),
         ],
       ),
     );
-    const Widget characters = CampaignCharacters();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 12, 12),
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const CampaignSymbol(size: 32),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: ExcludeSemantics(
-                  child: Text(
-                    'SéTú',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              PieceHeaderButton(piece: piece),
-            ],
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 192),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/home/fondo-homepage-banner.png'),
+            fit: BoxFit.cover,
+            alignment: Alignment.centerRight,
           ),
-          const SizedBox(height: 6),
-          if (largeText)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                greeting,
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: SizedBox(width: 156, child: characters),
-                ),
+        ),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: <Color>[
+                Color(0xD80C62EB),
+                Color(0x660C62EB),
+                Color(0x000C62EB),
               ],
-            )
-          else
-            Row(
+              stops: <double>[0, 0.48, 0.85],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 12, 14, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Expanded(flex: 52, child: greeting),
-                Expanded(flex: 48, child: characters),
+                Row(
+                  children: <Widget>[
+                    const CampaignSymbol(size: 28),
+                    const Spacer(),
+                    PieceHeaderButton(piece: piece),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                if (largeText)
+                  greeting
+                else
+                  Row(
+                    children: <Widget>[
+                      Expanded(flex: 6, child: greeting),
+                      const Spacer(flex: 4),
+                    ],
+                  ),
               ],
             ),
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -219,28 +224,27 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(24, 10, 24, 22),
+    padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
     child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const CampaignSymbol(size: 30),
+        const CampaignSymbol(size: 26),
         const SizedBox(height: 16),
         Semantics(
           header: true,
           child: Text(
             title,
-            textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 25,
+              fontSize: 30,
               fontWeight: FontWeight.w700,
-              height: 1.25,
+              height: 1.2,
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           subtitle,
-          textAlign: TextAlign.center,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 14,
@@ -463,13 +467,15 @@ class _InformacionTab extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: resource.tint,
-                      borderRadius: BorderRadius.circular(12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      resource.cover.assetPath,
+                      width: 86,
+                      height: 86,
+                      fit: BoxFit.cover,
+                      excludeFromSemantics: true,
                     ),
-                    child: Icon(resource.icon, color: resource.inkColor),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -559,9 +565,39 @@ class _AyudaTab extends StatelessWidget {
       ),
       const SizedBox(height: 14),
       FilledButton.icon(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+        ),
         onPressed: () => context.push<void>('/inicio/apoyo'),
         icon: const Icon(Icons.favorite_rounded),
         label: const Text('Pedir apoyo'),
+      ),
+      const SizedBox(height: 14),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEFF6FF),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFBFDBFE)),
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Garantías de protección',
+              style: TextStyle(
+                color: CureandoTheme.blue,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Tu relato es confidencial para la mesa de escucha. El colegio '
+              'solo recibe avisos de seguimiento general.',
+            ),
+          ],
+        ),
       ),
     ],
   );

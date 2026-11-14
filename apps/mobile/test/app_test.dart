@@ -61,7 +61,7 @@ void main() {
       const RepaintBoundary(key: captureKey, child: CureandoApp()),
     );
     await tester.pumpAndSettle();
-    final Finder title = find.text('Tu salud mental');
+    final Finder title = find.bySemanticsLabel('Simplemente #SoloSéTú');
     expect(title, findsOneWidget);
     await _capture(tester, captureKey, 'e01-welcome');
 

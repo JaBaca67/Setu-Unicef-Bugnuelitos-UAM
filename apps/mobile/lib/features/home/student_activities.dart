@@ -164,19 +164,27 @@ class _DailyQuestionCardState extends State<DailyQuestionCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                const Icon(Icons.quiz_outlined, color: CureandoTheme.blue),
-                Semantics(
-                  header: true,
-                  child: Text(
-                    'Pregunta del día',
-                    style: Theme.of(context).textTheme.titleMedium,
+                Image.asset(
+                  'assets/home/pregunta-del-dia.png',
+                  width: 36,
+                  height: 36,
+                  fit: BoxFit.contain,
+                  excludeFromSemantics: true,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Semantics(
+                    header: true,
+                    child: Text(
+                      'Pregunta del día',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   done ? 'Completada' : '+${LearningProgress.questionXp} XP',
                   style: const TextStyle(
@@ -303,7 +311,13 @@ class _EmotionDiceCardState extends State<EmotionDiceCard> {
           children: <Widget>[
             Row(
               children: <Widget>[
-                const Icon(Icons.casino_outlined, color: CureandoTheme.pink),
+                Image.asset(
+                  'assets/home/dado-de-emociones.png',
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.contain,
+                  excludeFromSemantics: true,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Semantics(
@@ -341,11 +355,8 @@ class _EmotionDiceCardState extends State<EmotionDiceCard> {
                         excludeSemantics: true,
                         child: Column(
                           children: <Widget>[
-                            Text(
-                              emotion.emoji,
-                              style: const TextStyle(fontSize: 42),
-                            ),
-                            const SizedBox(height: 6),
+                            _DiceEmotionFace(emotionName: emotion.name),
+                            const SizedBox(height: 8),
                             Text(emotion.name, style: textTheme.titleMedium),
                             const SizedBox(height: 6),
                             Text(emotion.prompt, textAlign: TextAlign.center),
@@ -367,6 +378,160 @@ class _EmotionDiceCardState extends State<EmotionDiceCard> {
       ),
     );
   }
+}
+
+class _DiceEmotionFace extends StatelessWidget {
+  const _DiceEmotionFace({required this.emotionName});
+
+  final String emotionName;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: 60,
+    child: CustomPaint(painter: _DiceEmotionFacePainter(emotionName)),
+  );
+}
+
+class _DiceEmotionFacePainter extends CustomPainter {
+  const _DiceEmotionFacePainter(this.emotionName);
+
+  final String emotionName;
+
+  Color get _faceColor => switch (emotionName) {
+    'Alegría' => CureandoTheme.yellow,
+    'Enojo' => CureandoTheme.pink,
+    'Calma' => CureandoTheme.green,
+    'Sorpresa' => CureandoTheme.yellow,
+    _ => CureandoTheme.blue,
+  };
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double s = size.shortestSide;
+    final Offset center = Offset(s / 2, s / 2);
+    final double r = s * 0.46;
+    const Color ink = Color(0xFF1D1D1B);
+
+    canvas.drawCircle(center, r + 2, Paint()..color = Colors.white);
+    canvas.drawCircle(center, r, Paint()..color = _faceColor);
+
+    final bool lightFace =
+        emotionName == 'Alegría' ||
+        emotionName == 'Sorpresa' ||
+        emotionName == 'Calma';
+    final Color featureColor = lightFace ? ink : Colors.white;
+    final Paint stroke = Paint()
+      ..color = featureColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.055
+      ..strokeCap = StrokeCap.round;
+    final Paint fill = Paint()..color = featureColor;
+
+    final double eyeY = s * 0.42;
+    final double leftX = s * 0.36;
+    final double rightX = s * 0.64;
+
+    if (emotionName == 'Calma') {
+      canvas.drawArc(
+        Rect.fromCenter(center: Offset(leftX, eyeY), width: s * 0.14, height: s * 0.08),
+        0,
+        math.pi,
+        false,
+        stroke,
+      );
+      canvas.drawArc(
+        Rect.fromCenter(center: Offset(rightX, eyeY), width: s * 0.14, height: s * 0.08),
+        0,
+        math.pi,
+        false,
+        stroke,
+      );
+    } else {
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(leftX, eyeY), width: s * 0.11, height: s * 0.16),
+        fill,
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(rightX, eyeY), width: s * 0.11, height: s * 0.16),
+        fill,
+      );
+    }
+
+    if (emotionName == 'Enojo') {
+      canvas.drawLine(
+        Offset(leftX - s * 0.07, eyeY - s * 0.14),
+        Offset(leftX + s * 0.07, eyeY - s * 0.08),
+        stroke,
+      );
+      canvas.drawLine(
+        Offset(rightX + s * 0.07, eyeY - s * 0.14),
+        Offset(rightX - s * 0.07, eyeY - s * 0.08),
+        stroke,
+      );
+    } else if (emotionName == 'Miedo') {
+      canvas.drawLine(
+        Offset(leftX - s * 0.07, eyeY - s * 0.11),
+        Offset(leftX + s * 0.06, eyeY - s * 0.15),
+        stroke,
+      );
+      canvas.drawLine(
+        Offset(rightX + s * 0.07, eyeY - s * 0.11),
+        Offset(rightX - s * 0.06, eyeY - s * 0.15),
+        stroke,
+      );
+    }
+
+    switch (emotionName) {
+      case 'Alegría':
+      case 'Calma':
+        canvas.drawArc(
+          Rect.fromCenter(
+            center: Offset(s * 0.5, s * 0.56),
+            width: s * 0.34,
+            height: s * 0.22,
+          ),
+          0.2,
+          math.pi - 0.4,
+          false,
+          stroke,
+        );
+      case 'Tristeza':
+      case 'Enojo':
+        canvas.drawArc(
+          Rect.fromCenter(
+            center: Offset(s * 0.5, s * 0.72),
+            width: s * 0.30,
+            height: s * 0.18,
+          ),
+          math.pi + 0.25,
+          math.pi - 0.5,
+          false,
+          stroke,
+        );
+      case 'Sorpresa':
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(s * 0.5, s * 0.66),
+            width: s * 0.15,
+            height: s * 0.19,
+          ),
+          stroke,
+        );
+      case 'Miedo':
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(s * 0.5, s * 0.67),
+            width: s * 0.22,
+            height: s * 0.12,
+          ),
+          stroke,
+        );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DiceEmotionFacePainter oldDelegate) =>
+      oldDelegate.emotionName != emotionName;
 }
 
 /// Pantalla de actividades (pestaña Actividades). Solo actividades educativas
