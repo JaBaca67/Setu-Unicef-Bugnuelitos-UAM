@@ -49,7 +49,11 @@ class SetuNavIcon extends StatelessWidget {
 /// Barra de navegación inferior flotante en formato píldora de vidrio
 /// translúcido, con íconos vectoriales de `NavBar-01.svg`. El contenido de la
 /// pantalla se desliza por detrás (`Scaffold.extendBody`).
-class SetuBottomNav extends StatelessWidget {
+///
+/// Una cápsula de vidrio marca la pestaña activa. Se puede tocar una pestaña
+/// o deslizar el dedo por la barra: la cápsula sigue al dedo y la pestaña se
+/// abre al soltar.
+class SetuBottomNav extends StatefulWidget {
   const SetuBottomNav({
     super.key,
     required this.selected,
@@ -60,61 +64,121 @@ class SetuBottomNav extends StatelessWidget {
   final ValueChanged<HomeSection> onSelected;
 
   @override
+  State<SetuBottomNav> createState() => _SetuBottomNavState();
+}
+
+class _SetuBottomNavState extends State<SetuBottomNav> {
+  static const double _height = 68;
+  static const int _count = 4;
+
+  /// Posición horizontal del dedo dentro de la barra; null si no arrastra.
+  double? _dragX;
+  int? _dragIndex;
+
+  int _indexAt(double dx, double width) =>
+      (dx / (width / _count)).floor().clamp(0, _count - 1);
+
+  void _drag(double dx, double width) => setState(() {
+    _dragX = dx.clamp(0.0, width);
+    _dragIndex = _indexAt(dx, width);
+  });
+
+  void _release({bool commit = true}) {
+    final int? index = _dragIndex;
+    setState(() {
+      _dragX = null;
+      _dragIndex = null;
+    });
+    if (commit && index != null && index != widget.selected?.index) {
+      widget.onSelected(HomeSection.values[index]);
+    }
+  }
+
+  Widget _bar(BuildContext context) => LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints constraints) {
+      final double width = constraints.maxWidth;
+      final double slot = width / _count;
+      final bool reduce = MediaQuery.disableAnimationsOf(context);
+      final double? finger = _dragX;
+      final bool dragging = finger != null;
+      final int? shown = _dragIndex ?? widget.selected?.index;
+      final double? x = finger != null
+          ? (((finger - slot / 2) / (width - slot)) * 2 - 1).clamp(-1.0, 1.0)
+          : shown == null
+          ? null
+          : -1 + shown * 2 / (_count - 1);
+
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        // Cada destino expone su propia acción al lector de pantalla.
+        excludeFromSemantics: true,
+        onTapUp: (TapUpDetails details) => widget.onSelected(
+          HomeSection.values[_indexAt(details.localPosition.dx, width)],
+        ),
+        onHorizontalDragStart: (DragStartDetails details) =>
+            _drag(details.localPosition.dx, width),
+        onHorizontalDragUpdate: (DragUpdateDetails details) =>
+            _drag(details.localPosition.dx, width),
+        onHorizontalDragEnd: (_) => _release(),
+        onHorizontalDragCancel: () => _release(commit: false),
+        child: SizedBox(
+          height: _height,
+          child: Stack(
+            children: <Widget>[
+              if (x != null)
+                AnimatedAlign(
+                  alignment: Alignment(x, 0),
+                  duration: dragging || reduce
+                      ? Duration.zero
+                      : const Duration(milliseconds: 240),
+                  curve: Curves.easeOutCubic,
+                  child: AnimatedScale(
+                    scale: dragging ? 1.08 : 1,
+                    duration: reduce
+                        ? Duration.zero
+                        : const Duration(milliseconds: 180),
+                    curve: Curves.easeOutBack,
+                    child: SizedBox(
+                      width: slot,
+                      height: _height,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 6,
+                        ),
+                        child: _GlassCapsule(),
+                      ),
+                    ),
+                  ),
+                ),
+              Row(
+                children: <Widget>[
+                  for (final HomeSection section in HomeSection.values)
+                    Expanded(
+                      child: _NavDestination(
+                        section: section,
+                        selected: section.index == shown,
+                        onTap: () => widget.onSelected(section),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+
+  @override
   Widget build(BuildContext context) {
-    final HomeSection? active = selected;
     final TextScaler clampedScaler = MediaQuery.textScalerOf(
       context,
     ).clamp(maxScaleFactor: 1.3);
-
     // Con «alto contraste» del sistema el vidrio se vuelve blanco sólido:
     // la legibilidad no depende de lo que pase por detrás.
     final bool solid = MediaQuery.highContrastOf(context);
     final BorderRadius radius = BorderRadius.circular(999);
-
-    final Widget bar = MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: clampedScaler),
-      child: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          height: 68,
-          // Cápsula translúcida: el estado activo también lo marca el peso
-          // de la etiqueta, no solo el color.
-          indicatorColor: active == null
-              ? Colors.transparent
-              : CureandoTheme.blue.withValues(alpha: 0.14),
-          indicatorShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          labelTextStyle: WidgetStateProperty.resolveWith((
-            Set<WidgetState> states,
-          ) {
-            final bool isSelected =
-                active != null && states.contains(WidgetState.selected);
-            return TextStyle(
-              fontSize: 11.5,
-              color: CureandoTheme.blue,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-              height: 1.1,
-            );
-          }),
-        ),
-        child: NavigationBar(
-          selectedIndex: active?.index ?? 0,
-          onDestinationSelected: (int index) =>
-              onSelected(HomeSection.values[index]),
-          destinations: <Widget>[
-            for (final HomeSection section in HomeSection.values)
-              NavigationDestination(
-                icon: SetuNavIcon(section: section, size: 28),
-                selectedIcon: SetuNavIcon(section: section, size: 28),
-                label: section.label,
-              ),
-          ],
-        ),
-      ),
-    );
 
     final Widget glass = DecoratedBox(
       decoration: BoxDecoration(
@@ -137,7 +201,10 @@ class SetuBottomNav extends StatelessWidget {
           width: 1.5,
         ),
       ),
-      child: bar,
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: clampedScaler),
+        child: Builder(builder: _bar),
+      ),
     );
 
     // Sin fondo opaco de lado a lado: la píldora flota sobre el contenido.
@@ -181,6 +248,91 @@ class SetuBottomNav extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Cápsula de vidrio que marca la pestaña activa.
+class _GlassCapsule extends StatelessWidget {
+  const _GlassCapsule();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(22),
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: <Color>[
+          Colors.white.withValues(alpha: 0.92),
+          CureandoTheme.blue.withValues(alpha: 0.16),
+        ],
+      ),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.9),
+        width: 1.5,
+      ),
+      boxShadow: <BoxShadow>[
+        BoxShadow(
+          color: CureandoTheme.blue.withValues(alpha: 0.2),
+          blurRadius: 10,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Ícono y etiqueta de un destino, centrados en su cuarto de la barra.
+class _NavDestination extends StatelessWidget {
+  const _NavDestination({
+    required this.section,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final HomeSection section;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    button: true,
+    selected: selected,
+    label: section.label,
+    onTap: onTap,
+    child: ExcludeSemantics(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              SetuNavIcon(section: section, size: 28),
+              const SizedBox(height: 3),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  section.label,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  // El estado activo también lo marca el peso, no solo el
+                  // color de la cápsula.
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    height: 1.1,
+                    color: CureandoTheme.blue,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _SetuNavIconPainter extends CustomPainter {
