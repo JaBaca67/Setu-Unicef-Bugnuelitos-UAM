@@ -26,6 +26,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/brand/
+    - assets/brand/characters/
+    - assets/brand/elements/
+    - assets/brand/nav/
     - assets/home/
     - assets/schools/
     - assets/welcome/
