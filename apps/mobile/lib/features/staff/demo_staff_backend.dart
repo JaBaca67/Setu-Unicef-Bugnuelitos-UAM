@@ -87,6 +87,24 @@ class _DemoCase {
   );
 }
 
+class _DemoDispatch {
+  _DemoDispatch(
+    this.caseId,
+    this.counselor,
+    this.tier, {
+    this.status = CaseDispatchStatus.pending,
+    DateTime? notifiedAt,
+  }) : notifiedAt = notifiedAt ?? DateTime(2026, 11, 13, 9, 6);
+
+  final String caseId;
+  final String counselor;
+  final CaseDispatchTier tier;
+  CaseDispatchStatus status;
+  final DateTime notifiedAt;
+  DateTime? respondedAt;
+  String? reason;
+}
+
 /// DEMOSTRACIÓN: personal autorizado en memoria, con datos ficticios que no
 /// salen del teléfono. Imita las respuestas del servidor para las pruebas de
 /// widgets; no es un mecanismo de autenticación.
@@ -100,7 +118,17 @@ class DemoStaffBackend implements StaffBackend {
     _seed('direccion.cca@setu.test', <StaffMembershipScope>[
       _scope('m-dir-cca', SetuStaffRole.schoolDirector, cca),
     ]);
+    _seed(externalCounselor, const <StaffMembershipScope>[
+      StaffMembershipScope(
+        membershipId: 'm-desk-ext',
+        role: SetuStaffRole.counselingDesk,
+        scopeLabel: 'Mesa de Escucha · Red externa · demostración',
+      ),
+    ]);
   }
+
+  /// Cuenta ficticia de la red externa de Mesa de Escucha.
+  static const String externalCounselor = 'red.externa@setu.test';
 
   /// Contraseña ficticia de las cuentas de demostración en memoria.
   static const String demoPassword = 'Demo-SeTu-2026';
@@ -263,6 +291,248 @@ class DemoStaffBackend implements StaffBackend {
       ),
     ),
   ];
+
+  /// Despachos ficticios: la alerta sin asignar se ofrece al equipo de
+  /// planta; las ya asignadas figuran como atendidas.
+  final List<_DemoDispatch> _dispatches = <_DemoDispatch>[
+    _DemoDispatch('demo-case-021', _desk, CaseDispatchTier.schoolPlant),
+    for (final String id in <String>[
+      'demo-case-014',
+      'demo-case-009',
+      'demo-case-030',
+    ])
+      _DemoDispatch(
+        id,
+        _desk,
+        CaseDispatchTier.schoolPlant,
+        status: CaseDispatchStatus.claimed,
+      )..respondedAt = DateTime(2026, 11, 13, 9, 30),
+  ];
+  final StreamController<CaseDispatchRecord> _dispatchEvents =
+      StreamController<CaseDispatchRecord>.broadcast();
+
+  CaseDispatchRecord _record(_DemoDispatch item) {
+    final _DemoCase found = _cases.firstWhere(
+      (_DemoCase entry) => entry.id == item.caseId,
+    );
+    return CaseDispatchRecord(
+      id: 'demo-dispatch-${item.caseId}-${item.counselor}',
+      caseId: item.caseId,
+      institutionId: found.institutionId,
+      counselorUserId: item.counselor,
+      dispatchTier: item.tier,
+      dispatchStatus: item.status,
+      notifiedAt: item.notifiedAt,
+      referenceCode: found.reference,
+      institutionName: found.institutionId == cca.id ? cca.name : schoolA.name,
+      situationType: found.situation,
+      caseStatus: found.status,
+      assignedCounselorId: found.assignedTo,
+      counselorEmail: item.counselor,
+      respondedAt: item.respondedAt,
+      declineReason: item.reason,
+    );
+  }
+
+  /// Deja el despacho coherente con quién atiende el caso y avisa en vivo a
+  /// las demás personas a las que se les había ofrecido.
+  void _settleDispatches(_DemoCase found, String winner, {bool notify = true}) {
+    final DateTime now = DateTime.now();
+    bool winnerListed = false;
+    for (final _DemoDispatch item in _dispatches) {
+      if (item.caseId != found.id) continue;
+      if (item.counselor == winner) {
+        winnerListed = true;
+        item
+          ..status = CaseDispatchStatus.claimed
+          ..respondedAt = now;
+      } else if (item.status == CaseDispatchStatus.pending ||
+          item.status == CaseDispatchStatus.claimed) {
+        item
+          ..status = CaseDispatchStatus.takenByOther
+          ..respondedAt = now;
+        if (notify) _dispatchEvents.add(_record(item));
+      }
+    }
+    if (!winnerListed) {
+      _dispatches.add(
+        _DemoDispatch(
+          found.id,
+          winner,
+          CaseDispatchTier.schoolPlant,
+          status: CaseDispatchStatus.claimed,
+          notifiedAt: now,
+        )..respondedAt = now,
+      );
+    }
+  }
+
+  /// Simula que otra persona de Mesa de Escucha tomó la alerta primero.
+  /// Solo para pruebas y demostración.
+  /// Con [notify] en falso no llega el aviso en vivo, como cuando dos
+  /// personas tocan «Tomar alerta» casi al mismo tiempo.
+  void simulateOtherClaim(String caseId, {bool notify = true}) {
+    final _DemoCase found = _cases.firstWhere(
+      (_DemoCase item) => item.id == caseId,
+    );
+    found
+      ..assignedTo = 'otra.persona@setu.test'
+      ..status = SetuCaseStatus.inListening
+      ..version += 1;
+    _settleDispatches(found, 'otra.persona@setu.test', notify: notify);
+  }
+
+  @override
+  Future<CaseClaimResult> claimCase({
+    required String operationId,
+    required String caseId,
+  }) async {
+    _scopes();
+    final _DemoDispatch? mine = _dispatches
+        .where(
+          (_DemoDispatch item) =>
+              item.caseId == caseId && item.counselor == _user,
+        )
+        .firstOrNull;
+    final _DemoCase? found = _cases
+        .where((_DemoCase item) => item.id == caseId)
+        .firstOrNull;
+    if (mine == null || found == null) {
+      throw const GatewayException('P0002', 'case_not_found');
+    }
+    if (!_has(SetuStaffRole.counselingDesk, found.institutionId)) {
+      throw const GatewayException(
+        '42501',
+        'forbidden_counseling_desk_required',
+      );
+    }
+    final String? holder = found.assignedTo;
+    if (holder != null && holder != _user) {
+      mine
+        ..status = CaseDispatchStatus.takenByOther
+        ..respondedAt ??= DateTime.now();
+      return CaseClaimResult(
+        ok: false,
+        claimed: false,
+        alreadyAssignedToYou: false,
+        error: 'case_already_taken',
+        caseId: caseId,
+        assignedCounselorId: holder,
+      );
+    }
+    final bool already = holder == _user;
+    if (!already) {
+      found
+        ..assignedTo = _user
+        ..version += 1;
+      if (found.status == SetuCaseStatus.received) {
+        found.status = SetuCaseStatus.inListening;
+      }
+      _settleDispatches(found, _user!);
+    }
+    return CaseClaimResult(
+      ok: true,
+      claimed: !already,
+      alreadyAssignedToYou: already,
+      caseId: caseId,
+      assignedCounselorId: _user!,
+      status: found.status,
+      humanLevel: found.level,
+      concurrencyVersion: found.version,
+    );
+  }
+
+  @override
+  Future<CaseDeclineResult> declineDispatch({
+    required String operationId,
+    required String caseId,
+    String? reason,
+  }) async {
+    _scopes();
+    final _DemoDispatch mine = _dispatches.firstWhere(
+      (_DemoDispatch item) =>
+          item.caseId == caseId &&
+          item.counselor == _user &&
+          item.status == CaseDispatchStatus.pending,
+      orElse: () => throw const GatewayException('P0002', 'case_not_found'),
+    );
+    final String clean = (reason ?? '').trim();
+    if (clean.length > 500) {
+      throw const GatewayException('22023', 'invalid_decline_reason');
+    }
+    mine
+      ..status = CaseDispatchStatus.declined
+      ..respondedAt = DateTime.now()
+      ..reason = clean.isEmpty ? null : clean;
+    // Si nadie más del equipo de planta la tiene pendiente, pasa a la red
+    // externa.
+    final bool othersPending = _dispatches.any(
+      (_DemoDispatch item) =>
+          item.caseId == caseId && item.status == CaseDispatchStatus.pending,
+    );
+    final bool alreadyExternal = _dispatches.any(
+      (_DemoDispatch item) =>
+          item.caseId == caseId && item.tier == CaseDispatchTier.externalPool,
+    );
+    final bool fallback = !othersPending && !alreadyExternal;
+    if (fallback) {
+      final _DemoDispatch external = _DemoDispatch(
+        caseId,
+        externalCounselor,
+        CaseDispatchTier.externalPool,
+        notifiedAt: DateTime.now(),
+      );
+      _dispatches.add(external);
+      _dispatchEvents.add(_record(external));
+    }
+    return CaseDeclineResult(
+      ok: true,
+      caseId: caseId,
+      dispatchStatus: CaseDispatchStatus.declined,
+      fallbackTier: fallback ? CaseDispatchTier.externalPool : null,
+      fallbackDispatchedCount: fallback ? 1 : null,
+    );
+  }
+
+  @override
+  Future<List<CaseDispatchRecord>> dispatchHistory({
+    String? institutionId,
+    String? caseId,
+  }) async {
+    final List<StaffMembershipScope> scopes = _scopes();
+    final bool mined = scopes.any(
+      (StaffMembershipScope scope) =>
+          scope.role == SetuStaffRole.minedSupervisor,
+    );
+    final bool desk = scopes.any(
+      (StaffMembershipScope scope) =>
+          scope.role == SetuStaffRole.counselingDesk,
+    );
+    if (!mined && !desk) {
+      throw const GatewayException('42501', 'forbidden_staff_role_required');
+    }
+    final List<CaseDispatchRecord> records = <CaseDispatchRecord>[
+      for (final _DemoDispatch item in _dispatches)
+        if (mined || item.counselor == _user) _record(item),
+    ];
+    return <CaseDispatchRecord>[
+      for (final CaseDispatchRecord record in records)
+        if ((caseId == null || record.caseId == caseId) &&
+            (institutionId == null || record.institutionId == institutionId))
+          record,
+    ]..sort(
+      (CaseDispatchRecord a, CaseDispatchRecord b) =>
+          b.notifiedAt.compareTo(a.notifiedAt),
+    );
+  }
+
+  @override
+  Stream<CaseDispatchRecord> incomingDispatches() {
+    final String? user = _user;
+    return _dispatchEvents.stream.where(
+      (CaseDispatchRecord record) => record.counselorUserId == user,
+    );
+  }
 
   /// Simula una caída de conexión en las pruebas.
   bool offline = false;
@@ -551,6 +821,7 @@ class DemoStaffBackend implements StaffBackend {
     if (found.status == SetuCaseStatus.received) {
       found.status = SetuCaseStatus.inListening;
     }
+    _settleDispatches(found, counselorUserId);
     if (changed) {
       _notices.add(
         SetuAssignmentNotice(

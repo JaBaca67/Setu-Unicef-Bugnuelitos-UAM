@@ -49,6 +49,33 @@ abstract interface class StaffBackend {
     required String counselorUserId,
   });
 
+  // Despacho a Mesa de Escucha: la alerta se ofrece a varias personas y la
+  // atiende la primera que la toma.
+  /// Toma una alerta despachada. Si otra persona la tomó antes, el resultado
+  /// lo indica (`isAlreadyTaken`) sin lanzar error.
+  Future<CaseClaimResult> claimCase({
+    required String operationId,
+    required String caseId,
+  });
+
+  /// Declina una alerta despachada; el servidor puede derivarla a la red
+  /// externa.
+  Future<CaseDeclineResult> declineDispatch({
+    required String operationId,
+    required String caseId,
+    String? reason,
+  });
+
+  /// Historial de despachos: completo para MINED y solo los propios para
+  /// Mesa de Escucha. Nunca trae relato ni mensajes.
+  Future<List<CaseDispatchRecord>> dispatchHistory({
+    String? institutionId,
+    String? caseId,
+  });
+
+  /// Cambios en vivo de los despachos de la sesión actual.
+  Stream<CaseDispatchRecord> incomingDispatches();
+
   // Mesa de Escucha: solo la persona asignada al caso.
   /// Avisos en vivo de casos recién asignados a la sesión actual.
   Stream<SetuAssignmentNotice> assignmentNotices();
@@ -194,6 +221,12 @@ extension StaffRolePath on SetuStaffRole {
   };
 }
 
+/// Nombre corto del nivel de despacho.
+String dispatchTierLabel(CaseDispatchTier tier) => switch (tier) {
+  CaseDispatchTier.schoolPlant => 'Equipo de planta',
+  CaseDispatchTier.externalPool => 'Red externa',
+};
+
 extension StaffScopeText on StaffMembershipScope {
   /// Centro o ámbito que se muestra a la persona.
   String get place => institutionName ?? scopeLabel;
@@ -229,6 +262,13 @@ String staffErrorMessage(Object error) {
   }
   if (has('chat_not_available')) {
     return 'El chat de este caso todavía no está habilitado.';
+  }
+  if (has('requires_external_counselor')) {
+    return 'Esta alerta involucra a personal del centro: la atiende la red '
+        'externa de Mesa de Escucha.';
+  }
+  if (has('invalid_decline_reason')) {
+    return 'El motivo es demasiado largo. Acortalo e intentá de nuevo.';
   }
   if (has('case_not_found')) {
     return 'Ese caso no está disponible para tu cuenta.';
@@ -308,6 +348,13 @@ class StaffSession extends ChangeNotifier {
     } on Object catch (error) {
       return staffErrorMessage(error);
     }
+  }
+
+  /// Al abrir la app: si el servidor conserva una sesión, recupera sus
+  /// membresías sin pedir la contraseña otra vez. Sin sesión no hace nada.
+  Future<void> restore() async {
+    if (backend.currentUserId == null) return;
+    await refresh();
   }
 
   /// Vuelve a leer las membresías que el servidor reconoce para la sesión.

@@ -75,6 +75,43 @@ class RemoteStaffBackend implements StaffBackend {
   }
 
   @override
+  Future<CaseClaimResult> claimCase({
+    required String operationId,
+    required String caseId,
+  }) => _gateway.claimCaseCounselor(
+    clientOperationId: operationId,
+    caseId: caseId,
+  );
+
+  @override
+  Future<CaseDeclineResult> declineDispatch({
+    required String operationId,
+    required String caseId,
+    String? reason,
+  }) => _gateway.declineCaseDispatch(
+    clientOperationId: operationId,
+    caseId: caseId,
+    reason: reason,
+  );
+
+  @override
+  Future<List<CaseDispatchRecord>> dispatchHistory({
+    String? institutionId,
+    String? caseId,
+  }) => _gateway.listCaseDispatchHistory(
+    institutionId: institutionId,
+    caseId: caseId,
+  );
+
+  @override
+  Stream<CaseDispatchRecord> incomingDispatches() {
+    final String? user = _gateway.currentStaffUserId;
+    return user == null
+        ? const Stream<CaseDispatchRecord>.empty()
+        : _gateway.watchIncomingDispatches(counselorUserId: user);
+  }
+
+  @override
   Future<CaseNarrativeView?> narrative(String caseId) =>
       _gateway.getCaseNarrative(caseId);
 

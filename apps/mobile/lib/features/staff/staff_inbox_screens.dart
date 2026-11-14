@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -215,6 +217,19 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
     await load();
   }
 
+  void _history(StaffCaseSummary item) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (BuildContext sheet) => _DispatchHistorySheet(
+        session: session,
+        item: item,
+        school: school(item),
+      ),
+    );
+  }
+
   Widget _tile(StaffCaseSummary item) {
     final bool assigned = item.assignedCounselorId != null;
     return Container(
@@ -272,6 +287,11 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
             child: Text(
               assigned ? 'Cambiar asignación' : 'Asignar a Mesa de Escucha',
             ),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+            onPressed: () => _history(item),
+            child: const Text('Historial de despacho'),
           ),
         ],
       ),
@@ -425,6 +445,227 @@ class _CounselorSheetState extends State<_CounselorSheet> {
   );
 }
 
+/// Historial de despacho de un caso para MINED: a quién se ofreció, por qué
+/// nivel, qué respondió cada persona y quién la atiende. Sin relato ni chat.
+class _DispatchHistorySheet extends StatefulWidget {
+  const _DispatchHistorySheet({
+    required this.session,
+    required this.item,
+    required this.school,
+  });
+
+  final StaffSession session;
+  final StaffCaseSummary item;
+  final String school;
+
+  @override
+  State<_DispatchHistorySheet> createState() => _DispatchHistorySheetState();
+}
+
+class _DispatchHistorySheetState extends State<_DispatchHistorySheet> {
+  late Future<List<CaseDispatchRecord>> _records = _load();
+
+  Future<List<CaseDispatchRecord>> _load() =>
+      widget.session.backend.dispatchHistory(
+        institutionId: widget.item.institutionId,
+        caseId: widget.item.id,
+      );
+
+  Widget _entry(CaseDispatchRecord record) {
+    final DateTime? responded = record.respondedAt;
+    final String? reason = record.declineReason;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: CureandoTheme.blueSoft,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            record.counselorEmail ?? 'Profesional de Mesa de Escucha',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: <Widget>[
+              StaffTag(dispatchTierLabel(record.dispatchTier)),
+              StaffTag(
+                record.dispatchStatus.label,
+                highlight: record.dispatchStatus == CaseDispatchStatus.pending,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Avisada: ${staffShortDate(record.notifiedAt)}'
+            '${responded == null ? '' : '\nRespondió: ${staffShortDate(responded)}'}',
+            style: const TextStyle(
+              fontSize: 15,
+              height: 1.4,
+              color: CureandoTheme.secondaryInk,
+            ),
+          ),
+          if (reason != null && reason.isNotEmpty)
+            Text(
+              'Motivo de declinación: $reason',
+              style: const TextStyle(fontSize: 15, height: 1.4),
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Semantics(
+            header: true,
+            child: Text(
+              'Despacho de ${widget.item.referenceCode}',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(widget.school),
+          const SizedBox(height: 12),
+          FutureBuilder<List<CaseDispatchRecord>>(
+            future: _records,
+            builder:
+                (
+                  BuildContext context,
+                  AsyncSnapshot<List<CaseDispatchRecord>> snapshot,
+                ) {
+                  if (snapshot.hasError) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        StaffNotice(staffErrorMessage(snapshot.error!)),
+                        TextButton(
+                          onPressed: () => setState(() => _records = _load()),
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    );
+                  }
+                  final List<CaseDispatchRecord>? found = snapshot.data;
+                  if (found == null) {
+                    return const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          semanticsLabel: 'Cargando historial',
+                        ),
+                      ),
+                    );
+                  }
+                  if (found.isEmpty) {
+                    return const StaffNotice(
+                      'Esta alerta todavía no se ofreció a nadie de Mesa de '
+                      'Escucha.',
+                      error: false,
+                    );
+                  }
+                  final CaseDispatchRecord? attending = found
+                      .where(
+                        (CaseDispatchRecord record) =>
+                            record.dispatchStatus == CaseDispatchStatus.claimed,
+                      )
+                      .firstOrNull;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      StaffNotice(
+                        attending == null
+                            ? 'Todavía nadie tomó esta alerta.'
+                            : 'La atiende: '
+                                  '${attending.counselorEmail ?? 'una persona de Mesa de Escucha'}',
+                        error: false,
+                      ),
+                      const SizedBox(height: 12),
+                      for (final CaseDispatchRecord record in found)
+                        _entry(record),
+                    ],
+                  );
+                },
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Motivo opcional para declinar una alerta despachada.
+class _DeclineDialog extends StatefulWidget {
+  const _DeclineDialog({required this.reference});
+
+  final String reference;
+
+  @override
+  State<_DeclineDialog> createState() => _DeclineDialogState();
+}
+
+class _DeclineDialogState extends State<_DeclineDialog> {
+  final TextEditingController _reason = TextEditingController();
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text('Declinar ${widget.reference}'),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          const Text(
+            'La alerta se ofrece a otras personas de Mesa de Escucha. El '
+            'motivo lo ve la supervisión del MINED.',
+          ),
+          const SizedBox(height: 14),
+          StaffField(
+            label: 'Motivo (opcional)',
+            controller: _reason,
+            hint: 'Ej. Estoy atendiendo otra conversación',
+            maxLines: 3,
+            maxLength: 500,
+            capitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.newline,
+          ),
+        ],
+      ),
+    ),
+    actions: <Widget>[
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Cancelar'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(_reason.text.trim()),
+        child: const Text('Declinar alerta'),
+      ),
+    ],
+  );
+}
+
 /// Aviso dentro de la app: «Tenés una alerta asignada». No lleva datos del
 /// caso; al tocarlo se vuelve a verificar la sesión antes de abrir la bandeja.
 class AssignmentBanner extends StatelessWidget {
@@ -514,11 +755,183 @@ class DeskInboxScreen extends StatefulWidget {
 
 class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
   _DeskFilter _filter = _DeskFilter.review;
+  final OperationIds _operations = OperationIds();
+  List<CaseDispatchRecord> _pending = const <CaseDispatchRecord>[];
+  StreamSubscription<CaseDispatchRecord>? _live;
+  String? _busyCase;
 
   @override
   StaffSession get session => widget.session;
 
+  @override
+  void initState() {
+    super.initState();
+    // La bandeja se actualiza sola cuando llega, se toma o se retira una
+    // alerta despachada a esta persona.
+    _live = session.backend.incomingDispatches().listen((_) {
+      if (mounted) load();
+    }, onError: (Object _) {});
+  }
+
+  @override
+  void dispose() {
+    _live?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Future<void> loadExtra() async {
+    final StaffBackend backend = session.backend;
+    final String? me = backend.currentUserId;
+    final List<CaseDispatchRecord> mine = await backend.dispatchHistory(
+      institutionId: session.active?.institutionId,
+    );
+    _pending = <CaseDispatchRecord>[
+      for (final CaseDispatchRecord record in mine)
+        if (record.dispatchStatus == CaseDispatchStatus.pending &&
+            record.counselorUserId == me)
+          record,
+    ];
+  }
+
+  void _say(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _claim(CaseDispatchRecord record) async {
+    if (_busyCase != null) return;
+    final String reference = record.referenceCode ?? 'la alerta';
+    setState(() => _busyCase = record.caseId);
+    String message;
+    try {
+      final CaseClaimResult result = await session.backend.claimCase(
+        operationId: _operations.idFor('claim|${record.caseId}'),
+        caseId: record.caseId,
+      );
+      _operations.done();
+      message = result.isAlreadyTaken
+          ? 'Otra persona de Mesa de Escucha tomó $reference antes. Ya no '
+                'está disponible.'
+          : result.claimed || result.alreadyAssignedToYou
+          ? 'Tomaste $reference. Ya está en «Mis casos».'
+          : 'No pudimos tomar $reference. Actualizá la bandeja e intentá de '
+                'nuevo.';
+    } on Object catch (failure) {
+      message = staffErrorMessage(failure);
+    }
+    if (!mounted) return;
+    setState(() => _busyCase = null);
+    _say(message);
+    await load();
+  }
+
+  Future<void> _decline(CaseDispatchRecord record) async {
+    if (_busyCase != null) return;
+    final String reference = record.referenceCode ?? 'la alerta';
+    final String? reason = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialog) => _DeclineDialog(reference: reference),
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _busyCase = record.caseId);
+    String message;
+    try {
+      final CaseDeclineResult result = await session.backend.declineDispatch(
+        operationId: _operations.idFor('decline|${record.caseId}|$reason'),
+        caseId: record.caseId,
+        reason: reason.isEmpty ? null : reason,
+      );
+      _operations.done();
+      message = result.fallbackTier == CaseDispatchTier.externalPool
+          ? 'Declinaste $reference. Se ofreció a la red externa.'
+          : 'Declinaste $reference.';
+    } on Object catch (failure) {
+      message = staffErrorMessage(failure);
+    }
+    if (!mounted) return;
+    setState(() => _busyCase = null);
+    _say(message);
+    await load();
+  }
+
+  Widget _dispatchTile(CaseDispatchRecord record) {
+    final bool busy = _busyCase == record.caseId;
+    final SetuSituationType? type = record.situationType;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CureandoTheme.yellowSoft,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE5C100)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: <Widget>[
+              Text(
+                record.referenceCode ?? 'Alerta',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              StaffTag(dispatchTierLabel(record.dispatchTier)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            record.institutionName ??
+                schools[record.institutionId] ??
+                'Centro sin nombre disponible',
+            style: const TextStyle(fontSize: 16),
+          ),
+          if (type != null)
+            Text(
+              staffCaseKind(
+                type,
+                SetuStudentCaseRole.victim,
+              ).split(' · ').first,
+              style: const TextStyle(fontSize: 16),
+            ),
+          Text(
+            'Te avisamos: ${staffShortDate(record.notifiedAt)}',
+            style: const TextStyle(
+              fontSize: 15,
+              color: CureandoTheme.secondaryInk,
+            ),
+          ),
+          const SizedBox(height: 10),
+          StaffPrimaryButton(
+            label: 'Tomar alerta',
+            busy: busy,
+            onPressed: _busyCase == null ? () => _claim(record) : null,
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            style: flowSecondaryStyle(),
+            onPressed: _busyCase == null ? () => _decline(record) : null,
+            child: const Text('Declinar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   bool _matches(StaffCaseSummary item) {
+    // Solo los casos que esta persona atiende: una alerta ofrecida que
+    // todavía no tomó aparece arriba, no en «Mis casos».
+    if (item.assignedCounselorId != session.backend.currentUserId) {
+      return false;
+    }
     if (item.status == SetuCaseStatus.closed) return false;
     return switch (_filter) {
       _DeskFilter.review => item.isUnassessed,
@@ -600,6 +1013,23 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         AssignmentBanner(session: session, onOpened: load),
+        if (_pending.isNotEmpty) ...<Widget>[
+          Semantics(
+            header: true,
+            child: const Text('Alertas por tomar', style: _heading),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Se ofrecen a varias personas de Mesa de Escucha. Quien la toma '
+            'primero la atiende; el relato y el chat se abren solo para esa '
+            'persona.',
+            style: TextStyle(fontSize: 15, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          for (final CaseDispatchRecord record in _pending)
+            _dispatchTile(record),
+          const SizedBox(height: 8),
+        ],
         Row(
           children: <Widget>[
             Expanded(
