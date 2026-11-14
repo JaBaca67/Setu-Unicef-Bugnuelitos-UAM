@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app.dart';
 import 'features/staff/remote_staff_backend.dart';
@@ -12,6 +13,10 @@ import 'shared/remote/setu_remote_models.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // La app se usa solo en vertical; el manifiesto de Android fija lo mismo.
+  await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+  ]);
   // Si el cliente remoto no puede prepararse, la app abre con la demostración
   // en memoria, que se identifica en pantalla como datos ficticios.
   StaffBackend? staff;
