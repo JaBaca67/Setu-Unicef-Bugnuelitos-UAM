@@ -100,13 +100,24 @@ WHERE NOT EXISTS (
 -- 2. Usuarios ficticios de personal (auth.users) y membresías (D1)
 -- ---------------------------------------------------------------------------
 
+-- Contraseña ficticia únicamente para pruebas de demostración local/remota: 'Demo-SeTu-2026'
 INSERT INTO auth.users (
   id,
   instance_id,
   aud,
   role,
   email,
+  encrypted_password,
   email_confirmed_at,
+  confirmation_token,
+  recovery_token,
+  email_change_token_new,
+  email_change,
+  phone_change,
+  phone_change_token,
+  email_change_token_current,
+  email_change_confirm_status,
+  reauthentication_token,
   raw_app_meta_data,
   raw_user_meta_data,
   is_sso_user,
@@ -121,7 +132,9 @@ VALUES
     'authenticated',
     'authenticated',
     'mined.demo@setu.test',
+    extensions.crypt('Demo-SeTu-2026', extensions.gen_salt('bf')),
     now(),
+    '', '', '', '', '', '', '', 0, '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"mined_supervisor"}'::jsonb,
     false,
@@ -135,7 +148,9 @@ VALUES
     'authenticated',
     'authenticated',
     'escucha.demo@setu.test',
+    extensions.crypt('Demo-SeTu-2026', extensions.gen_salt('bf')),
     now(),
+    '', '', '', '', '', '', '', 0, '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"counseling_desk"}'::jsonb,
     false,
@@ -149,7 +164,9 @@ VALUES
     'authenticated',
     'authenticated',
     'psicologia.cca@setu.test',
+    extensions.crypt('Demo-SeTu-2026', extensions.gen_salt('bf')),
     now(),
+    '', '', '', '', '', '', '', 0, '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"counseling_desk","school":"AULA26"}'::jsonb,
     false,
@@ -163,7 +180,9 @@ VALUES
     'authenticated',
     'authenticated',
     'direccion.aula24@setu.test',
+    extensions.crypt('Demo-SeTu-2026', extensions.gen_salt('bf')),
     now(),
+    '', '', '', '', '', '', '', 0, '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"school_director","school":"AULA24"}'::jsonb,
     false,
@@ -177,7 +196,9 @@ VALUES
     'authenticated',
     'authenticated',
     'direccion.aula25@setu.test',
+    extensions.crypt('Demo-SeTu-2026', extensions.gen_salt('bf')),
     now(),
+    '', '', '', '', '', '', '', 0, '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"school_director","school":"AULA25"}'::jsonb,
     false,
@@ -191,7 +212,9 @@ VALUES
     'authenticated',
     'authenticated',
     'direccion.cca@setu.test',
+    extensions.crypt('Demo-SeTu-2026', extensions.gen_salt('bf')),
     now(),
+    '', '', '', '', '', '', '', 0, '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"school_director","school":"AULA26"}'::jsonb,
     false,
@@ -205,7 +228,9 @@ VALUES
     'authenticated',
     'authenticated',
     'invitada.cca@setu.test',
+    extensions.crypt('Demo-SeTu-2026', extensions.gen_salt('bf')),
     now(),
+    '', '', '', '', '', '', '', 0, '',
     '{"provider":"email","providers":["email"]}'::jsonb,
     '{"demo_role":"pending_invite","school":"AULA26"}'::jsonb,
     false,
@@ -214,7 +239,51 @@ VALUES
     now()
   )
 ON CONFLICT (id) DO UPDATE
-SET email_confirmed_at = COALESCE(auth.users.email_confirmed_at, EXCLUDED.email_confirmed_at);
+SET
+  encrypted_password = COALESCE(auth.users.encrypted_password, EXCLUDED.encrypted_password),
+  email_confirmed_at = COALESCE(auth.users.email_confirmed_at, EXCLUDED.email_confirmed_at),
+  confirmation_token = COALESCE(auth.users.confirmation_token, ''),
+  recovery_token = COALESCE(auth.users.recovery_token, ''),
+  email_change_token_new = COALESCE(auth.users.email_change_token_new, ''),
+  email_change = COALESCE(auth.users.email_change, ''),
+  phone_change = COALESCE(auth.users.phone_change, ''),
+  phone_change_token = COALESCE(auth.users.phone_change_token, ''),
+  email_change_token_current = COALESCE(auth.users.email_change_token_current, ''),
+  email_change_confirm_status = COALESCE(auth.users.email_change_confirm_status, 0),
+  reauthentication_token = COALESCE(auth.users.reauthentication_token, '');
+
+INSERT INTO auth.identities (
+  id,
+  user_id,
+  provider_id,
+  identity_data,
+  provider,
+  last_sign_in_at,
+  created_at,
+  updated_at
+)
+SELECT
+  u.id,
+  u.id,
+  u.id::text,
+  jsonb_build_object(
+    'sub', u.id::text,
+    'email', u.email,
+    'email_verified', true,
+    'phone_verified', false
+  ),
+  'email',
+  NULL,
+  now(),
+  now()
+FROM auth.users u
+WHERE u.email LIKE '%@setu.test'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM auth.identities ai
+    WHERE ai.user_id = u.id
+      AND ai.provider = 'email'
+  );
 
 INSERT INTO public.staff_memberships (user_id, role, institution_id, active)
 SELECT m.user_id, m.role, m.institution_id, true
