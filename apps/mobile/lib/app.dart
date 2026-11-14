@@ -8,6 +8,7 @@ import 'features/piece/student_piece.dart';
 import 'features/piece/student_profile_screen.dart';
 import 'features/school_access/school_access_screen.dart';
 import 'features/school_access/school_location.dart';
+import 'features/school_access/school_qr_poster.dart';
 import 'features/school_access/student_session.dart';
 import 'features/staff/demo_staff_backend.dart';
 import 'features/staff/staff_access_screens.dart';
@@ -76,8 +77,9 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.screenSecurity ?? ScreenSecurityController();
   late final GoRouter _router = GoRouter(
     initialLocation: widget.showM1Verification ? '/verificacion-m1' : '/',
-    refreshListenable: _staff,
-    redirect: _staffRedirect,
+    // La guía de rutas se reevalúa al cambiar cualquiera de las sesiones.
+    refreshListenable: Listenable.merge(<Listenable>[_staff, _session]),
+    redirect: _sessionRedirect,
     routes: <RouteBase>[
       GoRoute(
         path: '/',
@@ -92,9 +94,31 @@ class _CureandoAppState extends State<CureandoApp> {
               SchoolAccessScreen(
                 step: SchoolAccessStep.method,
                 session: _session,
+                allowSimulation: widget.allowSchoolSimulation,
               ),
             ),
             routes: <RouteBase>[
+              // Llegada por el QR del cartel leído con la cámara del teléfono.
+              GoRoute(
+                path: 'enlace/:code',
+                pageBuilder: (context, state) => studentTransition(
+                  context,
+                  state,
+                  SchoolLinkScreen(
+                    session: _session,
+                    code: state.pathParameters['code'] ?? '',
+                  ),
+                ),
+              ),
+              // Cartel de demostración del Colegio Centro América (AULA26).
+              GoRoute(
+                path: 'cartel',
+                pageBuilder: (context, state) => studentTransition(
+                  context,
+                  state,
+                  SchoolQrPosterScreen(school: localSchoolCatalog.first),
+                ),
+              ),
               for (final SchoolAccessStep step in SchoolAccessStep.values)
                 if (step.path.isNotEmpty)
                   GoRoute(
@@ -229,6 +253,21 @@ class _CureandoAppState extends State<CureandoApp> {
                 DirectorInboxScreen(session: _staff),
             routes: <RouteBase>[
               GoRoute(
+                path: 'cartel',
+                builder: (BuildContext context, GoRouterState state) {
+                  final StaffMembershipScope? scope = _staff.active;
+                  return SchoolQrPosterScreen(
+                    school: ConfirmedSchool(
+                      id: scope?.institutionId ?? '',
+                      publicCode: scope?.institutionPublicCode ?? '',
+                      name: scope?.institutionName ?? 'Tu colegio',
+                      municipality: '',
+                      department: '',
+                    ),
+                  );
+                },
+              ),
+              GoRoute(
                 path: 'caso/:id',
                 builder: (BuildContext context, GoRouterState state) =>
                     DirectorCaseScreen(
@@ -281,18 +320,41 @@ class _CureandoAppState extends State<CureandoApp> {
   );
   final ValueNotifier<int> _revision = ValueNotifier<int>(0);
 
-  /// Guía de navegación del personal. No es control de acceso: los permisos
-  /// los aplica el servidor en cada consulta.
-  String? _staffRedirect(BuildContext context, GoRouterState state) {
-    final String location = state.matchedLocation;
-    if (!location.startsWith('/personal')) return null;
-    final StaffMembershipScope? active = _staff.active;
-    if (location == '/personal/activar') return null;
-    if (location == '/personal/ambito') {
-      return _staff.memberships.length > 1 ? null : '/personal';
+  /// Guía de navegación por sesión. Mientras haya una sesión abierta
+  /// (personal con ingreso o estudiante con colegio confirmado) no se puede
+  /// volver a la bienvenida ni cambiar de código o de rol: primero hay que
+  /// «Cerrar sesión» o «Salir del colegio». No es control de acceso: los
+  /// permisos los aplica el servidor en cada consulta.
+  String? _sessionRedirect(BuildContext context, GoRouterState state) {
+    // Enlace del cartel abierto desde fuera de la app.
+    if (state.uri.scheme == 'setu' && state.uri.host == 'colegio') {
+      final String? code = extractSchoolCode(state.uri.toString());
+      return code == null ? '/colegio' : '/colegio/enlace/$code';
     }
-    if (active == null) return location == '/personal' ? null : '/personal';
-    return location.startsWith(active.role.path) ? null : active.role.path;
+    final String location = state.matchedLocation;
+    if (widget.showM1Verification && location == '/verificacion-m1') {
+      return null;
+    }
+    final bool personal = location.startsWith('/personal');
+    final StaffMembershipScope? active = _staff.active;
+    if (_staff.memberships.isNotEmpty) {
+      if (location == '/personal/activar') return null;
+      if (active == null) {
+        return location == '/personal/ambito' ? null : '/personal/ambito';
+      }
+      return location.startsWith(active.role.path) ? null : active.role.path;
+    }
+    if (_session.school != null) {
+      final bool entry =
+          location == '/' || location.startsWith('/colegio') || personal;
+      return entry ? '/inicio' : null;
+    }
+    if (!personal ||
+        location == '/personal' ||
+        location == '/personal/activar') {
+      return null;
+    }
+    return '/personal';
   }
 
   void _update(VoidCallback action) {
@@ -310,7 +372,10 @@ class _CureandoAppState extends State<CureandoApp> {
     super.initState();
     _learningLifecycle = AppLifecycleListener(onResume: _learning.refreshDay);
     _session.addListener(_syncSchool);
-    _session.open().then((_) => _enterSavedSchool());
+    // Al abrir, cada sesión guardada se restaura y la guía de rutas lleva a
+    // su superficie: el colegio del estudiante o el ámbito del personal.
+    _session.open();
+    _staff.restore();
     if (widget.showM1Verification) {
       _security.addListener(_refresh);
       _security.initialize();
@@ -324,16 +389,6 @@ class _CureandoAppState extends State<CureandoApp> {
   void _syncSchool() {
     final String? code = _session.school?.publicCode;
     if (code != null) _support.schoolCode = code;
-  }
-
-  /// Con un colegio ya confirmado, la app abre directo en el inicio.
-  void _enterSavedSchool() {
-    if (!mounted || widget.showM1Verification || _session.school == null) {
-      return;
-    }
-    if (_router.routerDelegate.currentConfiguration.uri.path == '/') {
-      _router.go('/inicio');
-    }
   }
 
   void _refresh() {

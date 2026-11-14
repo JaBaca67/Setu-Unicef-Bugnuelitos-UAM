@@ -225,17 +225,14 @@ class StaffAreaScaffold extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(active.place),
               ],
-              const SizedBox(height: 16),
-              if (session.memberships.length > 1)
-                OutlinedButton(
-                  style: flowSecondaryStyle(),
-                  onPressed: () {
-                    Navigator.of(sheet).pop();
-                    context.go('/personal/ambito');
-                  },
-                  child: const Text('Cambiar de centro'),
+              const SizedBox(height: 12),
+              if (session.memberships.length > 1) ...<Widget>[
+                const Text(
+                  'Para trabajar con otro centro, cerrá sesión e ingresá de '
+                  'nuevo.',
                 ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
+              ],
               TextButton(
                 onPressed: () {
                   Navigator.of(sheet).pop();
