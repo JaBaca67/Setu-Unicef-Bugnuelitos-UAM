@@ -15,11 +15,11 @@ String normalizeSchoolCode(String code) {
 }
 
 enum SchoolProximity {
-  nearby('La lectura de ubicación coincide con la zona de prueba.'),
+  nearby('La lectura de ubicación coincide con la zona de tu colegio.'),
   simulated(
     'Este resultado es simulado. Podés mostrar el recorrido desde cualquier lugar.',
   ),
-  outside('Acercate al punto de prueba para intentarlo de nuevo.'),
+  outside('Acercate a tu colegio para intentarlo de nuevo.'),
   imprecise(
     'La lectura de ubicación es imprecisa. Probá de nuevo en un lugar abierto.',
   ),
@@ -45,7 +45,7 @@ enum SchoolProximity {
   String get title => switch (this) {
     nearby => 'Colegio confirmado',
     simulated => 'Cercanía simulada',
-    outside => 'Fuera de la zona de prueba',
+    outside => 'Fuera de la zona del colegio',
     _ => 'Cercanía sin confirmar',
   };
 }

@@ -84,8 +84,10 @@ class SupportFlow extends ChangeNotifier {
   final bool _ownsBackend;
   final CaseCapabilityCrypto _crypto;
 
-  /// Código público del colegio confirmado en el acceso escolar.
-  final String schoolCode;
+  /// Código público del colegio confirmado en el acceso escolar. La app lo
+  /// actualiza cuando el estudiante confirma o cambia de colegio; cada
+  /// alerta guarda el código vigente al momento de enviarla.
+  String schoolCode;
 
   /// Espera antes de reintentar una entrega que falló.
   final Duration retryDelay;
@@ -279,6 +281,7 @@ class SupportFlow extends ChangeNotifier {
             shape: piece?['shape'] as String?,
             color: piece?['color'] as String?,
             accessories: accessories.whereType<String>(),
+            displayName: piece?['displayName'] as String?,
           ),
         ),
       );

@@ -24,7 +24,17 @@ enum WelcomeDestination {
 }
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, this.hasSchool});
+
+  /// Indica si ya hay un colegio confirmado en este teléfono; con uno, el
+  /// ingreso estudiantil entra directo al inicio.
+  final bool Function()? hasSchool;
+
+  static const TextStyle _caption = TextStyle(
+    fontSize: 14,
+    height: 1.35,
+    color: CureandoTheme.secondaryInk,
+  );
 
   void _showPrivacy(BuildContext context) {
     showModalBottomSheet<void>(
@@ -96,13 +106,21 @@ class WelcomeScreen extends StatelessWidget {
                 shape: shape,
                 textStyle: buttonText,
               ),
-              onPressed: () => context.push('/colegio'),
+              onPressed: () => hasSchool?.call() ?? false
+                  ? context.go('/inicio')
+                  : context.push('/colegio'),
               child: const Text(
-                'Usar código del colegio',
+                'Ingreso estudiantil',
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
+            const Text(
+              'Entrás con el código de tu colegio, sin nombre ni correo.',
+              textAlign: TextAlign.center,
+              style: _caption,
+            ),
+            const SizedBox(height: 18),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(48, 52),
@@ -116,6 +134,12 @@ class WelcomeScreen extends StatelessWidget {
                 'Personal autorizado',
                 textAlign: TextAlign.center,
               ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Para Dirección, Mesa de Escucha y MINED.',
+              textAlign: TextAlign.center,
+              style: _caption,
             ),
             const SizedBox(height: 12),
             TextButton(

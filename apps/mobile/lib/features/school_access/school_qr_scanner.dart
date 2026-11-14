@@ -9,10 +9,13 @@ import 'school_location.dart';
 class SchoolQrScanner extends StatefulWidget {
   const SchoolQrScanner({
     super.key,
+    required this.resolve,
     required this.onAccepted,
     required this.onManual,
   });
 
+  /// Verdadero si el código leído corresponde a un colegio registrado.
+  final Future<bool> Function(String code) resolve;
   final VoidCallback onAccepted;
   final VoidCallback onManual;
 
@@ -28,6 +31,7 @@ class _SchoolQrScannerState extends State<SchoolQrScanner>
   );
   bool _leaving = false;
   bool _unknownCode = false;
+  bool _checking = false;
 
   @override
   void initState() {
@@ -45,14 +49,21 @@ class _SchoolQrScannerState extends State<SchoolQrScanner>
     }
   }
 
-  void _onDetect(BarcodeCapture capture) {
-    if (_leaving || !mounted) return;
+  Future<void> _onDetect(BarcodeCapture capture) async {
+    if (_leaving || _checking || !mounted) return;
     bool readCode = false;
     for (final Barcode barcode in capture.barcodes) {
       final String? value = barcode.rawValue;
       if (value == null) continue;
       readCode = true;
-      if (normalizeSchoolCode(value) == demoSchoolCode) {
+      final String code = normalizeSchoolCode(value);
+      // Solo se consultan lecturas con forma de código de colegio.
+      if (!RegExp(r'^[A-Z0-9]{6}$').hasMatch(code)) continue;
+      _checking = true;
+      final bool known = await widget.resolve(code);
+      _checking = false;
+      if (!mounted) return;
+      if (known) {
         unawaited(_leave(widget.onAccepted));
         return;
       }
@@ -124,7 +135,7 @@ class _SchoolQrScannerState extends State<SchoolQrScanner>
           Semantics(
             liveRegion: true,
             child: const Text(
-              'Ese QR no corresponde al código de prueba. Probá con el QR AULA24.',
+              'Ese QR no corresponde a un colegio registrado. Probá de nuevo o escribí el código.',
               textAlign: TextAlign.center,
             ),
           ),

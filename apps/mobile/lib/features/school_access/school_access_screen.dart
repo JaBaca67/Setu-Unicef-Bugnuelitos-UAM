@@ -9,6 +9,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import 'school_location.dart';
 import 'school_qr_scanner.dart';
+import 'student_session.dart';
 
 enum SchoolAccessStep {
   method(
@@ -42,12 +43,16 @@ class SchoolAccessScreen extends StatelessWidget {
   const SchoolAccessScreen({
     super.key,
     required this.step,
+    required this.session,
     this.proximity = SchoolProximity.unavailable,
     this.checkProximity = checkSchoolLocation,
     this.allowSimulation = false,
   });
 
   final SchoolAccessStep step;
+
+  /// Sesión estudiantil: resuelve el código y guarda el colegio confirmado.
+  final StudentSession session;
   final SchoolProximity proximity;
   final Future<SchoolProximity> Function() checkProximity;
   final bool allowSimulation;
@@ -57,9 +62,10 @@ class SchoolAccessScreen extends StatelessWidget {
     final List<Widget> content = switch (step) {
       SchoolAccessStep.method => _chooseMethod(context),
       SchoolAccessStep.scan => _scan(context),
-      SchoolAccessStep.manual => <Widget>[const _ManualCodeForm()],
+      SchoolAccessStep.manual => <Widget>[_ManualCodeForm(session: session)],
       SchoolAccessStep.proximity => <Widget>[
         _ProximityCheck(
+          school: session.candidate ?? session.school,
           check: checkProximity,
           allowSimulation: allowSimulation,
         ),
@@ -116,6 +122,7 @@ class SchoolAccessScreen extends StatelessWidget {
 
   List<Widget> _scan(BuildContext context) => <Widget>[
     SchoolQrScanner(
+      resolve: (String code) async => await session.resolve(code) != null,
       onAccepted: () =>
           context.pushReplacement(SchoolAccessStep.proximity.location),
       onManual: () => context.pushReplacement(SchoolAccessStep.manual.location),
@@ -136,13 +143,21 @@ class SchoolAccessScreen extends StatelessWidget {
                 : CureandoTheme.greenSoft,
           ),
           const SizedBox(height: 28),
-          const _SchoolCard(),
+          _SchoolCard(
+            school: session.candidate ?? session.school,
+            simulated: proximity == SchoolProximity.simulated,
+          ),
           const SizedBox(height: 20),
           Text(proximity.message, textAlign: TextAlign.center),
           const SizedBox(height: 32),
           _SchoolButton(
             label: 'Continuar',
-            onPressed: () => context.go('/inicio'),
+            onPressed: () {
+              // El colegio queda guardado en este teléfono para no pedir
+              // el código en cada ingreso.
+              session.confirmCandidate();
+              context.go('/inicio');
+            },
           ),
         ]
       : <Widget>[
@@ -183,8 +198,13 @@ class SchoolAccessScreen extends StatelessWidget {
 }
 
 class _ProximityCheck extends StatefulWidget {
-  const _ProximityCheck({required this.check, required this.allowSimulation});
+  const _ProximityCheck({
+    required this.school,
+    required this.check,
+    required this.allowSimulation,
+  });
 
+  final ConfirmedSchool? school;
   final Future<SchoolProximity> Function() check;
   final bool allowSimulation;
 
@@ -211,7 +231,7 @@ class _ProximityCheckState extends State<_ProximityCheck> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: <Widget>[
-      const _SchoolCard(),
+      _SchoolCard(school: widget.school),
       const SizedBox(height: 24),
       const Text(
         'Usamos tu ubicación una vez para saber si estás cerca de este colegio. Tu ubicación exacta no se guarda.',
@@ -301,7 +321,9 @@ class _SchoolHeader extends StatelessWidget {
 }
 
 class _ManualCodeForm extends StatefulWidget {
-  const _ManualCodeForm();
+  const _ManualCodeForm({required this.session});
+
+  final StudentSession session;
 
   @override
   State<_ManualCodeForm> createState() => _ManualCodeFormState();
@@ -312,14 +334,27 @@ class _ManualCodeFormState extends State<_ManualCodeForm> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focus = FocusNode();
   String? _error;
+  bool _searching = false;
 
-  void _continue() {
+  Future<void> _continue() async {
+    if (_searching) return;
     final String code = normalizeSchoolCode(_controller.text);
-    if (code != demoSchoolCode) {
+    if (code.length != _codeLength) {
+      setState(() => _error = 'Ingresá los seis caracteres del código.');
+      _focus.requestFocus();
+      return;
+    }
+    setState(() {
+      _searching = true;
+      _error = null;
+    });
+    final ConfirmedSchool? school = await widget.session.resolve(code);
+    if (!mounted) return;
+    setState(() => _searching = false);
+    if (school == null) {
       setState(
-        () => _error = code.length != _codeLength
-            ? 'Ingresá los seis caracteres del código.'
-            : 'Ese código no corresponde a la prueba. Revisá el código e intentá de nuevo.',
+        () => _error =
+            'Ese código no corresponde a un colegio registrado. Revisá el código e intentá de nuevo.',
       );
       _focus.requestFocus();
       return;
@@ -350,9 +385,12 @@ class _ManualCodeFormState extends State<_ManualCodeForm> {
           ),
         )
       else
-        const Text('Código de demostración AULA24'),
+        const Text('Tiene seis caracteres. Está en el cartel de tu colegio.'),
       const SizedBox(height: 24),
-      _SchoolButton(label: 'Entrar', onPressed: _continue),
+      _SchoolButton(
+        label: _searching ? 'Buscando tu colegio…' : 'Entrar',
+        onPressed: _searching ? null : _continue,
+      ),
       const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Text('o', textAlign: TextAlign.center),
@@ -538,7 +576,12 @@ class _SchoolBadge extends StatelessWidget {
 }
 
 class _SchoolCard extends StatelessWidget {
-  const _SchoolCard();
+  const _SchoolCard({required this.school, this.simulated = false});
+
+  final ConfirmedSchool? school;
+
+  /// Solo el modo de simulación de cercanía rotula el colegio como prueba.
+  final bool simulated;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -548,26 +591,59 @@ class _SchoolCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: const Color(0xFFD8E4F5)),
     ),
-    child: const Row(
+    child: Row(
       children: <Widget>[
-        Icon(Icons.school_outlined, color: CureandoTheme.blue),
-        SizedBox(width: 12),
+        SchoolCrest(school: school, size: 56),
+        const SizedBox(width: 12),
         Flexible(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                'Colegio Centro América',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                school?.displayName ?? 'Tu colegio',
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              Text(
-                'Referencia de prueba',
-                style: TextStyle(color: CureandoTheme.secondaryInk),
-              ),
+              if (school case final ConfirmedSchool found)
+                Text(
+                  found.place,
+                  style: const TextStyle(color: CureandoTheme.secondaryInk),
+                ),
+              if (simulated)
+                const Text(
+                  'Colegio de prueba · cercanía simulada',
+                  style: TextStyle(color: CureandoTheme.secondaryInk),
+                ),
             ],
           ),
         ),
       ],
     ),
   );
+}
+
+/// Escudo oficial del colegio, o un ícono escolar si la app no lo tiene.
+class SchoolCrest extends StatelessWidget {
+  const SchoolCrest({super.key, required this.school, this.size = 40});
+
+  final ConfirmedSchool? school;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? asset = school?.crestAsset;
+    return asset == null
+        ? ExcludeSemantics(
+            child: Icon(
+              Icons.school_outlined,
+              color: CureandoTheme.blue,
+              size: size * .6,
+            ),
+          )
+        : Image.asset(
+            asset,
+            width: size,
+            height: size,
+            semanticLabel: 'Escudo del ${school!.displayName}',
+          );
+  }
 }

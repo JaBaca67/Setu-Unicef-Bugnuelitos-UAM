@@ -50,11 +50,28 @@ class StudentPiece {
     required this.shape,
     required this.color,
     this.accessories = const <PieceAccessory>{},
+    this.nickname = defaultNickname,
   });
+
+  static const String defaultNickname = 'Pulgin Valiente';
+  static const int maxNickname = 24;
 
   final PieceShape shape;
   final PieceColor color;
   final Set<PieceAccessory> accessories;
+
+  /// Apodo de la pieza. Es un nombre de juego: nunca el nombre real.
+  final String nickname;
+
+  /// Apodo listo para guardar: sin espacios sobrantes, con tope de largo y
+  /// con el apodo por defecto si queda vacío.
+  static String cleanNickname(String? raw) {
+    final String clean = (raw ?? '').trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (clean.isEmpty) return defaultNickname;
+    return clean.length > maxNickname
+        ? clean.substring(0, maxNickname).trim()
+        : clean;
+  }
 
   static const StudentPiece initial = StudentPiece(
     shape: PieceShape.puzzle,
@@ -62,7 +79,12 @@ class StudentPiece {
     accessories: <PieceAccessory>{PieceAccessory.cap, PieceAccessory.glasses},
   );
 
-  factory StudentPiece.random(math.Random random) => StudentPiece(
+  /// Pieza al azar; conserva el apodo que se le pase.
+  factory StudentPiece.random(
+    math.Random random, {
+    String nickname = defaultNickname,
+  }) => StudentPiece(
+    nickname: nickname,
     shape: PieceShape.values[random.nextInt(PieceShape.values.length)],
     color: PieceColor.values[random.nextInt(PieceColor.values.length)],
     accessories: <PieceAccessory>{
@@ -81,8 +103,10 @@ class StudentPiece {
     return '$base con $extras';
   }
 
-  /// Forma serializable que viaja con la alerta. No lleva nombres ni fotos.
+  /// Forma serializable que viaja con la alerta. Lleva el apodo de la
+  /// pieza (`displayName`); nunca nombres reales ni fotos.
   Map<String, Object?> toJson() => <String, Object?>{
+    'displayName': nickname,
     'shape': shape.name,
     'color': color.name,
     'accessories': <String>[
@@ -97,6 +121,7 @@ class StudentPiece {
     String? shape,
     String? color,
     Iterable<String> accessories = const <String>[],
+    String? displayName,
   }) {
     final PieceShape? parsedShape = PieceShape.values
         .where((PieceShape value) => value.name == shape)
@@ -112,6 +137,7 @@ class StudentPiece {
         for (final PieceAccessory accessory in PieceAccessory.values)
           if (accessories.contains(accessory.name)) accessory,
       },
+      nickname: cleanNickname(displayName),
     );
   }
 
@@ -119,10 +145,12 @@ class StudentPiece {
     PieceShape? shape,
     PieceColor? color,
     Set<PieceAccessory>? accessories,
+    String? nickname,
   }) => StudentPiece(
     shape: shape ?? this.shape,
     color: color ?? this.color,
     accessories: accessories ?? this.accessories,
+    nickname: nickname ?? this.nickname,
   );
 
   StudentPiece toggle(PieceAccessory accessory) => copyWith(

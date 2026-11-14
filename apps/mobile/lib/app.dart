@@ -4,10 +4,11 @@ import 'features/home/learning_progress.dart';
 import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
-import 'features/piece/piece_editor_screen.dart';
 import 'features/piece/student_piece.dart';
+import 'features/piece/student_profile_screen.dart';
 import 'features/school_access/school_access_screen.dart';
 import 'features/school_access/school_location.dart';
+import 'features/school_access/student_session.dart';
 import 'features/staff/demo_staff_backend.dart';
 import 'features/staff/staff_access_screens.dart';
 import 'features/staff/staff_backend.dart';
@@ -32,6 +33,7 @@ class CureandoApp extends StatefulWidget {
     this.gateway,
     this.learningProgress,
     this.supportFlow,
+    this.studentSession,
     this.staffBackend,
     this.screenSecurity,
     this.showM1Verification = false,
@@ -42,6 +44,10 @@ class CureandoApp extends StatefulWidget {
   final CureandoGateway? gateway;
   final LearningProgress? learningProgress;
   final SupportFlow? supportFlow;
+
+  /// Colegio confirmado y pieza guardados en el teléfono. Sin valor se usa
+  /// el almacén cifrado del dispositivo y el catálogo local de colegios.
+  final StudentSession? studentSession;
 
   /// Puerto de personal autorizado. Sin valor se usa la demostración en
   /// memoria; `main.dart` inyecta el adaptador de Supabase.
@@ -63,9 +69,9 @@ class _CureandoAppState extends State<CureandoApp> {
   late final StaffSession _staff = StaffSession(
     widget.staffBackend ?? DemoStaffBackend(),
   );
-  final ValueNotifier<StudentPiece> _piece = ValueNotifier<StudentPiece>(
-    StudentPiece.initial,
-  );
+  late final StudentSession _session =
+      widget.studentSession ?? StudentSession();
+  ValueNotifier<StudentPiece> get _piece => _session.piece;
   late final ScreenSecurityController _security =
       widget.screenSecurity ?? ScreenSecurityController();
   late final GoRouter _router = GoRouter(
@@ -76,14 +82,17 @@ class _CureandoAppState extends State<CureandoApp> {
       GoRoute(
         path: '/',
         builder: (BuildContext context, GoRouterState state) =>
-            const WelcomeScreen(),
+            WelcomeScreen(hasSchool: () => _session.school != null),
         routes: <RouteBase>[
           GoRoute(
             path: 'colegio',
             pageBuilder: (context, state) => studentTransition(
               context,
               state,
-              const SchoolAccessScreen(step: SchoolAccessStep.method),
+              SchoolAccessScreen(
+                step: SchoolAccessStep.method,
+                session: _session,
+              ),
             ),
             routes: <RouteBase>[
               for (final SchoolAccessStep step in SchoolAccessStep.values)
@@ -97,6 +106,7 @@ class _CureandoAppState extends State<CureandoApp> {
                         state,
                         SchoolAccessScreen(
                           step: step,
+                          session: _session,
                           proximity:
                               extra is SchoolProximity &&
                                   (extra != SchoolProximity.simulated ||
@@ -138,7 +148,7 @@ class _CureandoAppState extends State<CureandoApp> {
                 pageBuilder: (context, state) => studentTransition(
                   context,
                   state,
-                  PieceEditorScreen(piece: _piece),
+                  StudentProfileScreen(session: _session, progress: _learning),
                 ),
               ),
               GoRoute(
@@ -299,12 +309,30 @@ class _CureandoAppState extends State<CureandoApp> {
   void initState() {
     super.initState();
     _learningLifecycle = AppLifecycleListener(onResume: _learning.refreshDay);
+    _session.addListener(_syncSchool);
+    _session.open().then((_) => _enterSavedSchool());
     if (widget.showM1Verification) {
       _security.addListener(_refresh);
       _security.initialize();
       _open();
     } else if (widget.allowDesignCapture) {
       _security.setSecureScreen(false);
+    }
+  }
+
+  /// Las alertas se registran en el colegio activo del estudiante.
+  void _syncSchool() {
+    final String? code = _session.school?.publicCode;
+    if (code != null) _support.schoolCode = code;
+  }
+
+  /// Con un colegio ya confirmado, la app abre directo en el inicio.
+  void _enterSavedSchool() {
+    if (!mounted || widget.showM1Verification || _session.school == null) {
+      return;
+    }
+    if (_router.routerDelegate.currentConfiguration.uri.path == '/') {
+      _router.go('/inicio');
     }
   }
 
@@ -338,7 +366,8 @@ class _CureandoAppState extends State<CureandoApp> {
     _learningLifecycle.dispose();
     if (widget.learningProgress == null) _learning.dispose();
     if (widget.supportFlow == null) _support.dispose();
-    _piece.dispose();
+    _session.removeListener(_syncSchool);
+    if (widget.studentSession == null) _session.dispose();
     if (widget.showM1Verification) {
       _security.removeListener(_refresh);
     }
