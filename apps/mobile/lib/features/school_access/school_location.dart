@@ -14,6 +14,35 @@ String normalizeSchoolCode(String code) {
   return normalized;
 }
 
+/// Código público de un colegio leído de un QR o de un enlace. Acepta el
+/// código directo (`AULA26`, `aula-26`), el enlace de la app
+/// (`setu://colegio/AULA26`) y cualquier URI con `?code=AULA26`. Devuelve
+/// null si la lectura no tiene forma de código de colegio.
+String? extractSchoolCode(String raw) {
+  final String text = raw.trim();
+  String candidate = text;
+  final Uri? uri = Uri.tryParse(text);
+  if (uri != null && uri.hasScheme) {
+    final String? query = uri.queryParameters['code'];
+    if (query != null) {
+      candidate = query;
+    } else if (uri.scheme.toLowerCase() == 'setu' &&
+        uri.host.toLowerCase() == 'colegio' &&
+        uri.pathSegments.isNotEmpty) {
+      candidate = uri.pathSegments.first;
+    } else {
+      return null;
+    }
+  } else if (text.toLowerCase().startsWith('?code=')) {
+    candidate = text.substring(6);
+  }
+  final String code = normalizeSchoolCode(candidate);
+  return RegExp(r'^[A-Z0-9]{6}$').hasMatch(code) ? code : null;
+}
+
+/// Contenido del QR oficial de un colegio.
+String schoolQrLink(String publicCode) => 'setu://colegio/$publicCode';
+
 enum SchoolProximity {
   nearby('La lectura de ubicación coincide con la zona de tu colegio.'),
   simulated(

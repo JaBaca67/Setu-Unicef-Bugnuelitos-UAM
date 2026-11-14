@@ -56,9 +56,10 @@ class _SchoolQrScannerState extends State<SchoolQrScanner>
       final String? value = barcode.rawValue;
       if (value == null) continue;
       readCode = true;
-      final String code = normalizeSchoolCode(value);
-      // Solo se consultan lecturas con forma de código de colegio.
-      if (!RegExp(r'^[A-Z0-9]{6}$').hasMatch(code)) continue;
+      // Acepta el código directo o el enlace del cartel; solo se consultan
+      // lecturas con forma de código de colegio.
+      final String? code = extractSchoolCode(value);
+      if (code == null) continue;
       _checking = true;
       final bool known = await widget.resolve(code);
       _checking = false;

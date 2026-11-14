@@ -88,6 +88,16 @@ class SchoolAccessScreen extends StatelessWidget {
     );
   }
 
+  List<Widget> _demoPoster(BuildContext context) => <Widget>[
+    TextButton(
+      onPressed: () => context.push<void>('/colegio/cartel'),
+      child: const Text(
+        'Ver cartel QR de demostración',
+        textAlign: TextAlign.center,
+      ),
+    ),
+  ];
+
   List<Widget> _chooseMethod(BuildContext context) => <Widget>[
     const SizedBox(height: 10),
     const _SchoolBadge(
@@ -118,13 +128,15 @@ class SchoolAccessScreen extends StatelessWidget {
       onPressed: () => context.push<void>('/informacion'),
       child: const Text('Explorar Información', textAlign: TextAlign.center),
     ),
+    if (allowSimulation) ..._demoPoster(context),
   ];
 
   List<Widget> _scan(BuildContext context) => <Widget>[
     SchoolQrScanner(
       resolve: (String code) async => await session.resolve(code) != null,
-      onAccepted: () =>
-          context.pushReplacement(SchoolAccessStep.proximity.location),
+      // Un QR válido del colegio confirma el centro y entra directo: la
+      // cercanía por ubicación queda para quien escribe el código a mano.
+      onAccepted: () => enterConfirmedSchool(context, session),
       onManual: () => context.pushReplacement(SchoolAccessStep.manual.location),
     ),
   ];
@@ -195,6 +207,99 @@ class SchoolAccessScreen extends StatelessWidget {
       child: const Text('Ayuda'),
     ),
   ];
+}
+
+/// Confirma el colegio encontrado, avisa a cuál se entró y abre el inicio.
+void enterConfirmedSchool(BuildContext context, StudentSession session) {
+  final ConfirmedSchool? school = session.candidate;
+  if (school == null) return;
+  final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(context);
+  session.confirmCandidate();
+  context.go('/inicio');
+  messenger?.showSnackBar(
+    SnackBar(content: Text('Entraste a ${school.displayName}.')),
+  );
+}
+
+/// Llegada por enlace `setu://colegio/CODIGO` (QR leído con la cámara del
+/// teléfono): valida el código y entra sin pasos manuales.
+class SchoolLinkScreen extends StatefulWidget {
+  const SchoolLinkScreen({
+    super.key,
+    required this.session,
+    required this.code,
+  });
+
+  final StudentSession session;
+  final String code;
+
+  @override
+  State<SchoolLinkScreen> createState() => _SchoolLinkScreenState();
+}
+
+class _SchoolLinkScreenState extends State<SchoolLinkScreen> {
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  Future<void> _resolve() async {
+    setState(() => _failed = false);
+    final String? code = extractSchoolCode(widget.code);
+    final ConfirmedSchool? school = code == null
+        ? null
+        : await widget.session.resolve(code);
+    if (!mounted) return;
+    if (school == null) {
+      setState(() => _failed = true);
+      return;
+    }
+    enterConfirmedSchool(context, widget.session);
+  }
+
+  @override
+  Widget build(BuildContext context) => CampaignScreen(
+    header: _SchoolHeader(
+      title: _failed ? 'No encontramos ese colegio' : 'Buscando tu colegio…',
+    ),
+    body: Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: _failed
+            ? <Widget>[
+                Semantics(
+                  liveRegion: true,
+                  child: const Text(
+                    'Ese enlace no corresponde a un colegio registrado, o no '
+                    'pudimos comprobarlo. Revisá tu conexión e intentá de '
+                    'nuevo.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _SchoolButton(label: 'Reintentar', onPressed: _resolve),
+                const SizedBox(height: 12),
+                _SchoolButton(
+                  label: 'Escribir código',
+                  outlined: true,
+                  onPressed: () => context.go(SchoolAccessStep.manual.location),
+                ),
+              ]
+            : const <Widget>[
+                SizedBox(height: 24),
+                Center(
+                  child: CircularProgressIndicator(
+                    semanticsLabel: 'Buscando tu colegio',
+                  ),
+                ),
+              ],
+      ),
+    ),
+  );
 }
 
 class _ProximityCheck extends StatefulWidget {

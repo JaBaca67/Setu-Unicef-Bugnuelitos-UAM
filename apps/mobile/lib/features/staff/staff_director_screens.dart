@@ -181,6 +181,11 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
               ),
             ),
             IconButton(
+              tooltip: 'Cartel QR del colegio',
+              onPressed: () => context.push<void>('/personal/direccion/cartel'),
+              icon: const Icon(Icons.qr_code_2_rounded),
+            ),
+            IconButton(
               tooltip: 'Actualizar',
               onPressed: loading ? null : load,
               icon: const Icon(Icons.refresh_rounded),
