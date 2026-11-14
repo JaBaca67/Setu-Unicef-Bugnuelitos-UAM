@@ -7,6 +7,8 @@ import 'package:cureando_mobile/features/home/student_activities.dart';
 import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:cureando_mobile/features/school_access/school_location.dart';
+import 'package:cureando_mobile/features/school_access/student_session.dart';
+import 'package:cureando_mobile/shared/widgets/setu_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -196,10 +198,7 @@ void main() {
     expect(find.text('Necesito hablar'), findsOneWidget);
     expect(find.text('Lo vi o supe de alguien'), findsOneWidget);
     expect(find.text('Sin detalles'), findsOneWidget);
-    expect(
-      find.textContaining('reciben solo datos limitados'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('reciben solo datos limitados'), findsOneWidget);
     await _tapLabel(tester, 'Editar');
     expect(find.text('Paso 1 de 3'), findsOneWidget);
     await _tapLabel(tester, 'Acoso verbal');
@@ -337,7 +336,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Mi pieza se arma con forma, color y accesorios, sin foto', (
+  testWidgets('Mi perfil arma la pieza con apodo, forma y color, sin foto', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
@@ -345,29 +344,44 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
-    await tester.tap(find.byTooltip('Personalizar tu pieza'));
+    await tester.tap(find.byTooltip('Abrir mi perfil'));
     await tester.pumpAndSettle();
-    expect(find.text('Mi pieza'), findsOneWidget);
-    expect(find.text('Todas las piezas tienen un lugar.'), findsOneWidget);
+    expect(find.text('Mi perfil'), findsOneWidget);
+    expect(find.text('Pulgin Valiente'), findsOneWidget);
+    await _tapLabel(tester, 'Mi pieza');
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).decoration?.hintText,
+      'Ej. Pulgin Valiente (no uses tu nombre real)',
+    );
+    await tester.enterText(find.byType(TextField), '  Estrella   Fugaz ');
     await _tapLabel(tester, 'Al azar');
     await _tapTooltip(tester, 'Estrella');
     await _tapLabel(tester, 'Color');
     await _tapTooltip(tester, 'Rosa');
     await _tapLabel(tester, 'Guardar mi pieza');
-    expect(find.text('Mi pieza'), findsNothing);
+    expect(find.text('Pieza guardada en este teléfono.'), findsOneWidget);
+    expect(find.text('Estrella Fugaz'), findsOneWidget);
     expect(
       find.bySemanticsLabel(RegExp('Tu pieza: Estrella de color rosa')),
       findsOneWidget,
     );
-    await tester.tap(find.byTooltip('Personalizar tu pieza'));
-    await tester.pumpAndSettle();
+    // Los cambios sin guardar se descartan.
+    await _tapLabel(tester, 'Mi pieza');
     await _tapLabel(tester, 'Accesorios');
     await _tapTooltip(tester, 'Corbatín');
     await _tapLabel(tester, 'Forma');
     await _tapTooltip(tester, 'Flor');
-    await _tapLabel(tester, 'Ahora no');
+    await _tapLabel(tester, 'Resumen');
     expect(
       find.bySemanticsLabel(RegExp('Tu pieza: Estrella de color rosa')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(
+      find.bySemanticsLabel(
+        RegExp('Tu pieza Estrella Fugaz: Estrella de color rosa'),
+      ),
       findsOneWidget,
     );
     semantics.dispose();
@@ -395,8 +409,9 @@ void main() {
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Pedir apoyo');
     expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
-    await tester.tap(find.byTooltip('Personalizar tu pieza'));
+    await tester.tap(find.byTooltip('Abrir mi perfil'));
     await tester.pumpAndSettle();
+    await _tapLabel(tester, 'Mi pieza');
     await _tapLabel(tester, 'Accesorios');
     await _tapLabel(tester, 'Guardar mi pieza');
     await tester.tap(find.byTooltip('Volver'));
@@ -448,17 +463,17 @@ CureandoApp _app({
   MemoryProgressStore? store,
   MemoryProgressStore? alertStore,
   DateTime Function()? now,
-}) =>
-    CureandoApp(
-      checkSchoolProximity: () async => SchoolProximity.nearby,
-      supportFlow: SupportFlow(
-        openStore: () async => alertStore ?? MemoryProgressStore(),
-      ),
-      learningProgress: LearningProgress(
-        openStore: () async => store ?? MemoryProgressStore(),
-        now: now ?? () => DateTime(2026, 11, 12),
-      ),
-    );
+}) => CureandoApp(
+  checkSchoolProximity: () async => SchoolProximity.nearby,
+  studentSession: StudentSession(openStore: () async => MemoryProgressStore()),
+  supportFlow: SupportFlow(
+    openStore: () async => alertStore ?? MemoryProgressStore(),
+  ),
+  learningProgress: LearningProgress(
+    openStore: () async => store ?? MemoryProgressStore(),
+    now: now ?? () => DateTime(2026, 11, 12),
+  ),
+);
 
 class MemoryProgressStore implements LocalStorePersistence {
   Map<String, Object?>? _data;
@@ -478,7 +493,7 @@ void _useTallView(WidgetTester tester) {
 }
 
 Future<void> _goHome(WidgetTester tester) async {
-  await _tapLabel(tester, 'Usar código del colegio');
+  await _tapLabel(tester, 'Ingreso estudiantil');
   await _tapLabel(tester, 'Escribir código');
   await tester.enterText(find.byType(TextField), demoSchoolCode);
   await _tapLabel(tester, 'Entrar');
@@ -499,7 +514,7 @@ Future<void> _tapTooltip(WidgetTester tester, String tooltip) async {
 
 Future<void> _tapNav(WidgetTester tester, String label) async {
   final Finder finder = find.descendant(
-    of: find.byType(NavigationBar),
+    of: find.byType(SetuBottomNav),
     matching: find.text(label),
   );
   await tester.tap(finder);

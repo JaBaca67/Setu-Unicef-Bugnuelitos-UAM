@@ -93,20 +93,26 @@ void main() {
         CureandoApp(checkSchoolProximity: () async => SchoolProximity.nearby),
       );
       await tester.pumpAndSettle();
-      await _tapLabel(tester, 'Usar código del colegio');
+      await _tapLabel(tester, 'Ingreso estudiantil');
       expect(find.text('Confirmá tu colegio'), findsOneWidget);
       final ModalRoute<Object?>? route = ModalRoute.of(
         tester.element(find.text('Confirmá tu colegio')),
       );
       expect(route?.transitionDuration, const Duration(milliseconds: 260));
       await _tapLabel(tester, 'Escribir código');
-      await tester.enterText(find.byType(TextField), 'aula-24');
+      await tester.enterText(find.byType(TextField), 'aula-26');
       expect(
         tester.widget<TextField>(find.byType(TextField)).controller?.text,
-        'aula24',
+        'aula26',
       );
       await _tapLabel(tester, 'Entrar');
       expect(find.text('Colegio Centro América'), findsOneWidget);
+      expect(find.text('Managua, Nicaragua'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Escudo del Colegio Centro América'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Colegio de prueba'), findsNothing);
       expect(find.text('Simular cercanía para la demo'), findsNothing);
       await _tapLabel(tester, 'Comprobar cercanía');
       expect(find.text('Colegio confirmado'), findsOneWidget);
@@ -132,7 +138,7 @@ void main() {
       CureandoApp(checkSchoolProximity: () async => SchoolProximity.outside),
     );
     await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Usar código del colegio');
+    await _tapLabel(tester, 'Ingreso estudiantil');
     await _tapLabel(tester, 'Escribir código');
     await _tapLabel(tester, 'Entrar');
     expect(
@@ -145,7 +151,7 @@ void main() {
     await tester.enterText(find.byType(TextField), ' aula-24 ');
     await _tapLabel(tester, 'Entrar');
     await _tapLabel(tester, 'Comprobar cercanía');
-    expect(find.text('Fuera de la zona de prueba'), findsOneWidget);
+    expect(find.text('Fuera de la zona del colegio'), findsOneWidget);
     await _tapLabel(tester, 'Explorar Información');
     expect(find.widgetWithText(AppBar, 'Información'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver'));
@@ -171,12 +177,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Usar código del colegio');
+    await _tapLabel(tester, 'Ingreso estudiantil');
     await _tapLabel(tester, 'Escribir código');
     await tester.enterText(find.byType(TextField), demoSchoolCode);
     await _tapLabel(tester, 'Entrar');
     await _tapLabel(tester, 'Simular cercanía para la demo');
     expect(find.text('Cercanía simulada'), findsOneWidget);
+    expect(find.textContaining('Colegio de prueba'), findsOneWidget);
     expect(find.text('Colegio confirmado'), findsNothing);
     expect(requests, 0);
     await _tapLabel(tester, 'Continuar');
@@ -219,7 +226,7 @@ void main() {
     await tester.pumpWidget(const CureandoApp(allowDesignCapture: true));
     await tester.pumpAndSettle();
     expect(secure, isFalse);
-    await _tapLabel(tester, 'Usar código del colegio');
+    await _tapLabel(tester, 'Ingreso estudiantil');
     final ModalRoute<Object?>? route = ModalRoute.of(
       tester.element(find.text('Confirmá tu colegio')),
     );
