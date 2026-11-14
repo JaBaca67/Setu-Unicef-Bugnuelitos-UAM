@@ -45,11 +45,11 @@ VALUES
   (
     '11111111-1111-4111-8111-000000000026',
     'AULA26',
-    'Colegio Centro América — Demo',
+    'Colegio Centro América',
     'Managua',
     'Managua',
-    12.104500,
-    -86.259800,
+    12.098062,
+    -86.2641465,
     150,
     1,
     true
@@ -324,7 +324,7 @@ VALUES
     'invitada.cca@setu.test',
     'school_director',
     '11111111-1111-4111-8111-000000000026',
-    'Colegio Centro América — Demo (Dirección)',
+    'Colegio Centro América (Dirección)',
     encode(sha256(convert_to(public.normalize_activation_code('CCA-DIR-2026'), 'UTF8')), 'hex'),
     now() + interval '14 days',
     NULL,
@@ -334,7 +334,7 @@ VALUES
     'practicante.cca@setu.test',
     'counseling_desk',
     '11111111-1111-4111-8111-000000000026',
-    'Colegio Centro América — Demo (Mesa de Escucha)',
+    'Colegio Centro América (Mesa de Escucha)',
     encode(sha256(convert_to(public.normalize_activation_code('CCA-MESA-2026'), 'UTF8')), 'hex'),
     now() + interval '14 days',
     NULL,
@@ -344,7 +344,7 @@ VALUES
     'expirada.cca@setu.test',
     'school_director',
     '11111111-1111-4111-8111-000000000026',
-    'Colegio Centro América — Demo (Vencida)',
+    'Colegio Centro América (Vencida)',
     encode(sha256(convert_to(public.normalize_activation_code('CCA-EXP-2026'), 'UTF8')), 'hex'),
     now() - interval '1 day',
     NULL,
@@ -354,7 +354,7 @@ VALUES
     'revocada.cca@setu.test',
     'school_director',
     '11111111-1111-4111-8111-000000000026',
-    'Colegio Centro América — Demo (Revocada)',
+    'Colegio Centro América (Revocada)',
     encode(sha256(convert_to(public.normalize_activation_code('CCA-REV-2026'), 'UTF8')), 'hex'),
     now() + interval '14 days',
     now() - interval '1 hour',
@@ -696,4 +696,50 @@ BEGIN
       concurrency_version = 2
   WHERE id = v_case_unassessed
     AND assigned_counselor_id IS NULL;
+
+  INSERT INTO public.case_counselor_dispatches (
+    case_id,
+    institution_id,
+    counselor_user_id,
+    dispatch_tier,
+    dispatch_status,
+    notified_at,
+    responded_at
+  )
+  SELECT
+    c.id,
+    c.institution_id,
+    sr.user_id,
+    CASE
+      WHEN sr.institution_id = c.institution_id THEN 'school_plant'
+      ELSE 'external_pool'
+    END,
+    CASE
+      WHEN c.assigned_counselor_id IS NULL THEN 'pending'
+      WHEN c.assigned_counselor_id = sr.user_id THEN 'claimed'
+      ELSE 'taken_by_other'
+    END,
+    c.created_at,
+    CASE
+      WHEN c.assigned_counselor_id IS NOT NULL THEN now()
+      ELSE NULL
+    END
+  FROM public.cases c
+  JOIN public.staff_roles sr
+    ON sr.role = 'counseling_desk'
+   AND sr.is_active = true
+   AND (
+     (sr.institution_id = c.institution_id AND NOT c.involves_staff)
+     OR (sr.institution_id IS NULL AND (
+       c.involves_staff
+       OR NOT EXISTS (
+         SELECT 1
+         FROM public.staff_roles sp
+         WHERE sp.role = 'counseling_desk'
+           AND sp.is_active = true
+           AND sp.institution_id = c.institution_id
+       )
+     ))
+   )
+  ON CONFLICT (case_id, counselor_user_id) DO NOTHING;
 END $$;
