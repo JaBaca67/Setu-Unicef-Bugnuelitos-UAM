@@ -260,12 +260,14 @@ void main() {
       final _MemoryStore progressStore = _MemoryStore();
       final _MemoryStore alertStore = _MemoryStore();
       SupportFlow support() => SupportFlow(openStore: () async => alertStore);
+      final SupportFlow firstSupport = support();
+      final SupportFlow secondSupport = support();
 
       await tester.pumpWidget(
         _app(
           sessionStore: sessionStore,
           progressStore: progressStore,
-          support: support(),
+          support: firstSupport,
         ),
       );
       await tester.pumpAndSettle();
@@ -299,11 +301,12 @@ void main() {
 
       // Al reabrir la app entra directo al inicio, sin pedir el código.
       await tester.pumpWidget(const SizedBox.shrink());
+      firstSupport.dispose();
       await tester.pumpWidget(
         _app(
           sessionStore: sessionStore,
           progressStore: progressStore,
-          support: support(),
+          support: secondSupport,
         ),
       );
       await tester.pumpAndSettle();
@@ -346,6 +349,8 @@ void main() {
       await _tapLabel(tester, 'Ingreso estudiantil');
       expect(find.text('Confirmá tu colegio'), findsOneWidget);
       expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      secondSupport.dispose();
     },
   );
 }

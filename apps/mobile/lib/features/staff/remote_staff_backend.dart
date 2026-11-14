@@ -120,6 +120,10 @@ class RemoteStaffBackend implements StaffBackend {
       _gateway.listCaseMessages(caseId);
 
   @override
+  Stream<CaseChatMessageView> watchMessages(String caseId) =>
+      _gateway.watchCaseMessages(caseId);
+
+  @override
   Future<List<CaseInternalNoteView>> notes(String caseId) =>
       _gateway.listCaseInternalNotes(caseId);
 
@@ -127,7 +131,15 @@ class RemoteStaffBackend implements StaffBackend {
   Future<void> enableChat({
     required String operationId,
     required String caseId,
-  }) => _gateway.enableCaseChat(clientOperationId: operationId, caseId: caseId);
+    String? openingMessage,
+  }) => _gateway.enableCaseChat(
+    clientOperationId: operationId,
+    caseId: caseId,
+    openingMessage:
+        openingMessage ??
+        'Hola, soy parte del equipo de escucha. Cuando quieras, podés '
+            'contarme lo que pasó.',
+  );
 
   @override
   Future<void> sendMessage({

@@ -171,6 +171,11 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                                   'El equipo de escucha puede conversar con vos',
                                 ),
                               )
+                            else if (widget.flow.caseClosed)
+                              const Text(
+                                'Este caso ya cerró. Podés revisar los '
+                                'mensajes anteriores.',
+                              )
                             else
                               Text(switch (widget.flow.delivery) {
                                 AlertDelivery.pending =>
@@ -186,12 +191,12 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                     ],
                   ),
                 ),
-                if (chatAvailable) ...<Widget>[
+                if (chatAvailable || widget.flow.caseClosed) ...<Widget>[
                   const SizedBox(height: 14),
                   FilledButton(
                     style: flowPrimaryStyle(),
                     onPressed: () => context.push<void>('/inicio/apoyo/chat'),
-                    child: const Text('Abrir chat'),
+                    child: Text(chatAvailable ? 'Abrir chat' : 'Ver chat'),
                   ),
                 ],
               ],
@@ -353,12 +358,50 @@ class SupportChatScreen extends StatefulWidget {
 class _SupportChatScreenState extends State<SupportChatScreen> {
   final TextEditingController _draft = TextEditingController();
   final FocusNode _focus = FocusNode();
+  final ScrollController _scroll = ScrollController();
+  int _lastMessageCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastMessageCount = widget.flow.messages.length;
+    widget.flow.addListener(_onFlowChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom(jump: true);
+      widget.flow.refreshChat();
+    });
+  }
 
   @override
   void dispose() {
+    widget.flow.removeListener(_onFlowChanged);
+    _scroll.dispose();
     _draft.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  void _onFlowChanged() {
+    final int count = widget.flow.messages.length;
+    final bool grew = count > _lastMessageCount;
+    _lastMessageCount = count;
+    if (grew) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    }
+  }
+
+  void _scrollToBottom({bool jump = false}) {
+    if (!mounted || !_scroll.hasClients) return;
+    final double target = _scroll.position.maxScrollExtent;
+    if (jump) {
+      _scroll.jumpTo(target);
+    } else {
+      _scroll.animateTo(
+        target,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _useIdea(String idea) {
@@ -418,15 +461,23 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                   ),
                   Expanded(
                     child: CustomScrollView(
+                      controller: _scroll,
                       slivers: <Widget>[
                         SliverPadding(
                           padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
                           sliver: SliverList.list(
                             children: <Widget>[
                               if (!open)
-                                const Text(
-                                  'Todavía no hay una persona disponible para '
-                                  'conversar. Te avisamos en Pedir apoyo.',
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(
+                                    flow.caseClosed
+                                        ? 'Este caso ya cerró. Podés revisar '
+                                              'los mensajes anteriores.'
+                                        : 'Todavía no hay una persona '
+                                              'disponible para conversar. Te '
+                                              'avisamos en Pedir apoyo.',
+                                  ),
                                 ),
                               for (final ChatMessage message in flow.messages)
                                 _Bubble(message: message),
@@ -482,8 +533,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                               minLines: 1,
                               maxLines: 4,
                               textCapitalization: TextCapitalization.sentences,
+                              textInputAction: TextInputAction.send,
+                              onSubmitted: (_) => _send(),
                               decoration: InputDecoration(
-                                hintText: 'Escribí un mensaje',
+                                hintText: flow.caseClosed
+                                    ? 'Chat cerrado (solo lectura)'
+                                    : 'Escribí un mensaje',
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 18,
                                   vertical: 14,

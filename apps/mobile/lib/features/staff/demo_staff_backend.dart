@@ -193,6 +193,8 @@ class DemoStaffBackend implements StaffBackend {
 
   final StreamController<SetuAssignmentNotice> _notices =
       StreamController<SetuAssignmentNotice>.broadcast();
+  final StreamController<CaseChatMessageView> _liveMessages =
+      StreamController<CaseChatMessageView>.broadcast();
   int _sequence = 0;
 
   final List<_DemoCase> _cases = <_DemoCase>[
@@ -862,6 +864,11 @@ class DemoStaffBackend implements StaffBackend {
       );
 
   @override
+  Stream<CaseChatMessageView> watchMessages(String caseId) => _liveMessages
+      .stream
+      .where((CaseChatMessageView message) => message.caseId == caseId);
+
+  @override
   Future<List<CaseInternalNoteView>> notes(String caseId) async =>
       List<CaseInternalNoteView>.of(
         _assignedOrNull(caseId)?.notes.reversed ??
@@ -872,10 +879,27 @@ class DemoStaffBackend implements StaffBackend {
   Future<void> enableChat({
     required String operationId,
     required String caseId,
+    String? openingMessage,
   }) async {
-    _assigned(caseId)
+    final _DemoCase found = _assigned(caseId);
+    if (found.status == SetuCaseStatus.closed) {
+      throw const GatewayException('P0001', 'chat_not_available');
+    }
+    found
       ..chat = true
       ..version += 1;
+    final String? clean = openingMessage?.trim();
+    if (clean != null && clean.isNotEmpty) {
+      final CaseChatMessageView message = CaseChatMessageView(
+        id: 'demo-msg-${++_sequence}-$operationId-greeting',
+        caseId: caseId,
+        senderRole: SetuMessageSender.counselingDesk,
+        body: clean,
+        createdAt: DateTime.now(),
+      );
+      found.messages.add(message);
+      _liveMessages.add(message);
+    }
   }
 
   @override
@@ -885,18 +909,18 @@ class DemoStaffBackend implements StaffBackend {
     required String body,
   }) async {
     final _DemoCase found = _assigned(caseId);
-    if (!found.chat) {
+    if (!found.chat || found.status == SetuCaseStatus.closed) {
       throw const GatewayException('P0001', 'chat_not_available');
     }
-    found.messages.add(
-      CaseChatMessageView(
-        id: 'demo-msg-${++_sequence}-$operationId',
-        caseId: caseId,
-        senderRole: SetuMessageSender.counselingDesk,
-        body: body.trim(),
-        createdAt: DateTime.now(),
-      ),
+    final CaseChatMessageView message = CaseChatMessageView(
+      id: 'demo-msg-${++_sequence}-$operationId',
+      caseId: caseId,
+      senderRole: SetuMessageSender.counselingDesk,
+      body: body.trim(),
+      createdAt: DateTime.now(),
     );
+    found.messages.add(message);
+    _liveMessages.add(message);
   }
 
   @override

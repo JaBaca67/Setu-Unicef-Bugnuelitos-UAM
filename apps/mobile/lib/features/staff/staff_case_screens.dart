@@ -576,7 +576,7 @@ class DeskChatScreen extends StatefulWidget {
     super.key,
     required this.session,
     required this.caseId,
-    this.refreshEvery = const Duration(seconds: 5),
+    this.refreshEvery = const Duration(seconds: 3),
   });
 
   final StaffSession session;
@@ -590,13 +590,16 @@ class DeskChatScreen extends StatefulWidget {
 class _DeskChatScreenState extends State<DeskChatScreen> {
   final OperationIds _operations = OperationIds();
   final TextEditingController _draft = TextEditingController();
+  final ScrollController _scroll = ScrollController();
   StaffCaseSummary? _case;
   List<CaseChatMessageView>? _messages;
   String? _error;
   bool _sending = false;
   bool _refreshing = false;
+  int _lastMessageCount = 0;
   String? _sendError;
   Timer? _timer;
+  StreamSubscription<CaseChatMessageView>? _liveMessages;
 
   StaffBackend get _backend => widget.session.backend;
 
@@ -604,14 +607,56 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
   void initState() {
     super.initState();
     _refresh();
+    _liveMessages = _backend
+        .watchMessages(widget.caseId)
+        .listen(_onLiveMessage);
     _timer = Timer.periodic(widget.refreshEvery, (_) => _refresh());
   }
 
   @override
   void dispose() {
+    _liveMessages?.cancel();
     _timer?.cancel();
+    _scroll.dispose();
     _draft.dispose();
     super.dispose();
+  }
+
+  void _scheduleScrollToBottom({bool jump = false}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final double target = _scroll.position.maxScrollExtent;
+      if (jump) {
+        _scroll.jumpTo(target);
+      } else {
+        _scroll.animateTo(
+          target,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _onLiveMessage(CaseChatMessageView message) {
+    if (!mounted) return;
+    final List<CaseChatMessageView>? current = _messages;
+    if (current == null) {
+      _refresh();
+      return;
+    }
+    if (current.any((CaseChatMessageView item) => item.id == message.id)) {
+      return;
+    }
+    final List<CaseChatMessageView> updated = <CaseChatMessageView>[
+      ...current,
+      message,
+    ];
+    setState(() {
+      _messages = updated;
+      _lastMessageCount = updated.length;
+    });
+    _scheduleScrollToBottom();
   }
 
   Future<void> _refresh() async {
@@ -626,13 +671,18 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
         widget.caseId,
       );
       if (!mounted) return;
+      final int previousCount = _lastMessageCount;
       setState(() {
         _case = found;
         _messages = messages;
+        _lastMessageCount = messages.length;
         _error = found == null
             ? 'Ese caso no está disponible para tu cuenta.'
             : null;
       });
+      if (messages.length > previousCount) {
+        _scheduleScrollToBottom(jump: previousCount == 0);
+      }
     } on Object catch (failure) {
       // Con mensajes ya cargados, un fallo de actualización no los oculta.
       if (mounted && _messages == null) {
@@ -715,6 +765,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
                 ),
                 Expanded(
                   child: ListView(
+                    controller: _scroll,
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                     children: <Widget>[
                       Align(
@@ -764,12 +815,49 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
                                       'escribirle al estudiante.',
                             error: false,
                           )
-                        else if (messages.isEmpty)
+                        else if (messages.isEmpty) ...<Widget>[
                           const StaffNotice(
                             'El estudiante ya recibió el aviso de que podés '
                             'conversar. Todavía no hay mensajes.',
                             error: false,
                           ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: CureandoTheme.ink,
+                                minimumSize: const Size(48, 48),
+                                side: const BorderSide(
+                                  color: CureandoTheme.blue,
+                                  width: 1.5,
+                                ),
+                                textStyle: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: () {
+                                const String greeting =
+                                    'Hola, soy parte del equipo de escucha. '
+                                    'Cuando quieras, podés contarme lo que '
+                                    'pasó.';
+                                _draft.value = const TextEditingValue(
+                                  text: greeting,
+                                  selection: TextSelection.collapsed(
+                                    offset: greeting.length,
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.waving_hand_outlined),
+                              label: const Text('Usar saludo de bienvenida'),
+                            ),
+                          ),
+                        ],
                         for (final CaseChatMessageView message in messages)
                           _DeskBubble(message: message, piece: piece),
                       ],
@@ -794,8 +882,12 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
                             minLines: 1,
                             maxLines: 4,
                             textCapitalization: TextCapitalization.sentences,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _send(),
                             decoration: InputDecoration(
-                              hintText: 'Escribí un mensaje',
+                              hintText: item?.status == SetuCaseStatus.closed
+                                  ? 'Chat cerrado (solo lectura)'
+                                  : 'Escribí un mensaje',
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 18,
                                 vertical: 14,

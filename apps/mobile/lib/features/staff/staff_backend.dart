@@ -84,11 +84,15 @@ abstract interface class StaffBackend {
 
   Future<List<CaseChatMessageView>> messages(String caseId);
 
+  /// Mensajes nuevos en vivo para la conversación abierta.
+  Stream<CaseChatMessageView> watchMessages(String caseId);
+
   Future<List<CaseInternalNoteView>> notes(String caseId);
 
   Future<void> enableChat({
     required String operationId,
     required String caseId,
+    String? openingMessage,
   });
 
   Future<void> sendMessage({

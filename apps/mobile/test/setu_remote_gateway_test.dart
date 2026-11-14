@@ -376,5 +376,60 @@ void main() {
         expect(realtimeRow.respondedAt, isNotNull);
       },
     );
+
+    test(
+      'parsea sesión de chat abierta y cerrada conservando mensajes previos',
+      () {
+        final StudentChatSessionView openSession =
+            StudentChatSessionView.fromJson(const <String, Object?>{
+              'case_id': 'case-open-1',
+              'chat_available_notice': true,
+              'messages': <Object?>[],
+            });
+        expect(openSession.caseId, equals('case-open-1'));
+        expect(openSession.chatAvailableNotice, isTrue);
+        expect(openSession.caseClosed, isFalse);
+        expect(openSession.messages, isEmpty);
+
+        final StudentChatSessionView closedSession =
+            StudentChatSessionView.fromJson(const <String, Object?>{
+              'case_id': 'case-closed-1',
+              'chat_available_notice': false,
+              'case_closed': true,
+              'messages': <Map<String, Object?>>[
+                <String, Object?>{
+                  'id': 'msg-1',
+                  'case_id': 'case-closed-1',
+                  'sender_role': 'counseling_desk',
+                  'body': 'Hola, estoy aquí para escucharte.',
+                  'created_at': '2026-11-14T03:10:00Z',
+                },
+                <String, Object?>{
+                  'id': 'msg-2',
+                  'case_id': 'case-closed-1',
+                  'sender_role': 'student',
+                  'body': 'Gracias por responder.',
+                  'created_at': '2026-11-14T03:12:00Z',
+                },
+              ],
+            });
+        expect(closedSession.caseId, equals('case-closed-1'));
+        expect(closedSession.chatAvailableNotice, isFalse);
+        expect(closedSession.caseClosed, isTrue);
+        expect(closedSession.messages, hasLength(2));
+        expect(
+          closedSession.messages.first.senderRole,
+          equals(SetuMessageSender.counselingDesk),
+        );
+        expect(
+          closedSession.messages.last.senderRole,
+          equals(SetuMessageSender.student),
+        );
+        expect(
+          closedSession.messages.last.body,
+          equals('Gracias por responder.'),
+        );
+      },
+    );
   });
 }

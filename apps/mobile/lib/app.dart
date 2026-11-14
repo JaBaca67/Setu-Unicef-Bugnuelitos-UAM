@@ -370,11 +370,17 @@ class _CureandoAppState extends State<CureandoApp> {
   @override
   void initState() {
     super.initState();
-    _learningLifecycle = AppLifecycleListener(onResume: _learning.refreshDay);
+    _learningLifecycle = AppLifecycleListener(
+      onResume: () {
+        _learning.refreshDay();
+        _support.refreshChat();
+      },
+    );
     _session.addListener(_syncSchool);
     // Al abrir, cada sesión guardada se restaura y la guía de rutas lleva a
     // su superficie: el colegio del estudiante o el ámbito del personal.
     _session.open();
+    _support.open();
     _staff.restore();
     if (widget.showM1Verification) {
       _security.addListener(_refresh);

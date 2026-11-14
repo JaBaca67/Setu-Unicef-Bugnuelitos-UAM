@@ -33,10 +33,15 @@ class AlertOutbox {
 
 @immutable
 class ChatSnapshot {
-  const ChatSnapshot({required this.available, required this.messages});
+  const ChatSnapshot({
+    required this.available,
+    required this.messages,
+    this.caseClosed = false,
+  });
 
   /// Verdadero cuando la Mesa de Escucha habilitó la conversación.
   final bool available;
+  final bool caseClosed;
   final List<ChatMessage> messages;
 }
 

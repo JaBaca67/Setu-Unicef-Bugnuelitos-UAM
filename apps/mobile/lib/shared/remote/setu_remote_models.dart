@@ -392,11 +392,13 @@ class StudentChatSessionView {
     required this.caseId,
     required this.chatAvailableNotice,
     required this.messages,
+    this.caseClosed = false,
     this.studentPiece,
   });
 
   final String caseId;
   final bool chatAvailableNotice;
+  final bool caseClosed;
   final StudentPieceSnapshot? studentPiece;
   final List<CaseChatMessageView> messages;
 
@@ -417,6 +419,7 @@ class StudentChatSessionView {
     return StudentChatSessionView(
       caseId: _readString(json, 'case_id'),
       chatAvailableNotice: _readBool(json, 'chat_available_notice'),
+      caseClosed: _readBool(json, 'case_closed'),
       studentPiece: pieceMap == null
           ? null
           : StudentPieceSnapshot.fromJson(pieceMap),

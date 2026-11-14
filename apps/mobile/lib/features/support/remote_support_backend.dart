@@ -15,7 +15,7 @@ class RemoteSupportBackend implements SupportBackend {
   Listenable? get changes => null;
 
   @override
-  Duration? get pollInterval => const Duration(seconds: 6);
+  Duration? get pollInterval => const Duration(seconds: 2);
 
   @override
   Future<String> submitAlert(AlertOutbox alert) async {
@@ -59,6 +59,7 @@ class RemoteSupportBackend implements SupportBackend {
     );
     return ChatSnapshot(
       available: session.chatAvailableNotice,
+      caseClosed: session.caseClosed,
       messages: <ChatMessage>[
         for (final CaseChatMessageView message in session.messages)
           ChatMessage(

@@ -197,6 +197,9 @@ abstract interface class SetuRemoteGateway {
   Stream<CaseDispatchRecord> watchIncomingDispatches({
     required String counselorUserId,
   });
+
+  /// Escucha mensajes entrantes en vivo en `public.case_messages` para un caso.
+  Stream<CaseChatMessageView> watchCaseMessages(String caseId);
 }
 
 /// Implementación oficial contra Supabase (`supabase_flutter`).
@@ -956,6 +959,49 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
                 if (row['counselor_user_id'] == counselorUserId &&
                     !controller.isClosed) {
                   controller.add(CaseDispatchRecord.fromJson(row));
+                }
+              },
+            )
+            .subscribe();
+      },
+      onCancel: () async {
+        final RealtimeChannel? active = channel;
+        if (active != null) {
+          await _client.removeChannel(active);
+        }
+      },
+    );
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<CaseChatMessageView> watchCaseMessages(String caseId) {
+    late final StreamController<CaseChatMessageView> controller;
+    RealtimeChannel? channel;
+
+    controller = StreamController<CaseChatMessageView>(
+      onListen: () {
+        channel = _client
+            .channel('case-messages-$caseId')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.insert,
+              schema: 'public',
+              table: 'case_messages',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'case_id',
+                value: caseId,
+              ),
+              callback: (PostgresChangePayload payload) {
+                if (payload.newRecord.isEmpty || controller.isClosed) return;
+                final Map<String, Object?> row = _normalizeDynamicMap(
+                  payload.newRecord,
+                );
+                try {
+                  controller.add(CaseChatMessageView.fromJson(row));
+                } on FormatException {
+                  // Ignora registros incompletos del canal en vivo.
                 }
               },
             )

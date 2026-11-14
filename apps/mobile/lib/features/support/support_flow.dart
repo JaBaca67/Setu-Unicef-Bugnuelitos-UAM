@@ -122,6 +122,9 @@ class SupportFlow extends ChangeNotifier {
   bool _chatAvailable = false;
   bool get chatAvailable => _chatAvailable;
 
+  bool _caseClosed = false;
+  bool get caseClosed => _caseClosed;
+
   List<ChatMessage> get messages => _messages;
   bool get studentWrote =>
       _messages.any((ChatMessage message) => message.fromStudent);
@@ -143,6 +146,7 @@ class SupportFlow extends ChangeNotifier {
             data['delivery'] as Map<Object?, Object?>?;
         _case = saved == null ? null : Map<String, Object?>.from(saved);
         _chatAvailable = data['chatAvailable'] == true;
+        _caseClosed = data['caseClosed'] == true;
         if (_alert != null) {
           _case ??= await _newCase(null);
           // Sin identificador de caso no hay acuse que mostrar.
@@ -214,6 +218,7 @@ class SupportFlow extends ChangeNotifier {
     _delivery = AlertDelivery.pending;
     _deliveryFailed = false;
     _chatAvailable = false;
+    _caseClosed = false;
     _messages = const <ChatMessage>[];
     situation = null;
     participation = null;
@@ -234,6 +239,7 @@ class SupportFlow extends ChangeNotifier {
     'delivery': delivery,
     'received': received,
     'chatAvailable': chatAvailable,
+    'caseClosed': caseClosed,
   };
 
   void _resume() {
@@ -307,6 +313,9 @@ class SupportFlow extends ChangeNotifier {
     _notify();
   }
 
+  /// Consulta de inmediato el estado y los mensajes nuevos del chat.
+  Future<void> refreshChat() => _refreshChat();
+
   Future<void> _refreshChat() async {
     final Map<String, Object?>? delivery = _case;
     final String? caseId = _caseId;
@@ -323,8 +332,10 @@ class SupportFlow extends ChangeNotifier {
       );
       if (_disposed || !identical(_case, delivery)) return;
       _messages = List<ChatMessage>.unmodifiable(snapshot.messages);
-      if (snapshot.available && !_chatAvailable) {
-        _chatAvailable = true;
+      if (_chatAvailable != snapshot.available ||
+          _caseClosed != snapshot.caseClosed) {
+        _chatAvailable = snapshot.available;
+        _caseClosed = snapshot.caseClosed;
         _persist();
       }
       _notify();
