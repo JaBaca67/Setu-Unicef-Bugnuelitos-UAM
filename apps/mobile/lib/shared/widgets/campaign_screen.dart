@@ -94,10 +94,9 @@ class CampaignBackground extends StatelessWidget {
     decoration: const BoxDecoration(
       color: CureandoTheme.blue,
       image: DecorationImage(
-        image: AssetImage('assets/welcome/campaign-pattern.png'),
-        fit: BoxFit.fitWidth,
+        image: AssetImage('assets/welcome/pag1-fondo.png'),
+        fit: BoxFit.cover,
         alignment: Alignment.topCenter,
-        repeat: ImageRepeat.repeatY,
       ),
     ),
     child: child,

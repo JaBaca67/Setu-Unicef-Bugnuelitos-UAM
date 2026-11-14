@@ -1,9 +1,9 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'svg_path_parser.dart';
 
 /// Destinos de la navegación inferior de SéTú (basados en NavBar-01.svg).
 enum HomeSection {
@@ -365,116 +365,10 @@ class _SetuNavIconPainter extends CustomPainter {
     ],
   };
 
-  static final RegExp _tokenPattern = RegExp(
-    r'[+-]?(?:\d*\.\d+|\d+\.?)(?:[eE][+-]?\d+)?|[A-Za-z]',
+  static ui.Path _pathFor(HomeSection section) => _normalizedCache.putIfAbsent(
+    section,
+    () => normalizeSvgPaths(_svgPaths[section]!),
   );
-
-  static ui.Path _pathFor(HomeSection section) =>
-      _normalizedCache.putIfAbsent(section, () {
-        final ui.Path combined = ui.Path()..fillType = ui.PathFillType.evenOdd;
-        for (final String d in _svgPaths[section]!) {
-          combined.addPath(_parseSvgPath(d), Offset.zero);
-        }
-        final Rect bounds = combined.getBounds();
-        final double maxDim = math.max(bounds.width, bounds.height);
-        final double scale = maxDim > 0 ? 1 / maxDim : 1;
-        final double dx = (1 - bounds.width * scale) / 2 - bounds.left * scale;
-        final double dy = (1 - bounds.height * scale) / 2 - bounds.top * scale;
-        final Matrix4 matrix = Matrix4.translationValues(dx, dy, 0)
-          ..scaleByDouble(scale, scale, 1, 1);
-        return combined.transform(matrix.storage)
-          ..fillType = ui.PathFillType.evenOdd;
-      });
-
-  static ui.Path _parseSvgPath(String d) {
-    final List<String> tokens = _tokenPattern
-        .allMatches(d)
-        .map((Match m) => m.group(0)!)
-        .toList();
-    final ui.Path path = ui.Path();
-    int i = 0;
-    String cmd = '';
-    double cx = 0;
-    double cy = 0;
-    double sx = 0;
-    double sy = 0;
-    double? lastC2x;
-    double? lastC2y;
-    String lastCmd = '';
-
-    double nextNum() => double.parse(tokens[i++]);
-    bool isCmd(String token) =>
-        token.length == 1 && token.codeUnitAt(0) >= 65; // A-Z / a-z
-
-    while (i < tokens.length) {
-      if (isCmd(tokens[i])) {
-        cmd = tokens[i++];
-        if (cmd == 'Z' || cmd == 'z') {
-          path.close();
-          cx = sx;
-          cy = sy;
-          lastCmd = cmd;
-          continue;
-        }
-      }
-      switch (cmd) {
-        case 'M':
-          cx = nextNum();
-          cy = nextNum();
-          sx = cx;
-          sy = cy;
-          path.moveTo(cx, cy);
-          lastCmd = 'M';
-          cmd = 'L';
-        case 'L':
-          cx = nextNum();
-          cy = nextNum();
-          path.lineTo(cx, cy);
-          lastCmd = 'L';
-        case 'l':
-          cx += nextNum();
-          cy += nextNum();
-          path.lineTo(cx, cy);
-          lastCmd = 'l';
-        case 'h':
-          cx += nextNum();
-          path.lineTo(cx, cy);
-          lastCmd = 'h';
-        case 'v':
-          cy += nextNum();
-          path.lineTo(cx, cy);
-          lastCmd = 'v';
-        case 'c':
-          final double x1 = cx + nextNum();
-          final double y1 = cy + nextNum();
-          final double x2 = cx + nextNum();
-          final double y2 = cy + nextNum();
-          final double x3 = cx + nextNum();
-          final double y3 = cy + nextNum();
-          path.cubicTo(x1, y1, x2, y2, x3, y3);
-          lastC2x = x2;
-          lastC2y = y2;
-          cx = x3;
-          cy = y3;
-          lastCmd = 'c';
-        case 's':
-          final bool hadCubic = lastCmd == 'c' || lastCmd == 's';
-          final double x1 = hadCubic && lastC2x != null ? 2 * cx - lastC2x : cx;
-          final double y1 = hadCubic && lastC2y != null ? 2 * cy - lastC2y : cy;
-          final double x2 = cx + nextNum();
-          final double y2 = cy + nextNum();
-          final double x3 = cx + nextNum();
-          final double y3 = cy + nextNum();
-          path.cubicTo(x1, y1, x2, y2, x3, y3);
-          lastC2x = x2;
-          lastC2y = y2;
-          cx = x3;
-          cy = y3;
-          lastCmd = 's';
-      }
-    }
-    return path;
-  }
 
   @override
   void paint(Canvas canvas, Size size) {
