@@ -135,6 +135,10 @@ class _HomeHeader extends StatelessWidget {
     Shadow(color: Color(0x40002B7A), blurRadius: 8, offset: Offset(0, 1)),
   ];
 
+  /// Distancia vertical desde la fila superior (logos/avatar) hasta «¡Hola!».
+  /// Aumentá este número para bajar más el texto o disminuílo para subirlo.
+  static const double greetingTopOffset = 22;
+
   @override
   Widget build(BuildContext context) {
     final bool largeText = MediaQuery.textScalerOf(context).scale(16) > 22;
@@ -180,7 +184,7 @@ class _HomeHeader extends StatelessWidget {
         ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 196),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 8, 14, 54),
+            padding: const EdgeInsets.fromLTRB(18, 8, 14, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -192,7 +196,7 @@ class _HomeHeader extends StatelessWidget {
                     PieceHeaderButton(piece: piece),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: greetingTopOffset),
                 if (largeText)
                   greeting
                 else
