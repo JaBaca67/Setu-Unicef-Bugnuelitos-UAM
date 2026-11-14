@@ -36,6 +36,7 @@ StudentPiece? _pieceOf(StaffCaseSummary? item) {
           shape: snapshot.shape,
           color: snapshot.color,
           accessories: snapshot.accessories,
+          displayName: snapshot.displayName,
         );
 }
 
@@ -385,6 +386,8 @@ class _DeskCaseScreenState extends State<DeskCaseScreen> {
                   ),
                   style: _text,
                 ),
+                if (item.studentPiece?.displayName case final String nick)
+                  Text('Apodo de la pieza: $nick', style: _text),
                 Text(
                   'Recibida: ${staffShortDate(item.receivedCentrallyAt)}',
                   style: const TextStyle(

@@ -44,6 +44,45 @@ class LearningProgress extends ChangeNotifier {
   DateTime get today => calendarDay(_now());
   int get xp =>
       _questionDays.length * questionXp + _resources.length * resourceXp;
+
+  /// Cada nivel pide la misma cantidad de XP: una escala fácil de leer.
+  static const int xpPerLevel = 50;
+  static const List<String> levelTitles = <String>[
+    'Curioso',
+    'Explorador',
+    'Constructor',
+    'Guía',
+    'Referente',
+  ];
+
+  int get level => xp ~/ xpPerLevel + 1;
+
+  /// XP acumulados dentro del nivel actual.
+  int get levelXp => xp % xpPerLevel;
+  String get levelTitle =>
+      levelTitles[level > levelTitles.length
+          ? levelTitles.length - 1
+          : level - 1];
+
+  /// Preguntas respondidas y lecturas completadas.
+  int get completedCount => _questionDays.length + _resources.length;
+
+  /// Racha más larga registrada en este teléfono.
+  int get bestStreak {
+    final List<DateTime> days = _activeDays.toList()..sort();
+    int best = 0;
+    int run = 0;
+    DateTime? previous;
+    for (final DateTime day in days) {
+      run = previous != null && day.difference(previous).inDays == 1
+          ? run + 1
+          : 1;
+      if (run > best) best = run;
+      previous = day;
+    }
+    return best;
+  }
+
   bool get answeredToday => _questionDays.contains(today);
   bool isActive(DateTime day) => _activeDays.contains(calendarDay(day));
   bool completedResource(String id) => _resources.contains(id);

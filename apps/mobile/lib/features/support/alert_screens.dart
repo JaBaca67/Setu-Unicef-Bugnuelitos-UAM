@@ -21,7 +21,7 @@ Widget _question(BuildContext context, String text) => Semantics(
   ),
 );
 
-/// Botón del avatar en el encabezado: abre «Mi pieza».
+/// Botón del avatar en el encabezado: abre «Mi perfil».
 class PieceHeaderButton extends StatelessWidget {
   const PieceHeaderButton({super.key, required this.piece});
 
@@ -31,10 +31,12 @@ class PieceHeaderButton extends StatelessWidget {
   Widget build(BuildContext context) => ValueListenableBuilder<StudentPiece>(
     valueListenable: piece,
     builder: (BuildContext context, StudentPiece value, _) => Tooltip(
-      message: 'Personalizar tu pieza',
+      message: 'Abrir mi perfil',
       child: Semantics(
         button: true,
-        label: 'Tu pieza: ${value.description}. Tocá para personalizarla.',
+        label:
+            'Tu pieza ${value.nickname}: ${value.description}. Tocá para '
+            'abrir tu perfil.',
         child: Material(
           color: Colors.transparent,
           shape: const CircleBorder(),
