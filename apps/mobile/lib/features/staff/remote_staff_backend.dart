@@ -16,6 +16,12 @@ class RemoteStaffBackend implements StaffBackend {
   String? get currentUserId => _gateway.currentStaffUserId;
 
   @override
+  String? get currentUserEmail => _gateway.currentStaffEmail;
+
+  @override
+  bool get isEmailConfirmed => _gateway.isCurrentStaffEmailConfirmed;
+
+  @override
   Future<StaffActivationPreview> previewActivation(
     String code, {
     String? email,
@@ -29,6 +35,17 @@ class RemoteStaffBackend implements StaffBackend {
       _gateway.signUpStaffAccount(email: email, password: password);
 
   @override
+  Future<void> resendConfirmationEmail({required String email}) =>
+      _gateway.resendStaffConfirmationEmail(email: email);
+
+  @override
+  Future<void> refreshAuthSession() => _gateway.refreshStaffAuthSession();
+
+  @override
+  Future<void> sendPasswordReset({required String email}) =>
+      _gateway.sendStaffPasswordResetEmail(email: email);
+
+  @override
   Future<void> signIn({required String email, required String password}) =>
       _gateway.signInStaffWithPassword(email: email, password: password);
 
@@ -40,8 +57,148 @@ class RemoteStaffBackend implements StaffBackend {
       _gateway.redeemStaffActivationCode(code);
 
   @override
+  Future<StaffActivationRedemption> redeemActivationWithProfile({
+    required String code,
+    required String firstName,
+    required String lastName,
+  }) => _gateway.redeemStaffActivationCodeWithProfile(
+    activationCode: code,
+    firstName: firstName,
+    lastName: lastName,
+  );
+
+  @override
   Future<List<StaffMembershipScope>> memberships() =>
       _gateway.getMyStaffMemberships();
+
+  @override
+  Future<StaffProfileView?> profile() => _gateway.getMyStaffProfile();
+
+  @override
+  Future<void> updateAvailabilityAndNotices({
+    required bool isAvailable,
+    required bool notifyNewAlerts,
+    required bool notifyNewMessages,
+  }) => _gateway.updateMyStaffAvailabilityAndNotices(
+    isAvailable: isAvailable,
+    notifyNewAlerts: notifyNewAlerts,
+    notifyNewMessages: notifyNewMessages,
+  );
+
+  @override
+  Future<void> requestInviteReplacement({
+    required String email,
+    required String reasonCode,
+    String? notes,
+  }) => _gateway.requestStaffInviteReplacement(
+    institutionalEmail: email,
+    reasonCode: reasonCode,
+    notes: notes,
+  );
+
+  @override
+  Future<List<StaffActivationInviteView>> invites({String? institutionId}) =>
+      _gateway.listStaffActivationInvites(institutionId: institutionId);
+
+  @override
+  Future<void> requestInvite({
+    required String email,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? fullName,
+    String? requesterProgramLabel,
+    String? supervisorUserId,
+  }) => _gateway.requestStaffActivationInvite(
+    institutionalEmail: email,
+    role: role,
+    institutionId: institutionId,
+    staffTier: staffTier,
+    fullName: fullName,
+    requesterProgramLabel: requesterProgramLabel,
+    supervisorUserId: supervisorUserId,
+  );
+
+  @override
+  Future<StaffInviteIssueResult> issueInvite({
+    String? email,
+    SetuStaffRole? role,
+    String? institutionId,
+    String? staffTier,
+    String? scopeLabel,
+    String? fullName,
+    String? supervisorUserId,
+    int expiresInHours = 72,
+    String? pendingInviteId,
+  }) => _gateway.issueStaffActivationInvite(
+    institutionalEmail: email,
+    role: role,
+    institutionId: institutionId,
+    staffTier: staffTier,
+    scopeLabel: scopeLabel,
+    fullName: fullName,
+    supervisorUserId: supervisorUserId,
+    expiresInHours: expiresInHours,
+    pendingInviteId: pendingInviteId,
+  );
+
+  @override
+  Future<void> revokeInvite({required String inviteId, String? reason}) =>
+      _gateway.revokeStaffActivationInvite(inviteId: inviteId, reason: reason);
+
+  @override
+  Future<StaffInviteIssueResult> replaceInvite({
+    required String inviteId,
+    String? newEmail,
+    int expiresInHours = 72,
+    String? reason,
+  }) => _gateway.replaceStaffActivationInvite(
+    inviteId: inviteId,
+    newInstitutionalEmail: newEmail,
+    expiresInHours: expiresInHours,
+    reason: reason,
+  );
+
+  @override
+  Future<CounselorDispatchCasesResult> counselorDispatches() =>
+      _gateway.listCounselorDispatchCases();
+
+  @override
+  Future<CaseDispatchRecoverResult> recoverDeclinedDispatch(String caseId) =>
+      _gateway.recoverDeclinedCaseDispatch(caseId);
+
+  @override
+  Future<SchoolCoverageAndAssignmentsView> schoolCoverageAndAssignments({
+    String? institutionId,
+  }) => _gateway.listSchoolCoverageAndAssignments(institutionId: institutionId);
+
+  @override
+  Future<void> setSchoolExternalCoverage({
+    required String institutionId,
+    ExternalCoverageMode? mode,
+    DateTime? until,
+    bool? minedExternalEnabled,
+  }) => _gateway.setSchoolExternalCoverage(
+    institutionId: institutionId,
+    mode: mode,
+    until: until,
+    minedExternalEnabled: minedExternalEnabled,
+  );
+
+  @override
+  Future<void> assignExternalCounselorSchool({
+    required String counselorUserId,
+    required String institutionId,
+    bool active = true,
+  }) => _gateway.assignExternalCounselorSchool(
+    counselorUserId: counselorUserId,
+    institutionId: institutionId,
+    active: active,
+  );
+
+  @override
+  Future<List<PracticanteSupervisorNoticeView>> supervisorNotices() =>
+      _gateway.listMySupervisorNotices();
 
   @override
   Future<Map<String, String>> institutionNames() =>

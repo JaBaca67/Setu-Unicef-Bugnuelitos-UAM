@@ -5,16 +5,97 @@ import '../../shared/remote/setu_remote_models.dart';
 import 'staff_backend.dart';
 
 class _Invite {
-  _Invite(this.email, this.role, {this.state = 'active'});
+  _Invite(
+    this.id,
+    this.email,
+    this.role, {
+    this.state = 'active',
+    this.staffTier = 'school_plant',
+    this.institutionId,
+    this.scopeLabel,
+    this.fullName,
+    this.requesterProgramLabel,
+    this.supervisorUserId,
+    this.requestStatus = StaffInviteRequestStatus.approved,
+    this.approvedBy,
+    this.approvedAt,
+    this.revokedAt,
+    this.revokedReason,
+    DateTime? expiresAt,
+    DateTime? createdAt,
+  }) : expiresAt = expiresAt ?? DateTime(2026, 12, 31, 23, 59),
+       createdAt = createdAt ?? DateTime(2026, 11, 13, 8, 0);
+
+  final String id;
   final String email;
   final SetuStaffRole role;
   String state;
+  String staffTier;
+  String? institutionId;
+  String? scopeLabel;
+  String? fullName;
+  String? requesterProgramLabel;
+  String? supervisorUserId;
+  StaffInviteRequestStatus requestStatus;
+  String? requestedBy;
+  String? approvedBy;
+  DateTime? approvedAt;
+  DateTime? revokedAt;
+  String? revokedBy;
+  String? revokedReason;
+  DateTime? redeemedAt;
+  String? replacedByInviteId;
+  DateTime expiresAt;
+  final DateTime createdAt;
+  final List<StaffInviteEventView> events = <StaffInviteEventView>[];
+}
+
+class _SchoolCoverage {
+  _SchoolCoverage({
+    required this.institutionId,
+    required this.publicCode,
+    required this.name,
+    this.minedExternalEnabled = true,
+    this.mode = ExternalCoverageMode.enabled,
+  });
+
+  final String institutionId;
+  final String publicCode;
+  final String name;
+  bool minedExternalEnabled;
+  ExternalCoverageMode mode;
+  DateTime? until;
+
+  bool get activeNow {
+    if (!minedExternalEnabled) return false;
+    return switch (mode) {
+      ExternalCoverageMode.disabled => false,
+      ExternalCoverageMode.enabled => true,
+      ExternalCoverageMode.temporaryUntil =>
+        until != null && until!.isAfter(DateTime.now().toUtc()),
+    };
+  }
 }
 
 class _Account {
-  _Account(this.password, {this.confirmed = false});
+  _Account(
+    this.password, {
+    this.confirmed = false,
+    this.firstName,
+    this.lastName,
+    this.staffTier = 'school_plant',
+  });
+
   final String password;
   bool confirmed;
+  String? firstName;
+  String? lastName;
+  String staffTier;
+  String? supervisorUserId;
+  bool isAvailable = true;
+  bool notifyNewAlerts = true;
+  bool notifyNewMessages = true;
+  final Set<String> assignedInstitutionIds = <String>{};
   final List<StaffMembershipScope> memberships = <StaffMembershipScope>[];
 }
 
@@ -110,25 +191,51 @@ class _DemoDispatch {
 /// widgets; no es un mecanismo de autenticación.
 class DemoStaffBackend implements StaffBackend {
   DemoStaffBackend({this.autoConfirmEmail = false}) {
-    _seed('mined.demo@setu.test', <StaffMembershipScope>[_mined]);
-    _seed('escucha.demo@setu.test', <StaffMembershipScope>[
-      _scope('m-desk-cca', SetuStaffRole.counselingDesk, cca),
-      _scope('m-desk-a', SetuStaffRole.counselingDesk, schoolA),
-    ]);
-    _seed('direccion.cca@setu.test', <StaffMembershipScope>[
-      _scope('m-dir-cca', SetuStaffRole.schoolDirector, cca),
-    ]);
-    _seed(externalCounselor, const <StaffMembershipScope>[
-      StaffMembershipScope(
-        membershipId: 'm-desk-ext',
-        role: SetuStaffRole.counselingDesk,
-        scopeLabel: 'Mesa de Escucha · Red externa · demostración',
-      ),
-    ]);
+    _seed(
+      'mined.demo@example.org',
+      <StaffMembershipScope>[_mined],
+      firstName: 'Equipo',
+      lastName: 'MINED',
+      staffTier: 'mined_central',
+    );
+    _seed(
+      'escucha.demo@example.org',
+      <StaffMembershipScope>[
+        _scope('m-desk-cca', SetuStaffRole.counselingDesk, cca),
+        _scope('m-desk-a', SetuStaffRole.counselingDesk, schoolA),
+      ],
+      firstName: 'María',
+      lastName: 'Pérez',
+      staffTier: 'external_network',
+      assignedSchools: <String>[cca.id, schoolA.id],
+    );
+    _seed(
+      'direccion.cca@example.org',
+      <StaffMembershipScope>[
+        _scope('m-dir-cca', SetuStaffRole.schoolDirector, cca),
+      ],
+      firstName: 'Dirección',
+      lastName: 'Centro América',
+      staffTier: 'school_director',
+    );
+    _seed(
+      externalCounselor,
+      const <StaffMembershipScope>[
+        StaffMembershipScope(
+          membershipId: 'm-desk-ext',
+          role: SetuStaffRole.counselingDesk,
+          scopeLabel: 'Mesa de Escucha · Red externa · demostración',
+        ),
+      ],
+      firstName: 'Carlos',
+      lastName: 'Mendoza',
+      staffTier: 'external_network',
+      assignedSchools: <String>[cca.id],
+    );
   }
 
   /// Cuenta ficticia de la red externa de Mesa de Escucha.
-  static const String externalCounselor = 'red.externa@setu.test';
+  static const String externalCounselor = 'red.externa@example.org';
 
   /// Contraseña ficticia de las cuentas de demostración en memoria.
   static const String demoPassword = 'Demo-SeTu-2026';
@@ -167,29 +274,68 @@ class DemoStaffBackend implements StaffBackend {
   final bool autoConfirmEmail;
 
   final Map<String, _Account> _accounts = <String, _Account>{};
+  final Map<String, _SchoolCoverage> _coverages = <String, _SchoolCoverage>{
+    cca.id: _SchoolCoverage(
+      institutionId: cca.id,
+      publicCode: cca.code,
+      name: cca.name,
+      minedExternalEnabled: true,
+      mode: ExternalCoverageMode.enabled,
+    ),
+    schoolA.id: _SchoolCoverage(
+      institutionId: schoolA.id,
+      publicCode: schoolA.code,
+      name: schoolA.name,
+      minedExternalEnabled: true,
+      mode: ExternalCoverageMode.enabled,
+    ),
+  };
+  final List<PracticanteSupervisorNoticeView> _supervisorNotices =
+      <PracticanteSupervisorNoticeView>[];
   final Map<String, _Invite> _invites = <String, _Invite>{
     'CCADIR2026': _Invite(
-      'invitada.cca@setu.test',
+      'inv-dir-1',
+      'invitada.cca@example.org',
       SetuStaffRole.schoolDirector,
+      staffTier: 'school_director',
+      institutionId: cca.id,
+      scopeLabel: 'Dirección del centro · Colegio Centro América — Demo',
+      approvedBy: 'mined.demo@example.org',
+      approvedAt: DateTime(2026, 11, 13, 8, 5),
     ),
     'CCAMESA2026': _Invite(
-      'practicante.cca@setu.test',
+      'inv-mesa-1',
+      'practicante.cca@example.org',
       SetuStaffRole.counselingDesk,
+      staffTier: 'practicante_5to',
+      institutionId: cca.id,
+      supervisorUserId: 'escucha.demo@example.org',
+      scopeLabel: 'Mesa de Escucha · Colegio Centro América — Demo',
+      approvedBy: 'mined.demo@example.org',
+      approvedAt: DateTime(2026, 11, 13, 8, 5),
     ),
     'CCAEXP2026': _Invite(
-      'expirada.cca@setu.test',
+      'inv-exp-1',
+      'expirada.cca@example.org',
       SetuStaffRole.counselingDesk,
       state: 'expired',
+      institutionId: cca.id,
+      scopeLabel: 'Mesa de Escucha · Colegio Centro América — Demo',
     ),
     'CCAREV2026': _Invite(
-      'revocada.cca@setu.test',
+      'inv-rev-1',
+      'revocada.cca@example.org',
       SetuStaffRole.counselingDesk,
       state: 'revoked',
+      institutionId: cca.id,
+      scopeLabel: 'Mesa de Escucha · Colegio Centro América — Demo',
+      revokedReason: 'Código anulado en demostración',
+      revokedAt: DateTime(2026, 11, 13, 8, 10),
     ),
   };
   String? _user;
 
-  static const String _desk = 'escucha.demo@setu.test';
+  static const String _desk = 'escucha.demo@example.org';
 
   final StreamController<SetuAssignmentNotice> _notices =
       StreamController<SetuAssignmentNotice>.broadcast();
@@ -378,10 +524,10 @@ class DemoStaffBackend implements StaffBackend {
       (_DemoCase item) => item.id == caseId,
     );
     found
-      ..assignedTo = 'otra.persona@setu.test'
+      ..assignedTo = 'otra.persona@example.org'
       ..status = SetuCaseStatus.inListening
       ..version += 1;
-    _settleDispatches(found, 'otra.persona@setu.test', notify: notify);
+    _settleDispatches(found, 'otra.persona@example.org', notify: notify);
   }
 
   @override
@@ -539,9 +685,23 @@ class DemoStaffBackend implements StaffBackend {
   /// Simula una caída de conexión en las pruebas.
   bool offline = false;
 
-  void _seed(String email, List<StaffMembershipScope> memberships) {
-    _accounts[email] = _Account(demoPassword, confirmed: true)
-      ..memberships.addAll(memberships);
+  void _seed(
+    String email,
+    List<StaffMembershipScope> memberships, {
+    String? firstName,
+    String? lastName,
+    String staffTier = 'school_plant',
+    List<String> assignedSchools = const <String>[],
+  }) {
+    final _Account account = _Account(
+      demoPassword,
+      confirmed: true,
+      firstName: firstName,
+      lastName: lastName,
+      staffTier: staffTier,
+    )..memberships.addAll(memberships);
+    account.assignedInstitutionIds.addAll(assignedSchools);
+    _accounts[email] = account;
   }
 
   /// Simula que la persona abrió el enlace de confirmación de su correo.
@@ -563,16 +723,36 @@ class DemoStaffBackend implements StaffBackend {
   String? get currentUserId => _user;
 
   @override
+  String? get currentUserEmail => _user;
+
+  @override
+  bool get isEmailConfirmed =>
+      _user != null && (_accounts[_user]?.confirmed ?? false);
+
+  @override
   Future<StaffActivationPreview> previewActivation(
     String code, {
     String? email,
   }) async {
     _online();
+    final _Account? account = _accounts[_user];
+    if (account == null) {
+      throw const GatewayException('42501', 'authentication_required');
+    }
+    if (!account.confirmed) {
+      throw const GatewayException('42501', 'email_not_verified');
+    }
     final _Invite? invite = _invites[_normalize(code)];
     if (invite == null) {
       return const StaffActivationPreview(
         ok: false,
         error: 'invalid_activation_code',
+      );
+    }
+    if (invite.requestStatus != StaffInviteRequestStatus.approved) {
+      return const StaffActivationPreview(
+        ok: false,
+        error: 'activation_code_not_approved',
       );
     }
     if (invite.state != 'active') {
@@ -585,20 +765,30 @@ class DemoStaffBackend implements StaffBackend {
         },
       );
     }
-    if (email != null && _clean(email) != invite.email) {
+    if (invite.email != _user) {
       return const StaffActivationPreview(
         ok: false,
         error: 'activation_email_mismatch',
         remainingAttempts: 4,
       );
     }
+    final ({String id, String code, String name})? school =
+        invite.institutionId == cca.id
+            ? cca
+            : invite.institutionId == schoolA.id
+            ? schoolA
+            : null;
     return StaffActivationPreview(
       ok: true,
+      inviteId: invite.id,
       role: invite.role,
-      institutionId: cca.id,
-      institutionPublicCode: cca.code,
-      institutionName: cca.name,
-      scopeLabel: '${invite.role.label} · ${cca.name}',
+      staffTier: invite.staffTier,
+      supervisorUserId: invite.supervisorUserId,
+      institutionId: school?.id,
+      institutionPublicCode: school?.code,
+      institutionName: school?.name,
+      scopeLabel: invite.scopeLabel ?? '${invite.role.label} · ${school?.name ?? 'Red externa'}',
+      expiresAt: invite.expiresAt,
     );
   }
 
@@ -611,6 +801,21 @@ class DemoStaffBackend implements StaffBackend {
     }
     _accounts[key] = _Account(password, confirmed: autoConfirmEmail);
     if (autoConfirmEmail) _user = key;
+  }
+
+  @override
+  Future<void> resendConfirmationEmail({required String email}) async {
+    _online();
+  }
+
+  @override
+  Future<void> refreshAuthSession() async {
+    _online();
+  }
+
+  @override
+  Future<void> sendPasswordReset({required String email}) async {
+    _online();
   }
 
   @override
@@ -641,18 +846,44 @@ class DemoStaffBackend implements StaffBackend {
   }
 
   @override
-  Future<StaffActivationRedemption> redeemActivation(String code) async {
+  Future<StaffActivationRedemption> redeemActivation(String code) =>
+      redeemActivationWithProfile(
+        code: code,
+        firstName: 'Personal',
+        lastName: 'Demo',
+      );
+
+  @override
+  Future<StaffActivationRedemption> redeemActivationWithProfile({
+    required String code,
+    required String firstName,
+    required String lastName,
+  }) async {
     _online();
     final _Account? account = _accounts[_user];
     if (account == null) {
       throw const GatewayException('42501', 'authentication_required');
     }
+    if (!account.confirmed) {
+      throw const GatewayException('42501', 'email_not_verified');
+    }
+    final String cleanFirst = firstName.trim();
+    final String cleanLast = lastName.trim();
+    if (cleanFirst.isEmpty || cleanLast.isEmpty) {
+      throw const GatewayException('22023', 'first_and_last_name_required');
+    }
     final _Invite? invite = _invites[_normalize(code)];
-    if (invite == null || invite.state != 'active') {
+    if (invite == null ||
+        invite.state != 'active' ||
+        invite.requestStatus != StaffInviteRequestStatus.approved) {
       return StaffActivationRedemption(
         ok: false,
         error: invite == null
             ? 'invalid_activation_code'
+            : invite.state == 'revoked'
+            ? 'activation_code_revoked'
+            : invite.state == 'expired'
+            ? 'activation_code_expired'
             : 'activation_code_already_used',
       );
     }
@@ -662,20 +893,552 @@ class DemoStaffBackend implements StaffBackend {
         error: 'activation_email_mismatch',
       );
     }
-    invite.state = 'used';
-    final StaffMembershipScope scope = _scope(
-      'm-${_normalize(code)}',
-      invite.role,
-      cca,
-    );
+    invite
+      ..state = 'used'
+      ..redeemedAt = DateTime.now().toUtc()
+      ..events.add(
+        StaffInviteEventView(
+          id: 'evt-${++_sequence}',
+          eventType: 'redeemed',
+          actorUserId: _user,
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
+    account
+      ..firstName = cleanFirst
+      ..lastName = cleanLast
+      ..staffTier = invite.staffTier
+      ..supervisorUserId = invite.supervisorUserId;
+    final ({String id, String code, String name})? school =
+        invite.institutionId == schoolA.id
+            ? schoolA
+            : invite.institutionId == cca.id
+            ? cca
+            : null;
+    final StaffMembershipScope scope = school != null
+        ? _scope('m-${_normalize(code)}', invite.role, school)
+        : StaffMembershipScope(
+            membershipId: 'm-${_normalize(code)}',
+            role: invite.role,
+            scopeLabel: invite.scopeLabel ?? invite.role.label,
+          );
     account.memberships.add(scope);
     return StaffActivationRedemption(
       ok: true,
       membershipId: scope.membershipId,
       role: scope.role,
+      staffTier: invite.staffTier,
+      supervisorUserId: invite.supervisorUserId,
       institutionId: scope.institutionId,
       scopeLabel: scope.scopeLabel,
+      firstName: cleanFirst,
+      lastName: cleanLast,
     );
+  }
+
+  @override
+  Future<StaffProfileView?> profile() async {
+    _online();
+    final String? uid = _user;
+    final _Account? account = uid == null ? null : _accounts[uid];
+    if (account == null || uid == null) {
+      throw const GatewayException('42501', 'authentication_required');
+    }
+    final _Account? sup = account.supervisorUserId == null
+        ? null
+        : _accounts[account.supervisorUserId];
+    final String? supName = sup == null
+        ? null
+        : '${sup.firstName ?? ''} ${sup.lastName ?? ''}'.trim();
+    final List<StaffSchoolScopeItem> assigned = <StaffSchoolScopeItem>[
+      for (final _SchoolCoverage cov in _coverages.values)
+        if (account.assignedInstitutionIds.contains(cov.institutionId))
+          StaffSchoolScopeItem(
+            institutionId: cov.institutionId,
+            publicCode: cov.publicCode,
+            name: cov.name,
+            coverageActiveNow: cov.activeNow,
+            externalSupportMode: cov.mode,
+            externalSupportUntil: cov.until,
+          ),
+    ];
+    final List<StaffSchoolScopeItem> available = <StaffSchoolScopeItem>[
+      for (final _SchoolCoverage cov in _coverages.values)
+        if (!account.assignedInstitutionIds.contains(cov.institutionId))
+          StaffSchoolScopeItem(
+            institutionId: cov.institutionId,
+            publicCode: cov.publicCode,
+            name: cov.name,
+            coverageActiveNow: cov.activeNow,
+            externalSupportMode: cov.mode,
+            externalSupportUntil: cov.until,
+          ),
+    ];
+    return StaffProfileView(
+      userId: uid,
+      email: uid,
+      emailConfirmed: account.confirmed,
+      firstName: account.firstName,
+      lastName: account.lastName,
+      staffTier: account.staffTier,
+      supervisorUserId: account.supervisorUserId,
+      supervisorName: supName?.isEmpty ?? true ? null : supName,
+      isAvailable: account.isAvailable,
+      notifyNewAlerts: account.notifyNewAlerts,
+      notifyNewMessages: account.notifyNewMessages,
+      memberships: List<StaffMembershipScope>.unmodifiable(account.memberships),
+      assignedSchools: assigned,
+      availableSchools: available,
+    );
+  }
+
+  @override
+  Future<void> updateAvailabilityAndNotices({
+    required bool isAvailable,
+    required bool notifyNewAlerts,
+    required bool notifyNewMessages,
+  }) async {
+    _online();
+    final _Account? account = _accounts[_user];
+    if (account == null) {
+      throw const GatewayException('42501', 'authentication_required');
+    }
+    account
+      ..isAvailable = isAvailable
+      ..notifyNewAlerts = notifyNewAlerts
+      ..notifyNewMessages = notifyNewMessages;
+  }
+
+  @override
+  Future<void> requestInviteReplacement({
+    required String email,
+    required String reasonCode,
+    String? notes,
+  }) async {
+    _online();
+  }
+
+  @override
+  Future<List<StaffActivationInviteView>> invites({
+    String? institutionId,
+  }) async {
+    final List<StaffMembershipScope> scopes = _scopes();
+    final bool mined = scopes.any(
+      (StaffMembershipScope s) => s.role == SetuStaffRole.minedSupervisor,
+    );
+    final Set<String?> directed = <String?>{
+      for (final StaffMembershipScope s in scopes)
+        if (s.role == SetuStaffRole.schoolDirector) s.institutionId,
+    };
+    if (!mined && directed.isEmpty) {
+      throw const GatewayException('42501', 'forbidden_invite_viewer_required');
+    }
+    return <StaffActivationInviteView>[
+      for (final _Invite item in _invites.values)
+        if ((mined || (item.institutionId != null && directed.contains(item.institutionId))) &&
+            (institutionId == null || item.institutionId == institutionId))
+          StaffActivationInviteView(
+            inviteId: item.id,
+            institutionalEmail: item.email,
+            fullName: item.fullName,
+            role: item.role,
+            staffTier: item.staffTier,
+            institutionId: item.institutionId,
+            institutionName: item.institutionId == cca.id
+                ? cca.name
+                : item.institutionId == schoolA.id
+                ? schoolA.name
+                : null,
+            scopeLabel: item.scopeLabel ?? item.role.label,
+            requestStatus: item.requestStatus,
+            requesterProgramLabel: item.requesterProgramLabel,
+            supervisorUserId: item.supervisorUserId,
+            requestedBy: item.requestedBy,
+            approvedBy: item.approvedBy,
+            approvedAt: item.approvedAt,
+            expiresAt: item.expiresAt,
+            revokedAt: item.revokedAt,
+            revokedBy: item.revokedBy,
+            revokedReason: item.revokedReason,
+            redeemedAt: item.redeemedAt,
+            replacedByInviteId: item.replacedByInviteId,
+            createdAt: item.createdAt,
+            events: List<StaffInviteEventView>.unmodifiable(item.events),
+          ),
+    ];
+  }
+
+  @override
+  Future<void> requestInvite({
+    required String email,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? fullName,
+    String? requesterProgramLabel,
+    String? supervisorUserId,
+  }) async {
+    _online();
+    final bool director = institutionId != null &&
+        _has(SetuStaffRole.schoolDirector, institutionId);
+    final bool mined = _has(SetuStaffRole.minedSupervisor);
+    if (!director && !mined) {
+      throw const GatewayException('42501', 'forbidden_invite_requester');
+    }
+    if (director && !mined && staffTier != 'school_plant') {
+      throw const GatewayException('42501', 'forbidden_invite_tier');
+    }
+    final String code = 'REQ${++_sequence}2026';
+    _invites[code] = _Invite(
+      'inv-req-$_sequence',
+      _clean(email),
+      role,
+      staffTier: staffTier,
+      institutionId: institutionId,
+      fullName: fullName,
+      requesterProgramLabel: requesterProgramLabel,
+      supervisorUserId: supervisorUserId,
+      requestStatus: StaffInviteRequestStatus.pendingApproval,
+      scopeLabel: '${role.label} · ${institutionId == schoolA.id ? schoolA.name : cca.name}',
+    )
+      ..requestedBy = _user
+      ..events.add(
+        StaffInviteEventView(
+          id: 'evt-${++_sequence}',
+          eventType: 'requested',
+          actorUserId: _user,
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
+  }
+
+  @override
+  Future<StaffInviteIssueResult> issueInvite({
+    String? email,
+    SetuStaffRole? role,
+    String? institutionId,
+    String? staffTier,
+    String? scopeLabel,
+    String? fullName,
+    String? supervisorUserId,
+    int expiresInHours = 72,
+    String? pendingInviteId,
+  }) async {
+    _online();
+    if (!_has(SetuStaffRole.minedSupervisor)) {
+      throw const GatewayException('42501', 'forbidden_mined_required');
+    }
+    final DateTime now = DateTime.now().toUtc();
+    if (pendingInviteId != null) {
+      final _Invite pending = _invites.values.firstWhere(
+        (_Invite i) => i.id == pendingInviteId,
+      );
+      pending
+        ..requestStatus = StaffInviteRequestStatus.approved
+        ..approvedBy = _user
+        ..approvedAt = now
+        ..expiresAt = now.add(Duration(hours: expiresInHours));
+      final String code = _invites.entries
+          .firstWhere((MapEntry<String, _Invite> e) => e.value.id == pending.id)
+          .key;
+      return StaffInviteIssueResult(
+        ok: true,
+        inviteId: pending.id,
+        activationCode: code,
+        institutionalEmail: pending.email,
+        role: pending.role,
+        staffTier: pending.staffTier,
+        institutionId: pending.institutionId,
+        scopeLabel: pending.scopeLabel ?? pending.role.label,
+        expiresAt: pending.expiresAt,
+      );
+    }
+    final String code = 'SETU${++_sequence}26';
+    final SetuStaffRole resolvedRole = role ?? SetuStaffRole.counselingDesk;
+    final String resolvedTier = staffTier ?? 'school_plant';
+    final _Invite invite = _Invite(
+      'inv-$_sequence',
+      _clean(email ?? ''),
+      resolvedRole,
+      staffTier: resolvedTier,
+      institutionId: institutionId,
+      fullName: fullName,
+      supervisorUserId: supervisorUserId,
+      scopeLabel: scopeLabel ?? resolvedRole.label,
+      approvedBy: _user,
+      approvedAt: now,
+      expiresAt: now.add(Duration(hours: expiresInHours)),
+    );
+    invite.events.add(
+      StaffInviteEventView(
+        id: 'evt-${++_sequence}',
+        eventType: 'issued',
+        actorUserId: _user,
+        createdAt: now,
+      ),
+    );
+    _invites[code] = invite;
+    return StaffInviteIssueResult(
+      ok: true,
+      inviteId: invite.id,
+      activationCode: code,
+      institutionalEmail: invite.email,
+      role: invite.role,
+      staffTier: invite.staffTier,
+      institutionId: invite.institutionId,
+      scopeLabel: invite.scopeLabel ?? '',
+      expiresAt: invite.expiresAt,
+    );
+  }
+
+  @override
+  Future<void> revokeInvite({required String inviteId, String? reason}) async {
+    _online();
+    if (!_has(SetuStaffRole.minedSupervisor)) {
+      throw const GatewayException('42501', 'forbidden_mined_required');
+    }
+    final _Invite found = _invites.values.firstWhere(
+      (_Invite i) => i.id == inviteId,
+    );
+    found
+      ..state = 'revoked'
+      ..revokedAt = DateTime.now().toUtc()
+      ..revokedBy = _user
+      ..revokedReason = reason;
+  }
+
+  @override
+  Future<StaffInviteIssueResult> replaceInvite({
+    required String inviteId,
+    String? newEmail,
+    int expiresInHours = 72,
+    String? reason,
+  }) async {
+    _online();
+    if (!_has(SetuStaffRole.minedSupervisor)) {
+      throw const GatewayException('42501', 'forbidden_mined_required');
+    }
+    final _Invite old = _invites.values.firstWhere(
+      (_Invite i) => i.id == inviteId,
+    );
+    final StaffInviteIssueResult fresh = await issueInvite(
+      email: newEmail ?? old.email,
+      role: old.role,
+      institutionId: old.institutionId,
+      staffTier: old.staffTier,
+      scopeLabel: old.scopeLabel,
+      fullName: old.fullName,
+      supervisorUserId: old.supervisorUserId,
+      expiresInHours: expiresInHours,
+    );
+    old
+      ..state = 'revoked'
+      ..revokedAt = DateTime.now().toUtc()
+      ..revokedBy = _user
+      ..revokedReason = reason ?? 'Reposición'
+      ..replacedByInviteId = fresh.inviteId;
+    return fresh;
+  }
+
+  @override
+  Future<CounselorDispatchCasesResult> counselorDispatches() async {
+    _scopes();
+    final List<CaseDispatchRecord> pending = <CaseDispatchRecord>[];
+    final List<DeclinedDispatchRecord> declined = <DeclinedDispatchRecord>[];
+    for (final _DemoDispatch item in _dispatches) {
+      if (item.counselor != _user) continue;
+      final _DemoCase found = _cases.firstWhere(
+        (_DemoCase c) => c.id == item.caseId,
+      );
+      if (item.status == CaseDispatchStatus.pending &&
+          found.assignedTo == null &&
+          found.status != SetuCaseStatus.closed) {
+        pending.add(_record(item));
+      } else if (item.status == CaseDispatchStatus.declined) {
+        final bool covOk = item.tier == CaseDispatchTier.schoolPlant ||
+            (_coverages[found.institutionId]?.activeNow ?? false);
+        final DeclinedDispatchAvailability avail = found.assignedTo != null
+            ? DeclinedDispatchAvailability.alreadyInCare
+            : found.status == SetuCaseStatus.closed
+            ? DeclinedDispatchAvailability.closed
+            : !covOk
+            ? DeclinedDispatchAvailability.coverageInactive
+            : DeclinedDispatchAvailability.available;
+        declined.add(
+          DeclinedDispatchRecord(
+            id: 'demo-dispatch-${item.caseId}-${item.counselor}',
+            caseId: item.caseId,
+            institutionId: found.institutionId,
+            counselorUserId: item.counselor,
+            dispatchTier: item.tier,
+            dispatchStatus: item.status,
+            notifiedAt: item.notifiedAt,
+            canRecover: avail == DeclinedDispatchAvailability.available,
+            availabilityState: avail,
+            referenceCode: found.reference,
+            institutionName: found.institutionId == cca.id
+                ? cca.name
+                : schoolA.name,
+            situationType: found.situation,
+            caseStatus: found.status,
+            assignedCounselorId: found.assignedTo,
+            respondedAt: item.respondedAt,
+            declineReason: item.reason,
+            declaredAt: found.declaredAt,
+            involvesStaff: found.involvesStaff,
+          ),
+        );
+      }
+    }
+    return CounselorDispatchCasesResult(
+      pendingDispatches: pending,
+      declinedDispatches: declined,
+    );
+  }
+
+  @override
+  Future<CaseDispatchRecoverResult> recoverDeclinedDispatch(
+    String caseId,
+  ) async {
+    _scopes();
+    final _DemoDispatch mine = _dispatches.firstWhere(
+      (_DemoDispatch d) =>
+          d.caseId == caseId &&
+          d.counselor == _user &&
+          d.status == CaseDispatchStatus.declined,
+      orElse: () => throw const GatewayException('P0002', 'case_not_found'),
+    );
+    final _DemoCase found = _cases.firstWhere((_DemoCase c) => c.id == caseId);
+    if (found.assignedTo != null) {
+      return CaseDispatchRecoverResult(
+        ok: false,
+        caseId: caseId,
+        error: 'already_in_care',
+        availabilityState: DeclinedDispatchAvailability.alreadyInCare,
+      );
+    }
+    mine
+      ..status = CaseDispatchStatus.pending
+      ..respondedAt = null;
+    return CaseDispatchRecoverResult(
+      ok: true,
+      caseId: caseId,
+      dispatchStatus: CaseDispatchStatus.pending,
+      availabilityState: DeclinedDispatchAvailability.available,
+    );
+  }
+
+  @override
+  Future<SchoolCoverageAndAssignmentsView> schoolCoverageAndAssignments({
+    String? institutionId,
+  }) async {
+    final List<StaffMembershipScope> scopes = _scopes();
+    final bool mined = scopes.any(
+      (StaffMembershipScope s) => s.role == SetuStaffRole.minedSupervisor,
+    );
+    final Set<String?> directed = <String?>{
+      for (final StaffMembershipScope s in scopes)
+        if (s.role == SetuStaffRole.schoolDirector) s.institutionId,
+    };
+    if (!mined && directed.isEmpty) {
+      throw const GatewayException('42501', 'forbidden_coverage_viewer_required');
+    }
+    final List<SchoolCoverageStatusView> schools = <SchoolCoverageStatusView>[
+      for (final _SchoolCoverage cov in _coverages.values)
+        if ((mined || directed.contains(cov.institutionId)) &&
+            (institutionId == null || cov.institutionId == institutionId))
+          SchoolCoverageStatusView(
+            institutionId: cov.institutionId,
+            publicCode: cov.publicCode,
+            name: cov.name,
+            minedExternalEnabled: cov.minedExternalEnabled,
+            externalSupportMode: cov.mode,
+            externalSupportUntil: cov.until,
+            coverageActiveNow: cov.activeNow,
+            hasPlantCounselor: true,
+            assignedExternalCount: _accounts.values
+                .where((_Account a) =>
+                    a.staffTier == 'external_network' &&
+                    a.assignedInstitutionIds.contains(cov.institutionId))
+                .length,
+          ),
+    ];
+    final List<ExternalCounselorAssignmentView> extList = mined
+        ? <ExternalCounselorAssignmentView>[
+            for (final MapEntry<String, _Account> entry in _accounts.entries)
+              if (entry.value.staffTier == 'external_network')
+                ExternalCounselorAssignmentView(
+                  userId: entry.key,
+                  email: entry.key,
+                  firstName: entry.value.firstName,
+                  lastName: entry.value.lastName,
+                  staffTier: entry.value.staffTier,
+                  isAvailable: entry.value.isAvailable,
+                  assignedInstitutionIds: List<String>.unmodifiable(
+                    entry.value.assignedInstitutionIds,
+                  ),
+                ),
+          ]
+        : const <ExternalCounselorAssignmentView>[];
+    return SchoolCoverageAndAssignmentsView(
+      schools: schools,
+      externalCounselors: extList,
+    );
+  }
+
+  @override
+  Future<void> setSchoolExternalCoverage({
+    required String institutionId,
+    ExternalCoverageMode? mode,
+    DateTime? until,
+    bool? minedExternalEnabled,
+  }) async {
+    _online();
+    final bool mined = _has(SetuStaffRole.minedSupervisor);
+    final bool director = _has(SetuStaffRole.schoolDirector, institutionId);
+    if (!mined && !director) {
+      throw const GatewayException('42501', 'forbidden_coverage_manager');
+    }
+    final _SchoolCoverage cov = _coverages[institutionId]!;
+    if (mined && minedExternalEnabled != null) {
+      cov.minedExternalEnabled = minedExternalEnabled;
+    }
+    if (!cov.minedExternalEnabled &&
+        !mined &&
+        mode != null &&
+        mode != ExternalCoverageMode.disabled) {
+      throw const GatewayException('42501', 'coverage_locked_by_mined');
+    }
+    if (mode != null) {
+      cov
+        ..mode = mode
+        ..until = mode == ExternalCoverageMode.temporaryUntil ? until : null;
+    }
+  }
+
+  @override
+  Future<void> assignExternalCounselorSchool({
+    required String counselorUserId,
+    required String institutionId,
+    bool active = true,
+  }) async {
+    _online();
+    if (!_has(SetuStaffRole.minedSupervisor)) {
+      throw const GatewayException('42501', 'forbidden_mined_required');
+    }
+    final _Account? counselor = _accounts[counselorUserId];
+    if (counselor == null) return;
+    if (active) {
+      counselor.assignedInstitutionIds.add(institutionId);
+    } else {
+      counselor.assignedInstitutionIds.remove(institutionId);
+    }
+  }
+
+  @override
+  Future<List<PracticanteSupervisorNoticeView>> supervisorNotices() async {
+    _scopes();
+    return List<PracticanteSupervisorNoticeView>.unmodifiable(_supervisorNotices);
   }
 
   @override
@@ -1003,6 +1766,25 @@ class DemoStaffBackend implements StaffBackend {
       );
     } else if (found.status == SetuCaseStatus.received) {
       found.status = SetuCaseStatus.inListening;
+    }
+    final _Account? actor = _accounts[_user];
+    if (actor != null && actor.staffTier == 'practicante_5to') {
+      _supervisorNotices.add(
+        PracticanteSupervisorNoticeView(
+          eventId: 'notice-${++_sequence}',
+          caseId: found.id,
+          referenceCode: found.reference,
+          institutionName: found.institutionId == cca.id
+              ? cca.name
+              : schoolA.name,
+          situationType: found.situation,
+          humanLevel: level,
+          practicanteName: '${actor.firstName ?? ''} ${actor.lastName ?? ''}'
+              .trim(),
+          reason: assessment.guidanceNotes.trim(),
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
     }
   }
 

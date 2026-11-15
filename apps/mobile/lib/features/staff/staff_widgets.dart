@@ -7,8 +7,15 @@ import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import 'staff_backend.dart';
 
-/// Lleva a la superficie del rol activo o al selector de centro.
+/// Lleva a la superficie del rol activo, al selector de centro o a completar
+/// la activación cuando la cuenta aún no tiene membresías activas.
 void enterStaffArea(BuildContext context, StaffSession session) {
+  if (session.memberships.isEmpty) {
+    if (session.isAuthenticated) {
+      context.go('/personal/activar');
+    }
+    return;
+  }
   final StaffMembershipScope? active = session.active;
   context.go(active == null ? '/personal/ambito' : active.role.path);
 }
@@ -208,7 +215,7 @@ class StaffAreaScaffold extends StatelessWidget {
       useSafeArea: true,
       builder: (BuildContext sheet) => SafeArea(
         top: false,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -233,6 +240,15 @@ class StaffAreaScaffold extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
               ],
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  Navigator.of(sheet).pop();
+                  context.push('/personal/perfil');
+                },
+                icon: const Icon(Icons.person_outline_rounded),
+                label: const Text('Mi perfil y disponibilidad'),
+              ),
+              const SizedBox(height: 8),
               TextButton(
                 onPressed: () {
                   Navigator.of(sheet).pop();

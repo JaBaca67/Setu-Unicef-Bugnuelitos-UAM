@@ -158,6 +158,10 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
             ),
             const SizedBox(height: 8),
             TextButton(
+              onPressed: () => context.push('/personal/ayuda'),
+              child: const Text('Necesito ayuda con mi acceso', style: _link),
+            ),
+            TextButton(
               onPressed: () => context.go('/'),
               child: const Text('Volver a la bienvenida', style: _link),
             ),
@@ -190,11 +194,12 @@ class _WavePainter extends CustomPainter {
   bool shouldRepaint(_WavePainter oldDelegate) => false;
 }
 
-enum _ActivationStep { code, account, email }
+enum _ActivationStep { account, email, codeAndProfile }
 
-/// Primer ingreso (`/personal/activar`): validar la invitación de un solo
-/// uso, crear la contraseña, confirmar el correo y canjear el código. El rol
-/// y el centro los decide el servidor, nunca un campo de esta pantalla.
+/// Primer ingreso (`/personal/activar`): crear cuenta con correo institucional
+/// y contraseña, confirmar el correo mediante el enlace, validar el código de
+/// un solo uso y completar nombre y apellidos antes de entrar. El rol y el
+/// ámbito provienen siempre del servidor.
 class StaffActivationScreen extends StatefulWidget {
   const StaffActivationScreen({super.key, required this.session});
 
@@ -207,24 +212,43 @@ class StaffActivationScreen extends StatefulWidget {
 class _StaffActivationScreenState extends State<StaffActivationScreen> {
   static const int _minPassword = 8;
 
-  final TextEditingController _code = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   final TextEditingController _repeat = TextEditingController();
-  _ActivationStep _step = _ActivationStep.code;
+  final TextEditingController _code = TextEditingController();
+  final TextEditingController _firstName = TextEditingController();
+  final TextEditingController _lastName = TextEditingController();
+
+  late _ActivationStep _step;
   StaffActivationPreview? _preview;
   bool _hidden = true;
   bool _busy = false;
   String? _error;
+  String? _info;
 
   StaffBackend get _backend => widget.session.backend;
 
   @override
+  void initState() {
+    super.initState();
+    if (_backend.currentUserId != null) {
+      _email.text = _backend.currentUserEmail ?? '';
+      _step = _backend.isEmailConfirmed
+          ? _ActivationStep.codeAndProfile
+          : _ActivationStep.email;
+    } else {
+      _step = _ActivationStep.account;
+    }
+  }
+
+  @override
   void dispose() {
-    _code.dispose();
     _email.dispose();
     _password.dispose();
     _repeat.dispose();
+    _code.dispose();
+    _firstName.dispose();
+    _lastName.dispose();
     super.dispose();
   }
 
@@ -235,6 +259,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _info = null;
     });
     String? error;
     try {
@@ -249,9 +274,84 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     });
   }
 
+  Future<String?> _createAccount() async {
+    final String email = _email.text.trim();
+    if (!email.contains('@')) return 'Escribí tu correo institucional.';
+    if (_password.text.length < _minPassword) {
+      return 'La contraseña necesita al menos $_minPassword caracteres.';
+    }
+    if (_password.text != _repeat.text) {
+      return 'Las dos contraseñas no coinciden.';
+    }
+    try {
+      await _backend.signUp(email: email, password: _password.text);
+    } on GatewayException catch (failure) {
+      final String text = '${failure.code} ${failure.message}'.toLowerCase();
+      if (!text.contains('already')) rethrow;
+      // Si la cuenta ya existe, intenta iniciar sesión o avanzar a confirmar
+      // correo si todavía está pendiente.
+      try {
+        await _backend.signIn(email: email, password: _password.text);
+      } on GatewayException catch (signFailure) {
+        final String signMsg =
+            '${signFailure.code} ${signFailure.message}'.toLowerCase();
+        if (signMsg.contains('email_not_confirmed')) {
+          _step = _ActivationStep.email;
+          return null;
+        }
+        rethrow;
+      }
+    }
+    if (_backend.currentUserId != null && _backend.isEmailConfirmed) {
+      final String? membershipError = await widget.session.refresh();
+      if (membershipError == null && widget.session.memberships.isNotEmpty) {
+        if (mounted) enterStaffArea(context, widget.session);
+        return null;
+      }
+      _step = _ActivationStep.codeAndProfile;
+      return null;
+    }
+    _step = _ActivationStep.email;
+    return null;
+  }
+
+  Future<String?> _resendLink() async {
+    final String email = (_backend.currentUserEmail ?? _email.text).trim();
+    if (!email.contains('@')) {
+      return 'Escribí tu correo institucional para reenviar el enlace.';
+    }
+    await _backend.resendConfirmationEmail(email: email);
+    _info = 'Si la cuenta está pendiente de verificación, reenviamos el '
+        'enlace a $email.';
+    return null;
+  }
+
+  Future<String?> _confirmEmail() async {
+    final String email = (_backend.currentUserEmail ?? _email.text).trim();
+    if (_backend.currentUserId != null) {
+      await _backend.refreshAuthSession();
+    } else {
+      if (!email.contains('@') || _password.text.isEmpty) {
+        return 'Ingresá con tu correo y contraseña luego de abrir el enlace.';
+      }
+      await _backend.signIn(email: email, password: _password.text);
+    }
+    if (_backend.currentUserId == null || !_backend.isEmailConfirmed) {
+      return 'Todavía no vemos tu correo confirmado. Abrí el enlace que te '
+          'enviamos e intentá de nuevo.';
+    }
+    final String? membershipError = await widget.session.refresh();
+    if (membershipError == null && widget.session.memberships.isNotEmpty) {
+      if (mounted) enterStaffArea(context, widget.session);
+      return null;
+    }
+    _step = _ActivationStep.codeAndProfile;
+    return null;
+  }
+
   Future<String?> _validateCode() async {
     if (_code.text.trim().isEmpty) {
-      return 'Escribí el código de activación.';
+      return 'Escribí el código de activación que recibiste.';
     }
     final StaffActivationPreview preview = await _backend.previewActivation(
       _code.text.trim(),
@@ -266,50 +366,19 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     return null;
   }
 
-  Future<String?> _createAccount() async {
-    final String email = _email.text.trim();
-    if (!email.contains('@')) return 'Escribí tu correo institucional.';
-    if (_password.text.length < _minPassword) {
-      return 'La contraseña necesita al menos $_minPassword caracteres.';
+  Future<String?> _redeemWithProfile() async {
+    if (_code.text.trim().isEmpty) {
+      return 'Escribí el código de activación que recibiste.';
     }
-    if (_password.text != _repeat.text) {
-      return 'Las dos contraseñas no coinciden.';
+    if (_firstName.text.trim().isEmpty || _lastName.text.trim().isEmpty) {
+      return 'Completá tu nombre y apellidos para entrar al área autorizada.';
     }
-    final StaffActivationPreview preview = await _backend.previewActivation(
-      _code.text.trim(),
-      email: email,
-    );
-    if (!preview.ok) {
-      return activationErrorMessage(
-        preview.error,
-        remainingAttempts: preview.remainingAttempts,
-      );
-    }
-    try {
-      await _backend.signUp(email: email, password: _password.text);
-    } on GatewayException catch (failure) {
-      // Si la cuenta ya existía, la persona sigue al paso de confirmación e
-      // ingresa con la contraseña que escribió.
-      final String text = '${failure.code} ${failure.message}'.toLowerCase();
-      if (!text.contains('already')) rethrow;
-    }
-    if (_backend.currentUserId != null && await _redeem() == null) {
-      return null;
-    }
-    _step = _ActivationStep.email;
-    return null;
-  }
-
-  Future<String?> _confirmEmail() async {
-    await _backend.signIn(email: _email.text.trim(), password: _password.text);
-    return _redeem();
-  }
-
-  /// Canjea el código con la sesión abierta y entra a la superficie del rol.
-  Future<String?> _redeem() async {
-    final StaffActivationRedemption result = await _backend.redeemActivation(
-      _code.text.trim(),
-    );
+    final StaffActivationRedemption result = await _backend
+        .redeemActivationWithProfile(
+          code: _code.text.trim(),
+          firstName: _firstName.text.trim(),
+          lastName: _lastName.text.trim(),
+        );
     if (!result.ok) {
       return activationErrorMessage(
         result.error,
@@ -321,48 +390,76 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     return error;
   }
 
-  void _restart() => setState(() {
-    _step = _ActivationStep.code;
-    _preview = null;
-    _error = null;
-  });
+  Future<void> _restart() async {
+    if (_backend.currentUserId != null) {
+      await widget.session.signOut();
+    }
+    if (!mounted) return;
+    setState(() {
+      _step = _ActivationStep.account;
+      _preview = null;
+      _code.clear();
+      _error = null;
+      _info = null;
+    });
+  }
 
-  void _help() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (BuildContext sheet) => SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _assigned(StaffActivationPreview preview) {
+    final String? tierLabel = StaffTierKind.fromWire(preview.staffTier)?.label;
+    return Semantics(
+      container: true,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFDDEAFB),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
             children: <Widget>[
-              Semantics(
-                header: true,
-                child: Text(
-                  'Ayuda con tu acceso',
-                  style: Theme.of(sheet).textTheme.titleLarge,
+              const Icon(
+                Icons.school_outlined,
+                size: 44,
+                color: CureandoTheme.ink,
+              ),
+              const VerticalDivider(
+                width: 28,
+                thickness: 1.5,
+                color: CureandoTheme.blue,
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      preview.institutionName == null
+                          ? 'Ámbito asignado'
+                          : 'Colegio asignado',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      preview.institutionName ??
+                          preview.scopeLabel ??
+                          'Sin centro específico',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    if (preview.role != null)
+                      Text(
+                        tierLabel == null
+                            ? preview.role!.label
+                            : '${preview.role!.label} · $tierLabel',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: CureandoTheme.secondaryInk,
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'El código de activación es personal, sirve una sola vez y '
-                'vence. Te lo entrega quien administra los accesos de tu '
-                'institución, junto con el correo institucional al que quedó '
-                'asociado.',
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Si el código venció, ya se usó o no lo tenés, pedí uno nuevo '
-                'por esa misma vía. No compartas tu código ni tu contraseña.',
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.of(sheet).pop(),
-                child: const Text('Cerrar'),
               ),
             ],
           ),
@@ -371,106 +468,15 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     );
   }
 
-  Widget _assigned(StaffActivationPreview preview) => Semantics(
-    container: true,
-    child: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDDEAFB),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: <Widget>[
-            const Icon(
-              Icons.school_outlined,
-              size: 44,
-              color: CureandoTheme.ink,
-            ),
-            const VerticalDivider(
-              width: 28,
-              thickness: 1.5,
-              color: CureandoTheme.blue,
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    preview.institutionName == null
-                        ? 'Ámbito asignado'
-                        : 'Colegio asignado',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    preview.institutionName ??
-                        preview.scopeLabel ??
-                        'Sin centro específico',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  if (preview.role != null)
-                    Text(
-                      preview.role!.label,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: CureandoTheme.secondaryInk,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-
-  List<Widget> _codeStep() {
-    final StaffActivationPreview? preview = _preview;
-    return <Widget>[
-      if (preview != null) ...<Widget>[
-        _assigned(preview),
-        const SizedBox(height: 24),
-      ],
-      Semantics(
-        header: true,
-        child: const Text('Código de activación', style: _title),
-      ),
-      const SizedBox(height: 10),
-      const Text(
-        'Ingresá el código que te entregaron para tu cuenta.',
-        style: _lead,
-      ),
-      const SizedBox(height: 20),
-      StaffField(
-        label: 'Código de activación',
-        controller: _code,
-        hint: 'Ej. CCA-DIR-2026',
-        capitalization: TextCapitalization.characters,
-        textInputAction: TextInputAction.done,
-        onChanged: (_) {
-          if (_preview != null) setState(() => _preview = null);
-        },
-        onSubmitted: (_) => _run(_validateCode),
-      ),
-    ];
-  }
-
   List<Widget> _accountStep() => <Widget>[
-    _assigned(_preview!),
-    const SizedBox(height: 24),
     Semantics(
       header: true,
-      child: const Text('Creá tu contraseña', style: _title),
+      child: const Text('Creá tu cuenta', style: _title),
     ),
     const SizedBox(height: 10),
     const Text(
-      'Usá el correo institucional al que te entregaron el código.',
+      'Paso 1 de 3. Registrá el correo institucional vinculado a tu invitación '
+      'y elegí una contraseña. Luego confirmás el correo y activás tu código.',
       style: _lead,
     ),
     const SizedBox(height: 20),
@@ -501,49 +507,140 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     ),
   ];
 
-  List<Widget> _emailStep() => <Widget>[
-    const Icon(
-      Icons.mark_email_unread_outlined,
-      size: 56,
-      color: CureandoTheme.blue,
-    ),
-    const SizedBox(height: 16),
-    Semantics(
-      header: true,
-      child: const Text('Revisá tu correo institucional', style: _title),
-    ),
-    const SizedBox(height: 10),
-    const Text(
-      'Si el correo es válido, vas a recibir un enlace para confirmarlo. '
-      'Abrilo y después volvé a esta pantalla.',
-      style: _lead,
-    ),
-    const SizedBox(height: 10),
-    const Text(
-      'Tu acceso se activa recién cuando el correo queda confirmado.',
-      style: _lead,
-    ),
-  ];
+  List<Widget> _emailStep() {
+    final String activeEmail = (_backend.currentUserEmail ?? _email.text)
+        .trim();
+    return <Widget>[
+      const Icon(
+        Icons.mark_email_unread_outlined,
+        size: 56,
+        color: CureandoTheme.blue,
+      ),
+      const SizedBox(height: 16),
+      Semantics(
+        header: true,
+        child: const Text('Revisá tu correo institucional', style: _title),
+      ),
+      const SizedBox(height: 10),
+      Text(
+        'Paso 2 de 3. Enviamos un enlace de confirmación a '
+        '${activeEmail.isEmpty ? 'tu correo institucional' : activeEmail}. '
+        'Abrilo y después volvé a SéTú.',
+        style: _lead,
+      ),
+      const SizedBox(height: 10),
+      const Text(
+        'Mientras tu correo no esté confirmado ni hayas canjeado tu código '
+        'individual, tu cuenta no tendrá acceso al área de personal.',
+        style: _lead,
+      ),
+      const SizedBox(height: 16),
+      OutlinedButton.icon(
+        style: flowSecondaryStyle(),
+        onPressed: _busy ? null : () => _run(_resendLink),
+        icon: const Icon(Icons.forward_to_inbox_rounded),
+        label: const Text('Reenviar enlace de confirmación'),
+      ),
+    ];
+  }
+
+  List<Widget> _codeAndProfileStep() {
+    final StaffActivationPreview? preview = _preview;
+    final String confirmedEmail = (_backend.currentUserEmail ?? _email.text)
+        .trim();
+    return <Widget>[
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F7ED),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: <Widget>[
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFF008F30),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                confirmedEmail.isEmpty
+                    ? 'Correo confirmado · Sin membresía activa aún'
+                    : 'Correo confirmado: $confirmedEmail',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: CureandoTheme.ink,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 18),
+      if (preview != null) ...<Widget>[
+        _assigned(preview),
+        const SizedBox(height: 20),
+      ],
+      Semantics(
+        header: true,
+        child: const Text('Código y datos personales', style: _title),
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Paso 3 de 3. Ingresá tu código individual de un solo uso y completá '
+        'tu nombre y apellidos.',
+        style: _lead,
+      ),
+      const SizedBox(height: 18),
+      StaffField(
+        label: 'Código de activación',
+        controller: _code,
+        hint: 'Ej. SETU-XXXX-XXXX',
+        capitalization: TextCapitalization.characters,
+        textInputAction: TextInputAction.done,
+        onChanged: (_) {
+          if (_preview != null) setState(() => _preview = null);
+        },
+        onSubmitted: (_) => _run(_validateCode),
+      ),
+      if (preview != null) ...<Widget>[
+        const SizedBox(height: 18),
+        StaffField(
+          label: 'Nombre',
+          controller: _firstName,
+          hint: 'Tu nombre',
+          autofillHints: const <String>[AutofillHints.givenName],
+        ),
+        const SizedBox(height: 14),
+        StaffField(
+          label: 'Apellidos',
+          controller: _lastName,
+          hint: 'Tus apellidos',
+          autofillHints: const <String>[AutofillHints.familyName],
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _run(_redeemWithProfile),
+        ),
+      ],
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final (String label, Future<String?> Function() action) = switch (_step) {
-      _ActivationStep.code when _preview == null => (
+      _ActivationStep.account => ('Crear mi cuenta', _createAccount),
+      _ActivationStep.email => ('Ya confirmé mi correo', _confirmEmail),
+      _ActivationStep.codeAndProfile when _preview == null => (
         'Validar código',
         _validateCode,
       ),
-      _ActivationStep.code => (
-        'Confirmar acceso',
-        () async {
-          _step = _ActivationStep.account;
-          return null;
-        },
+      _ActivationStep.codeAndProfile => (
+        'Activar cuenta',
+        _redeemWithProfile,
       ),
-      _ActivationStep.account => ('Crear mi cuenta', _createAccount),
-      _ActivationStep.email => ('Ya confirmé mi correo', _confirmEmail),
     };
     return FlowScaffold(
-      header: const FlowHeader(title: 'Confirmá tu acceso'),
+      header: const FlowHeader(title: 'Activá tu cuenta'),
       bottom: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -553,15 +650,19 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
             busy: _busy,
             onPressed: () => _run(action),
           ),
-          if (_step == _ActivationStep.code)
-            TextButton(
-              onPressed: _help,
-              child: const Text('Necesito ayuda con mi acceso', style: _link),
-            )
-          else
+          TextButton(
+            onPressed: () => context.push('/personal/ayuda'),
+            child: const Text('Necesito ayuda con mi acceso', style: _link),
+          ),
+          if (_step != _ActivationStep.account)
             TextButton(
               onPressed: _busy ? null : _restart,
-              child: const Text('Usar otro código', style: _link),
+              child: Text(
+                _backend.currentUserId != null
+                    ? 'Cerrar sesión y usar otra cuenta'
+                    : 'Volver al paso anterior',
+                style: _link,
+              ),
             ),
         ],
       ),
@@ -570,10 +671,14 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             ...switch (_step) {
-              _ActivationStep.code => _codeStep(),
               _ActivationStep.account => _accountStep(),
               _ActivationStep.email => _emailStep(),
+              _ActivationStep.codeAndProfile => _codeAndProfileStep(),
             },
+            if (_info != null) ...<Widget>[
+              const SizedBox(height: 16),
+              StaffNotice(_info!, error: false),
+            ],
             if (_error != null) ...<Widget>[
               const SizedBox(height: 16),
               StaffNotice(_error!),
@@ -583,6 +688,214 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
       ),
     );
   }
+}
+
+enum _AccessHelpMode { resendLink, replaceCode, resetPassword }
+
+/// Flujo interactivo «Necesito ayuda con mi acceso» (`/personal/ayuda`):
+/// reenvío de enlace de confirmación, solicitud de reposición de código o
+/// restablecimiento de contraseña mediante Supabase Auth.
+class StaffAccessHelpScreen extends StatefulWidget {
+  const StaffAccessHelpScreen({super.key, required this.session});
+
+  final StaffSession session;
+
+  @override
+  State<StaffAccessHelpScreen> createState() => _StaffAccessHelpScreenState();
+}
+
+class _StaffAccessHelpScreenState extends State<StaffAccessHelpScreen> {
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _notes = TextEditingController();
+  _AccessHelpMode _mode = _AccessHelpMode.resendLink;
+  String _reasonCode = 'expired';
+  bool _busy = false;
+  String? _message;
+  bool _ok = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final String? current = widget.session.currentUserEmail;
+    if (current != null && current.isNotEmpty) {
+      _email.text = current;
+    }
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    final String email = _email.text.trim();
+    if (!email.contains('@')) {
+      setState(() {
+        _ok = false;
+        _message = 'Escribí tu correo institucional.';
+      });
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      switch (_mode) {
+        case _AccessHelpMode.resendLink:
+          await widget.session.backend.resendConfirmationEmail(email: email);
+          if (!mounted) return;
+          setState(() {
+            _busy = false;
+            _ok = true;
+            _message =
+                'Si la cuenta existe y sigue pendiente de verificación, '
+                'reenviamos el enlace a $email.';
+          });
+        case _AccessHelpMode.replaceCode:
+          await widget.session.backend.requestInviteReplacement(
+            email: email,
+            reasonCode: _reasonCode,
+            notes: _notes.text.trim().isEmpty ? null : _notes.text.trim(),
+          );
+          if (!mounted) return;
+          setState(() {
+            _busy = false;
+            _ok = true;
+            _message =
+                'Si hay una invitación vinculada a $email, registramos tu '
+                'solicitud de reposición para revisión de MINED. La persona '
+                'autorizada revocará el código anterior y te enviará uno nuevo.';
+          });
+        case _AccessHelpMode.resetPassword:
+          await widget.session.backend.sendPasswordReset(email: email);
+          if (!mounted) return;
+          setState(() {
+            _busy = false;
+            _ok = true;
+            _message =
+                'Si ya tenés una cuenta activa con $email, enviamos un correo '
+                'de recuperación de contraseña.';
+          });
+      }
+    } on Object catch (failure) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _ok = false;
+        _message = staffErrorMessage(failure);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => FlowScaffold(
+    header: const FlowHeader(title: 'Necesito ayuda con mi acceso'),
+    bottom: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        StaffPrimaryButton(
+          label: switch (_mode) {
+            _AccessHelpMode.resendLink => 'Reenviar enlace de confirmación',
+            _AccessHelpMode.replaceCode => 'Solicitar reposición de código',
+            _AccessHelpMode.resetPassword => 'Enviar correo de recuperación',
+          },
+          busy: _busy,
+          onPressed: _submit,
+        ),
+      ],
+    ),
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const Text(
+          'Elegí qué pasó con tu acceso para resolverlo sin compartir códigos '
+          'ni datos por canales grupales:',
+          style: _lead,
+        ),
+        const SizedBox(height: 16),
+        SegmentedButton<_AccessHelpMode>(
+          segments: const <ButtonSegment<_AccessHelpMode>>[
+            ButtonSegment<_AccessHelpMode>(
+              value: _AccessHelpMode.resendLink,
+              label: Text('Enlace'),
+            ),
+            ButtonSegment<_AccessHelpMode>(
+              value: _AccessHelpMode.replaceCode,
+              label: Text('Código'),
+            ),
+            ButtonSegment<_AccessHelpMode>(
+              value: _AccessHelpMode.resetPassword,
+              label: Text('Clave'),
+            ),
+          ],
+          selected: <_AccessHelpMode>{_mode},
+          onSelectionChanged: (Set<_AccessHelpMode> next) {
+            setState(() {
+              _mode = next.first;
+              _message = null;
+            });
+          },
+        ),
+        const SizedBox(height: 18),
+        StaffField(
+          label: 'Correo institucional',
+          controller: _email,
+          hint: 'nombre@colegio.edu.ni',
+          keyboardType: TextInputType.emailAddress,
+        ),
+        if (_mode == _AccessHelpMode.replaceCode) ...<Widget>[
+          const SizedBox(height: 16),
+          const Text(
+            'Motivo de la reposición',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: CureandoTheme.ink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          RadioGroup<String>(
+            groupValue: _reasonCode,
+            onChanged: (String? value) {
+              if (value != null) setState(() => _reasonCode = value);
+            },
+            child: const Column(
+              children: <Widget>[
+                RadioListTile<String>(
+                  value: 'expired',
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('El código venció o no funciona'),
+                ),
+                RadioListTile<String>(
+                  value: 'lost',
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Perdí el código individual'),
+                ),
+                RadioListTile<String>(
+                  value: 'wrong_email',
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('Se emitió a un correo incorrecto'),
+                ),
+              ],
+            ),
+          ),
+          StaffField(
+            label: 'Detalle breve (opcional)',
+            controller: _notes,
+            hint: 'Ej. correo institucional correcto o colegio',
+          ),
+        ],
+        if (_message != null) ...<Widget>[
+          const SizedBox(height: 16),
+          StaffNotice(_message!, error: !_ok),
+        ],
+      ],
+    ),
+  );
 }
 
 /// Selector de ámbito (`/personal/ambito`) cuando la persona tiene membresías

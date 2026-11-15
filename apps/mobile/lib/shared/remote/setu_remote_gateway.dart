@@ -64,6 +64,10 @@ abstract interface class SetuRemoteGateway {
   // Autenticación y activación individual de personal autorizado
   String? get currentStaffUserId;
 
+  String? get currentStaffEmail;
+
+  bool get isCurrentStaffEmailConfirmed;
+
   Future<StaffActivationPreview> previewStaffActivationCode({
     required String activationCode,
     String? institutionalEmail,
@@ -73,6 +77,18 @@ abstract interface class SetuRemoteGateway {
     required String email,
     required String password,
     String? emailRedirectTo,
+  });
+
+  Future<void> resendStaffConfirmationEmail({
+    required String email,
+    String? emailRedirectTo,
+  });
+
+  Future<void> refreshStaffAuthSession();
+
+  Future<void> sendStaffPasswordResetEmail({
+    required String email,
+    String? redirectTo,
   });
 
   Future<void> signInStaffWithPassword({
@@ -86,7 +102,88 @@ abstract interface class SetuRemoteGateway {
     String activationCode,
   );
 
+  Future<StaffActivationRedemption> redeemStaffActivationCodeWithProfile({
+    required String activationCode,
+    required String firstName,
+    required String lastName,
+  });
+
   Future<List<StaffMembershipScope>> getMyStaffMemberships();
+
+  Future<StaffProfileView> getMyStaffProfile();
+
+  Future<void> updateMyStaffAvailabilityAndNotices({
+    required bool isAvailable,
+    required bool notifyNewAlerts,
+    required bool notifyNewMessages,
+  });
+
+  Future<void> requestStaffInviteReplacement({
+    required String institutionalEmail,
+    required String reasonCode,
+    String? notes,
+  });
+
+  Future<List<StaffActivationInviteView>> listStaffActivationInvites({
+    String? institutionId,
+  });
+
+  Future<Map<String, Object?>> requestStaffActivationInvite({
+    required String institutionalEmail,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? fullName,
+    String? requesterProgramLabel,
+    String? supervisorUserId,
+  });
+
+  Future<StaffInviteIssueResult> issueStaffActivationInvite({
+    String? institutionalEmail,
+    SetuStaffRole? role,
+    String? institutionId,
+    String? staffTier,
+    String? scopeLabel,
+    String? fullName,
+    String? supervisorUserId,
+    int expiresInHours = 72,
+    String? pendingInviteId,
+  });
+
+  Future<void> revokeStaffActivationInvite({
+    required String inviteId,
+    String? reason,
+  });
+
+  Future<StaffInviteIssueResult> replaceStaffActivationInvite({
+    required String inviteId,
+    String? newInstitutionalEmail,
+    int expiresInHours = 72,
+    String? reason,
+  });
+
+  Future<CounselorDispatchCasesResult> listCounselorDispatchCases();
+
+  Future<CaseDispatchRecoverResult> recoverDeclinedCaseDispatch(String caseId);
+
+  Future<SchoolCoverageAndAssignmentsView> listSchoolCoverageAndAssignments({
+    String? institutionId,
+  });
+
+  Future<void> setSchoolExternalCoverage({
+    required String institutionId,
+    ExternalCoverageMode? mode,
+    DateTime? until,
+    bool? minedExternalEnabled,
+  });
+
+  Future<void> assignExternalCounselorSchool({
+    required String counselorUserId,
+    required String institutionId,
+    bool active = true,
+  });
+
+  Future<List<PracticanteSupervisorNoticeView>> listMySupervisorNotices();
 
   // Operación por rol institucional (protegida por RLS y RPC en Supabase)
   Future<List<StaffCaseSummary>> listCasesForScope({String? institutionId});
@@ -222,6 +319,15 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
 
   @override
   String? get currentStaffUserId => _client.auth.currentUser?.id;
+
+  @override
+  String? get currentStaffEmail => _client.auth.currentUser?.email;
+
+  @override
+  bool get isCurrentStaffEmailConfirmed {
+    final String? confirmedAt = _client.auth.currentUser?.emailConfirmedAt;
+    return confirmedAt != null && confirmedAt.isNotEmpty;
+  }
 
   @override
   Future<PublicSchoolResolution?> resolvePublicSchool(String publicCode) async {
@@ -390,6 +496,46 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
   }
 
   @override
+  Future<void> resendStaffConfirmationEmail({
+    required String email,
+    String? emailRedirectTo,
+  }) async {
+    try {
+      await _client.auth.resend(
+        type: OtpType.signup,
+        email: email.trim(),
+        emailRedirectTo: emailRedirectTo,
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> refreshStaffAuthSession() async {
+    try {
+      await _client.auth.refreshSession();
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> sendStaffPasswordResetEmail({
+    required String email,
+    String? redirectTo,
+  }) async {
+    try {
+      await _client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: redirectTo,
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
   Future<void> signInStaffWithPassword({
     required String email,
     required String password,
@@ -423,6 +569,305 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
         params: <String, Object?>{'p_activation_code': activationCode},
       );
       return StaffActivationRedemption.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<StaffActivationRedemption> redeemStaffActivationCodeWithProfile({
+    required String activationCode,
+    required String firstName,
+    required String lastName,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'redeem_staff_activation_code_with_profile',
+        params: <String, Object?>{
+          'p_activation_code': activationCode,
+          'p_first_name': firstName.trim(),
+          'p_last_name': lastName.trim(),
+        },
+      );
+      return StaffActivationRedemption.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<StaffProfileView> getMyStaffProfile() async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'get_my_staff_profile',
+      );
+      return StaffProfileView.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> updateMyStaffAvailabilityAndNotices({
+    required bool isAvailable,
+    required bool notifyNewAlerts,
+    required bool notifyNewMessages,
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'update_my_staff_availability_and_notices',
+        params: <String, Object?>{
+          'p_is_available': isAvailable,
+          'p_notify_new_alerts': notifyNewAlerts,
+          'p_notify_new_messages': notifyNewMessages,
+        },
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> requestStaffInviteReplacement({
+    required String institutionalEmail,
+    required String reasonCode,
+    String? notes,
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'request_staff_invite_replacement',
+        params: <String, Object?>{
+          'p_institutional_email': institutionalEmail.trim(),
+          'p_reason_code': reasonCode,
+          'p_notes': notes,
+        },
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<List<StaffActivationInviteView>> listStaffActivationInvites({
+    String? institutionId,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'list_staff_activation_invites',
+        params: <String, Object?>{'p_institution_id': institutionId},
+      );
+      final List<Object?> rows = _requireList(response);
+      return List<StaffActivationInviteView>.unmodifiable(
+        rows.map(
+          (Object? item) =>
+              StaffActivationInviteView.fromJson(_requireMap(item)),
+        ),
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<Map<String, Object?>> requestStaffActivationInvite({
+    required String institutionalEmail,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? fullName,
+    String? requesterProgramLabel,
+    String? supervisorUserId,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'request_staff_activation_invite',
+        params: <String, Object?>{
+          'p_institutional_email': institutionalEmail.trim(),
+          'p_role': role.wireValue,
+          'p_institution_id': institutionId,
+          'p_staff_tier': staffTier,
+          'p_full_name': fullName,
+          'p_requester_program_label': requesterProgramLabel,
+          'p_supervisor_user_id': supervisorUserId,
+        },
+      );
+      return _requireMap(response);
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<StaffInviteIssueResult> issueStaffActivationInvite({
+    String? institutionalEmail,
+    SetuStaffRole? role,
+    String? institutionId,
+    String? staffTier,
+    String? scopeLabel,
+    String? fullName,
+    String? supervisorUserId,
+    int expiresInHours = 72,
+    String? pendingInviteId,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'issue_staff_activation_invite',
+        params: <String, Object?>{
+          'p_institutional_email': institutionalEmail?.trim(),
+          'p_role': role?.wireValue,
+          'p_institution_id': institutionId,
+          'p_staff_tier': staffTier,
+          'p_scope_label': scopeLabel,
+          'p_full_name': fullName,
+          'p_supervisor_user_id': supervisorUserId,
+          'p_expires_in_hours': expiresInHours,
+          'p_pending_invite_id': pendingInviteId,
+        },
+      );
+      return StaffInviteIssueResult.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> revokeStaffActivationInvite({
+    required String inviteId,
+    String? reason,
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'revoke_staff_activation_invite',
+        params: <String, Object?>{
+          'p_invite_id': inviteId,
+          'p_reason': reason,
+        },
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<StaffInviteIssueResult> replaceStaffActivationInvite({
+    required String inviteId,
+    String? newInstitutionalEmail,
+    int expiresInHours = 72,
+    String? reason,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'replace_staff_activation_invite',
+        params: <String, Object?>{
+          'p_invite_id': inviteId,
+          'p_new_institutional_email': newInstitutionalEmail?.trim(),
+          'p_expires_in_hours': expiresInHours,
+          'p_reason': reason,
+        },
+      );
+      return StaffInviteIssueResult.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<CounselorDispatchCasesResult> listCounselorDispatchCases() async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'list_counselor_dispatch_cases',
+      );
+      return CounselorDispatchCasesResult.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<CaseDispatchRecoverResult> recoverDeclinedCaseDispatch(
+    String caseId,
+  ) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'recover_declined_case_dispatch',
+        params: <String, Object?>{'p_case_id': caseId},
+      );
+      return CaseDispatchRecoverResult.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<SchoolCoverageAndAssignmentsView> listSchoolCoverageAndAssignments({
+    String? institutionId,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'list_school_coverage_and_assignments',
+        params: <String, Object?>{'p_institution_id': institutionId},
+      );
+      return SchoolCoverageAndAssignmentsView.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> setSchoolExternalCoverage({
+    required String institutionId,
+    ExternalCoverageMode? mode,
+    DateTime? until,
+    bool? minedExternalEnabled,
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'set_school_external_coverage',
+        params: <String, Object?>{
+          'p_institution_id': institutionId,
+          'p_mode': mode?.wireValue,
+          'p_until': until?.toUtc().toIso8601String(),
+          'p_mined_external_enabled': minedExternalEnabled,
+        },
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> assignExternalCounselorSchool({
+    required String counselorUserId,
+    required String institutionId,
+    bool active = true,
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'assign_external_counselor_school',
+        params: <String, Object?>{
+          'p_counselor_user_id': counselorUserId,
+          'p_institution_id': institutionId,
+          'p_active': active,
+        },
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<List<PracticanteSupervisorNoticeView>> listMySupervisorNotices() async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'list_my_supervisor_notices',
+      );
+      final List<Object?> rows = _requireList(response);
+      return List<PracticanteSupervisorNoticeView>.unmodifiable(
+        rows.map(
+          (Object? item) =>
+              PracticanteSupervisorNoticeView.fromJson(_requireMap(item)),
+        ),
+      );
     } catch (error) {
       throw _mapError(error);
     }

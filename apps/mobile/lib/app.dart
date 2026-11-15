@@ -20,6 +20,7 @@ import 'features/staff/staff_backend.dart';
 import 'features/staff/staff_case_screens.dart';
 import 'features/staff/staff_director_screens.dart';
 import 'features/staff/staff_inbox_screens.dart';
+import 'features/staff/staff_profile_screens.dart';
 import 'features/support/alert_screens.dart';
 import 'features/support/support_flow.dart';
 import 'features/support/support_screens.dart';
@@ -302,10 +303,32 @@ class _CureandoAppState extends State<CureandoApp> {
             MinedInboxScreen(session: _staff),
       ),
       GoRoute(
+        path: '/personal/ayuda',
+        builder: (BuildContext context, GoRouterState state) =>
+            StaffAccessHelpScreen(session: _staff),
+      ),
+      GoRoute(
+        path: '/personal/perfil',
+        builder: (BuildContext context, GoRouterState state) =>
+            StaffProfileScreen(session: _staff),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'disponibilidad',
+            builder: (BuildContext context, GoRouterState state) =>
+                StaffAvailabilityScreen(session: _staff),
+          ),
+        ],
+      ),
+      GoRoute(
         path: '/personal/mesa',
         builder: (BuildContext context, GoRouterState state) =>
             DeskInboxScreen(session: _staff),
         routes: <RouteBase>[
+          GoRoute(
+            path: 'declinadas',
+            builder: (BuildContext context, GoRouterState state) =>
+                DeskDeclinedScreen(session: _staff),
+          ),
           GoRoute(
             path: 'caso/:id',
             builder: (BuildContext context, GoRouterState state) =>
@@ -378,11 +401,23 @@ class _CureandoAppState extends State<CureandoApp> {
     final bool personal = location.startsWith('/personal');
     final StaffMembershipScope? active = _staff.active;
     if (_staff.memberships.isNotEmpty) {
-      if (location == '/personal/activar') return null;
+      if (location == '/personal/ayuda' ||
+          location.startsWith('/personal/perfil')) {
+        return null;
+      }
       if (active == null) {
         return location == '/personal/ambito' ? null : '/personal/ambito';
       }
       return location.startsWith(active.role.path) ? null : active.role.path;
+    }
+    if (_staff.isAuthenticated) {
+      if (!personal) return '/personal/activar';
+      if (location == '/personal' ||
+          location == '/personal/activar' ||
+          location == '/personal/ayuda') {
+        return null;
+      }
+      return '/personal/activar';
     }
     if (_session.school != null) {
       final bool entry =
@@ -391,7 +426,8 @@ class _CureandoAppState extends State<CureandoApp> {
     }
     if (!personal ||
         location == '/personal' ||
-        location == '/personal/activar') {
+        location == '/personal/activar' ||
+        location == '/personal/ayuda') {
       return null;
     }
     return '/personal';

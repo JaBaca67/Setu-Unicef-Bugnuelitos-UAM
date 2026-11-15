@@ -183,7 +183,8 @@ enum CaseDispatchStatus {
   pending('pending', 'Pendiente'),
   claimed('claimed', 'Atendida'),
   takenByOther('taken_by_other', 'Tomada por otro'),
-  declined('declined', 'Declinada');
+  declined('declined', 'Declinada'),
+  withdrawnCoverage('withdrawn_coverage', 'Cobertura pausada');
 
   const CaseDispatchStatus(this.wireValue, this.label);
 
@@ -428,13 +429,15 @@ class StudentChatSessionView {
   }
 }
 
-/// Resultado de `preview_staff_activation_code` antes de crear cuenta o confirmar acceso.
+/// Resultado de `preview_staff_activation_code` luego de confirmar el correo.
 class StaffActivationPreview {
   const StaffActivationPreview({
     required this.ok,
     this.error,
     this.inviteId,
     this.role,
+    this.staffTier,
+    this.supervisorUserId,
     this.institutionId,
     this.institutionPublicCode,
     this.institutionName,
@@ -448,6 +451,8 @@ class StaffActivationPreview {
   final String? error;
   final String? inviteId;
   final SetuStaffRole? role;
+  final String? staffTier;
+  final String? supervisorUserId;
   final String? institutionId;
   final String? institutionPublicCode;
   final String? institutionName;
@@ -463,6 +468,8 @@ class StaffActivationPreview {
       error: _readNullableString(json, 'error'),
       inviteId: _readNullableString(json, 'invite_id'),
       role: roleStr == null ? null : SetuStaffRole.fromWire(roleStr),
+      staffTier: _readNullableString(json, 'staff_tier'),
+      supervisorUserId: _readNullableString(json, 'supervisor_user_id'),
       institutionId: _readNullableString(json, 'institution_id'),
       institutionPublicCode: _readNullableString(
         json,
@@ -477,15 +484,19 @@ class StaffActivationPreview {
   }
 }
 
-/// Resultado transaccional de `redeem_staff_activation_code`.
+/// Resultado transaccional de `redeem_staff_activation_code_with_profile`.
 class StaffActivationRedemption {
   const StaffActivationRedemption({
     required this.ok,
     this.error,
     this.membershipId,
     this.role,
+    this.staffTier,
+    this.supervisorUserId,
     this.institutionId,
     this.scopeLabel,
+    this.firstName,
+    this.lastName,
     this.remainingAttempts,
     this.lockedUntil,
   });
@@ -494,8 +505,12 @@ class StaffActivationRedemption {
   final String? error;
   final String? membershipId;
   final SetuStaffRole? role;
+  final String? staffTier;
+  final String? supervisorUserId;
   final String? institutionId;
   final String? scopeLabel;
+  final String? firstName;
+  final String? lastName;
   final int? remainingAttempts;
   final DateTime? lockedUntil;
 
@@ -506,8 +521,12 @@ class StaffActivationRedemption {
       error: _readNullableString(json, 'error'),
       membershipId: _readNullableString(json, 'membership_id'),
       role: roleStr == null ? null : SetuStaffRole.fromWire(roleStr),
+      staffTier: _readNullableString(json, 'staff_tier'),
+      supervisorUserId: _readNullableString(json, 'supervisor_user_id'),
       institutionId: _readNullableString(json, 'institution_id'),
       scopeLabel: _readNullableString(json, 'scope_label'),
+      firstName: _readNullableString(json, 'first_name'),
+      lastName: _readNullableString(json, 'last_name'),
       remainingAttempts: _readNullableInt(json, 'remaining_attempts'),
       lockedUntil: _readNullableDateTime(json, 'locked_until'),
     );
@@ -1116,6 +1135,689 @@ class CaseDispatchRecord {
       counselorEmail: _readNullableString(json, 'counselor_email'),
       respondedAt: _readNullableDateTime(json, 'responded_at'),
       declineReason: _readNullableString(json, 'decline_reason'),
+    );
+  }
+}
+
+/// Tipo o equipo del personal autorizado (`staff_tier`).
+enum StaffTierKind {
+  schoolPlant('school_plant', 'Planta del colegio'),
+  externalNetwork('external_network', 'Red externa'),
+  practicante5to('practicante_5to', 'Practicante 5.º año'),
+  minedCentral('mined_central', 'MINED central'),
+  schoolDirector('school_director', 'Dirección del centro');
+
+  const StaffTierKind(this.wireValue, this.label);
+
+  final String wireValue;
+  final String label;
+
+  static StaffTierKind? fromWire(String? value) {
+    if (value == null || value.isEmpty) return null;
+    for (final StaffTierKind item in values) {
+      if (item.wireValue == value) return item;
+    }
+    return null;
+  }
+}
+
+/// Estado de la solicitud/emisión de invitación de personal.
+enum StaffInviteRequestStatus {
+  pendingApproval('pending_approval', 'Solicitud pendiente'),
+  approved('approved', 'Aprobada'),
+  rejected('rejected', 'Rechazada');
+
+  const StaffInviteRequestStatus(this.wireValue, this.label);
+
+  final String wireValue;
+  final String label;
+
+  static StaffInviteRequestStatus fromWire(String value) {
+    for (final StaffInviteRequestStatus item in values) {
+      if (item.wireValue == value) return item;
+    }
+    return StaffInviteRequestStatus.approved;
+  }
+}
+
+/// Estado de cobertura de Red externa en un centro educativo.
+enum ExternalCoverageMode {
+  disabled('disabled', 'Apoyo externo desactivado'),
+  enabled('enabled', 'Apoyo externo habilitado'),
+  temporaryUntil('temporary_until', 'Apoyo temporal');
+
+  const ExternalCoverageMode(this.wireValue, this.label);
+
+  final String wireValue;
+  final String label;
+
+  static ExternalCoverageMode fromWire(String value) {
+    for (final ExternalCoverageMode item in values) {
+      if (item.wireValue == value) return item;
+    }
+    return ExternalCoverageMode.disabled;
+  }
+}
+
+/// Disponibilidad actual de una alerta declinada para recuperación en bandeja.
+enum DeclinedDispatchAvailability {
+  available('available', 'Disponible'),
+  alreadyInCare('already_in_care', 'Ya está en atención'),
+  coverageInactive('coverage_inactive', 'Cobertura externa inactiva'),
+  closed('closed', 'Cerrado');
+
+  const DeclinedDispatchAvailability(this.wireValue, this.label);
+
+  final String wireValue;
+  final String label;
+
+  static DeclinedDispatchAvailability fromWire(String value) {
+    for (final DeclinedDispatchAvailability item in values) {
+      if (item.wireValue == value) return item;
+    }
+    return DeclinedDispatchAvailability.available;
+  }
+}
+
+/// Colegio visible en el perfil de personal (asignado o disponible en el catálogo).
+class StaffSchoolScopeItem {
+  const StaffSchoolScopeItem({
+    required this.institutionId,
+    required this.publicCode,
+    required this.name,
+    required this.coverageActiveNow,
+    required this.externalSupportMode,
+    this.externalSupportUntil,
+  });
+
+  final String institutionId;
+  final String publicCode;
+  final String name;
+  final bool coverageActiveNow;
+  final ExternalCoverageMode externalSupportMode;
+  final DateTime? externalSupportUntil;
+
+  factory StaffSchoolScopeItem.fromJson(Map<String, Object?> json) {
+    return StaffSchoolScopeItem(
+      institutionId: _readString(json, 'institution_id'),
+      publicCode: _readNullableString(json, 'public_code') ?? '',
+      name: _readString(json, 'name'),
+      coverageActiveNow: _readBool(json, 'coverage_active_now'),
+      externalSupportMode: ExternalCoverageMode.fromWire(
+        _readNullableString(json, 'external_support_mode') ?? 'disabled',
+      ),
+      externalSupportUntil: _readNullableDateTime(json, 'external_support_until'),
+    );
+  }
+}
+
+/// Perfil completo de la cuenta de personal autorizado (`get_my_staff_profile`).
+class StaffProfileView {
+  const StaffProfileView({
+    required this.userId,
+    required this.email,
+    required this.emailConfirmed,
+    required this.isAvailable,
+    required this.notifyNewAlerts,
+    required this.notifyNewMessages,
+    required this.memberships,
+    required this.assignedSchools,
+    required this.availableSchools,
+    this.firstName,
+    this.lastName,
+    this.staffTier,
+    this.supervisorUserId,
+    this.supervisorName,
+  });
+
+  final String userId;
+  final String email;
+  final bool emailConfirmed;
+  final String? firstName;
+  final String? lastName;
+  final String? staffTier;
+  final String? supervisorUserId;
+  final String? supervisorName;
+  final bool isAvailable;
+  final bool notifyNewAlerts;
+  final bool notifyNewMessages;
+  final List<StaffMembershipScope> memberships;
+  final List<StaffSchoolScopeItem> assignedSchools;
+  final List<StaffSchoolScopeItem> availableSchools;
+
+  String get fullName {
+    final String joined =
+        '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    if (joined.isNotEmpty) return joined;
+    return email;
+  }
+
+  String get initials {
+    final List<String> parts = fullName
+        .split(RegExp(r'\s+'))
+        .where((String p) => p.isNotEmpty)
+        .toList();
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    if (parts.isNotEmpty && parts[0].length >= 2) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return 'ST';
+  }
+
+  String get staffTierLabel =>
+      StaffTierKind.fromWire(staffTier)?.label ?? 'Personal autorizado';
+
+  factory StaffProfileView.fromJson(Map<String, Object?> json) {
+    return StaffProfileView(
+      userId: _readString(json, 'user_id'),
+      email: _readNullableString(json, 'email') ?? '',
+      emailConfirmed: _readBool(json, 'email_confirmed'),
+      firstName: _readNullableString(json, 'first_name'),
+      lastName: _readNullableString(json, 'last_name'),
+      staffTier: _readNullableString(json, 'staff_tier'),
+      supervisorUserId: _readNullableString(json, 'supervisor_user_id'),
+      supervisorName: _readNullableString(json, 'supervisor_name'),
+      isAvailable: _readBool(json, 'is_available', fallback: true),
+      notifyNewAlerts: _readBool(json, 'notify_new_alerts', fallback: true),
+      notifyNewMessages: _readBool(json, 'notify_new_messages', fallback: true),
+      memberships: List<StaffMembershipScope>.unmodifiable(<StaffMembershipScope>[
+        for (final Object? entry in _readList(json, 'memberships'))
+          if (entry is Map<dynamic, dynamic>)
+            StaffMembershipScope.fromJson(_castMap(entry)),
+      ]),
+      assignedSchools: List<StaffSchoolScopeItem>.unmodifiable(<StaffSchoolScopeItem>[
+        for (final Object? entry in _readList(json, 'assigned_schools'))
+          if (entry is Map<dynamic, dynamic>)
+            StaffSchoolScopeItem.fromJson(_castMap(entry)),
+      ]),
+      availableSchools: List<StaffSchoolScopeItem>.unmodifiable(<StaffSchoolScopeItem>[
+        for (final Object? entry in _readList(json, 'available_schools'))
+          if (entry is Map<dynamic, dynamic>)
+            StaffSchoolScopeItem.fromJson(_castMap(entry)),
+      ]),
+    );
+  }
+}
+
+/// Evento de auditoría de una invitación de personal (sin exponer el código).
+class StaffInviteEventView {
+  const StaffInviteEventView({
+    required this.id,
+    required this.eventType,
+    required this.createdAt,
+    this.actorUserId,
+    this.details,
+  });
+
+  final String id;
+  final String eventType;
+  final String? actorUserId;
+  final String? details;
+  final DateTime createdAt;
+
+  String get eventLabel => switch (eventType) {
+    'requested' => 'Solicitud registrada',
+    'issued' => 'Invitación emitida',
+    'revoked' => 'Invitación revocada',
+    'replaced' => 'Invitación repuesta',
+    'redeemed' => 'Código canjeado',
+    'replacement_requested' => 'Reposición solicitada',
+    _ => eventType,
+  };
+
+  factory StaffInviteEventView.fromJson(Map<String, Object?> json) {
+    return StaffInviteEventView(
+      id: _readString(json, 'id'),
+      eventType: _readString(json, 'event_type'),
+      actorUserId: _readNullableString(json, 'actor_user_id'),
+      details: _readNullableString(json, 'details'),
+      createdAt: _readDateTime(json, 'created_at'),
+    );
+  }
+}
+
+/// Registro visible de solicitud o invitación emitida (`list_staff_activation_invites`).
+class StaffActivationInviteView {
+  const StaffActivationInviteView({
+    required this.inviteId,
+    required this.institutionalEmail,
+    required this.role,
+    required this.staffTier,
+    required this.scopeLabel,
+    required this.requestStatus,
+    required this.createdAt,
+    required this.events,
+    this.fullName,
+    this.institutionId,
+    this.institutionName,
+    this.requesterProgramLabel,
+    this.supervisorUserId,
+    this.supervisorName,
+    this.requestedBy,
+    this.approvedBy,
+    this.approvedAt,
+    this.expiresAt,
+    this.revokedAt,
+    this.revokedBy,
+    this.revokedReason,
+    this.redeemedAt,
+    this.replacedByInviteId,
+  });
+
+  final String inviteId;
+  final String institutionalEmail;
+  final String? fullName;
+  final SetuStaffRole role;
+  final String staffTier;
+  final String? institutionId;
+  final String? institutionName;
+  final String scopeLabel;
+  final StaffInviteRequestStatus requestStatus;
+  final String? requesterProgramLabel;
+  final String? supervisorUserId;
+  final String? supervisorName;
+  final String? requestedBy;
+  final String? approvedBy;
+  final DateTime? approvedAt;
+  final DateTime? expiresAt;
+  final DateTime? revokedAt;
+  final String? revokedBy;
+  final String? revokedReason;
+  final DateTime? redeemedAt;
+  final String? replacedByInviteId;
+  final DateTime createdAt;
+  final List<StaffInviteEventView> events;
+
+  bool get isExpired =>
+      expiresAt != null && expiresAt!.isBefore(DateTime.now().toUtc());
+
+  bool get isActiveForRedemption =>
+      requestStatus == StaffInviteRequestStatus.approved &&
+      redeemedAt == null &&
+      revokedAt == null &&
+      !isExpired;
+
+  String get displayStatus {
+    if (redeemedAt != null) return 'Canjeada';
+    if (replacedByInviteId != null) return 'Reemplazada';
+    if (revokedAt != null) return 'Revocada';
+    if (requestStatus == StaffInviteRequestStatus.pendingApproval) {
+      return 'Por aprobar';
+    }
+    if (requestStatus == StaffInviteRequestStatus.rejected) {
+      return 'Rechazada';
+    }
+    if (isExpired) return 'Vencida';
+    return 'Emitida y vigente';
+  }
+
+  factory StaffActivationInviteView.fromJson(Map<String, Object?> json) {
+    return StaffActivationInviteView(
+      inviteId: _readString(json, 'invite_id'),
+      institutionalEmail: _readString(json, 'institutional_email'),
+      fullName: _readNullableString(json, 'full_name'),
+      role: SetuStaffRole.fromWire(_readString(json, 'role')),
+      staffTier: _readNullableString(json, 'staff_tier') ?? 'school_plant',
+      institutionId: _readNullableString(json, 'institution_id'),
+      institutionName: _readNullableString(json, 'institution_name'),
+      scopeLabel: _readNullableString(json, 'scope_label') ?? '',
+      requestStatus: StaffInviteRequestStatus.fromWire(
+        _readNullableString(json, 'request_status') ?? 'approved',
+      ),
+      requesterProgramLabel: _readNullableString(json, 'requester_program_label'),
+      supervisorUserId: _readNullableString(json, 'supervisor_user_id'),
+      supervisorName: _readNullableString(json, 'supervisor_name'),
+      requestedBy: _readNullableString(json, 'requested_by'),
+      approvedBy: _readNullableString(json, 'approved_by'),
+      approvedAt: _readNullableDateTime(json, 'approved_at'),
+      expiresAt: _readNullableDateTime(json, 'expires_at'),
+      revokedAt: _readNullableDateTime(json, 'revoked_at'),
+      revokedBy: _readNullableString(json, 'revoked_by'),
+      revokedReason: _readNullableString(json, 'revoked_reason'),
+      redeemedAt: _readNullableDateTime(json, 'redeemed_at'),
+      replacedByInviteId: _readNullableString(json, 'replaced_by_invite_id'),
+      createdAt: _readDateTime(json, 'created_at'),
+      events: List<StaffInviteEventView>.unmodifiable(<StaffInviteEventView>[
+        for (final Object? entry in _readList(json, 'events'))
+          if (entry is Map<dynamic, dynamic>)
+            StaffInviteEventView.fromJson(_castMap(entry)),
+      ]),
+    );
+  }
+}
+
+/// Respuesta única al emitir o reponer una invitación con su código efímero.
+class StaffInviteIssueResult {
+  const StaffInviteIssueResult({
+    required this.ok,
+    required this.inviteId,
+    required this.activationCode,
+    required this.institutionalEmail,
+    required this.role,
+    required this.staffTier,
+    required this.scopeLabel,
+    this.institutionId,
+    this.expiresAt,
+  });
+
+  final bool ok;
+  final String inviteId;
+  final String activationCode;
+  final String institutionalEmail;
+  final SetuStaffRole role;
+  final String staffTier;
+  final String? institutionId;
+  final String scopeLabel;
+  final DateTime? expiresAt;
+
+  factory StaffInviteIssueResult.fromJson(Map<String, Object?> json) {
+    return StaffInviteIssueResult(
+      ok: _readBool(json, 'ok', fallback: true),
+      inviteId: _readString(json, 'invite_id'),
+      activationCode: _readString(json, 'activation_code'),
+      institutionalEmail: _readString(json, 'institutional_email'),
+      role: SetuStaffRole.fromWire(_readString(json, 'role')),
+      staffTier: _readNullableString(json, 'staff_tier') ?? 'school_plant',
+      institutionId: _readNullableString(json, 'institution_id'),
+      scopeLabel: _readNullableString(json, 'scope_label') ?? '',
+      expiresAt: _readNullableDateTime(json, 'expires_at'),
+    );
+  }
+}
+
+/// Elemento de «Declinadas recientes» en Mesa de Escucha.
+class DeclinedDispatchRecord {
+  const DeclinedDispatchRecord({
+    required this.id,
+    required this.caseId,
+    required this.institutionId,
+    required this.counselorUserId,
+    required this.dispatchTier,
+    required this.dispatchStatus,
+    required this.notifiedAt,
+    required this.canRecover,
+    required this.availabilityState,
+    this.referenceCode,
+    this.institutionName,
+    this.situationType,
+    this.caseStatus,
+    this.assignedCounselorId,
+    this.respondedAt,
+    this.declineReason,
+    this.declaredAt,
+    this.involvesStaff = false,
+  });
+
+  final String id;
+  final String caseId;
+  final String institutionId;
+  final String counselorUserId;
+  final CaseDispatchTier dispatchTier;
+  final CaseDispatchStatus dispatchStatus;
+  final DateTime notifiedAt;
+  final bool canRecover;
+  final DeclinedDispatchAvailability availabilityState;
+  final String? referenceCode;
+  final String? institutionName;
+  final SetuSituationType? situationType;
+  final SetuCaseStatus? caseStatus;
+  final String? assignedCounselorId;
+  final DateTime? respondedAt;
+  final String? declineReason;
+  final DateTime? declaredAt;
+  final bool involvesStaff;
+
+  factory DeclinedDispatchRecord.fromJson(Map<String, Object?> json) {
+    final String? rawSituation = _readNullableString(json, 'situation_type');
+    final String? rawCaseStatus = _readNullableString(json, 'case_status');
+    return DeclinedDispatchRecord(
+      id: _readString(json, 'id'),
+      caseId: _readString(json, 'case_id'),
+      institutionId: _readString(json, 'institution_id'),
+      counselorUserId: _readString(json, 'counselor_user_id'),
+      dispatchTier: CaseDispatchTier.fromWire(_readString(json, 'dispatch_tier')),
+      dispatchStatus: CaseDispatchStatus.fromWire(
+        _readString(json, 'dispatch_status'),
+      ),
+      notifiedAt: _readDateTime(json, 'notified_at'),
+      canRecover: _readBool(json, 'can_recover'),
+      availabilityState: DeclinedDispatchAvailability.fromWire(
+        _readNullableString(json, 'availability_state') ?? 'available',
+      ),
+      referenceCode: _readNullableString(json, 'reference_code'),
+      institutionName: _readNullableString(json, 'institution_name'),
+      situationType: rawSituation == null || rawSituation.isEmpty
+          ? null
+          : SetuSituationType.fromWire(rawSituation),
+      caseStatus: rawCaseStatus == null || rawCaseStatus.isEmpty
+          ? null
+          : SetuCaseStatus.fromWire(rawCaseStatus),
+      assignedCounselorId: _readNullableString(json, 'assigned_counselor_id'),
+      respondedAt: _readNullableDateTime(json, 'responded_at'),
+      declineReason: _readNullableString(json, 'decline_reason'),
+      declaredAt: _readNullableDateTime(json, 'declared_at'),
+      involvesStaff: _readBool(json, 'involves_staff'),
+    );
+  }
+}
+
+/// Resultado de `list_counselor_dispatch_cases`: ofertas pendientes y declinadas recientes.
+class CounselorDispatchCasesResult {
+  const CounselorDispatchCasesResult({
+    required this.pendingDispatches,
+    required this.declinedDispatches,
+  });
+
+  final List<CaseDispatchRecord> pendingDispatches;
+  final List<DeclinedDispatchRecord> declinedDispatches;
+
+  factory CounselorDispatchCasesResult.fromJson(Map<String, Object?> json) {
+    return CounselorDispatchCasesResult(
+      pendingDispatches: List<CaseDispatchRecord>.unmodifiable(<CaseDispatchRecord>[
+        for (final Object? entry in _readList(json, 'pending_dispatches'))
+          if (entry is Map<dynamic, dynamic>)
+            CaseDispatchRecord.fromJson(_castMap(entry)),
+      ]),
+      declinedDispatches: List<DeclinedDispatchRecord>.unmodifiable(<DeclinedDispatchRecord>[
+        for (final Object? entry in _readList(json, 'declined_dispatches'))
+          if (entry is Map<dynamic, dynamic>)
+            DeclinedDispatchRecord.fromJson(_castMap(entry)),
+      ]),
+    );
+  }
+}
+
+/// Resultado de `recover_declined_case_dispatch`.
+class CaseDispatchRecoverResult {
+  const CaseDispatchRecoverResult({
+    required this.ok,
+    required this.caseId,
+    this.dispatchStatus,
+    this.error,
+    this.availabilityState,
+  });
+
+  final bool ok;
+  final String caseId;
+  final CaseDispatchStatus? dispatchStatus;
+  final String? error;
+  final DeclinedDispatchAvailability? availabilityState;
+
+  factory CaseDispatchRecoverResult.fromJson(Map<String, Object?> json) {
+    final String? rawStatus = _readNullableString(json, 'dispatch_status');
+    final String? rawAvailability = _readNullableString(
+      json,
+      'availability_state',
+    );
+    return CaseDispatchRecoverResult(
+      ok: _readBool(json, 'ok'),
+      caseId: _readNullableString(json, 'case_id') ?? '',
+      dispatchStatus: rawStatus == null || rawStatus.isEmpty
+          ? null
+          : CaseDispatchStatus.fromWire(rawStatus),
+      error: _readNullableString(json, 'error'),
+      availabilityState: rawAvailability == null || rawAvailability.isEmpty
+          ? null
+          : DeclinedDispatchAvailability.fromWire(rawAvailability),
+    );
+  }
+}
+
+/// Estado de cobertura externa de un centro educativo.
+class SchoolCoverageStatusView {
+  const SchoolCoverageStatusView({
+    required this.institutionId,
+    required this.publicCode,
+    required this.name,
+    required this.minedExternalEnabled,
+    required this.externalSupportMode,
+    required this.coverageActiveNow,
+    required this.hasPlantCounselor,
+    required this.assignedExternalCount,
+    this.externalSupportUntil,
+  });
+
+  final String institutionId;
+  final String publicCode;
+  final String name;
+  final bool minedExternalEnabled;
+  final ExternalCoverageMode externalSupportMode;
+  final DateTime? externalSupportUntil;
+  final bool coverageActiveNow;
+  final bool hasPlantCounselor;
+  final int assignedExternalCount;
+
+  factory SchoolCoverageStatusView.fromJson(Map<String, Object?> json) {
+    return SchoolCoverageStatusView(
+      institutionId: _readString(json, 'institution_id'),
+      publicCode: _readNullableString(json, 'public_code') ?? '',
+      name: _readString(json, 'name'),
+      minedExternalEnabled: _readBool(json, 'mined_external_enabled'),
+      externalSupportMode: ExternalCoverageMode.fromWire(
+        _readNullableString(json, 'external_support_mode') ?? 'disabled',
+      ),
+      externalSupportUntil: _readNullableDateTime(
+        json,
+        'external_support_until',
+      ),
+      coverageActiveNow: _readBool(json, 'coverage_active_now'),
+      hasPlantCounselor: _readBool(json, 'has_plant_counselor'),
+      assignedExternalCount: _readInt(
+        json,
+        'assigned_external_count',
+        fallback: 0,
+      ),
+    );
+  }
+}
+
+/// Psicólogo de Red externa con sus centros asignados.
+class ExternalCounselorAssignmentView {
+  const ExternalCounselorAssignmentView({
+    required this.userId,
+    required this.email,
+    required this.staffTier,
+    required this.isAvailable,
+    required this.assignedInstitutionIds,
+    this.firstName,
+    this.lastName,
+  });
+
+  final String userId;
+  final String email;
+  final String? firstName;
+  final String? lastName;
+  final String staffTier;
+  final bool isAvailable;
+  final List<String> assignedInstitutionIds;
+
+  String get displayName {
+    final String joined =
+        '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    return joined.isEmpty ? email : joined;
+  }
+
+  factory ExternalCounselorAssignmentView.fromJson(Map<String, Object?> json) {
+    return ExternalCounselorAssignmentView(
+      userId: _readString(json, 'user_id'),
+      email: _readNullableString(json, 'email') ?? '',
+      firstName: _readNullableString(json, 'first_name'),
+      lastName: _readNullableString(json, 'last_name'),
+      staffTier: _readNullableString(json, 'staff_tier') ?? 'external_network',
+      isAvailable: _readBool(json, 'is_available', fallback: true),
+      assignedInstitutionIds: List<String>.unmodifiable(<String>[
+        for (final Object? entry in _readList(json, 'assigned_institution_ids'))
+          if (entry != null) entry.toString(),
+      ]),
+    );
+  }
+}
+
+/// Vista conjunta de colegios y asignaciones externas (`list_school_coverage_and_assignments`).
+class SchoolCoverageAndAssignmentsView {
+  const SchoolCoverageAndAssignmentsView({
+    required this.schools,
+    required this.externalCounselors,
+  });
+
+  final List<SchoolCoverageStatusView> schools;
+  final List<ExternalCounselorAssignmentView> externalCounselors;
+
+  factory SchoolCoverageAndAssignmentsView.fromJson(Map<String, Object?> json) {
+    return SchoolCoverageAndAssignmentsView(
+      schools: List<SchoolCoverageStatusView>.unmodifiable(<SchoolCoverageStatusView>[
+        for (final Object? entry in _readList(json, 'schools'))
+          if (entry is Map<dynamic, dynamic>)
+            SchoolCoverageStatusView.fromJson(_castMap(entry)),
+      ]),
+      externalCounselors: List<ExternalCounselorAssignmentView>.unmodifiable(<ExternalCounselorAssignmentView>[
+        for (final Object? entry in _readList(json, 'external_counselors'))
+          if (entry is Map<dynamic, dynamic>)
+            ExternalCounselorAssignmentView.fromJson(_castMap(entry)),
+      ]),
+    );
+  }
+}
+
+/// Aviso no bloqueante al psicólogo tutor por actuación de practicante de 5.º año.
+class PracticanteSupervisorNoticeView {
+  const PracticanteSupervisorNoticeView({
+    required this.eventId,
+    required this.caseId,
+    required this.referenceCode,
+    required this.institutionName,
+    required this.situationType,
+    required this.humanLevel,
+    required this.createdAt,
+    this.practicanteName,
+    this.reason,
+  });
+
+  final String eventId;
+  final String caseId;
+  final String referenceCode;
+  final String institutionName;
+  final SetuSituationType situationType;
+  final int humanLevel;
+  final String? practicanteName;
+  final String? reason;
+  final DateTime createdAt;
+
+  factory PracticanteSupervisorNoticeView.fromJson(Map<String, Object?> json) {
+    return PracticanteSupervisorNoticeView(
+      eventId: _readString(json, 'event_id'),
+      caseId: _readString(json, 'case_id'),
+      referenceCode: _readNullableString(json, 'reference_code') ?? '',
+      institutionName: _readNullableString(json, 'institution_name') ?? '',
+      situationType: SetuSituationType.fromWire(
+        _readString(json, 'situation_type'),
+      ),
+      humanLevel: _readInt(json, 'human_level', fallback: 1),
+      practicanteName: _readNullableString(json, 'practicante_name'),
+      reason: _readNullableString(json, 'reason'),
+      createdAt: _readDateTime(json, 'created_at'),
     );
   }
 }

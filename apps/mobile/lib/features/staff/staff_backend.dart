@@ -20,6 +20,10 @@ abstract interface class StaffBackend {
 
   String? get currentUserId;
 
+  String? get currentUserEmail;
+
+  bool get isEmailConfirmed;
+
   Future<StaffActivationPreview> previewActivation(
     String code, {
     String? email,
@@ -27,13 +31,95 @@ abstract interface class StaffBackend {
 
   Future<void> signUp({required String email, required String password});
 
+  Future<void> resendConfirmationEmail({required String email});
+
+  Future<void> refreshAuthSession();
+
+  Future<void> sendPasswordReset({required String email});
+
   Future<void> signIn({required String email, required String password});
 
   Future<void> signOut();
 
   Future<StaffActivationRedemption> redeemActivation(String code);
 
+  Future<StaffActivationRedemption> redeemActivationWithProfile({
+    required String code,
+    required String firstName,
+    required String lastName,
+  });
+
   Future<List<StaffMembershipScope>> memberships();
+
+  Future<StaffProfileView?> profile();
+
+  Future<void> updateAvailabilityAndNotices({
+    required bool isAvailable,
+    required bool notifyNewAlerts,
+    required bool notifyNewMessages,
+  });
+
+  Future<void> requestInviteReplacement({
+    required String email,
+    required String reasonCode,
+    String? notes,
+  });
+
+  Future<List<StaffActivationInviteView>> invites({String? institutionId});
+
+  Future<void> requestInvite({
+    required String email,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? fullName,
+    String? requesterProgramLabel,
+    String? supervisorUserId,
+  });
+
+  Future<StaffInviteIssueResult> issueInvite({
+    String? email,
+    SetuStaffRole? role,
+    String? institutionId,
+    String? staffTier,
+    String? scopeLabel,
+    String? fullName,
+    String? supervisorUserId,
+    int expiresInHours = 72,
+    String? pendingInviteId,
+  });
+
+  Future<void> revokeInvite({required String inviteId, String? reason});
+
+  Future<StaffInviteIssueResult> replaceInvite({
+    required String inviteId,
+    String? newEmail,
+    int expiresInHours = 72,
+    String? reason,
+  });
+
+  Future<CounselorDispatchCasesResult> counselorDispatches();
+
+  Future<CaseDispatchRecoverResult> recoverDeclinedDispatch(String caseId);
+
+  Future<SchoolCoverageAndAssignmentsView> schoolCoverageAndAssignments({
+    String? institutionId,
+  });
+
+  Future<void> setSchoolExternalCoverage({
+    required String institutionId,
+    ExternalCoverageMode? mode,
+    DateTime? until,
+    bool? minedExternalEnabled,
+  });
+
+  Future<void> assignExternalCounselorSchool({
+    required String counselorUserId,
+    required String institutionId,
+    bool active = true,
+  });
+
+  Future<List<PracticanteSupervisorNoticeView>> supervisorNotices();
 
   /// Nombres de los centros activos, por identificador.
   Future<Map<String, String>> institutionNames();
@@ -276,6 +362,18 @@ String staffErrorMessage(Object error) {
   if (has('invalid_decline_reason')) {
     return 'El motivo es demasiado largo. Acortalo e intentá de nuevo.';
   }
+  if (has('invite_email_mismatch')) {
+    return 'Ese código pertenece a otro correo institucional.';
+  }
+  if (has('coverage_inactive') || has('coverage_locked_by_mined')) {
+    return 'La cobertura de Red externa para ese centro está pausada o venció.';
+  }
+  if (has('supervisor_required') || has('invalid_supervisor_for_practicante')) {
+    return 'Un practicante de 5.º año requiere un psicólogo de planta activo como tutor.';
+  }
+  if (has('first_and_last_name_required') || has('name_required')) {
+    return 'Completá tu nombre y apellidos para activar la cuenta.';
+  }
   if (has('case_not_found')) {
     return 'Ese caso no está disponible para tu cuenta.';
   }
@@ -316,7 +414,7 @@ String activationErrorMessage(String? error, {int? remainingAttempts}) {
     'activation_code_expired' =>
       'Ese código ya venció. Pedí uno nuevo a quien administra los accesos.',
     'activation_code_revoked' =>
-      'Ese código fue anulado. Pedí uno nuevo a quien administra los accesos.',
+      'Ese código fue revocado. Pedí uno nuevo a quien administra los accesos.',
     'activation_code_already_used' =>
       'Ese código ya se usó. Si ya activaste tu cuenta, ingresá con tu '
           'correo y contraseña.',
@@ -360,10 +458,19 @@ class StaffSession extends ChangeNotifier {
   List<StaffMembershipScope> get memberships => _memberships;
 
   StaffMembershipScope? _active;
+  StaffProfileView? _profile;
 
   /// Ámbito con el que la persona está trabajando; null si no hay sesión o
   /// falta elegir entre varios centros.
   StaffMembershipScope? get active => _active;
+
+  StaffProfileView? get profile => _profile;
+
+  bool get isAuthenticated => backend.currentUserId != null;
+
+  bool get isEmailConfirmed => backend.isEmailConfirmed;
+
+  String? get currentUserEmail => backend.currentUserEmail;
 
   bool get needsScopeChoice => _active == null && _memberships.length > 1;
 
@@ -439,6 +546,16 @@ class StaffSession extends ChangeNotifier {
       _memberships = found;
       _active = _resolveActive(found, keep);
       _savedActiveMembershipId = _active?.membershipId;
+      if (found.isNotEmpty) {
+        try {
+          _profile = await backend.profile();
+        } on Object {
+          // Si el perfil opcional no responde en una llamada puntual, las
+          // membresías válidas siguen activas.
+        }
+      } else {
+        _profile = null;
+      }
       _save();
       _watchAssignments();
       if (!_disposed) notifyListeners();
@@ -556,18 +673,38 @@ class StaffSession extends ChangeNotifier {
     super.dispose();
   }
 
+  Future<String?> refreshAuthAndMemberships() async {
+    try {
+      await backend.refreshAuthSession();
+    } on Object catch (error) {
+      return staffErrorMessage(error);
+    }
+    return refresh();
+  }
+
+  Future<void> reloadProfile() async {
+    if (backend.currentUserId == null) return;
+    try {
+      _profile = await backend.profile();
+      if (!_disposed) notifyListeners();
+    } on Object {
+      // Mantiene el perfil en caché si falla la recarga puntual.
+    }
+  }
+
   Future<void> signOut() async {
     _touched = true;
     _memberships = const <StaffMembershipScope>[];
     _active = null;
+    _profile = null;
     _savedActiveMembershipId = null;
-    await _save();
-    _watchAssignments();
-    if (!_disposed) notifyListeners();
     try {
       await backend.signOut();
     } on Object {
       // La sesión local ya se cerró; el servidor vence la suya por su cuenta.
     }
+    await _save();
+    _watchAssignments();
+    if (!_disposed) notifyListeners();
   }
 }
