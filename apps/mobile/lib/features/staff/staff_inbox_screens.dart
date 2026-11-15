@@ -7,6 +7,7 @@ import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import 'staff_backend.dart';
+import 'staff_mined_sheets.dart';
 import 'staff_widgets.dart';
 
 const List<String> _months = <String>[
@@ -325,6 +326,31 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
           'solo de la persona de Mesa de Escucha asignada.',
           style: TextStyle(fontSize: 15, height: 1.4),
         ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          children: <Widget>[
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: CureandoTheme.ink,
+                side: const BorderSide(color: CureandoTheme.blue, width: 1.5),
+              ),
+              onPressed: () => showMinedInvitesSheet(context, session),
+              icon: const Icon(Icons.badge_outlined, color: CureandoTheme.blue),
+              label: const Text('Invitaciones de personal'),
+            ),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: CureandoTheme.ink,
+                side: const BorderSide(color: CureandoTheme.blue, width: 1.5),
+              ),
+              onPressed: () => showMinedCoverageSheet(context, session),
+              icon: const Icon(Icons.hub_outlined, color: CureandoTheme.blue),
+              label: const Text('Cobertura externa'),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         ...listBody(
           visible: cases ?? const <StaffCaseSummary>[],
@@ -609,17 +635,18 @@ class _DispatchHistorySheetState extends State<_DispatchHistorySheet> {
   );
 }
 
-/// Motivo opcional para declinar una alerta despachada.
-class _DeclineDialog extends StatefulWidget {
-  const _DeclineDialog({required this.reference});
+/// Hoja inferior para declinar una alerta despachada con motivo opcional.
+class _DeclineSheet extends StatefulWidget {
+  const _DeclineSheet({required this.reference, required this.school});
 
   final String reference;
+  final String school;
 
   @override
-  State<_DeclineDialog> createState() => _DeclineDialogState();
+  State<_DeclineSheet> createState() => _DeclineSheetState();
 }
 
-class _DeclineDialogState extends State<_DeclineDialog> {
+class _DeclineSheetState extends State<_DeclineSheet> {
   final TextEditingController _reason = TextEditingController();
 
   @override
@@ -629,16 +656,75 @@ class _DeclineDialogState extends State<_DeclineDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text('Declinar ${widget.reference}'),
-    content: SingleChildScrollView(
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        14,
+        24,
+        16 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Semantics(
+            header: true,
+            child: Text(
+              '¿Declinar esta alerta?',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: CureandoTheme.blueSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Icon(
+                  Icons.school_outlined,
+                  size: 18,
+                  color: CureandoTheme.blue,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    '${widget.school} · ${widget.reference}',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
           const Text(
-            'La alerta se ofrece a otras personas de Mesa de Escucha. El '
-            'motivo lo ve la supervisión del MINED.',
+            'La alerta seguirá disponible para otras personas autorizadas.',
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.4,
+              color: CureandoTheme.secondaryInk,
+            ),
           ),
           const SizedBox(height: 14),
           StaffField(
@@ -650,19 +736,21 @@ class _DeclineDialogState extends State<_DeclineDialog> {
             capitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.newline,
           ),
+          const SizedBox(height: 14),
+          FilledButton(
+            style: flowPrimaryStyle(),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Volver'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            style: flowSecondaryStyle(),
+            onPressed: () => Navigator.of(context).pop(_reason.text.trim()),
+            child: const Text('Confirmar declinación'),
+          ),
         ],
       ),
     ),
-    actions: <Widget>[
-      TextButton(
-        onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Cancelar'),
-      ),
-      FilledButton(
-        onPressed: () => Navigator.of(context).pop(_reason.text.trim()),
-        child: const Text('Declinar alerta'),
-      ),
-    ],
   );
 }
 
@@ -753,10 +841,20 @@ class DeskInboxScreen extends StatefulWidget {
   State<DeskInboxScreen> createState() => _DeskInboxScreenState();
 }
 
+enum _DeskTab { toClaim, myCases }
+
 class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
+  _DeskTab _tab = _DeskTab.myCases;
+  bool _tabChosenByUser = false;
   _DeskFilter _filter = _DeskFilter.review;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String? _selectedInstitutionId;
+  bool _oldestFirst = true;
   final OperationIds _operations = OperationIds();
   List<CaseDispatchRecord> _pending = const <CaseDispatchRecord>[];
+  List<PracticanteSupervisorNoticeView> _supervisorNotices =
+      const <PracticanteSupervisorNoticeView>[];
   StreamSubscription<CaseDispatchRecord>? _live;
   String? _busyCase;
 
@@ -775,6 +873,7 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _live?.cancel();
     super.dispose();
   }
@@ -792,6 +891,17 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
             record.counselorUserId == me)
           record,
     ];
+    _supervisorNotices = await backend.supervisorNotices();
+    if (!_tabChosenByUser) {
+      _tabChosenByUser = true;
+      _tab = _pending.isNotEmpty ? _DeskTab.toClaim : _DeskTab.myCases;
+    }
+    if (_selectedInstitutionId != null &&
+        !_pending.any(
+          (CaseDispatchRecord r) => r.institutionId == _selectedInstitutionId,
+        )) {
+      _selectedInstitutionId = null;
+    }
   }
 
   void _say(String message) {
@@ -828,98 +938,270 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     await load();
   }
 
+  Future<void> _recoverAndReload(String caseId) async {
+    try {
+      final CaseDispatchRecoverResult res = await session.backend
+          .recoverDeclinedDispatch(caseId);
+      if (!mounted) return;
+      if (res.ok) {
+        _say('La alerta volvió a tu bandeja «Por tomar».');
+      } else {
+        _say(
+          res.availabilityState?.label ??
+              'Ya no pudimos recuperar esta alerta.',
+        );
+      }
+      await load();
+    } on Object catch (failure) {
+      if (mounted) _say(staffErrorMessage(failure));
+    }
+  }
+
   Future<void> _decline(CaseDispatchRecord record) async {
     if (_busyCase != null) return;
     final String reference = record.referenceCode ?? 'la alerta';
-    final String? reason = await showDialog<String>(
+    final String schoolLabel =
+        record.institutionName ??
+        schools[record.institutionId] ??
+        'Centro escolar';
+    final String? reason = await showModalBottomSheet<String>(
       context: context,
-      builder: (BuildContext dialog) => _DeclineDialog(reference: reference),
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (BuildContext sheet) => _DeclineSheet(
+        reference: reference,
+        school: schoolLabel,
+      ),
     );
     if (reason == null || !mounted) return;
     setState(() => _busyCase = record.caseId);
-    String message;
+    bool declined = false;
+    String? errorMessage;
     try {
-      final CaseDeclineResult result = await session.backend.declineDispatch(
+      await session.backend.declineDispatch(
         operationId: _operations.idFor('decline|${record.caseId}|$reason'),
         caseId: record.caseId,
         reason: reason.isEmpty ? null : reason,
       );
       _operations.done();
-      message = result.fallbackTier == CaseDispatchTier.externalPool
-          ? 'Declinaste $reference. Se ofreció a la red externa.'
-          : 'Declinaste $reference.';
+      declined = true;
     } on Object catch (failure) {
-      message = staffErrorMessage(failure);
+      errorMessage = staffErrorMessage(failure);
     }
     if (!mounted) return;
     setState(() => _busyCase = null);
-    _say(message);
     await load();
+    if (!mounted) return;
+    if (!declined) {
+      _say(errorMessage ?? 'No pudimos declinar la alerta.');
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: CureandoTheme.ink,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        content: const Text(
+          'Alerta declinada',
+          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+        action: SnackBarAction(
+          label: 'Deshacer',
+          textColor: const Color(0xFF93C5FD),
+          onPressed: () => _recoverAndReload(record.caseId),
+        ),
+      ),
+    );
+  }
+
+  List<CaseDispatchRecord> _filteredPending() {
+    final String q = _searchQuery.trim().toLowerCase();
+    final List<CaseDispatchRecord> items = <CaseDispatchRecord>[
+      for (final CaseDispatchRecord r in _pending)
+        if ((_selectedInstitutionId == null ||
+                r.institutionId == _selectedInstitutionId) &&
+            (q.isEmpty ||
+                (r.referenceCode ?? '').toLowerCase().contains(q) ||
+                (r.institutionName ?? schools[r.institutionId] ?? '')
+                    .toLowerCase()
+                    .contains(q)))
+          r,
+    ];
+    items.sort((CaseDispatchRecord a, CaseDispatchRecord b) {
+      final int cmp = a.notifiedAt.compareTo(b.notifiedAt);
+      return _oldestFirst ? cmp : -cmp;
+    });
+    return items;
+  }
+
+  String _hhmm(DateTime value) {
+    final DateTime local = value.toLocal();
+    final String h = local.hour.toString().padLeft(2, '0');
+    final String m = local.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   Widget _dispatchTile(CaseDispatchRecord record) {
     final bool busy = _busyCase == record.caseId;
     final SetuSituationType? type = record.situationType;
+    final String schoolName =
+        record.institutionName ??
+        schools[record.institutionId] ??
+        'Centro sin nombre disponible';
+    final String tierText = record.dispatchTier == CaseDispatchTier.externalPool
+        ? 'Red externa'
+        : 'Equipo de planta';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: CureandoTheme.yellowSoft,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5C100)),
+        border: Border.all(color: const Color(0xFFDBE6F5)),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x0D0A2E5C),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                record.referenceCode ?? 'Alerta',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: CureandoTheme.blueSoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.school_outlined,
+                  color: CureandoTheme.blue,
                 ),
               ),
-              StaffTag(dispatchTierLabel(record.dispatchTier)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            schoolName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: CureandoTheme.ink,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.schedule_rounded,
+                          size: 15,
+                          color: CureandoTheme.secondaryInk,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _hhmm(record.notifiedAt),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: CureandoTheme.secondaryInk,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${type == null ? 'Alerta' : staffCaseKind(type, SetuStudentCaseRole.victim).split(' · ').first} · ${record.referenceCode ?? 'Alerta'}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: CureandoTheme.secondaryInk,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    StaffTag(tierText),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            record.institutionName ??
-                schools[record.institutionId] ??
-                'Centro sin nombre disponible',
-            style: const TextStyle(fontSize: 16),
-          ),
-          if (type != null)
-            Text(
-              staffCaseKind(
-                type,
-                SetuStudentCaseRole.victim,
-              ).split(' · ').first,
-              style: const TextStyle(fontSize: 16),
-            ),
-          Text(
-            'Te avisamos: ${staffShortDate(record.notifiedAt)}',
-            style: const TextStyle(
-              fontSize: 15,
-              color: CureandoTheme.secondaryInk,
-            ),
-          ),
-          const SizedBox(height: 10),
-          StaffPrimaryButton(
-            label: 'Tomar alerta',
-            busy: busy,
-            onPressed: _busyCase == null ? () => _claim(record) : null,
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            style: flowSecondaryStyle(),
-            onPressed: _busyCase == null ? () => _decline(record) : null,
-            child: const Text('Declinar'),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              Expanded(
+                flex: 3,
+                child: FilledButton(
+                  style: flowPrimaryStyle().copyWith(
+                    padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    ),
+                    textStyle: const WidgetStatePropertyAll<TextStyle>(
+                      TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  onPressed: _busyCase == null ? () => _claim(record) : null,
+                  child: busy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                'Tomar alerta',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Icon(Icons.arrow_forward_rounded, size: 18),
+                          ],
+                        ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: OutlinedButton(
+                  style: flowSecondaryStyle().copyWith(
+                    padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                    ),
+                    textStyle: const WidgetStatePropertyAll<TextStyle>(
+                      TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  onPressed: _busyCase == null ? () => _decline(record) : null,
+                  child: const Text(
+                    'Declinar',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -928,7 +1210,7 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
 
   bool _matches(StaffCaseSummary item) {
     // Solo los casos que esta persona atiende: una alerta ofrecida que
-    // todavía no tomó aparece arriba, no en «Mis casos».
+    // todavía no tomó aparece en «Por tomar», no en «Mis casos».
     if (item.assignedCounselorId != session.backend.currentUserId) {
       return false;
     }
@@ -941,6 +1223,11 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
 
   Future<void> _openCase(StaffCaseSummary item) async {
     await context.push('/personal/mesa/caso/${item.id}');
+    if (mounted) await load();
+  }
+
+  Future<void> _openDeclined() async {
+    await context.push('/personal/mesa/declinadas');
     if (mounted) await load();
   }
 
@@ -1006,83 +1293,516 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     ),
   );
 
-  @override
-  Widget build(BuildContext context) => StaffAreaScaffold(
-    session: session,
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _segmentedTabs() => Container(
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF1F5F9),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(color: const Color(0xFFDBE6F5)),
+    ),
+    child: Row(
       children: <Widget>[
-        AssignmentBanner(session: session, onOpened: load),
-        if (_pending.isNotEmpty) ...<Widget>[
-          Semantics(
-            header: true,
-            child: const Text('Alertas por tomar', style: _heading),
+        Expanded(
+          child: _tabPill(
+            label: 'Por tomar',
+            selected: _tab == _DeskTab.toClaim,
+            onTap: () => setState(() {
+              _tabChosenByUser = true;
+              _tab = _DeskTab.toClaim;
+            }),
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'Se ofrecen a varias personas de Mesa de Escucha. Quien la toma '
-            'primero la atiende; el relato y el chat se abren solo para esa '
-            'persona.',
-            style: TextStyle(fontSize: 15, height: 1.4),
+        ),
+        Expanded(
+          child: _tabPill(
+            label: 'Mis casos',
+            selected: _tab == _DeskTab.myCases,
+            onTap: () => setState(() {
+              _tabChosenByUser = true;
+              _tab = _DeskTab.myCases;
+            }),
           ),
-          const SizedBox(height: 12),
-          for (final CaseDispatchRecord record in _pending)
-            _dispatchTile(record),
-          const SizedBox(height: 8),
-        ],
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Semantics(
-                header: true,
-                child: const Text('Mis casos', style: _heading),
-              ),
-            ),
-            IconButton(
-              tooltip: 'Actualizar',
-              onPressed: loading ? null : load,
-              icon: const Icon(Icons.refresh_rounded),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          children: <Widget>[
-            for (final _DeskFilter filter in _DeskFilter.values)
-              ChoiceChip(
-                label: Text(filter.label),
-                selected: _filter == filter,
-                showCheckmark: true,
-                labelStyle: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: _filter == filter ? Colors.white : CureandoTheme.ink,
-                ),
-                checkmarkColor: Colors.white,
-                selectedColor: CureandoTheme.blue,
-                backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 10,
-                ),
-                shape: const StadiumBorder(
-                  side: BorderSide(color: Color(0xFFCBD5E1)),
-                ),
-                onSelected: (_) => setState(() => _filter = filter),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        ...listBody(
-          visible: (cases ?? const <StaffCaseSummary>[])
-              .where(_matches)
-              .toList(),
-          empty: _filter.empty,
-          tile: _tile,
         ),
       ],
     ),
   );
+
+  Widget _tabPill({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) => GestureDetector(
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: selected ? CureandoTheme.blue : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: selected ? Colors.white : CureandoTheme.ink,
+        ),
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final List<CaseDispatchRecord> filteredPending = _filteredPending();
+    final Map<String, String> pendingSchools = <String, String>{
+      for (final CaseDispatchRecord r in _pending)
+        r.institutionId:
+            r.institutionName ?? schools[r.institutionId] ?? r.institutionId,
+    };
+
+    return StaffAreaScaffold(
+      session: session,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          AssignmentBanner(session: session, onOpened: load),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Semantics(
+                      header: true,
+                      child: const Text('Mesa de escucha', style: _heading),
+                    ),
+                    Text(
+                      '${_pending.length} ${_pending.length == 1 ? 'alerta' : 'alertas'} por tomar',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: CureandoTheme.secondaryInk,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Mi perfil y disponibilidad',
+                onPressed: () => context.push('/personal/perfil'),
+                icon: const Icon(Icons.person_outline_rounded),
+              ),
+              IconButton(
+                tooltip: 'Actualizar',
+                onPressed: loading ? null : load,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
+          ),
+          if (_supervisorNotices.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: CureandoTheme.yellowSoft,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE5C100)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'Aviso de supervisión a tu cargo',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  for (final PracticanteSupervisorNoticeView notice
+                      in _supervisorNotices.take(3))
+                    Text(
+                      '• ${notice.institutionName} (${notice.referenceCode}): cierre propuesto por ${notice.practicanteName ?? 'practicante'} · Nivel ${notice.humanLevel}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          _segmentedTabs(),
+          const SizedBox(height: 14),
+          if (_tab == _DeskTab.toClaim) ...<Widget>[
+            TextField(
+              controller: _searchController,
+              onChanged: (String v) => setState(() => _searchQuery = v),
+              decoration: InputDecoration(
+                hintText: 'Buscá por colegio o referencia',
+                prefixIcon: const Icon(Icons.search_rounded),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: <Widget>[
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 160, maxWidth: 240),
+                  child: DropdownButtonFormField<String?>(
+                    initialValue: _selectedInstitutionId,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    items: <DropdownMenuItem<String?>>[
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text(
+                          'Todos los colegios',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      for (final MapEntry<String, String> entry
+                          in pendingSchools.entries)
+                        DropdownMenuItem<String?>(
+                          value: entry.key,
+                          child: Text(
+                            entry.value,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: (String? value) =>
+                        setState(() => _selectedInstitutionId = value),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () =>
+                      setState(() => _oldestFirst = !_oldestFirst),
+                  icon: const Icon(Icons.swap_vert_rounded, size: 18),
+                  label: Text(
+                    _oldestFirst
+                        ? 'Más antiguas primero'
+                        : 'Más recientes primero',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (filteredPending.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 18),
+                child: Text(
+                  'No tenés alertas pendientes por tomar.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, color: CureandoTheme.secondaryInk),
+                ),
+              )
+            else
+              for (final CaseDispatchRecord record in filteredPending)
+                _dispatchTile(record),
+            Center(
+              child: TextButton(
+                onPressed: _openDeclined,
+                child: const Text(
+                  'Declinadas recientes',
+                  style: TextStyle(decoration: TextDecoration.underline),
+                ),
+              ),
+            ),
+          ] else ...<Widget>[
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final _DeskFilter filter in _DeskFilter.values)
+                  ChoiceChip(
+                    label: Text(filter.label),
+                    selected: _filter == filter,
+                    showCheckmark: true,
+                    labelStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          _filter == filter ? Colors.white : CureandoTheme.ink,
+                    ),
+                    checkmarkColor: Colors.white,
+                    selectedColor: CureandoTheme.blue,
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
+                    shape: const StadiumBorder(
+                      side: BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                    onSelected: (_) => setState(() => _filter = filter),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...listBody(
+              visible: (cases ?? const <StaffCaseSummary>[])
+                  .where(_matches)
+                  .toList(),
+              empty: _filter.empty,
+              tile: _tile,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Pantalla de alertas declinadas recientes (`/personal/mesa/declinadas`).
+class DeskDeclinedScreen extends StatefulWidget {
+  const DeskDeclinedScreen({super.key, required this.session});
+
+  final StaffSession session;
+
+  @override
+  State<DeskDeclinedScreen> createState() => _DeskDeclinedScreenState();
+}
+
+class _DeskDeclinedScreenState extends State<DeskDeclinedScreen> {
+  List<DeclinedDispatchRecord>? _records;
+  Map<String, String> _schools = const <String, String>{};
+  bool _loading = true;
+  String? _error;
+  String? _busyCaseId;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final CounselorDispatchCasesResult result = await widget.session.backend
+          .counselorDispatches();
+      final Map<String, String> schools = await widget.session.backend
+          .institutionNames();
+      if (!mounted) return;
+      setState(() {
+        _records = result.declinedDispatches;
+        _schools = schools;
+        _loading = false;
+      });
+    } on Object catch (failure) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = staffErrorMessage(failure);
+      });
+    }
+  }
+
+  Future<void> _recover(DeclinedDispatchRecord record) async {
+    setState(() => _busyCaseId = record.caseId);
+    try {
+      final CaseDispatchRecoverResult res = await widget.session.backend
+          .recoverDeclinedDispatch(record.caseId);
+      if (!mounted) return;
+      setState(() => _busyCaseId = null);
+      if (res.ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Alerta devuelta a tu bandeja «Por tomar».'),
+          ),
+        );
+        context.pop();
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            res.availabilityState?.label ?? 'La alerta ya no está disponible.',
+          ),
+        ),
+      );
+      await _load();
+    } on Object catch (failure) {
+      if (!mounted) return;
+      setState(() => _busyCaseId = null);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(staffErrorMessage(failure))));
+    }
+  }
+
+  Widget _recordTile(DeclinedDispatchRecord record) {
+    final String schoolName =
+        record.institutionName ??
+        _schools[record.institutionId] ??
+        'Centro escolar';
+    final bool available =
+        record.availabilityState == DeclinedDispatchAvailability.available &&
+        record.canRecover;
+    final Color badgeBg = available
+        ? const Color(0xFFDCFCE7)
+        : const Color(0xFFF1F5F9);
+    final Color badgeFg = available
+        ? const Color(0xFF166534)
+        : CureandoTheme.secondaryInk;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFDBE6F5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: CureandoTheme.blueSoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.school_outlined,
+                  color: CureandoTheme.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      schoolName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      record.referenceCode ?? record.caseId,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: CureandoTheme.secondaryInk,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: badgeBg,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        record.availabilityState.label,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: badgeFg,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (available) ...<Widget>[
+            const SizedBox(height: 12),
+            FilledButton(
+              style: flowPrimaryStyle().copyWith(
+                padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+                  EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                ),
+              ),
+              onPressed: _busyCaseId == record.caseId
+                  ? null
+                  : () => _recover(record),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Flexible(
+                    child: Text(
+                      'Volver a la bandeja',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: 6),
+                  Icon(Icons.arrow_forward_rounded, size: 18),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<DeclinedDispatchRecord> records =
+        _records ?? const <DeclinedDispatchRecord>[];
+    return FlowScaffold(
+      header: const FlowHeader(
+        title: 'Declinadas recientes',
+        subtitle: 'Mesa de escucha',
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          const Text(
+            'Podés recuperar las alertas que sigan disponibles.',
+            style: TextStyle(fontSize: 15, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          if (_error != null) ...<Widget>[
+            StaffNotice(_error!),
+            TextButton(onPressed: _load, child: const Text('Reintentar')),
+          ] else if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: CircularProgressIndicator(
+                  semanticsLabel: 'Cargando declinadas',
+                ),
+              ),
+            )
+          else if (records.isEmpty)
+            const StaffNotice(
+              'No tenés alertas declinadas recientes.',
+              error: false,
+            )
+          else
+            for (final DeclinedDispatchRecord r in records) _recordTile(r),
+        ],
+      ),
+    );
+  }
 }

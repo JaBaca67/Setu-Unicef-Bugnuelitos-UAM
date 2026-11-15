@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/remote/setu_remote_models.dart';
@@ -61,16 +61,28 @@ class DirectorInboxScreen extends StatefulWidget {
 
 class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
   Set<String> _withSheet = const <String>{};
+  SchoolCoverageStatusView? _coverage;
+  List<StaffActivationInviteView> _invites = const <StaffActivationInviteView>[];
 
   @override
   StaffSession get session => widget.session;
 
   @override
   Future<void> loadExtra() async {
-    final List<CaseActionSheetView> sheets = await session.backend.sheets();
+    final StaffBackend backend = session.backend;
+    final String? institution = session.active?.institutionId;
+    final List<CaseActionSheetView> sheets = await backend.sheets();
     _withSheet = <String>{
       for (final CaseActionSheetView sheet in sheets) sheet.caseId,
     };
+    if (institution != null) {
+      final SchoolCoverageAndAssignmentsView coverageView = await backend
+          .schoolCoverageAndAssignments(institutionId: institution);
+      _coverage = coverageView.schools
+          .where((SchoolCoverageStatusView s) => s.institutionId == institution)
+          .firstOrNull;
+      _invites = await backend.invites(institutionId: institution);
+    }
   }
 
   Future<void> _open(StaffCaseSummary item) async {
@@ -93,6 +105,95 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
         ) ??
         false;
     if (saved && mounted) await load();
+  }
+
+  Future<void> _manageCoverage() async {
+    final SchoolCoverageStatusView? coverage = _coverage;
+    if (coverage == null) return;
+    final bool saved =
+        await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (BuildContext sheet) => _DirectorCoverageSheet(
+            backend: session.backend,
+            coverage: coverage,
+          ),
+        ) ??
+        false;
+    if (saved && mounted) await load();
+  }
+
+  Future<void> _requestPlantInvite() async {
+    final String? institution = session.active?.institutionId;
+    if (institution == null) return;
+    final bool saved =
+        await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (BuildContext sheet) => _DirectorInviteRequestSheet(
+            backend: session.backend,
+            institutionId: institution,
+            schoolName: session.active?.place ?? '',
+            existingInvites: _invites,
+          ),
+        ) ??
+        false;
+    if (saved && mounted) await load();
+  }
+
+  Widget _coverageBanner(SchoolCoverageStatusView coverage) {
+    final String statusLabel;
+    if (!coverage.minedExternalEnabled) {
+      statusLabel = 'Pausado por MINED central';
+    } else if (coverage.externalSupportMode ==
+            ExternalCoverageMode.temporaryUntil &&
+        coverage.externalSupportUntil != null) {
+      statusLabel =
+          'Apoyo temporal hasta ${staffShortDate(coverage.externalSupportUntil!)}';
+    } else {
+      statusLabel = coverage.externalSupportMode.label;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: CureandoTheme.blueSoft,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFA5C1EF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Icon(Icons.hub_outlined, color: CureandoTheme.blue),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Cobertura de Red externa',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+              ),
+              TextButton(
+                onPressed: _manageCoverage,
+                child: const Text('Configurar'),
+              ),
+            ],
+          ),
+          Text(statusLabel, style: _muted),
+          if (!coverage.minedExternalEnabled)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'MINED deshabilitó o pausó el apoyo externo para tu centro.',
+                style: TextStyle(fontSize: 13, color: CureandoTheme.secondaryInk),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _tile(StaffCaseSummary item) => Material(
@@ -198,6 +299,20 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
           'Ves el aviso mínimo y las fichas autorizadas para tu centro. El '
           'relato y la conversación del estudiante no llegan a la dirección.',
           style: TextStyle(fontSize: 15, height: 1.4),
+        ),
+        const SizedBox(height: 12),
+        if (_coverage != null) ...<Widget>[
+          _coverageBanner(_coverage!),
+          const SizedBox(height: 10),
+        ],
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: CureandoTheme.ink,
+            side: const BorderSide(color: CureandoTheme.blue, width: 1.5),
+          ),
+          onPressed: _requestPlantInvite,
+          icon: const Icon(Icons.person_add_outlined, color: CureandoTheme.blue),
+          label: const Text('Solicitar invitación de planta'),
         ),
         const SizedBox(height: 16),
         ...listBody(
@@ -717,6 +832,304 @@ class _ActionSheetState extends State<_ActionSheet> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _DirectorCoverageSheet extends StatefulWidget {
+  const _DirectorCoverageSheet({required this.backend, required this.coverage});
+
+  final StaffBackend backend;
+  final SchoolCoverageStatusView coverage;
+
+  @override
+  State<_DirectorCoverageSheet> createState() => _DirectorCoverageSheetState();
+}
+
+class _DirectorCoverageSheetState extends State<_DirectorCoverageSheet> {
+  late ExternalCoverageMode _mode = widget.coverage.externalSupportMode;
+  late DateTime _until =
+      widget.coverage.externalSupportUntil ?? _defaultEndOfDay();
+  bool _saving = false;
+  String? _error;
+
+  static DateTime _defaultEndOfDay() {
+    final DateTime now = DateTime.now();
+    final DateTime eod = DateTime(now.year, now.month, now.day, 18);
+    return eod.isAfter(now) ? eod : now.add(const Duration(hours: 4));
+  }
+
+  Future<void> _pickDateTime() async {
+    final DateTime now = DateTime.now();
+    final DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: _until.isAfter(now) ? _until : now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 30)),
+    );
+    if (date == null || !mounted) return;
+    final TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_until.toLocal()),
+    );
+    if (time == null || !mounted) return;
+    setState(() {
+      _until = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    });
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.backend.setSchoolExternalCoverage(
+        institutionId: widget.coverage.institutionId,
+        mode: _mode,
+        until: _mode == ExternalCoverageMode.temporaryUntil
+            ? _until.toUtc()
+            : null,
+      );
+      if (mounted) Navigator.of(context).pop(true);
+    } on Object catch (failure) {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error = staffErrorMessage(failure);
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool allowedByMined = widget.coverage.minedExternalEnabled;
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Semantics(
+              header: true,
+              child: Text(
+                'Cobertura de Red externa',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(widget.coverage.name, style: _muted),
+            const SizedBox(height: 12),
+            if (!allowedByMined) ...<Widget>[
+              const StaffNotice(
+                'La supervisión del MINED tiene pausada la cobertura externa '
+                'para este colegio. Consultá con MINED para reactivarla.',
+              ),
+              const SizedBox(height: 12),
+            ],
+            RadioGroup<ExternalCoverageMode>(
+              groupValue: _mode,
+              onChanged: (ExternalCoverageMode? value) {
+                if (value != null && allowedByMined) {
+                  setState(() => _mode = value);
+                }
+              },
+              child: Column(
+                children: <Widget>[
+                  RadioListTile<ExternalCoverageMode>(
+                    value: ExternalCoverageMode.disabled,
+                    enabled: allowedByMined,
+                    title: const Text('Apoyo externo desactivado'),
+                    subtitle: const Text(
+                      'Solo atiende el equipo de planta autorizado.',
+                    ),
+                  ),
+                  RadioListTile<ExternalCoverageMode>(
+                    value: ExternalCoverageMode.enabled,
+                    enabled: allowedByMined,
+                    title: const Text('Apoyo externo habilitado'),
+                    subtitle: const Text(
+                      'Deriva a Red externa asignada si planta declina o no está.',
+                    ),
+                  ),
+                  RadioListTile<ExternalCoverageMode>(
+                    value: ExternalCoverageMode.temporaryUntil,
+                    enabled: allowedByMined,
+                    title: const Text('Apoyo temporal hasta fecha y hora'),
+                    subtitle: Text(
+                      'Vence automáticamente el ${staffShortDate(_until)}.',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_mode == ExternalCoverageMode.temporaryUntil &&
+                allowedByMined) ...<Widget>[
+              const SizedBox(height: 6),
+              OutlinedButton.icon(
+                onPressed: _pickDateTime,
+                icon: const Icon(Icons.schedule_rounded),
+                label: Text('Cambiar vencimiento (${staffShortDate(_until)})'),
+              ),
+            ],
+            if (_error != null) ...<Widget>[
+              const SizedBox(height: 10),
+              StaffNotice(_error!),
+            ],
+            const SizedBox(height: 14),
+            if (allowedByMined)
+              StaffPrimaryButton(
+                label: 'Guardar cobertura',
+                busy: _saving,
+                onPressed: _save,
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DirectorInviteRequestSheet extends StatefulWidget {
+  const _DirectorInviteRequestSheet({
+    required this.backend,
+    required this.institutionId,
+    required this.schoolName,
+    required this.existingInvites,
+  });
+
+  final StaffBackend backend;
+  final String institutionId;
+  final String schoolName;
+  final List<StaffActivationInviteView> existingInvites;
+
+  @override
+  State<_DirectorInviteRequestSheet> createState() =>
+      _DirectorInviteRequestSheetState();
+}
+
+class _DirectorInviteRequestSheetState
+    extends State<_DirectorInviteRequestSheet> {
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _name = TextEditingController();
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final String email = _email.text.trim();
+    if (!email.contains('@')) {
+      setState(() => _error = 'Escribí el correo institucional de la persona.');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.backend.requestInvite(
+        email: email,
+        role: SetuStaffRole.counselingDesk,
+        institutionId: widget.institutionId,
+        staffTier: 'school_plant',
+        fullName: _name.text.trim().isEmpty ? null : _name.text.trim(),
+      );
+      if (mounted) Navigator.of(context).pop(true);
+    } on Object catch (failure) {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error = staffErrorMessage(failure);
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        16 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Semantics(
+            header: true,
+            child: Text(
+              'Solicitar invitación de planta',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Centro: ${widget.schoolName}. MINED revisa y emite el código en '
+            'privado.',
+            style: _muted,
+          ),
+          const SizedBox(height: 14),
+          StaffField(
+            label: 'Correo institucional',
+            controller: _email,
+            hint: 'psicologia@colegio.edu.ni',
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 10),
+          StaffField(
+            label: 'Nombre y apellidos (opcional)',
+            controller: _name,
+            capitalization: TextCapitalization.words,
+          ),
+          if (_error != null) ...<Widget>[
+            const SizedBox(height: 10),
+            StaffNotice(_error!),
+          ],
+          const SizedBox(height: 14),
+          StaffPrimaryButton(
+            label: 'Enviar solicitud a MINED',
+            busy: _saving,
+            onPressed: _submit,
+          ),
+          if (widget.existingInvites.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 16),
+            const Text(
+              'Solicitudes e invitaciones del centro',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            for (final StaffActivationInviteView inv in widget.existingInvites)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  '• ${inv.institutionalEmail} · ${inv.displayStatus}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+          ],
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cerrar'),
           ),
         ],
       ),

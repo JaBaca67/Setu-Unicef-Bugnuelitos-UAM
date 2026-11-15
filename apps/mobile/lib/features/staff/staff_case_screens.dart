@@ -497,76 +497,165 @@ class _ReviewSheet extends StatelessWidget {
   final StaffCaseSummary item;
   final CaseAssessment assessment;
 
-  Widget _row(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Column(
+  Widget _dataRow(String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          label,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        SizedBox(
+          width: 112,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: CureandoTheme.secondaryInk,
+            ),
+          ),
         ),
-        Text(value, style: _text),
+        Expanded(child: Text(value, style: _text)),
       ],
     ),
   );
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    top: false,
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Semantics(
-            header: true,
-            child: Text(
-              'Revisá antes de guardar',
-              style: Theme.of(context).textTheme.titleLarge,
+  Widget build(BuildContext context) {
+    final String situationLabel = staffCaseKind(
+      item.situationType,
+      item.studentRole,
+      origin: item.origin,
+    );
+    final List<String> parts = situationLabel.split(' · ');
+    final String tipo = parts.first;
+    final String participacion = parts.length > 1 ? parts.sublist(1).join(' · ') : '';
+
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Semantics(
+              header: true,
+              child: Text(
+                'Revisá antes de guardar',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _row('Valoración', staffLevelLabel(assessment.level)),
-          if (assessment.urgentReferral)
-            _row('Derivación urgente', 'Se registra ahora.'),
-          if (assessment.issueSheet) ...<Widget>[
-            _row(
-              'Ficha mínima para',
-              assessment.omitSchool
-                  ? 'Solo la supervisión del MINED, por conflicto de interés.'
-                  : 'La dirección del centro y la supervisión del MINED.',
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: CureandoTheme.blueSoft,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    item.referenceCode,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  StaffTag(staffLevelLabel(assessment.level)),
+                ],
+              ),
             ),
-            _row(
-              'Contenido de la ficha',
-              '${staffCaseKind(item.situationType, item.studentRole, origin: item.origin)}\n'
-                  '${staffLevelLabel(assessment.level)}',
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFDBE6F5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const Text(
+                    'Datos de la alerta',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  _dataRow('Tipo', tipo),
+                  if (participacion.isNotEmpty)
+                    _dataRow('Participación', participacion),
+                  _dataRow('Hora', staffShortDate(item.receivedCentrallyAt)),
+                  if (assessment.urgentReferral)
+                    _dataRow('Derivación urgente', 'Se registra ahora.'),
+                ],
+              ),
             ),
-            _row('Orientación', assessment.guidanceNotes),
-            const StaffNotice(
-              'La ficha no incluye el relato, los mensajes ni las notas '
-              'internas.',
-              error: false,
+            if (assessment.issueSheet) ...<Widget>[
+              const SizedBox(height: 12),
+              const Text(
+                'Orientación para el centro',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: CureandoTheme.blueSoft,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(assessment.guidanceNotes, style: _text),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.edit_outlined,
+                      size: 20,
+                      color: CureandoTheme.blue,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Destinatarios',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                assessment.omitSchool
+                    ? 'Solo la supervisión del MINED, por conflicto de interés.'
+                    : 'La dirección del centro y la supervisión del MINED.',
+                style: _text,
+              ),
+              const SizedBox(height: 8),
+              const StaffNotice(
+                'La ficha no incluye el relato, los mensajes ni las notas '
+                'internas.',
+                error: false,
+              ),
+            ],
+            if (assessment.closeCase) ...<Widget>[
+              const SizedBox(height: 12),
+              _dataRow('Cierre en Mesa de Escucha', assessment.closedReason),
+            ],
+            const SizedBox(height: 16),
+            FilledButton(
+              style: flowPrimaryStyle(),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Confirmar y guardar'),
             ),
-            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Volver a editar'),
+            ),
           ],
-          if (assessment.closeCase)
-            _row('Cierre en Mesa de Escucha', assessment.closedReason),
-          const SizedBox(height: 8),
-          FilledButton(
-            style: flowPrimaryStyle(),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirmar y guardar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Volver a editar'),
-          ),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Conversación humana con el estudiante (`…/caso/:id/chat`). La nota
@@ -592,9 +681,11 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
   final TextEditingController _draft = TextEditingController();
   final ScrollController _scroll = ScrollController();
   StaffCaseSummary? _case;
+  Map<String, String> _schools = const <String, String>{};
   List<CaseChatMessageView>? _messages;
   String? _error;
   bool _sending = false;
+  bool _enablingChat = false;
   bool _refreshing = false;
   int _lastMessageCount = 0;
   String? _sendError;
@@ -667,6 +758,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
         widget.session,
         widget.caseId,
       );
+      final Map<String, String> schools = await _backend.institutionNames();
       final List<CaseChatMessageView> messages = await _backend.messages(
         widget.caseId,
       );
@@ -674,6 +766,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
       final int previousCount = _lastMessageCount;
       setState(() {
         _case = found;
+        _schools = schools;
         _messages = messages;
         _lastMessageCount = messages.length;
         _error = found == null
@@ -719,6 +812,27 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
     });
   }
 
+  Future<void> _enableChatFromHere() async {
+    if (_enablingChat) return;
+    setState(() => _enablingChat = true);
+    try {
+      await _backend.enableChat(
+        operationId: _operations.idFor('enable-chat'),
+        caseId: widget.caseId,
+      );
+      _operations.done();
+      await _refresh();
+    } on Object catch (failure) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(staffErrorMessage(failure))));
+      }
+    } finally {
+      if (mounted) setState(() => _enablingChat = false);
+    }
+  }
+
   void _notes() {
     showModalBottomSheet<void>(
       context: context,
@@ -727,6 +841,165 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
       backgroundColor: CureandoTheme.yellowSoft,
       builder: (BuildContext sheet) =>
           _NotesSheet(backend: _backend, caseId: widget.caseId),
+    );
+  }
+
+  Widget _preChatState(StaffCaseSummary item) {
+    final String schoolName =
+        _schools[item.institutionId] ?? widget.session.active?.place ?? '';
+    final String situationOnly = staffCaseKind(
+      item.situationType,
+      item.studentRole,
+      origin: item.origin,
+    ).split(' · ').first;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFDCFCE7),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Row(
+            children: <Widget>[
+              Icon(Icons.check_circle_rounded, color: Color(0xFF15803D)),
+              SizedBox(width: 10),
+              Text(
+                'Alerta tomada',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: CureandoTheme.ink,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFDBE6F5)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: CureandoTheme.blueSoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.school_outlined,
+                  color: CureandoTheme.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      schoolName.isEmpty ? item.referenceCode : schoolName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      situationOnly,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: CureandoTheme.secondaryInk,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    StaffTag(
+                      staffLevelLabel(item.humanLevel),
+                      highlight: item.isUnassessed,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: OutlinedButton.icon(
+                style: flowSecondaryStyle(),
+                onPressed: _notes,
+                icon: const Icon(Icons.description_outlined, size: 18),
+                label: const Text('Nota interna'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                style: flowSecondaryStyle(),
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/personal/mesa/caso/${item.id}');
+                  }
+                },
+                icon: const Icon(Icons.workspace_premium_outlined, size: 18),
+                label: const Text('Valorar caso'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEAF2FE),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const Center(
+                child: Icon(
+                  Icons.extension_rounded,
+                  size: 46,
+                  color: Color(0xFF22C55E),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Chat pendiente',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: CureandoTheme.ink,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Avisale al estudiante que podés conversar.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              StaffPrimaryButton(
+                label: 'Habilitar chat',
+                busy: _enablingChat,
+                onPressed: _enableChatFromHere,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -768,34 +1041,9 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
                     controller: _scroll,
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                     children: <Widget>[
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: CureandoTheme.ink,
-                            minimumSize: const Size(48, 48),
-                            side: const BorderSide(
-                              color: CureandoTheme.blue,
-                              width: 1.5,
-                            ),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: item == null ? null : _notes,
-                          icon: const Icon(Icons.lock_outline_rounded),
-                          label: const Text('Nota interna'),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
                       if (_error != null)
                         StaffNotice(_error!)
-                      else if (messages == null)
+                      else if (messages == null || item == null)
                         const Padding(
                           padding: EdgeInsets.only(top: 24),
                           child: Center(
@@ -804,15 +1052,39 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
                             ),
                           ),
                         )
+                      else if (!item.chatAvailableNotice &&
+                          item.status != SetuCaseStatus.closed)
+                        _preChatState(item)
                       else ...<Widget>[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: CureandoTheme.ink,
+                              minimumSize: const Size(48, 48),
+                              side: const BorderSide(
+                                color: CureandoTheme.blue,
+                                width: 1.5,
+                              ),
+                              textStyle: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: _notes,
+                            icon: const Icon(Icons.lock_outline_rounded),
+                            label: const Text('Nota interna'),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
                         if (!open)
-                          StaffNotice(
-                            item?.status == SetuCaseStatus.closed
-                                ? 'El caso está cerrado. La conversación '
-                                      'queda solo para lectura.'
-                                : 'El chat todavía no está habilitado. '
-                                      'Habilitalo desde la alerta para '
-                                      'escribirle al estudiante.',
+                          const StaffNotice(
+                            'El caso está cerrado. La conversación '
+                            'queda solo para lectura.',
                             error: false,
                           )
                         else if (messages.isEmpty) ...<Widget>[
