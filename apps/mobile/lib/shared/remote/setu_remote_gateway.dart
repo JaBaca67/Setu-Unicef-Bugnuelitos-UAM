@@ -243,6 +243,20 @@ abstract interface class SetuRemoteGateway {
   });
 
   // Dirección y actuaciones del centro
+  /// Finaliza la conversación sin cerrar el expediente institucional.
+  Future<Map<String, Object?>> endCaseConversation({
+    required String clientOperationId,
+    required String caseId,
+  });
+
+  /// Borrador de la «Nota para la ficha»; solo la persona asignada.
+  Future<CaseSheetDraftView?> getCaseSheetDraft(String caseId);
+
+  Future<CaseSheetDraftView> saveCaseSheetDraft({
+    required String caseId,
+    required String guidanceDraft,
+  });
+
   Future<List<CaseActionSheetView>> listCaseActionSheets({String? caseId});
 
   Future<List<SchoolActionRecordView>> listSchoolActions(String caseId);
@@ -363,6 +377,9 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
           'p_location_text': submission.locationText,
           'p_approx_date_text': submission.approxDateText,
           'p_student_piece': submission.studentPiece?.toJson(),
+          // Sin hash se usa la variante anterior de la función, sin cupo.
+          if (submission.installationVerifierHash != null)
+            'p_installation_verifier_hash': submission.installationVerifierHash,
         },
       );
       return StudentAlertReceipt.fromJson(_requireMap(response));
@@ -738,10 +755,7 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
     try {
       await _client.rpc<Object?>(
         'revoke_staff_activation_invite',
-        params: <String, Object?>{
-          'p_invite_id': inviteId,
-          'p_reason': reason,
-        },
+        params: <String, Object?>{'p_invite_id': inviteId, 'p_reason': reason},
       );
     } catch (error) {
       throw _mapError(error);
@@ -856,7 +870,8 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
   }
 
   @override
-  Future<List<PracticanteSupervisorNoticeView>> listMySupervisorNotices() async {
+  Future<List<PracticanteSupervisorNoticeView>>
+  listMySupervisorNotices() async {
     try {
       final Object? response = await _client.rpc<Object?>(
         'list_my_supervisor_notices',
@@ -901,7 +916,8 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
             'id,institution_id,reference_code,situation_type,student_role,origin,'
             'status,human_level,involves_staff,assigned_counselor_id,'
             'chat_available_notice,urgent_referral_triggered,concurrency_version,'
-            'declared_at,received_centrally_at,closed_at,closed_reason,student_piece',
+            'declared_at,received_centrally_at,closed_at,closed_reason,'
+            'conversation_ended_at,student_piece',
           );
       if (institutionId != null) {
         query = query.eq('institution_id', institutionId);
@@ -1135,6 +1151,58 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
         },
       );
       return _requireMap(response);
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<Map<String, Object?>> endCaseConversation({
+    required String clientOperationId,
+    required String caseId,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'end_case_conversation',
+        params: <String, Object?>{
+          'p_client_operation_id': clientOperationId,
+          'p_case_id': caseId,
+        },
+      );
+      return _requireMap(response);
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<CaseSheetDraftView?> getCaseSheetDraft(String caseId) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'get_case_sheet_draft',
+        params: <String, Object?>{'p_case_id': caseId},
+      );
+      if (response == null) return null;
+      return CaseSheetDraftView.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<CaseSheetDraftView> saveCaseSheetDraft({
+    required String caseId,
+    required String guidanceDraft,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'save_case_sheet_draft',
+        params: <String, Object?>{
+          'p_case_id': caseId,
+          'p_guidance_draft': guidanceDraft,
+        },
+      );
+      return CaseSheetDraftView.fromJson(_requireMap(response));
     } catch (error) {
       throw _mapError(error);
     }

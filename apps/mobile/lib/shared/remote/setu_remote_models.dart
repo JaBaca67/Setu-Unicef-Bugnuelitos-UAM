@@ -308,6 +308,7 @@ class StudentAlertSubmission {
     this.locationText = '',
     this.approxDateText = '',
     this.studentPiece,
+    this.installationVerifierHash,
   });
 
   final String clientOperationId;
@@ -322,6 +323,10 @@ class StudentAlertSubmission {
   final String locationText;
   final String approxDateText;
   final StudentPieceSnapshot? studentPiece;
+
+  /// SHA-256 del secreto de instalación. El servidor lo usa solo para el cupo
+  /// de alertas activas por instalación; el secreto nunca sale del teléfono.
+  final String? installationVerifierHash;
 }
 
 /// Acuse devuelto por `submit_student_alert` al confirmar recepción central.
@@ -394,12 +399,18 @@ class StudentChatSessionView {
     required this.chatAvailableNotice,
     required this.messages,
     this.caseClosed = false,
+    this.conversationEnded = false,
+    this.referenceCode,
     this.studentPiece,
   });
 
   final String caseId;
   final bool chatAvailableNotice;
   final bool caseClosed;
+
+  /// Verdadero cuando la Mesa finalizó la conversación (o el caso cerró).
+  final bool conversationEnded;
+  final String? referenceCode;
   final StudentPieceSnapshot? studentPiece;
   final List<CaseChatMessageView> messages;
 
@@ -421,6 +432,10 @@ class StudentChatSessionView {
       caseId: _readString(json, 'case_id'),
       chatAvailableNotice: _readBool(json, 'chat_available_notice'),
       caseClosed: _readBool(json, 'case_closed'),
+      conversationEnded:
+          _readBool(json, 'conversation_ended') ||
+          _readBool(json, 'case_closed'),
+      referenceCode: _readNullableString(json, 'reference_code'),
       studentPiece: pieceMap == null
           ? null
           : StudentPieceSnapshot.fromJson(pieceMap),
@@ -637,6 +652,7 @@ class StaffCaseSummary {
     this.assignedCounselorId,
     this.closedAt,
     this.closedReason,
+    this.conversationEndedAt,
     this.studentPiece,
   });
 
@@ -659,7 +675,14 @@ class StaffCaseSummary {
   final DateTime receivedCentrallyAt;
   final DateTime? closedAt;
   final String? closedReason;
+
+  /// Momento en que la Mesa finalizó la conversación. No cierra el expediente.
+  final DateTime? conversationEndedAt;
   final StudentPieceSnapshot? studentPiece;
+
+  /// Conversación finalizada o caso cerrado: el chat queda solo de consulta.
+  bool get isConversationEnded =>
+      conversationEndedAt != null || status == SetuCaseStatus.closed;
 
   /// Los casos recién asignados llegan «Sin valorar» (`human_level IS NULL`).
   bool get isUnassessed => humanLevel == null;
@@ -695,9 +718,31 @@ class StaffCaseSummary {
       receivedCentrallyAt: _readDateTime(json, 'received_centrally_at'),
       closedAt: _readNullableDateTime(json, 'closed_at'),
       closedReason: _readNullableString(json, 'closed_reason'),
+      conversationEndedAt: _readNullableDateTime(json, 'conversation_ended_at'),
       studentPiece: pieceMap == null
           ? null
           : StudentPieceSnapshot.fromJson(pieceMap),
+    );
+  }
+}
+
+/// Borrador de la «Nota para la ficha», reservado a la persona asignada.
+class CaseSheetDraftView {
+  const CaseSheetDraftView({
+    required this.caseId,
+    required this.guidanceDraft,
+    this.updatedAt,
+  });
+
+  final String caseId;
+  final String guidanceDraft;
+  final DateTime? updatedAt;
+
+  factory CaseSheetDraftView.fromJson(Map<String, Object?> json) {
+    return CaseSheetDraftView(
+      caseId: _readString(json, 'case_id'),
+      guidanceDraft: _readNullableString(json, 'guidance_draft') ?? '',
+      updatedAt: _readNullableDateTime(json, 'updated_at'),
     );
   }
 }
@@ -1246,7 +1291,10 @@ class StaffSchoolScopeItem {
       externalSupportMode: ExternalCoverageMode.fromWire(
         _readNullableString(json, 'external_support_mode') ?? 'disabled',
       ),
-      externalSupportUntil: _readNullableDateTime(json, 'external_support_until'),
+      externalSupportUntil: _readNullableDateTime(
+        json,
+        'external_support_until',
+      ),
     );
   }
 }
@@ -1286,8 +1334,7 @@ class StaffProfileView {
   final List<StaffSchoolScopeItem> availableSchools;
 
   String get fullName {
-    final String joined =
-        '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    final String joined = '${firstName ?? ''} ${lastName ?? ''}'.trim();
     if (joined.isNotEmpty) return joined;
     return email;
   }
@@ -1322,21 +1369,24 @@ class StaffProfileView {
       isAvailable: _readBool(json, 'is_available', fallback: true),
       notifyNewAlerts: _readBool(json, 'notify_new_alerts', fallback: true),
       notifyNewMessages: _readBool(json, 'notify_new_messages', fallback: true),
-      memberships: List<StaffMembershipScope>.unmodifiable(<StaffMembershipScope>[
-        for (final Object? entry in _readList(json, 'memberships'))
-          if (entry is Map<dynamic, dynamic>)
-            StaffMembershipScope.fromJson(_castMap(entry)),
-      ]),
-      assignedSchools: List<StaffSchoolScopeItem>.unmodifiable(<StaffSchoolScopeItem>[
-        for (final Object? entry in _readList(json, 'assigned_schools'))
-          if (entry is Map<dynamic, dynamic>)
-            StaffSchoolScopeItem.fromJson(_castMap(entry)),
-      ]),
-      availableSchools: List<StaffSchoolScopeItem>.unmodifiable(<StaffSchoolScopeItem>[
-        for (final Object? entry in _readList(json, 'available_schools'))
-          if (entry is Map<dynamic, dynamic>)
-            StaffSchoolScopeItem.fromJson(_castMap(entry)),
-      ]),
+      memberships:
+          List<StaffMembershipScope>.unmodifiable(<StaffMembershipScope>[
+            for (final Object? entry in _readList(json, 'memberships'))
+              if (entry is Map<dynamic, dynamic>)
+                StaffMembershipScope.fromJson(_castMap(entry)),
+          ]),
+      assignedSchools:
+          List<StaffSchoolScopeItem>.unmodifiable(<StaffSchoolScopeItem>[
+            for (final Object? entry in _readList(json, 'assigned_schools'))
+              if (entry is Map<dynamic, dynamic>)
+                StaffSchoolScopeItem.fromJson(_castMap(entry)),
+          ]),
+      availableSchools:
+          List<StaffSchoolScopeItem>.unmodifiable(<StaffSchoolScopeItem>[
+            for (final Object? entry in _readList(json, 'available_schools'))
+              if (entry is Map<dynamic, dynamic>)
+                StaffSchoolScopeItem.fromJson(_castMap(entry)),
+          ]),
     );
   }
 }
@@ -1466,7 +1516,10 @@ class StaffActivationInviteView {
       requestStatus: StaffInviteRequestStatus.fromWire(
         _readNullableString(json, 'request_status') ?? 'approved',
       ),
-      requesterProgramLabel: _readNullableString(json, 'requester_program_label'),
+      requesterProgramLabel: _readNullableString(
+        json,
+        'requester_program_label',
+      ),
       supervisorUserId: _readNullableString(json, 'supervisor_user_id'),
       supervisorName: _readNullableString(json, 'supervisor_name'),
       requestedBy: _readNullableString(json, 'requested_by'),
@@ -1577,7 +1630,9 @@ class DeclinedDispatchRecord {
       caseId: _readString(json, 'case_id'),
       institutionId: _readString(json, 'institution_id'),
       counselorUserId: _readString(json, 'counselor_user_id'),
-      dispatchTier: CaseDispatchTier.fromWire(_readString(json, 'dispatch_tier')),
+      dispatchTier: CaseDispatchTier.fromWire(
+        _readString(json, 'dispatch_tier'),
+      ),
       dispatchStatus: CaseDispatchStatus.fromWire(
         _readString(json, 'dispatch_status'),
       ),
@@ -1615,16 +1670,18 @@ class CounselorDispatchCasesResult {
 
   factory CounselorDispatchCasesResult.fromJson(Map<String, Object?> json) {
     return CounselorDispatchCasesResult(
-      pendingDispatches: List<CaseDispatchRecord>.unmodifiable(<CaseDispatchRecord>[
-        for (final Object? entry in _readList(json, 'pending_dispatches'))
-          if (entry is Map<dynamic, dynamic>)
-            CaseDispatchRecord.fromJson(_castMap(entry)),
-      ]),
-      declinedDispatches: List<DeclinedDispatchRecord>.unmodifiable(<DeclinedDispatchRecord>[
-        for (final Object? entry in _readList(json, 'declined_dispatches'))
-          if (entry is Map<dynamic, dynamic>)
-            DeclinedDispatchRecord.fromJson(_castMap(entry)),
-      ]),
+      pendingDispatches:
+          List<CaseDispatchRecord>.unmodifiable(<CaseDispatchRecord>[
+            for (final Object? entry in _readList(json, 'pending_dispatches'))
+              if (entry is Map<dynamic, dynamic>)
+                CaseDispatchRecord.fromJson(_castMap(entry)),
+          ]),
+      declinedDispatches:
+          List<DeclinedDispatchRecord>.unmodifiable(<DeclinedDispatchRecord>[
+            for (final Object? entry in _readList(json, 'declined_dispatches'))
+              if (entry is Map<dynamic, dynamic>)
+                DeclinedDispatchRecord.fromJson(_castMap(entry)),
+          ]),
     );
   }
 }
@@ -1734,8 +1791,7 @@ class ExternalCounselorAssignmentView {
   final List<String> assignedInstitutionIds;
 
   String get displayName {
-    final String joined =
-        '${firstName ?? ''} ${lastName ?? ''}'.trim();
+    final String joined = '${firstName ?? ''} ${lastName ?? ''}'.trim();
     return joined.isEmpty ? email : joined;
   }
 
@@ -1767,16 +1823,20 @@ class SchoolCoverageAndAssignmentsView {
 
   factory SchoolCoverageAndAssignmentsView.fromJson(Map<String, Object?> json) {
     return SchoolCoverageAndAssignmentsView(
-      schools: List<SchoolCoverageStatusView>.unmodifiable(<SchoolCoverageStatusView>[
-        for (final Object? entry in _readList(json, 'schools'))
-          if (entry is Map<dynamic, dynamic>)
-            SchoolCoverageStatusView.fromJson(_castMap(entry)),
-      ]),
-      externalCounselors: List<ExternalCounselorAssignmentView>.unmodifiable(<ExternalCounselorAssignmentView>[
-        for (final Object? entry in _readList(json, 'external_counselors'))
-          if (entry is Map<dynamic, dynamic>)
-            ExternalCounselorAssignmentView.fromJson(_castMap(entry)),
-      ]),
+      schools: List<SchoolCoverageStatusView>.unmodifiable(
+        <SchoolCoverageStatusView>[
+          for (final Object? entry in _readList(json, 'schools'))
+            if (entry is Map<dynamic, dynamic>)
+              SchoolCoverageStatusView.fromJson(_castMap(entry)),
+        ],
+      ),
+      externalCounselors: List<ExternalCounselorAssignmentView>.unmodifiable(
+        <ExternalCounselorAssignmentView>[
+          for (final Object? entry in _readList(json, 'external_counselors'))
+            if (entry is Map<dynamic, dynamic>)
+              ExternalCounselorAssignmentView.fromJson(_castMap(entry)),
+        ],
+      ),
     );
   }
 }
