@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/svg_path_parser.dart';
+import 'piece_name_catalog.dart';
+
+export 'piece_name_catalog.dart';
 
 /// Formas de pieza disponibles. Son dibujos de la marca: no usan fotos,
 /// nombres ni datos de la persona.
@@ -38,12 +41,21 @@ enum PieceColor {
 }
 
 enum PieceAccessory {
-  cap('Gorra'),
-  glasses('Lentes'),
-  bowTie('Corbatín');
+  cap('Gorra', 'Gorra amarilla', 'la gorra', Rect.fromLTRB(28, 0, 92, 34)),
+  glasses('Lentes', 'Lentes azules', 'los lentes', Rect.fromLTRB(24, 38, 76, 62)),
+  bowTie('Corbatín', 'Corbatín rosado', 'el corbatín', Rect.fromLTRB(36, 62, 64, 80));
 
-  const PieceAccessory(this.label);
+  const PieceAccessory(this.label, this.fullLabel, this.article, this.bounds);
   final String label;
+
+  /// Nombre con su color, para «Lo que lleva».
+  final String fullLabel;
+
+  /// Nombre con artículo, para el aviso «Tu pieza se puso la gorra».
+  final String article;
+
+  /// Zona del lienzo de la pieza (100×124) que ocupa el accesorio.
+  final Rect bounds;
 }
 
 @immutable
@@ -52,28 +64,19 @@ class StudentPiece {
     required this.shape,
     required this.color,
     this.accessories = const <PieceAccessory>{},
-    this.nickname = defaultNickname,
+    this.name = PieceName.initial,
   });
-
-  static const String defaultNickname = 'Pulgin Valiente';
-  static const int maxNickname = 24;
 
   final PieceShape shape;
   final PieceColor color;
   final Set<PieceAccessory> accessories;
 
-  /// Apodo de la pieza. Es un nombre de juego: nunca el nombre real.
-  final String nickname;
+  /// Nombre de juego del catálogo aprobado; null mientras el estudiante no
+  /// elija uno válido (por ejemplo, tras migrar un apodo libre anterior).
+  final PieceName? name;
 
-  /// Apodo listo para guardar: sin espacios sobrantes, con tope de largo y
-  /// con el apodo por defecto si queda vacío.
-  static String cleanNickname(String? raw) {
-    final String clean = (raw ?? '').trim().replaceAll(RegExp(r'\s+'), ' ');
-    if (clean.isEmpty) return defaultNickname;
-    return clean.length > maxNickname
-        ? clean.substring(0, maxNickname).trim()
-        : clean;
-  }
+  /// Texto del nombre de juego; null si todavía no hay uno válido.
+  String? get displayName => name?.displayName;
 
   static const StudentPiece initial = StudentPiece(
     shape: PieceShape.puzzle,
@@ -81,12 +84,10 @@ class StudentPiece {
     accessories: <PieceAccessory>{PieceAccessory.cap, PieceAccessory.glasses},
   );
 
-  /// Pieza al azar; conserva el apodo que se le pase.
-  factory StudentPiece.random(
-    math.Random random, {
-    String nickname = defaultNickname,
-  }) => StudentPiece(
-    nickname: nickname,
+  /// Apariencia al azar; conserva el nombre que se le pase.
+  factory StudentPiece.random(math.Random random, {PieceName? name}) =>
+      StudentPiece(
+    name: name,
     shape: PieceShape.values[random.nextInt(PieceShape.values.length)],
     color: PieceColor.values[random.nextInt(PieceColor.values.length)],
     accessories: <PieceAccessory>{
@@ -105,10 +106,11 @@ class StudentPiece {
     return '$base con $extras';
   }
 
-  /// Forma serializable que viaja con la alerta. Lleva el apodo de la
-  /// pieza (`displayName`); nunca nombres reales ni fotos.
+  /// Forma serializable que se guarda en el teléfono y viaja con la alerta.
+  /// Lleva el nombre de juego (`displayName`) solo si pertenece al catálogo;
+  /// nunca nombres reales, fotos, racha, XP ni nivel.
   Map<String, Object?> toJson() => <String, Object?>{
-    'displayName': nickname,
+    if (displayName != null) 'displayName': displayName,
     'shape': shape.name,
     'color': color.name,
     'accessories': <String>[
@@ -118,7 +120,8 @@ class StudentPiece {
   };
 
   /// Reconstruye la pieza recibida; null si falta la forma o el color, o si
-  /// no son valores conocidos.
+  /// no son valores conocidos. Un `displayName` fuera del catálogo deja la
+  /// pieza sin nombre de juego y conserva su apariencia.
   static StudentPiece? tryParse({
     String? shape,
     String? color,
@@ -139,7 +142,7 @@ class StudentPiece {
         for (final PieceAccessory accessory in PieceAccessory.values)
           if (accessories.contains(accessory.name)) accessory,
       },
-      nickname: cleanNickname(displayName),
+      name: PieceName.match(displayName),
     );
   }
 
@@ -147,13 +150,22 @@ class StudentPiece {
     PieceShape? shape,
     PieceColor? color,
     Set<PieceAccessory>? accessories,
-    String? nickname,
+    PieceName? name,
+    bool clearName = false,
   }) => StudentPiece(
     shape: shape ?? this.shape,
     color: color ?? this.color,
     accessories: accessories ?? this.accessories,
-    nickname: nickname ?? this.nickname,
+    name: clearName ? null : (name ?? this.name),
   );
+
+  /// Misma apariencia y mismo nombre.
+  bool sameAs(StudentPiece other) =>
+      other.shape == shape &&
+      other.color == color &&
+      other.name == name &&
+      other.accessories.length == accessories.length &&
+      other.accessories.containsAll(accessories);
 
   StudentPiece toggle(PieceAccessory accessory) => copyWith(
     accessories: accessories.contains(accessory)
@@ -419,64 +431,10 @@ class _PiecePainter extends CustomPainter {
       }
     }
 
-    if (piece.accessories.contains(PieceAccessory.glasses)) {
-      final Paint frame = Paint()
-        ..color = CureandoTheme.blue
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.6
-        ..strokeCap = StrokeCap.round;
-      canvas.drawCircle(const Offset(41.5, 50), 9, frame);
-      canvas.drawCircle(const Offset(58.5, 50), 9, frame);
-      canvas.drawLine(const Offset(26, 49), const Offset(32.5, 49.5), frame);
-      canvas.drawLine(const Offset(67.5, 49.5), const Offset(74, 49), frame);
-    }
-
-    if (piece.accessories.contains(PieceAccessory.bowTie)) {
-      final Paint pink = Paint()..color = CureandoTheme.pink;
-      final Path bow = Path()
-        ..moveTo(50, 71)
-        ..lineTo(40, 65.5)
-        ..lineTo(40, 76.5)
-        ..close()
-        ..moveTo(50, 71)
-        ..lineTo(60, 65.5)
-        ..lineTo(60, 76.5)
-        ..close();
-      canvas.drawPath(
-        bow,
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
-          ..strokeJoin = StrokeJoin.round,
-      );
-      canvas.drawPath(bow, pink);
-      canvas.drawCircle(const Offset(50, 71), 2.8, pink);
-    }
-
-    if (piece.accessories.contains(PieceAccessory.cap)) {
-      final Path dome = Path()
-        ..moveTo(33, 27)
-        ..cubicTo(32, 4, 68, 2, 70, 24)
-        ..close();
-      final Path visor = Path()
-        ..moveTo(52, 22)
-        ..cubicTo(64, 14, 86, 20, 88, 28)
-        ..cubicTo(80, 33, 62, 31, 52, 26)
-        ..close();
-      final Path cap = _union(_union(dome, visor), _circle(51, 6, 2.6));
-      canvas.drawPath(cap, outline..strokeWidth = 5);
-      canvas.drawPath(cap, Paint()..color = CureandoTheme.yellow);
-      canvas.drawPath(
-        Path()
-          ..moveTo(54, 25)
-          ..cubicTo(64, 30, 80, 32, 88, 28),
-        Paint()
-          ..color = const Color(0xFFE0B400)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..strokeCap = StrokeCap.round,
-      );
+    for (final PieceAccessory accessory in PieceAccessory.values) {
+      if (piece.accessories.contains(accessory)) {
+        paintAccessory(canvas, accessory);
+      }
     }
 
     if (sparks) {
@@ -491,6 +449,73 @@ class _PiecePainter extends CustomPainter {
     canvas.restore();
   }
 
+  /// Dibuja un accesorio en coordenadas del lienzo de la pieza (100×124).
+  static void paintAccessory(Canvas canvas, PieceAccessory accessory) {
+    switch (accessory) {
+      case PieceAccessory.glasses:
+        final Paint frame = Paint()
+          ..color = CureandoTheme.blue
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.6
+          ..strokeCap = StrokeCap.round;
+        canvas.drawCircle(const Offset(41.5, 50), 9, frame);
+        canvas.drawCircle(const Offset(58.5, 50), 9, frame);
+        canvas.drawLine(const Offset(26, 49), const Offset(32.5, 49.5), frame);
+        canvas.drawLine(const Offset(67.5, 49.5), const Offset(74, 49), frame);
+      case PieceAccessory.bowTie:
+        final Paint pink = Paint()..color = CureandoTheme.pink;
+        final Path bow = Path()
+          ..moveTo(50, 71)
+          ..lineTo(40, 65.5)
+          ..lineTo(40, 76.5)
+          ..close()
+          ..moveTo(50, 71)
+          ..lineTo(60, 65.5)
+          ..lineTo(60, 76.5)
+          ..close();
+        canvas.drawPath(
+          bow,
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3
+            ..strokeJoin = StrokeJoin.round,
+        );
+        canvas.drawPath(bow, pink);
+        canvas.drawCircle(const Offset(50, 71), 2.8, pink);
+      case PieceAccessory.cap:
+        final Path dome = Path()
+          ..moveTo(33, 27)
+          ..cubicTo(32, 4, 68, 2, 70, 24)
+          ..close();
+        final Path visor = Path()
+          ..moveTo(52, 22)
+          ..cubicTo(64, 14, 86, 20, 88, 28)
+          ..cubicTo(80, 33, 62, 31, 52, 26)
+          ..close();
+        final Path cap = _union(_union(dome, visor), _circle(51, 6, 2.6));
+        canvas.drawPath(
+          cap,
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 5
+            ..strokeJoin = StrokeJoin.round,
+        );
+        canvas.drawPath(cap, Paint()..color = CureandoTheme.yellow);
+        canvas.drawPath(
+          Path()
+            ..moveTo(54, 25)
+            ..cubicTo(64, 30, 80, 32, 88, 28),
+          Paint()
+            ..color = const Color(0xFFE0B400)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..strokeCap = StrokeCap.round,
+        );
+    }
+  }
+
   @override
   bool shouldRepaint(_PiecePainter old) =>
       old.piece.shape != piece.shape ||
@@ -501,6 +526,98 @@ class _PiecePainter extends CustomPainter {
       old.legs != legs ||
       old.piece.accessories.length != piece.accessories.length ||
       !old.piece.accessories.containsAll(piece.accessories);
+}
+
+/// Contorno de pieza de rompecabezas, motivo decorativo de la marca.
+class PuzzleOutline extends StatelessWidget {
+  const PuzzleOutline({
+    super.key,
+    this.size = 64,
+    this.color = const Color(0xFF8FBCF2),
+  });
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _OutlinePainter(color)),
+    ),
+  );
+}
+
+class _OutlinePainter extends CustomPainter {
+  const _OutlinePainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Path path = _PiecePainter._svgPuzzleBody;
+    final Rect bounds = path.getBounds();
+    final double k = math.min(
+      (size.width - 4) / bounds.width,
+      (size.height - 4) / bounds.height,
+    );
+    canvas.save();
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.scale(k);
+    canvas.translate(-bounds.center.dx, -bounds.center.dy);
+    canvas.drawPath(path, Paint()..color = color.withValues(alpha: .18));
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6 / k
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_OutlinePainter old) => old.color != color;
+}
+
+/// Ilustración de un accesorio suelto, para «Lo que lleva».
+class AccessoryFigure extends StatelessWidget {
+  const AccessoryFigure({super.key, required this.accessory, this.width = 96});
+
+  final PieceAccessory accessory;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final Rect bounds = accessory.bounds;
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: width,
+        height: width * bounds.height / bounds.width,
+        child: CustomPaint(painter: _AccessoryPainter(accessory)),
+      ),
+    );
+  }
+}
+
+class _AccessoryPainter extends CustomPainter {
+  const _AccessoryPainter(this.accessory);
+  final PieceAccessory accessory;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Rect bounds = accessory.bounds;
+    final double k = size.width / bounds.width;
+    canvas.save();
+    canvas.scale(k);
+    canvas.translate(-bounds.left, -bounds.top);
+    _PiecePainter.paintAccessory(canvas, accessory);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_AccessoryPainter old) => old.accessory != accessory;
 }
 
 /// Línea ondulada punteada, motivo decorativo de la campaña.

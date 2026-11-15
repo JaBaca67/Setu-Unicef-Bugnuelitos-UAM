@@ -42,7 +42,7 @@ class RemoteSupportBackend implements SupportBackend {
         narrativeText: alert.details.isEmpty ? null : alert.details,
         studentPiece: alert.piece == null
             ? null
-            : StudentPieceSnapshot.fromJson(alert.piece!.toJson()),
+            : StudentPieceSnapshot.fromJson(alert.piece!),
       ),
     );
     return receipt.caseId;

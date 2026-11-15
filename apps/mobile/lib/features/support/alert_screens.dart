@@ -35,8 +35,8 @@ class PieceHeaderButton extends StatelessWidget {
       child: Semantics(
         button: true,
         label:
-            'Tu pieza ${value.nickname}: ${value.description}. Tocá para '
-            'abrir tu perfil.',
+            '${value.displayName == null ? 'Tu pieza' : 'Tu pieza ${value.displayName}'}'
+            ': ${value.description}. Tocá para abrir tu perfil.',
         child: Material(
           color: Colors.transparent,
           shape: const CircleBorder(),

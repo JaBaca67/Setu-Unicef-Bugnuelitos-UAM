@@ -105,7 +105,7 @@ const List<ConfirmedSchool> localSchoolCatalog = <ConfirmedSchool>[
 typedef SchoolResolver = Future<ConfirmedSchool?> Function(String publicCode);
 
 /// Sesión estudiantil guardada en el teléfono: el colegio confirmado y la
-/// pieza con su apodo. No hay cuenta, nombre real, correo ni foto.
+/// pieza con su nombre de juego. No hay cuenta, nombre real, correo ni foto.
 class StudentSession extends ChangeNotifier {
   StudentSession({
     Future<LocalStorePersistence> Function()? openStore,
@@ -148,6 +148,7 @@ class StudentSession extends ChangeNotifier {
   Future<void> open() => _opened ? Future<void>.value() : _opening ??= _load();
 
   Future<void> _load() async {
+    bool legacyNickname = false;
     try {
       final LocalStorePersistence store =
           await Future<LocalStorePersistence>.sync(_openStore);
@@ -172,11 +173,16 @@ class StudentSession extends ChangeNotifier {
             _loadingPiece = true;
             piece.value = parsed;
             _loadingPiece = false;
+            // Un apodo libre anterior (fuera del catálogo) se descarta del
+            // almacén: podría ser un nombre real. La apariencia se conserva.
+            if (saved['displayName'] != null && parsed.name == null) {
+              legacyNickname = true;
+            }
           }
         }
       }
       _store = store;
-      if (_schoolTouched || _pieceTouched) _save();
+      if (_schoolTouched || _pieceTouched || legacyNickname) _save();
     } on Object {
       // Sin almacén la sesión vive solo mientras la app está abierta.
     } finally {

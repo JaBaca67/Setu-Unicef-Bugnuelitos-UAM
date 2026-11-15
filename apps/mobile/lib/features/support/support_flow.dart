@@ -268,10 +268,7 @@ class SupportFlow extends ChangeNotifier {
     if (_delivering || alert == null || delivery == null) return;
     _delivering = true;
     try {
-      final Map<Object?, Object?>? piece =
-          delivery['piece'] as Map<Object?, Object?>?;
-      final List<Object?> accessories =
-          (piece?['accessories'] as List<Object?>?) ?? const <Object?>[];
+      final Object? piece = delivery['piece'];
       final String caseId = await backend.submitAlert(
         AlertOutbox(
           operationId: delivery['operationId']! as String,
@@ -283,12 +280,10 @@ class SupportFlow extends ChangeNotifier {
           details: alert['details'] as String? ?? '',
           verifierHash: delivery['verifierHash']! as String,
           declaredAt: DateTime.parse(delivery['declaredAt']! as String),
-          piece: StudentPiece.tryParse(
-            shape: piece?['shape'] as String?,
-            color: piece?['color'] as String?,
-            accessories: accessories.whereType<String>(),
-            displayName: piece?['displayName'] as String?,
-          ),
+          // La pieza viaja tal como se guardó al enviar la alerta.
+          piece: piece is Map<Object?, Object?>
+              ? piece.cast<String, Object?>()
+              : null,
         ),
       );
       // Si mientras tanto se envió otra alerta, este acuse ya no aplica.

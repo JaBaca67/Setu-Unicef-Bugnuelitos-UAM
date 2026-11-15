@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../shared/models/cureando_models.dart';
-import '../piece/student_piece.dart';
 import 'support_flow.dart';
 
 /// Alerta lista para entregar. El secreto de capacidad nunca viaja: solo su
@@ -28,7 +27,10 @@ class AlertOutbox {
   final String details;
   final String verifierHash;
   final DateTime declaredAt;
-  final StudentPiece? piece;
+
+  /// Pieza tal como quedó guardada al enviar la alerta (`StudentPiece.toJson`).
+  /// Se reenvía sin reinterpretar, para no alterar alertas ya enviadas.
+  final Map<String, Object?>? piece;
 }
 
 @immutable
