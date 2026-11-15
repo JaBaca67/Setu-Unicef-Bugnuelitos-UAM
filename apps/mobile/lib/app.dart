@@ -28,6 +28,7 @@ import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
 import 'shared/platform/screen_security_controller.dart';
+import 'shared/remote/push_notification_service.dart';
 import 'shared/remote/setu_remote_models.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/setu_brand_mark.dart';
@@ -458,6 +459,18 @@ class _CureandoAppState extends State<CureandoApp> {
     );
     _session.addListener(_syncSchool);
     _syncSchool();
+    _staff.addListener(_syncPush);
+    _support.addListener(_syncPush);
+    PushNotificationService.instance.setListeners(
+      onForegroundEvent: () {
+        _support.refreshChat();
+        if (_staff.memberships.isNotEmpty) {
+          _staff.refresh();
+        }
+      },
+      onTokenChanged: _syncPush,
+    );
+    _syncPush();
     // Al abrir, cada sesión guardada se restaura y la guía de rutas lleva a
     // su superficie: el colegio del estudiante o el ámbito del personal.
     _session.open();
@@ -476,6 +489,17 @@ class _CureandoAppState extends State<CureandoApp> {
   void _syncSchool() {
     final String? code = _session.school?.publicCode;
     if (code != null) _support.schoolCode = code;
+  }
+
+  void _syncPush() {
+    PushNotificationService.instance.syncStaff(
+      hasActiveSession: _staff.memberships.isNotEmpty,
+    );
+    PushNotificationService.instance.syncStudentCase(
+      caseId: _support.activeCaseId,
+      capabilityToken: _support.activeCapabilityToken,
+      active: _support.activeCaseId != null,
+    );
   }
 
   void _refresh() {
@@ -509,6 +533,9 @@ class _CureandoAppState extends State<CureandoApp> {
     if (widget.learningProgress == null) _learning.dispose();
     if (widget.supportFlow == null) _support.dispose();
     _session.removeListener(_syncSchool);
+    _staff.removeListener(_syncPush);
+    _support.removeListener(_syncPush);
+    PushNotificationService.instance.setListeners();
     if (widget.studentSession == null) _session.dispose();
     if (widget.showM1Verification) {
       _security.removeListener(_refresh);

@@ -98,6 +98,26 @@ abstract interface class SetuRemoteGateway {
 
   Future<void> signOutStaff();
 
+  Future<void> registerStaffPushToken({
+    required String fcmToken,
+    String platform = 'android',
+  });
+
+  Future<void> unregisterStaffPushToken({required String fcmToken});
+
+  Future<void> registerStudentPushToken({
+    required String caseId,
+    required String capabilityToken,
+    required String fcmToken,
+    String platform = 'android',
+  });
+
+  Future<void> unregisterStudentPushToken({
+    required String caseId,
+    required String capabilityToken,
+    required String fcmToken,
+  });
+
   Future<StaffActivationRedemption> redeemStaffActivationCode(
     String activationCode,
   );
@@ -571,6 +591,78 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
   Future<void> signOutStaff() async {
     try {
       await _client.auth.signOut();
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> registerStaffPushToken({
+    required String fcmToken,
+    String platform = 'android',
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'register_staff_push_token',
+        params: <String, Object?>{
+          'p_fcm_token': fcmToken,
+          'p_platform': platform,
+        },
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> unregisterStaffPushToken({required String fcmToken}) async {
+    try {
+      await _client.rpc<Object?>(
+        'unregister_staff_push_token',
+        params: <String, Object?>{'p_fcm_token': fcmToken},
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> registerStudentPushToken({
+    required String caseId,
+    required String capabilityToken,
+    required String fcmToken,
+    String platform = 'android',
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'register_student_push_token',
+        params: <String, Object?>{
+          'p_case_id': caseId,
+          'p_capability_token': capabilityToken,
+          'p_fcm_token': fcmToken,
+          'p_platform': platform,
+        },
+      );
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<void> unregisterStudentPushToken({
+    required String caseId,
+    required String capabilityToken,
+    required String fcmToken,
+  }) async {
+    try {
+      await _client.rpc<Object?>(
+        'unregister_student_push_token',
+        params: <String, Object?>{
+          'p_case_id': caseId,
+          'p_capability_token': capabilityToken,
+          'p_fcm_token': fcmToken,
+        },
+      );
     } catch (error) {
       throw _mapError(error);
     }

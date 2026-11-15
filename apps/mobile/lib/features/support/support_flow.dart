@@ -131,6 +131,15 @@ class SupportFlow extends ChangeNotifier {
 
   String? get _caseId => _case?['caseId'] as String?;
 
+  /// Identificador y token del caso activo recibido, usados para registrar push.
+  String? get activeCaseId =>
+      _delivery == AlertDelivery.received && !_caseClosed ? _caseId : null;
+
+  String? get activeCapabilityToken {
+    if (_delivery != AlertDelivery.received || _caseClosed) return null;
+    return _case?['token'] as String?;
+  }
+
   Future<void> open() =>
       _store != null ? Future<void>.value() : _opening ??= _load();
 

@@ -9,6 +9,7 @@ import 'features/staff/staff_backend.dart';
 import 'features/school_access/student_session.dart';
 import 'features/support/remote_support_backend.dart';
 import 'features/support/support_flow.dart';
+import 'shared/remote/push_notification_service.dart';
 import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/remote/setu_remote_models.dart';
 import 'shared/theme/app_theme.dart';
@@ -29,6 +30,7 @@ Future<void> main() async {
   try {
     final SetuRemoteGateway gateway =
         await SupabaseSetuRemoteGateway.initialize();
+    await PushNotificationService.instance.initialize(gateway: gateway);
     staff = RemoteStaffBackend(gateway);
     // El código del colegio se valida en la plataforma; sin red, la sesión
     // usa su catálogo local de respaldo.
