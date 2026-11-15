@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const ValueKey<String> _captureKey = ValueKey<String>('staff-capture');
-const String _desk = 'escucha.demo@setu.test';
+const String _desk = 'escucha.demo@example.org';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -62,7 +62,7 @@ void main() {
   ) async {
     final DemoStaffBackend backend = await signIn(
       tester,
-      'mined.demo@setu.test',
+      'mined.demo@example.org',
     );
     expect(find.text('Alertas recibidas'), findsOneWidget);
     expect(find.text('DEMO-021'), findsOneWidget);
@@ -146,7 +146,7 @@ void main() {
   ) async {
     await signIn(
       tester,
-      'mined.demo@setu.test',
+      'mined.demo@example.org',
       size: const Size(320, 568),
       textScale: 2,
     );
@@ -160,6 +160,30 @@ void main() {
     await _tap(tester, 'Ingresar');
     await _tap(tester, 'Colegio de prueba A');
     expect(find.text('Mis casos'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('MINED administra invitaciones de personal y cobertura externa', (
+    WidgetTester tester,
+  ) async {
+    await signIn(tester, 'mined.demo@example.org');
+    await _tap(tester, 'Invitaciones de personal');
+    expect(find.text('Invitaciones de personal'), findsWidgets);
+    expect(find.text('Emitir invitación'), findsOneWidget);
+    await _tap(tester, 'Emitir invitación');
+    await _type(tester, 'Correo institucional', 'nueva.externa@example.org');
+    await _tap(tester, 'Emitir código');
+    expect(find.text('Código de activación emitido'), findsOneWidget);
+    await _tap(tester, 'Listo');
+    await tester.tap(find.byTooltip('Cerrar'));
+    await tester.pumpAndSettle();
+
+    await _tap(tester, 'Cobertura externa');
+    expect(find.text('Cobertura de Red externa'), findsOneWidget);
+    expect(find.text('Colegios asignados'), findsOneWidget);
+    expect(find.text('Colegios disponibles'), findsOneWidget);
+    await tester.tap(find.byTooltip('Cerrar'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 }

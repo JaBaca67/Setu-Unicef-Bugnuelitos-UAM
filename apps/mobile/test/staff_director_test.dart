@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const ValueKey<String> _captureKey = ValueKey<String>('staff-capture');
-const String _director = 'direccion.cca@setu.test';
+const String _director = 'direccion.cca@example.org';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -183,7 +183,7 @@ void main() {
         backend.recordSchoolAction(operationId: operation, action: action);
 
     await backend.signIn(
-      email: 'mined.demo@setu.test',
+      email: 'mined.demo@example.org',
       password: DemoStaffBackend.demoPassword,
     );
     await expectLater(
@@ -243,6 +243,25 @@ void main() {
         ),
       ),
     );
+  });
+
+  testWidgets('Dirección configura cobertura externa y solicita alta de planta', (
+    WidgetTester tester,
+  ) async {
+    await openDirector(tester);
+    expect(find.text('Cobertura de Red externa'), findsOneWidget);
+    await _tap(tester, 'Configurar');
+    expect(find.text('Apoyo externo desactivado'), findsOneWidget);
+    expect(find.text('Apoyo temporal hasta fecha y hora'), findsOneWidget);
+    await _tap(tester, 'Apoyo externo desactivado');
+    await _tap(tester, 'Guardar cobertura');
+    expect(find.text('Apoyo externo desactivado'), findsOneWidget);
+
+    await _tap(tester, 'Solicitar invitación de planta');
+    expect(find.text('Solicitar invitación de planta'), findsWidgets);
+    await _type(tester, 'Correo institucional', 'planta.nueva@example.org');
+    await _tap(tester, 'Enviar solicitud a MINED');
+    expect(tester.takeException(), isNull);
   });
 }
 

@@ -88,7 +88,7 @@ void main() {
       findsOneWidget,
     );
 
-    await _type(tester, 'Correo institucional', 'direccion.cca@setu.test');
+    await _type(tester, 'Correo institucional', 'direccion.cca@example.org');
     await _type(tester, 'Contraseña', 'otra-clave');
     expect(_password(tester).obscureText, isTrue);
     await tester.tap(find.byTooltip('Mostrar contraseña'));
@@ -128,7 +128,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
 
-    await signIn(tester, 'escucha.demo@setu.test');
+    await signIn(tester, 'escucha.demo@example.org');
     expect(find.text('¿Dónde vas a trabajar?'), findsOneWidget);
     expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
     await _capture(tester, 'p04-ambito');
@@ -152,38 +152,20 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el primer ingreso valida el código, el correo y el canje', (
+  testWidgets('el alta exige confirmar correo antes del código y nombre', (
     WidgetTester tester,
   ) async {
     final DemoStaffBackend backend = await open(tester);
     await _tap(tester, 'Activar mi cuenta');
-    expect(find.text('Confirmá tu acceso'), findsOneWidget);
+    expect(find.text('Creá tu cuenta'), findsOneWidget);
+
     await _tap(tester, 'Necesito ayuda con mi acceso');
-    expect(find.text('Ayuda con tu acceso'), findsOneWidget);
-    await _tap(tester, 'Cerrar');
+    expect(find.text('Elegí qué pasó con tu acceso para resolverlo sin compartir códigos ni datos por canales grupales:'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('Creá tu cuenta'), findsOneWidget);
 
-    await _tap(tester, 'Validar código');
-    expect(find.text('Escribí el código de activación.'), findsOneWidget);
-    await _type(tester, 'Código de activación', 'NO-EXISTE');
-    await _tap(tester, 'Validar código');
-    expect(find.textContaining('No reconocemos ese código'), findsOneWidget);
-    await _type(tester, 'Código de activación', 'CCA-EXP-2026');
-    await _tap(tester, 'Validar código');
-    expect(find.textContaining('ya venció'), findsOneWidget);
-    await _type(tester, 'Código de activación', 'CCA-REV-2026');
-    await _tap(tester, 'Validar código');
-    expect(find.textContaining('fue anulado'), findsOneWidget);
-
-    await _type(tester, 'Código de activación', 'cca-dir-2026');
-    await _tap(tester, 'Validar código');
-    expect(find.text('Colegio asignado'), findsOneWidget);
-    expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
-    expect(find.text('Dirección del centro'), findsOneWidget);
-    await _capture(tester, 'p03-activacion');
-    await _tap(tester, 'Confirmar acceso');
-
-    expect(find.text('Creá tu contraseña'), findsOneWidget);
-    await _type(tester, 'Correo institucional', 'otra@setu.test');
+    await _type(tester, 'Correo institucional', 'invitada.cca@example.org');
     await _type(tester, 'Contraseña nueva', 'corta');
     await _tap(tester, 'Crear mi cuenta');
     expect(find.textContaining('al menos 8 caracteres'), findsOneWidget);
@@ -193,25 +175,89 @@ void main() {
     expect(find.text('Las dos contraseñas no coinciden.'), findsOneWidget);
     await _type(tester, 'Repetí la contraseña', 'Clave-Ficticia-1');
     await _tap(tester, 'Crear mi cuenta');
-    expect(find.textContaining('otro correo institucional'), findsOneWidget);
-
-    await _type(tester, 'Correo institucional', 'invitada.cca@setu.test');
-    await _tap(tester, 'Crear mi cuenta');
     expect(find.text('Revisá tu correo institucional'), findsOneWidget);
+
+    await _tap(tester, 'Reenviar enlace de confirmación');
+    expect(find.textContaining('reenviamos el enlace'), findsOneWidget);
+
     await _tap(tester, 'Ya confirmé mi correo');
     expect(
       find.textContaining('Todavía no vemos tu correo confirmado'),
       findsOneWidget,
     );
 
-    backend.confirmEmail('invitada.cca@setu.test');
+    // Cuenta confirmada pero aún sin membresía activa permanece bloqueada.
+    backend.confirmEmail('invitada.cca@example.org');
     await _tap(tester, 'Ya confirmé mi correo');
+    expect(find.text('Código y datos personales'), findsOneWidget);
+    final GoRouter router = GoRouter.of(
+      tester.element(find.byType(StaffActivationScreen)),
+    );
+    router.go('/personal/direccion');
+    await tester.pumpAndSettle();
+    expect(find.text('Código y datos personales'), findsOneWidget);
+
+    await _tap(tester, 'Validar código');
+    expect(find.textContaining('Escribí el código de activación'), findsOneWidget);
+    await _type(tester, 'Código de activación', 'NO-EXISTE');
+    await _tap(tester, 'Validar código');
+    expect(find.textContaining('No reconocemos ese código'), findsOneWidget);
+    await _type(tester, 'Código de activación', 'CCA-EXP-2026');
+    await _tap(tester, 'Validar código');
+    expect(find.textContaining('ya venció'), findsOneWidget);
+    await _type(tester, 'Código de activación', 'CCA-REV-2026');
+    await _tap(tester, 'Validar código');
+    expect(find.textContaining('fue revocado'), findsOneWidget);
+
+    await _type(tester, 'Código de activación', 'cca-dir-2026');
+    await _tap(tester, 'Validar código');
+    expect(find.text('Colegio asignado'), findsOneWidget);
+    expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
+    expect(find.textContaining('Dirección del centro'), findsOneWidget);
+    await _capture(tester, 'p03-activacion');
+
+    await _tap(tester, 'Activar cuenta');
+    expect(
+      find.textContaining('Completá tu nombre y apellidos'),
+      findsOneWidget,
+    );
+    await _type(tester, 'Nombre', 'Lucía');
+    await _type(tester, 'Apellidos', 'Mendoza');
+    await _tap(tester, 'Activar cuenta');
     expect(find.text('Dirección del centro'), findsOneWidget);
     expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
 
     // El código es de un solo uso.
-    final preview = await backend.previewActivation('CCA-DIR-2026');
+    final preview = await backend.previewActivation('CCADIR2026');
     expect(preview.error, 'activation_code_already_used');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('perfil, disponibilidad y ayuda con acceso funcionan en vivo', (
+    WidgetTester tester,
+  ) async {
+    await open(tester);
+    await signIn(tester, 'escucha.demo@example.org');
+    await _tap(tester, 'Colegio de prueba A');
+    await tester.tap(find.byTooltip('Mi sesión'));
+    await tester.pumpAndSettle();
+    await _tap(tester, 'Mi perfil y disponibilidad');
+    expect(find.text('Mi perfil'), findsOneWidget);
+    expect(find.text('escucha.demo@example.org'), findsOneWidget);
+
+    await _tap(tester, 'Disponible para nuevas alertas');
+    expect(find.text('Disponibilidad y avisos'), findsOneWidget);
+    expect(find.text('Pantalla bloqueada'), findsOneWidget);
+    await _tap(tester, 'Recibir nuevas alertas');
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile).first).value,
+      isFalse,
+      reason: 'Switch should toggle off when tapped',
+    );
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mi perfil'), findsOneWidget);
+    expect(find.text('Pausada para nuevas alertas'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -220,7 +266,7 @@ void main() {
   ) async {
     final DemoStaffBackend backend = await open(tester);
     backend.offline = true;
-    await signIn(tester, 'mined.demo@setu.test');
+    await signIn(tester, 'mined.demo@example.org');
     expect(
       find.textContaining('Revisá tu conexión a internet'),
       findsOneWidget,
@@ -237,11 +283,9 @@ void main() {
     await open(tester, size: const Size(320, 568), textScale: 2);
     expect(tester.takeException(), isNull);
     await _tap(tester, 'Activar mi cuenta');
-    await _type(tester, 'Código de activación', 'CCA-MESA-2026');
-    await _tap(tester, 'Validar código');
-    expect(find.text('Colegio asignado'), findsOneWidget);
-    await _tap(tester, 'Confirmar acceso');
-    expect(find.text('Creá tu contraseña'), findsOneWidget);
+    expect(find.text('Creá tu cuenta'), findsOneWidget);
+    await _tap(tester, 'Necesito ayuda con mi acceso');
+    expect(find.text('Reenviar enlace de confirmación'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

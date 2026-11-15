@@ -13,7 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-const String _desk = 'escucha.demo@setu.test';
+const String _desk = 'escucha.demo@example.org';
 const String _home = '¿Qué querés hacer hoy?';
 
 class _MemoryStore implements LocalStorePersistence {
@@ -200,7 +200,7 @@ void main() {
       _useTallView(tester);
       final DemoStaffBackend backend = DemoStaffBackend();
       await backend.signIn(
-        email: 'direccion.cca@setu.test',
+        email: 'direccion.cca@example.org',
         password: DemoStaffBackend.demoPassword,
       );
       await tester.pumpWidget(_app(staff: backend));
@@ -303,15 +303,14 @@ void main() {
       WidgetTester tester,
     ) async {
       final DemoStaffBackend backend = await openDesk(tester);
-      expect(find.text('Alertas por tomar'), findsOneWidget);
-      expect(find.text('DEMO-021'), findsOneWidget);
+      expect(find.text('1 alerta por tomar'), findsOneWidget);
+      expect(find.textContaining('DEMO-021'), findsOneWidget);
       expect(find.text('Equipo de planta'), findsOneWidget);
       // Antes de tomarla no hay relato para esta persona.
       expect(await backend.narrative('demo-case-021'), isNull);
       await _tap(tester, 'Tomar alerta');
       expect(find.textContaining('Tomaste DEMO-021'), findsOneWidget);
-      expect(find.text('Alertas por tomar'), findsNothing);
-      expect(find.text('DEMO-021'), findsOneWidget);
+      expect(find.text('0 alertas por tomar'), findsOneWidget);
       expect(await backend.narrative('demo-case-021'), isNotNull);
       expect(tester.takeException(), isNull);
     });
@@ -326,8 +325,7 @@ void main() {
         find.textContaining('Otra persona de Mesa de Escucha tomó DEMO-021'),
         findsOneWidget,
       );
-      expect(find.text('Alertas por tomar'), findsNothing);
-      expect(find.text('DEMO-021'), findsNothing);
+      expect(find.text('0 alertas por tomar'), findsOneWidget);
       // El relato sigue reservado a quien ganó la toma.
       expect(await backend.narrative('demo-case-021'), isNull);
       expect(await backend.messages('demo-case-021'), isEmpty);
@@ -338,29 +336,44 @@ void main() {
       WidgetTester tester,
     ) async {
       final DemoStaffBackend backend = await openDesk(tester);
-      expect(find.text('Alertas por tomar'), findsOneWidget);
+      expect(find.text('1 alerta por tomar'), findsOneWidget);
       backend.simulateOtherClaim('demo-case-021');
       await tester.pumpAndSettle();
-      expect(find.text('Alertas por tomar'), findsNothing);
+      expect(find.text('0 alertas por tomar'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('declinar deriva a la red externa y MINED ve el historial', (
+    testWidgets('declinar deriva a la red externa y permite deshacer o recuperar', (
       WidgetTester tester,
     ) async {
       final DemoStaffBackend backend = await openDesk(tester);
       await _tap(tester, 'Declinar');
-      expect(find.text('Declinar DEMO-021'), findsOneWidget);
+      expect(find.text('¿Declinar esta alerta?'), findsOneWidget);
       await tester.enterText(
-        find.byType(TextField),
+        find.byType(TextField).last,
         'Atiendo otra conversación',
       );
-      await _tap(tester, 'Declinar alerta');
-      expect(
-        find.text('Declinaste DEMO-021. Se ofreció a la red externa.'),
-        findsOneWidget,
+      await _tap(tester, 'Confirmar declinación');
+      expect(tester.takeException(), isNull, reason: 'after first decline');
+      expect(find.text('Alerta declinada'), findsOneWidget);
+      expect(find.text('Deshacer'), findsOneWidget);
+      expect(find.text('0 alertas por tomar'), findsOneWidget);
+
+      await _tap(tester, 'Declinadas recientes');
+      expect(tester.takeException(), isNull, reason: 'after open declined');
+      expect(find.text('Declinadas recientes'), findsOneWidget);
+      expect(find.text('Disponible'), findsOneWidget);
+      await _tap(tester, 'Volver a la bandeja');
+      expect(tester.takeException(), isNull, reason: 'after recover');
+      expect(find.text('1 alerta por tomar'), findsOneWidget);
+
+      await _tap(tester, 'Declinar');
+      await tester.enterText(
+        find.byType(TextField).last,
+        'Atiendo otra conversación',
       );
-      expect(find.text('Alertas por tomar'), findsNothing);
+      await _tap(tester, 'Confirmar declinación');
+      expect(tester.takeException(), isNull, reason: 'after second decline');
 
       final List<CaseDispatchRecord> mine = await backend.dispatchHistory(
         caseId: 'demo-case-021',
@@ -373,7 +386,7 @@ void main() {
       await _signOut(tester);
       await tester.enterText(
         find.byType(TextField).at(0),
-        'mined.demo@setu.test',
+        'mined.demo@example.org',
       );
       await tester.enterText(
         find.byType(TextField).at(1),
@@ -470,9 +483,9 @@ void main() {
       await tester.pumpWidget(_app(staffStore: staffStore));
       await tester.pumpAndSettle();
 
-      await _signIn(tester, 'direccion.cca@setu.test');
+      await _signIn(tester, 'direccion.cca@example.org');
       expect(find.text('Avisos y fichas'), findsOneWidget);
-      expect(staffStore.data?['userId'], 'direccion.cca@setu.test');
+      expect(staffStore.data?['userId'], 'direccion.cca@example.org');
       expect(staffStore.data?['activeMembershipId'], isNotNull);
 
       // En la raíz del rol, Atrás no vuelve al login ni a la bienvenida.

@@ -335,7 +335,7 @@ void main() {
               'case_status': 'received',
               'assigned_counselor_id': null,
               'counselor_user_id': '00000000-0000-0000-0000-000000000105',
-              'counselor_email': 'psicologia.cca@setu.test',
+              'counselor_email': 'psicologia.cca@example.org',
               'dispatch_tier': 'school_plant',
               'dispatch_status': 'pending',
               'notified_at': '2026-11-14T03:00:00Z',

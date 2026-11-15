@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const ValueKey<String> _captureKey = ValueKey<String>('staff-capture');
-const String _desk = 'escucha.demo@setu.test';
+const String _desk = 'escucha.demo@example.org';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -251,7 +251,7 @@ void main() {
   test('quien no tiene el caso asignado no lee ni actúa sobre él', () async {
     final DemoStaffBackend backend = DemoStaffBackend();
     await backend.signIn(
-      email: 'mined.demo@setu.test',
+      email: 'mined.demo@example.org',
       password: DemoStaffBackend.demoPassword,
     );
     expect(await backend.narrative('demo-case-014'), isNull);
