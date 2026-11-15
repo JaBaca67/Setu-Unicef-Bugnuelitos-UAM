@@ -109,22 +109,23 @@ Future<SchoolProximity> checkSchoolLocation({
 }) async {
   // Referencia pública del colegio confirmado o del campus demo, nunca datos
   // de ubicación de estudiantes.
-  final double? latitude =
-      targetLat ??
-      double.tryParse(
-        const String.fromEnvironment(
-          'SETU_DEMO_LATITUDE',
-          defaultValue: '12.098062',
-        ),
-      );
-  final double? longitude =
-      targetLng ??
-      double.tryParse(
-        const String.fromEnvironment(
-          'SETU_DEMO_LONGITUDE',
-          defaultValue: '-86.2641465',
-        ),
-      );
+  final bool hasTarget = targetLat != null || targetLng != null;
+  final double? latitude = hasTarget
+      ? targetLat
+      : double.tryParse(
+          const String.fromEnvironment(
+            'SETU_DEMO_LATITUDE',
+            defaultValue: '12.098062',
+          ),
+        );
+  final double? longitude = hasTarget
+      ? targetLng
+      : double.tryParse(
+          const String.fromEnvironment(
+            'SETU_DEMO_LONGITUDE',
+            defaultValue: '-86.2641465',
+          ),
+        );
   final double resolvedRadius = radiusMeters ?? demoSchoolRadiusMeters;
   if (!resolvedRadius.isFinite ||
       resolvedRadius <= 0 ||
