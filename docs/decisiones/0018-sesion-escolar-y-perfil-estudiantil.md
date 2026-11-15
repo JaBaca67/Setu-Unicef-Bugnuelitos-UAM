@@ -18,7 +18,7 @@ El acceso escolar E02 validaba un único código en el teléfono (`AULA24`) y lo
 
 ## Consecuencias y pendientes
 
-- **El apodo es texto libre que llega a la Mesa de Escucha.** El campo pide no usar el nombre real, pero la app no puede impedirlo. Queda por validar con el equipo si conviene una lista cerrada de apodos.
+- **El apodo pasa a catálogo cerrado en [ADR 0021](0021-perfil-y-nombre-de-juego.md).** En la versión inicial fue texto libre; desde ADR 0021 solo se eligen combinaciones predefinidas y los apodos libres previos se omiten en nuevas alertas hasta elegir un nombre válido.
 - **Teléfonos compartidos.** La sesión persiste entre aperturas: quien use después el mismo teléfono entra al mismo colegio y ve la misma pieza. No expone relato ni chat nuevos, pero el aviso de chat de una alerta anterior sigue en el teléfono como antes.
 - **Actualizado por ADR 0019:** la sesión bloquea el regreso a la bienvenida y el cambio de rol, y un QR válido entra sin comprobación de cercanía.
 - **Cercanía.** La comprobación sigue usando el punto de referencia de la compilación (`SETU_DEMO_LATITUDE/LONGITUDE`), no las coordenadas del colegio resuelto.
