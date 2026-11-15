@@ -19,10 +19,17 @@ conserva para los roles autorizados (mesa de escucha, MINED y dirección).
    escolar E02, con el tema, el router y las transiciones existentes
    (movimiento reducido incluido). Implementada en
    `apps/mobile/lib/features/home/`.
-2. **Navegación inferior de cuatro destinos:** Inicio, Información,
-   Actividades y Ayuda. Inicio reúne adelantos y accesos directos de las
-   otras secciones. Sustituye la propuesta anterior «Inicio, Mi
-   seguimiento, Información y Ayuda» de docs/06.
+2. **Navegación inferior de cuatro destinos y deslizamiento horizontal:**
+   Inicio, Información, Actividades y Ayuda. Inicio reúne adelantos y
+   accesos directos de las otras secciones. Sustituye la propuesta anterior
+   «Inicio, Mi seguimiento, Información y Ayuda» de docs/06. Además de
+   tocar la barra `SetuBottomNav`, el usuario puede deslizar
+   horizontalmente sobre `StudentHomeScreen` (vía `CampaignScreen`) para
+   desplazarse en orden entre las cuatro pestañas en sincronía con la
+   barra inferior; al presionar Atrás desde `Información`, `Actividades` o
+   `Ayuda` regresa a `Inicio`, y en `Inicio` permanece en `/inicio` sin
+   volver a la bienvenida ni al acceso escolar (`PopScope` y ruta de nivel
+   superior).
 3. **Sin vista estudiantil de seguimiento:** se elimina E07 «Mi seguimiento
    privado» del recorrido estudiantil. Dentro de «Pedir apoyo», la
    experiencia prevista es que, después de enviar una alerta, el estudiante
@@ -66,9 +73,12 @@ conserva para los roles autorizados (mesa de escucha, MINED y dirección).
 - El aviso de disponibilidad requiere diseño técnico posterior (backend y
   notificaciones están fuera del corte actual); no se muestran avisos
   ficticios como atención real.
-- Pruebas: 32 en total (`flutter analyze` limpio); cubren navegación entre
-  pestañas, muestras identificadas, avatar, texto al 200 % en pantalla
-  chica y movimiento reducido.
+- Pruebas (`apps/mobile/test/home_test.dart`,
+  `apps/mobile/test/session_lock_test.dart`): `flutter analyze` limpio;
+  cubren navegación entre pestañas por barra y deslizamiento horizontal,
+  retorno a `Inicio` con el botón Atrás sin salir al login, muestras
+  identificadas, avatar, texto al 200 % en pantalla chica y movimiento
+  reducido.
 
 ## Pendientes
 
