@@ -75,3 +75,5 @@ Confirmado por el usuario el 13 nov 2026: el alumnado sigue sin cuentas (código
 - MINED no tiene todavía en la app el seguimiento de supervisión (`mined_update_case_supervision`): escalar y cerrar quedan para un bloque posterior.
 - El aviso nativo de Android en segundo plano o con pantalla bloqueada («Tenés una alerta asignada») queda en bloque posterior sujeto a aprobación explícita tras conectar la UI.
 - Pendiente para producción real: activar *Leaked Password Protection* en Supabase Auth y sustituir usuarios/códigos ficticios de `seed.sql` por altas institucionales verificadas.
+
+> **Actualización ([ADR 0020](0020-alta-post-verificacion-y-cobertura-red-externa.md), 2026-11-15):** El orden de activación quedó actualizado a *registro con correo real → confirmación de enlace en Supabase Auth → ingreso del código individual y nombre/apellidos*; además se eliminaron los correos ficticios `@setu.test` de `seed.sql` y del proyecto remoto.
