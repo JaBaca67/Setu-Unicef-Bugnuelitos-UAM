@@ -14,12 +14,14 @@ class FlowScaffold extends StatelessWidget {
     required this.body,
     this.bottom,
     this.bottomNavigationBar,
+    this.onRefresh,
   });
 
   final Widget header;
   final Widget body;
   final Widget? bottom;
   final Widget? bottomNavigationBar;
+  final Future<void> Function()? onRefresh;
 
   /// La barra flota sobre el contenido solo si no hay una acción fija abajo.
   bool get _floatingNav => bottomNavigationBar != null && bottom == null;
@@ -54,18 +56,29 @@ class FlowScaffold extends StatelessWidget {
                 // Con la barra flotante, `extendBody` informa su alto como
                 // margen inferior: el último elemento no queda tapado.
                 child: Builder(
-                  builder: (BuildContext inner) => SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      20,
-                      20,
-                      16 +
-                          (_floatingNav
-                              ? MediaQuery.paddingOf(inner).bottom
-                              : 0),
-                    ),
-                    child: body,
-                  ),
+                  builder: (BuildContext inner) {
+                    final Widget scroll = SingleChildScrollView(
+                      physics: onRefresh == null
+                          ? null
+                          : const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        20,
+                        20,
+                        16 +
+                            (_floatingNav
+                                ? MediaQuery.paddingOf(inner).bottom
+                                : 0),
+                      ),
+                      child: body,
+                    );
+                    if (onRefresh == null) return scroll;
+                    return RefreshIndicator(
+                      onRefresh: onRefresh!,
+                      color: CureandoTheme.blue,
+                      child: scroll,
+                    );
+                  },
                 ),
               ),
               if (bottom != null)

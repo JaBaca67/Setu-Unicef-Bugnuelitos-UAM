@@ -57,7 +57,7 @@ void main() {
   Future<void> signIn(WidgetTester tester, String email) async {
     await _type(tester, 'Correo institucional', email);
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
   }
 
   testWidgets('la bienvenida lleva al ingreso de personal y valida la cuenta', (
@@ -82,7 +82,7 @@ void main() {
 
     expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
     await _capture(tester, 'p02-ingreso');
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     expect(
       find.text('Escribí tu correo institucional y tu contraseña.'),
       findsOneWidget,
@@ -95,20 +95,20 @@ void main() {
     await tester.pump();
     expect(_password(tester).obscureText, isFalse);
     expect(find.byTooltip('Ocultar contraseña'), findsOneWidget);
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     expect(
       find.text('El correo o la contraseña no coinciden.'),
       findsOneWidget,
     );
 
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     expect(find.text('Dirección del centro'), findsOneWidget);
     expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Mi sesión'));
+    await tester.tap(find.byTooltip('Mi perfil'));
     await tester.pumpAndSettle();
-    expect(find.text('Cambiar de centro'), findsNothing);
+    expect(find.text('Mi perfil'), findsOneWidget);
     await _tap(tester, 'Cerrar sesión');
     expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
 
@@ -144,9 +144,13 @@ void main() {
     router.go('/personal/ambito');
     await tester.pumpAndSettle();
     expect(find.text('Mis casos'), findsOneWidget);
-    await tester.tap(find.byTooltip('Mi sesión'));
+    await tester.tap(find.byTooltip('Mi perfil'));
     await tester.pumpAndSettle();
-    expect(find.text('Cambiar de centro'), findsNothing);
+    expect(find.text('Mi perfil'), findsOneWidget);
+    expect(
+      find.textContaining('cerrá sesión e ingresá de nuevo'),
+      findsOneWidget,
+    );
     await _tap(tester, 'Cerrar sesión');
     expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -156,7 +160,7 @@ void main() {
     WidgetTester tester,
   ) async {
     final DemoStaffBackend backend = await open(tester);
-    await _tap(tester, 'Activar mi cuenta');
+    await _tap(tester, 'Registrar cuenta');
     expect(find.text('Creá tu cuenta'), findsOneWidget);
 
     await _tap(tester, 'Necesito ayuda con mi acceso');
@@ -239,9 +243,8 @@ void main() {
     await open(tester);
     await signIn(tester, 'escucha.demo@example.org');
     await _tap(tester, 'Colegio de prueba A');
-    await tester.tap(find.byTooltip('Mi sesión'));
+    await tester.tap(find.byTooltip('Mi perfil'));
     await tester.pumpAndSettle();
-    await _tap(tester, 'Mi perfil y disponibilidad');
     expect(find.text('Mi perfil'), findsOneWidget);
     expect(find.text('escucha.demo@example.org'), findsOneWidget);
 
@@ -261,6 +264,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'iniciar sesión bloquea cuentas sin código canjeado y ofrece continuar registro',
+    (WidgetTester tester) async {
+      final DemoStaffBackend backend = await open(tester);
+      await backend.signUp(
+        email: 'invitada.cca@example.org',
+        password: DemoStaffBackend.demoPassword,
+      );
+      backend.confirmEmail('invitada.cca@example.org');
+      await backend.signOut();
+
+      await signIn(tester, 'invitada.cca@example.org');
+      expect(
+        find.textContaining('todavía no completó su registro con el código'),
+        findsOneWidget,
+      );
+      await _tap(tester, 'Continuar mi registro con código');
+      expect(find.text('Código y datos personales'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('sin conexión informa el fallo y no entra', (
     WidgetTester tester,
   ) async {
@@ -272,7 +297,7 @@ void main() {
       findsOneWidget,
     );
     backend.offline = false;
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     expect(find.text('MINED central'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -282,7 +307,7 @@ void main() {
   ) async {
     await open(tester, size: const Size(320, 568), textScale: 2);
     expect(tester.takeException(), isNull);
-    await _tap(tester, 'Activar mi cuenta');
+    await _tap(tester, 'Registrar cuenta');
     expect(find.text('Creá tu cuenta'), findsOneWidget);
     await _tap(tester, 'Necesito ayuda con mi acceso');
     expect(find.text('Reenviar enlace de confirmación'), findsOneWidget);

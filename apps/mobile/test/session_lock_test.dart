@@ -98,11 +98,11 @@ Future<void> _signIn(WidgetTester tester, String email) async {
     find.byType(TextField).at(1),
     DemoStaffBackend.demoPassword,
   );
-  await _tap(tester, 'Ingresar');
+  await _tap(tester, 'Iniciar sesión');
 }
 
 Future<void> _signOut(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('Mi sesión'));
+  await tester.tap(find.byTooltip('Mi perfil'));
   await tester.pumpAndSettle();
   await _tap(tester, 'Cerrar sesión');
 }
@@ -262,8 +262,9 @@ void main() {
       expect(find.text('Mis casos'), findsOneWidget);
       await _go(tester, '/personal/ambito');
       expect(find.text('Mis casos'), findsOneWidget);
-      await tester.tap(find.byTooltip('Mi sesión'));
+      await tester.tap(find.byTooltip('Mi perfil'));
       await tester.pumpAndSettle();
+      expect(find.text('Mi perfil'), findsOneWidget);
       expect(find.text('Cambiar de centro'), findsNothing);
       expect(
         find.textContaining('cerrá sesión e ingresá de nuevo'),
@@ -392,11 +393,14 @@ void main() {
         find.byType(TextField).at(1),
         DemoStaffBackend.demoPassword,
       );
-      await _tap(tester, 'Ingresar');
+      await _tap(tester, 'Iniciar sesión');
       expect(find.text('Alertas recibidas'), findsOneWidget);
       final Finder tile = find.ancestor(
         of: find.text('DEMO-021'),
-        matching: find.byType(Column),
+        matching: find.byWidgetPredicate(
+          (Widget widget) =>
+              widget is Container && widget.decoration is BoxDecoration,
+        ),
       );
       final Finder history = find.descendant(
         of: tile.first,

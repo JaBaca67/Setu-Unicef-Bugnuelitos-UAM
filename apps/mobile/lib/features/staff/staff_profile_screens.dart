@@ -261,7 +261,20 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                     title: 'Ayuda con mi acceso',
                     onTap: () => context.push('/personal/ayuda'),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  if (widget.session.memberships.length > 1) ...<Widget>[
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        'Para trabajar con otro centro, cerrá sesión e '
+                        'ingresá de nuevo.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: CureandoTheme.secondaryInk,
+                        ),
+                      ),
+                    ),
+                  ],
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFC62828),
@@ -357,14 +370,16 @@ class _ProfileIdentityCard extends StatelessWidget {
                           : const Color(0xFFB45309),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      profile.emailConfirmed
-                          ? 'Correo verificado'
-                          : 'Verificación pendiente',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: CureandoTheme.ink,
+                    Expanded(
+                      child: Text(
+                        profile.emailConfirmed
+                            ? 'Correo verificado'
+                            : 'Verificación pendiente',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: CureandoTheme.ink,
+                        ),
                       ),
                     ),
                   ],
@@ -467,11 +482,7 @@ class _SchoolLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: <Widget>[
-      const Icon(
-        Icons.school_outlined,
-        size: 22,
-        color: CureandoTheme.blue,
-      ),
+      StaffSchoolLogo(schoolName: name, size: 32, borderRadius: 8),
       const SizedBox(width: 10),
       Expanded(
         child: Text(

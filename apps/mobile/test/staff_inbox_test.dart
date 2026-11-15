@@ -53,7 +53,7 @@ void main() {
     await _tap(tester, 'Personal autorizado');
     await _type(tester, 'Correo institucional', email);
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     return backend;
   }
 
@@ -85,9 +85,16 @@ void main() {
     expect(find.text('Asignada'), findsNWidgets(4));
 
     backend.offline = true;
-    await tester.ensureVisible(find.byTooltip('Actualizar'));
+    await tester.drag(
+      find.byType(Scrollable).first,
+      const Offset(0, 1000),
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Actualizar'));
+    await tester.fling(
+      find.byType(Scrollable).first,
+      const Offset(0, 400),
+      1000,
+    );
     await tester.pumpAndSettle();
     expect(
       find.textContaining('Revisá tu conexión a internet'),
@@ -126,16 +133,22 @@ void main() {
     expect(find.text('Mis casos'), findsOneWidget);
     expect(find.text('DEMO-021'), findsNothing);
 
+    // Solo queda el botón superior derecho de perfil y recarga por gesto.
+    expect(find.byTooltip('Mi perfil'), findsOneWidget);
+    expect(find.byTooltip('Mi perfil y disponibilidad'), findsNothing);
+    expect(find.byTooltip('Actualizar'), findsNothing);
+
     // Para trabajar con otro centro hay que cerrar sesión e ingresar de nuevo.
-    await tester.tap(find.byTooltip('Mi sesión'));
+    await tester.tap(find.byTooltip('Mi perfil'));
     await tester.pumpAndSettle();
     await _tap(tester, 'Cerrar sesión');
     await _type(tester, 'Correo institucional', _desk);
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     await _tap(tester, 'Colegio Centro América — Demo');
     expect(find.text('DEMO-021'), findsOneWidget);
     expect(find.text('Sin valorar'), findsOneWidget);
+    expect(find.byType(Image), findsWidgets);
     await _tap(tester, 'En conversación');
     expect(find.text('No tenés conversaciones activas.'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -152,12 +165,12 @@ void main() {
     );
     expect(find.text('Alertas recibidas'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await tester.tap(find.byTooltip('Mi sesión'));
+    await tester.tap(find.byTooltip('Mi perfil'));
     await tester.pumpAndSettle();
     await _tap(tester, 'Cerrar sesión');
     await _type(tester, 'Correo institucional', _desk);
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     await _tap(tester, 'Colegio de prueba A');
     expect(find.text('Mis casos'), findsOneWidget);
     expect(tester.takeException(), isNull);

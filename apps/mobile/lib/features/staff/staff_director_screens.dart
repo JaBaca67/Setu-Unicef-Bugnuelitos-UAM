@@ -263,6 +263,7 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
   @override
   Widget build(BuildContext context) => StaffAreaScaffold(
     session: session,
+    onRefresh: load,
     bottom: session.backend.supportsTeacherNotice
         ? OutlinedButton(
             style: flowSecondaryStyle(),
@@ -285,11 +286,6 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
               tooltip: 'Cartel QR del colegio',
               onPressed: () => context.push<void>('/personal/direccion/cartel'),
               icon: const Icon(Icons.qr_code_2_rounded),
-            ),
-            IconButton(
-              tooltip: 'Actualizar',
-              onPressed: loading ? null : load,
-              icon: const Icon(Icons.refresh_rounded),
             ),
           ],
         ),

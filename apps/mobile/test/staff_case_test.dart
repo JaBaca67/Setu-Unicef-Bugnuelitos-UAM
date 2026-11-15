@@ -56,7 +56,7 @@ void main() {
     await _tap(tester, 'Personal autorizado');
     await _type(tester, 'Correo institucional', _desk);
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
-    await _tap(tester, 'Ingresar');
+    await _tap(tester, 'Iniciar sesión');
     await _tap(tester, 'Colegio de prueba A');
     return backend;
   }

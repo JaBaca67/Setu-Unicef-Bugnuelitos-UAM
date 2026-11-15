@@ -887,18 +887,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: CureandoTheme.blueSoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.school_outlined,
-                  color: CureandoTheme.blue,
-                ),
-              ),
+              StaffSchoolLogo(schoolName: schoolName, size: 44),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

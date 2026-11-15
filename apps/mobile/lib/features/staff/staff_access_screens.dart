@@ -34,6 +34,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
   final TextEditingController _password = TextEditingController();
   bool _hidden = true;
   bool _busy = false;
+  bool _needsRegistrationCompletion = false;
   String? _error;
 
   @override
@@ -46,13 +47,15 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
   Future<void> _submit() async {
     if (_busy) return;
     if (_email.text.trim().isEmpty || _password.text.isEmpty) {
-      setState(
-        () => _error = 'Escribí tu correo institucional y tu contraseña.',
-      );
+      setState(() {
+        _needsRegistrationCompletion = false;
+        _error = 'Escribí tu correo institucional y tu contraseña.';
+      });
       return;
     }
     setState(() {
       _busy = true;
+      _needsRegistrationCompletion = false;
       _error = null;
     });
     final String? error = await widget.session.signIn(
@@ -60,6 +63,16 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
       _password.text,
     );
     if (!mounted) return;
+    if (widget.session.isAuthenticated && widget.session.memberships.isEmpty) {
+      setState(() {
+        _busy = false;
+        _needsRegistrationCompletion = true;
+        _error =
+            'Esta cuenta todavía no completó su registro con el código '
+            'individual y tu nombre. Completá ese paso para iniciar sesión.';
+      });
+      return;
+    }
     setState(() {
       _busy = false;
       _error = error;
@@ -68,6 +81,26 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
       _password.clear();
       enterStaffArea(context, widget.session);
     }
+  }
+
+  Future<void> _leaveToWelcome() async {
+    if (widget.session.isAuthenticated && widget.session.memberships.isEmpty) {
+      await widget.session.signOut();
+    }
+    if (mounted) context.go('/');
+  }
+
+  Future<void> _openRegistration() async {
+    if (_needsRegistrationCompletion &&
+        widget.session.isAuthenticated &&
+        widget.session.memberships.isEmpty) {
+      context.push('/personal/activar');
+      return;
+    }
+    if (widget.session.isAuthenticated && widget.session.memberships.isEmpty) {
+      await widget.session.signOut();
+    }
+    if (mounted) context.push('/personal/activar');
   }
 
   @override
@@ -128,6 +161,18 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
               hint: 'nombre@colegio.edu.ni',
               keyboardType: TextInputType.emailAddress,
               autofillHints: const <String>[AutofillHints.username],
+              onChanged: (_) {
+                if (_needsRegistrationCompletion) {
+                  setState(() {
+                    _needsRegistrationCompletion = false;
+                    _error = null;
+                  });
+                  if (widget.session.memberships.isEmpty &&
+                      widget.session.isAuthenticated) {
+                    widget.session.signOut();
+                  }
+                }
+              },
             ),
             const SizedBox(height: 18),
             StaffField(
@@ -144,17 +189,25 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
               const SizedBox(height: 16),
               StaffNotice(_error!),
             ],
+            if (_needsRegistrationCompletion) ...<Widget>[
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                onPressed: _openRegistration,
+                icon: const Icon(Icons.qr_code_rounded),
+                label: const Text('Continuar mi registro con código'),
+              ),
+            ],
             const SizedBox(height: 24),
             StaffPrimaryButton(
-              label: 'Ingresar',
+              label: 'Iniciar sesión',
               busy: _busy,
               onPressed: _submit,
             ),
             const SizedBox(height: 12),
             OutlinedButton(
               style: flowSecondaryStyle(),
-              onPressed: () => context.push('/personal/activar'),
-              child: const Text('Activar mi cuenta'),
+              onPressed: _openRegistration,
+              child: const Text('Registrar cuenta'),
             ),
             const SizedBox(height: 8),
             TextButton(
@@ -162,7 +215,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
               child: const Text('Necesito ayuda con mi acceso', style: _link),
             ),
             TextButton(
-              onPressed: () => context.go('/'),
+              onPressed: _leaveToWelcome,
               child: const Text('Volver a la bienvenida', style: _link),
             ),
           ],
@@ -305,8 +358,9 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     if (_backend.currentUserId != null && _backend.isEmailConfirmed) {
       final String? membershipError = await widget.session.refresh();
       if (membershipError == null && widget.session.memberships.isNotEmpty) {
-        if (mounted) enterStaffArea(context, widget.session);
-        return null;
+        await widget.session.signOut();
+        return 'Esta cuenta ya completó su registro. Volvé atrás y usá '
+            '«Iniciar sesión» para ingresar.';
       }
       _step = _ActivationStep.codeAndProfile;
       return null;
@@ -417,10 +471,9 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
         child: IntrinsicHeight(
           child: Row(
             children: <Widget>[
-              const Icon(
-                Icons.school_outlined,
-                size: 44,
-                color: CureandoTheme.ink,
+              StaffSchoolLogo(
+                schoolName: preview.institutionName,
+                size: 48,
               ),
               const VerticalDivider(
                 width: 28,
@@ -640,7 +693,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
       ),
     };
     return FlowScaffold(
-      header: const FlowHeader(title: 'Activá tu cuenta'),
+      header: const FlowHeader(title: 'Registrar cuenta'),
       bottom: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -930,7 +983,7 @@ class StaffScopeScreen extends StatelessWidget {
         children: <Widget>[
           const Text(
             'Tu cuenta tiene acceso a más de un centro. Elegí uno; podés '
-            'cambiarlo después desde «Mi sesión».',
+            'cambiarlo después desde «Mi perfil».',
             style: _lead,
           ),
           const SizedBox(height: 16),
@@ -953,11 +1006,7 @@ class StaffScopeScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: <Widget>[
-                        const Icon(
-                          Icons.school_outlined,
-                          size: 36,
-                          color: CureandoTheme.ink,
-                        ),
+                        StaffSchoolLogo(schoolName: scope.place, size: 42),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(

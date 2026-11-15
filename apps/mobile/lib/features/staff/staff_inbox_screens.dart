@@ -233,6 +233,7 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
 
   Widget _tile(StaffCaseSummary item) {
     final bool assigned = item.assignedCounselorId != null;
+    final String schoolName = school(item);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -243,41 +244,55 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 6,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                item.referenceCode,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+              StaffSchoolLogo(schoolName: schoolName, size: 44),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: <Widget>[
+                        Text(
+                          item.referenceCode,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        StaffTag(
+                          assigned ? 'Asignada' : 'Sin asignar',
+                          highlight: !assigned,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(schoolName, style: const TextStyle(fontSize: 16)),
+                    Text(
+                      staffCaseKind(
+                        item.situationType,
+                        item.studentRole,
+                        origin: item.origin,
+                      ),
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                    Text(
+                      'Recibida: ${staffShortDate(item.receivedCentrallyAt)}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: CureandoTheme.secondaryInk,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              StaffTag(
-                assigned ? 'Asignada' : 'Sin asignar',
-                highlight: !assigned,
-              ),
             ],
-          ),
-          const SizedBox(height: 6),
-          Text(school(item), style: const TextStyle(fontSize: 16)),
-          Text(
-            staffCaseKind(
-              item.situationType,
-              item.studentRole,
-              origin: item.origin,
-            ),
-            style: const TextStyle(fontSize: 16),
-          ),
-          Text(
-            'Recibida: ${staffShortDate(item.receivedCentrallyAt)}',
-            style: const TextStyle(
-              fontSize: 15,
-              color: CureandoTheme.secondaryInk,
-            ),
           ),
           const SizedBox(height: 10),
           OutlinedButton(
@@ -302,23 +317,13 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
   @override
   Widget build(BuildContext context) => StaffAreaScaffold(
     session: session,
+    onRefresh: load,
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Semantics(
-                header: true,
-                child: const Text('Alertas recibidas', style: _heading),
-              ),
-            ),
-            IconButton(
-              tooltip: 'Actualizar',
-              onPressed: loading ? null : load,
-              icon: const Icon(Icons.refresh_rounded),
-            ),
-          ],
+        Semantics(
+          header: true,
+          child: const Text('Alertas recibidas', style: _heading),
         ),
         const SizedBox(height: 4),
         const Text(
@@ -699,10 +704,10 @@ class _DeclineSheetState extends State<_DeclineSheet> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const Icon(
-                  Icons.school_outlined,
-                  size: 18,
-                  color: CureandoTheme.blue,
+                StaffSchoolLogo(
+                  schoolName: widget.school,
+                  size: 28,
+                  borderRadius: 8,
                 ),
                 const SizedBox(width: 8),
                 Flexible(
@@ -1041,6 +1046,19 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     return '$h:$m';
   }
 
+  static const BoxDecoration _alertCardDecoration = BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.all(Radius.circular(18)),
+    border: Border.fromBorderSide(BorderSide(color: Color(0xFFDBE6F5))),
+    boxShadow: <BoxShadow>[
+      BoxShadow(
+        color: Color(0x0D0A2E5C),
+        blurRadius: 10,
+        offset: Offset(0, 4),
+      ),
+    ],
+  );
+
   Widget _dispatchTile(CaseDispatchRecord record) {
     final bool busy = _busyCase == record.caseId;
     final SetuSituationType? type = record.situationType;
@@ -1055,36 +1073,14 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFDBE6F5)),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x0D0A2E5C),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _alertCardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: CureandoTheme.blueSoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.school_outlined,
-                  color: CureandoTheme.blue,
-                ),
-              ),
+              StaffSchoolLogo(schoolName: schoolName, size: 44),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1231,67 +1227,141 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     if (mounted) await load();
   }
 
-  Widget _tile(StaffCaseSummary item) => Material(
-    color: CureandoTheme.blueSoft,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: const BorderSide(color: CureandoTheme.blue, width: 1.5),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: () => _openCase(item),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 12,
+  Widget _tile(StaffCaseSummary item) {
+    final String schoolName = school(item);
+    final String kind = staffCaseKind(
+      item.situationType,
+      item.studentRole,
+      origin: item.origin,
+    );
+    return DecoratedBox(
+      decoration: _alertCardDecoration,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openCase(item),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    StaffSchoolLogo(schoolName: schoolName, size: 44),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(
+                                  schoolName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: CureandoTheme.ink,
+                                  ),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.schedule_rounded,
+                                size: 15,
+                                color: CureandoTheme.secondaryInk,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _hhmm(item.receivedCentrallyAt),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: CureandoTheme.secondaryInk,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 2,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: <Widget>[
+                              Text(
+                                '$kind ·',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: CureandoTheme.secondaryInk,
+                                ),
+                              ),
+                              Text(
+                                item.referenceCode,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: CureandoTheme.secondaryInk,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: <Widget>[
+                              StaffTag(
+                                staffLevelLabel(item.humanLevel),
+                                highlight: item.isUnassessed,
+                              ),
+                              if (item.isInConversation)
+                                const StaffTag('Chat habilitado'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  style: flowPrimaryStyle().copyWith(
+                    padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    ),
+                    textStyle: const WidgetStatePropertyAll<TextStyle>(
+                      TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  onPressed: () => _openCase(item),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text(
-                        item.referenceCode,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                      Flexible(
+                        child: Text(
+                          'Abrir caso',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        staffShortDate(item.receivedCentrallyAt),
-                        style: const TextStyle(fontSize: 15),
-                      ),
+                      SizedBox(width: 6),
+                      Icon(Icons.arrow_forward_rounded, size: 18),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 10,
-                    runSpacing: 6,
-                    children: <Widget>[
-                      Text(school(item), style: const TextStyle(fontSize: 16)),
-                      StaffTag(
-                        staffLevelLabel(item.humanLevel),
-                        highlight: item.isUnassessed,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 32,
-              color: CureandoTheme.blue,
-            ),
-          ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _segmentedTabs() => Container(
     padding: const EdgeInsets.all(4),
@@ -1362,39 +1432,24 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
 
     return StaffAreaScaffold(
       session: session,
+      onRefresh: load,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           AssignmentBanner(session: session, onOpened: load),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Semantics(
-                      header: true,
-                      child: const Text('Mesa de escucha', style: _heading),
-                    ),
-                    Text(
-                      '${_pending.length} ${_pending.length == 1 ? 'alerta' : 'alertas'} por tomar',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: CureandoTheme.secondaryInk,
-                      ),
-                    ),
-                  ],
+              Semantics(
+                header: true,
+                child: const Text('Mesa de escucha', style: _heading),
+              ),
+              Text(
+                '${_pending.length} ${_pending.length == 1 ? 'alerta' : 'alertas'} por tomar',
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: CureandoTheme.secondaryInk,
                 ),
-              ),
-              IconButton(
-                tooltip: 'Mi perfil y disponibilidad',
-                onPressed: () => context.push('/personal/perfil'),
-                icon: const Icon(Icons.person_outline_rounded),
-              ),
-              IconButton(
-                tooltip: 'Actualizar',
-                onPressed: loading ? null : load,
-                icon: const Icon(Icons.refresh_rounded),
               ),
             ],
           ),
@@ -1677,18 +1732,7 @@ class _DeskDeclinedScreenState extends State<DeskDeclinedScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: CureandoTheme.blueSoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.school_outlined,
-                  color: CureandoTheme.blue,
-                ),
-              ),
+              StaffSchoolLogo(schoolName: schoolName, size: 44),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1770,6 +1814,7 @@ class _DeskDeclinedScreenState extends State<DeskDeclinedScreen> {
     final List<DeclinedDispatchRecord> records =
         _records ?? const <DeclinedDispatchRecord>[];
     return FlowScaffold(
+      onRefresh: _load,
       header: const FlowHeader(
         title: 'Declinadas recientes',
         subtitle: 'Mesa de escucha',

@@ -147,7 +147,7 @@ class WelcomeScreen extends StatelessWidget {
                 side: const BorderSide(color: Color(0xFFA5C1EF)),
                 textStyle: buttonText,
               ),
-              onPressed: () => context.push('/personal'),
+              onPressed: () => context.go('/personal'),
               child: const Text(
                 'Personal autorizado',
                 textAlign: TextAlign.center,

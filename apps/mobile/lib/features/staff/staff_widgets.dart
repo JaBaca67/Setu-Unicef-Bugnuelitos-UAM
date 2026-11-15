@@ -195,78 +195,97 @@ class StaffPrimaryButton extends StatelessWidget {
   );
 }
 
-/// Pantalla de una superficie de personal: marca, rol y menú de la sesión.
+/// Devuelve la ruta del logo empaquetado del colegio si está disponible.
+String? staffSchoolLogoAsset({String? schoolName, String? publicCode}) {
+  final String normalizedCode = (publicCode ?? '').trim().toUpperCase();
+  final String normalizedName = (schoolName ?? '')
+      .trim()
+      .toLowerCase()
+      .replaceAll('á', 'a')
+      .replaceAll('é', 'e')
+      .replaceAll('í', 'i')
+      .replaceAll('ó', 'o')
+      .replaceAll('ú', 'u');
+  if (normalizedCode == 'AULA26' ||
+      normalizedName.startsWith('colegio centro america')) {
+    return 'assets/schools/colegio_centro_america.png';
+  }
+  return null;
+}
+
+/// Insignia cuadrada del colegio: muestra su logo oficial si existe o un
+/// ícono escolar de respaldo.
+class StaffSchoolLogo extends StatelessWidget {
+  const StaffSchoolLogo({
+    super.key,
+    this.schoolName,
+    this.publicCode,
+    this.size = 44,
+    this.borderRadius = 12,
+  });
+
+  final String? schoolName;
+  final String? publicCode;
+  final double size;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? asset = staffSchoolLogoAsset(
+      schoolName: schoolName,
+      publicCode: publicCode,
+    );
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: asset == null ? CureandoTheme.blueSoft : Colors.white,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: asset == null
+            ? null
+            : Border.all(color: const Color(0xFFDBE6F5)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: asset == null
+          ? Icon(
+              Icons.school_outlined,
+              color: CureandoTheme.blue,
+              size: size * 0.54,
+            )
+          : Padding(
+              padding: EdgeInsets.all(size * 0.1),
+              child: Image.asset(
+                asset,
+                fit: BoxFit.contain,
+                semanticLabel: schoolName == null || schoolName!.isEmpty
+                    ? 'Logo del colegio'
+                    : 'Logo de $schoolName',
+              ),
+            ),
+    );
+  }
+}
+
+/// Pantalla de una superficie de personal: marca, rol y acceso directo al perfil.
 class StaffAreaScaffold extends StatelessWidget {
   const StaffAreaScaffold({
     super.key,
     required this.session,
     required this.body,
     this.bottom,
+    this.onRefresh,
   });
 
   final StaffSession session;
   final Widget body;
   final Widget? bottom;
-
-  void _menu(BuildContext context) {
-    final StaffMembershipScope? active = session.active;
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      builder: (BuildContext sheet) => SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Semantics(
-                header: true,
-                child: Text(
-                  active?.role.label ?? 'Personal autorizado',
-                  style: Theme.of(sheet).textTheme.titleLarge,
-                ),
-              ),
-              if (active != null) ...<Widget>[
-                const SizedBox(height: 4),
-                Text(active.place),
-              ],
-              const SizedBox(height: 12),
-              if (session.memberships.length > 1) ...<Widget>[
-                const Text(
-                  'Para trabajar con otro centro, cerrá sesión e ingresá de '
-                  'nuevo.',
-                ),
-                const SizedBox(height: 8),
-              ],
-              FilledButton.tonalIcon(
-                onPressed: () {
-                  Navigator.of(sheet).pop();
-                  context.push('/personal/perfil');
-                },
-                icon: const Icon(Icons.person_outline_rounded),
-                label: const Text('Mi perfil y disponibilidad'),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(sheet).pop();
-                  session.signOut();
-                },
-                child: const Text('Cerrar sesión'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  final Future<void> Function()? onRefresh;
 
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: Navigator.of(context).canPop(),
     child: FlowScaffold(
+      onRefresh: onRefresh,
       header: Padding(
         padding: const EdgeInsets.fromLTRB(18, 10, 10, 12),
         child: Row(
@@ -304,8 +323,11 @@ class StaffAreaScaffold extends StatelessWidget {
               ),
             ),
             IconButton(
-              tooltip: 'Mi sesión',
-              onPressed: () => _menu(context),
+              tooltip: 'Mi perfil',
+              onPressed: () {
+                ScaffoldMessenger.maybeOf(context)?.clearSnackBars();
+                context.push('/personal/perfil');
+              },
               icon: const CircleAvatar(
                 radius: 20,
                 backgroundColor: Colors.white,
