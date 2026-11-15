@@ -273,6 +273,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
   final TextEditingController _lastName = TextEditingController();
 
   late _ActivationStep _step;
+  AppLifecycleListener? _lifecycle;
   StaffActivationPreview? _preview;
   bool _hidden = true;
   bool _busy = false;
@@ -292,10 +293,27 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     } else {
       _step = _ActivationStep.account;
     }
+    _lifecycle = AppLifecycleListener(onResume: _checkConfirmedOnResume);
+  }
+
+  Future<void> _checkConfirmedOnResume() async {
+    if (!mounted || _busy || _step != _ActivationStep.email) return;
+    if (_backend.currentUserId == null) return;
+    try {
+      await _backend.refreshAuthSession();
+    } on Object {
+      return;
+    }
+    if (!mounted || !_backend.isEmailConfirmed) return;
+    setState(() {
+      _step = _ActivationStep.codeAndProfile;
+      _error = null;
+    });
   }
 
   @override
   void dispose() {
+    _lifecycle?.dispose();
     _email.dispose();
     _password.dispose();
     _repeat.dispose();

@@ -394,6 +394,10 @@ class _CureandoAppState extends State<CureandoApp> {
       final String? code = extractSchoolCode(state.uri.toString());
       return code == null ? '/colegio' : '/colegio/enlace/$code';
     }
+    // Retorno desde el enlace de confirmación de correo de Supabase Auth.
+    if (state.uri.scheme == 'setu' && state.uri.host == 'login-callback') {
+      return '/personal/activar';
+    }
     final String location = state.matchedLocation;
     if (widget.showM1Verification && location == '/verificacion-m1') {
       return null;

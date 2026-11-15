@@ -7,6 +7,8 @@ import 'staff_backend.dart';
 class RemoteStaffBackend implements StaffBackend {
   RemoteStaffBackend(this._gateway);
 
+  static const String _authRedirectUrl = 'setu://login-callback';
+
   final SetuRemoteGateway _gateway;
 
   @override
@@ -32,11 +34,18 @@ class RemoteStaffBackend implements StaffBackend {
 
   @override
   Future<void> signUp({required String email, required String password}) =>
-      _gateway.signUpStaffAccount(email: email, password: password);
+      _gateway.signUpStaffAccount(
+        email: email,
+        password: password,
+        emailRedirectTo: _authRedirectUrl,
+      );
 
   @override
   Future<void> resendConfirmationEmail({required String email}) =>
-      _gateway.resendStaffConfirmationEmail(email: email);
+      _gateway.resendStaffConfirmationEmail(
+        email: email,
+        emailRedirectTo: _authRedirectUrl,
+      );
 
   @override
   Future<void> refreshAuthSession() => _gateway.refreshStaffAuthSession();

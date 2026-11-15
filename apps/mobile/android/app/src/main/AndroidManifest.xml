@@ -32,7 +32,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Enlace del cartel QR del colegio: setu://colegio/CODIGO -->
+            <!-- Enlaces profundos de SéTú: setu://colegio/CODIGO y retorno Auth setu://login-callback -->
             <meta-data
                 android:name="flutter_deeplinking_enabled"
                 android:value="true" />
@@ -41,6 +41,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="setu" android:host="colegio"/>
+                <data android:scheme="setu" android:host="login-callback"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
