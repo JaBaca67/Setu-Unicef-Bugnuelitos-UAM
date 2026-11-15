@@ -459,6 +459,31 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: CureandoTheme.background,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _line, width: 1.5),
+            ),
+            child: CheckboxListTile(
+              value: widget.flow.involvesStaff,
+              onChanged: (bool? value) =>
+                  setState(() => widget.flow.setInvolvesStaff(value ?? false)),
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text(
+                '¿Involucra a personal del colegio?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              subtitle: const Text(
+                'Si lo marcás, la dirección del colegio no verá este caso; irá directo al MINED y a la Mesa de Escucha.',
+                style: TextStyle(
+                  color: CureandoTheme.secondaryInk,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     ),
@@ -546,6 +571,15 @@ class _AlertReviewScreenState extends State<AlertReviewScreen> {
                   label: 'Detalles',
                   value: details.isEmpty ? 'Sin detalles' : details,
                 ),
+                if (flow.involvesStaff) ...<Widget>[
+                  const Divider(height: 1, color: _line),
+                  const _ReviewRow(
+                    icon: Icons.shield_outlined,
+                    color: CureandoTheme.blue,
+                    label: 'Personal del colegio',
+                    value: 'Sí, omitir dirección del colegio',
+                  ),
+                ],
               ],
             ),
           ),

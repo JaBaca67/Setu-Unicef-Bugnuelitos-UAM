@@ -36,7 +36,7 @@ class RemoteSupportBackend implements SupportBackend {
           Participation.witness => SetuStudentCaseRole.solidarityWitness,
         },
         origin: SetuAlertOrigin.online,
-        involvesStaff: false,
+        involvesStaff: alert.involvesStaff,
         declaredAt: alert.declaredAt,
         capabilityVerifierHash: alert.verifierHash,
         narrativeText: alert.details.isEmpty ? null : alert.details,

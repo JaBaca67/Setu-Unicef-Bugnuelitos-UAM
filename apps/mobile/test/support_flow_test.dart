@@ -132,66 +132,66 @@ void main() {
     flow.dispose();
   });
 
-  test(
-    'si la pieza no tiene nombre válido omite displayName y conserva alertas previas',
-    () async {
-      const StudentPiece unnamed = StudentPiece(
-        shape: PieceShape.star,
-        color: PieceColor.pink,
-        name: null,
-      );
-      flow
-        ..selectSituation(Situation.talk)
-        ..selectParticipation(Participation.witness);
-      expect(await flow.send(piece: unnamed), isTrue);
-      await _settle();
+  test('si la pieza no tiene nombre válido omite displayName y conserva alertas previas', () async {
+    const StudentPiece unnamed = StudentPiece(
+      shape: PieceShape.star,
+      color: PieceColor.pink,
+      name: null,
+    );
+    flow
+      ..selectSituation(Situation.talk)
+      ..selectParticipation(Participation.witness);
+    expect(await flow.send(piece: unnamed), isTrue);
+    await _settle();
 
-      final AlertOutbox sent = platform.alerts.single;
-      expect(sent.piece, isNotNull);
-      expect(sent.piece!['shape'], 'star');
-      expect(sent.piece!['color'], 'pink');
-      expect(sent.piece!.containsKey('displayName'), isFalse);
-      flow.dispose();
+    final AlertOutbox sent = platform.alerts.single;
+    expect(sent.piece, isNotNull);
+    expect(sent.piece!['shape'], 'star');
+    expect(sent.piece!['color'], 'pink');
+    expect(sent.piece!.containsKey('displayName'), isFalse);
+    flow.dispose();
 
-      // Una alerta pendiente guardada antes de migrar no se altera al reenviar.
-      final _MemoryStore legacyStore = _MemoryStore();
-      legacyStore.data = <String, Object?>{
-        'version': 1,
-        'alert': <String, Object?>{
-          'situation': Situation.verbal.name,
-          'participation': Participation.own.name,
-          'details': 'Caso previo',
+    // Una alerta pendiente guardada antes de migrar no se altera al reenviar.
+    final _MemoryStore legacyStore = _MemoryStore();
+    legacyStore.data = <String, Object?>{
+      'version': 1,
+      'alert': <String, Object?>{
+        'situation': Situation.verbal.name,
+        'participation': Participation.own.name,
+        'details': 'Caso previo',
+      },
+      'delivery': <String, Object?>{
+        'operationId': 'alert-legacy',
+        'token': 'a' * 64,
+        'verifierHash': 'b' * 64,
+        'declaredAt': DateTime.utc(2026, 11, 10).toIso8601String(),
+        'schoolCode': 'AULA26',
+        'piece': <String, Object?>{
+          'displayName': 'Apodo Anterior',
+          'shape': 'puzzle',
+          'color': 'green',
+          'accessories': <String>['cap'],
         },
-        'delivery': <String, Object?>{
-          'operationId': 'alert-legacy',
-          'token': 'a' * 64,
-          'verifierHash': 'b' * 64,
-          'declaredAt': DateTime.utc(2026, 11, 10).toIso8601String(),
-          'schoolCode': 'AULA26',
-          'piece': <String, Object?>{
-            'displayName': 'Apodo Anterior',
-            'shape': 'puzzle',
-            'color': 'green',
-            'accessories': <String>['cap'],
-          },
-          'caseId': null,
-        },
-        'received': false,
-        'chatAvailable': false,
-        'caseClosed': false,
-      };
-      final _FakePlatform legacyPlatform = _FakePlatform();
-      final SupportFlow legacyFlow = SupportFlow(
-        openStore: () async => legacyStore,
-        backend: legacyPlatform,
-        schoolCode: 'AULA26',
-      );
-      await legacyFlow.open();
-      await _settle();
-      expect(legacyPlatform.alerts.single.piece?['displayName'], 'Apodo Anterior');
-      legacyFlow.dispose();
-    },
-  );
+        'caseId': null,
+      },
+      'received': false,
+      'chatAvailable': false,
+      'caseClosed': false,
+    };
+    final _FakePlatform legacyPlatform = _FakePlatform();
+    final SupportFlow legacyFlow = SupportFlow(
+      openStore: () async => legacyStore,
+      backend: legacyPlatform,
+      schoolCode: 'AULA26',
+    );
+    await legacyFlow.open();
+    await _settle();
+    expect(
+      legacyPlatform.alerts.single.piece?['displayName'],
+      'Apodo Anterior',
+    );
+    legacyFlow.dispose();
+  });
 
   test('si no puede guardar en el teléfono no envía nada', () async {
     store.failing = true;
@@ -251,6 +251,32 @@ void main() {
 
       // Los mensajes no se guardan en el teléfono.
       expect(store.data.toString(), isNot(contains('Quiero contar algo')));
+      flow.dispose();
+    },
+  );
+
+  test(
+    'marca involucramiento de personal del colegio y lo envía en AlertOutbox',
+    () async {
+      final _MemoryStore store = _MemoryStore();
+      final _SpySupportBackend backend = _SpySupportBackend();
+      final SupportFlow flow = SupportFlow(
+        openStore: () async => store,
+        backend: backend,
+        schoolCode: 'AULA26',
+      );
+      await flow.open();
+      flow.selectSituation(Situation.verbal);
+      flow.selectParticipation(Participation.own);
+      flow.setInvolvesStaff(true);
+
+      final bool saved = await flow.send();
+      expect(saved, isTrue);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(backend.alerts, hasLength(1));
+      expect(backend.alerts.single.involvesStaff, isTrue);
+      expect(flow.involvesStaff, isFalse);
       flow.dispose();
     },
   );

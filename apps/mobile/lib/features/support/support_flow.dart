@@ -108,6 +108,7 @@ class SupportFlow extends ChangeNotifier {
   Situation? situation;
   Participation? participation;
   String details = '';
+  bool involvesStaff = false;
 
   AlertDelivery _delivery = AlertDelivery.none;
   AlertDelivery get delivery => _delivery;
@@ -190,6 +191,12 @@ class SupportFlow extends ChangeNotifier {
     _notify();
   }
 
+  void setInvolvesStaff(bool value) {
+    if (involvesStaff == value) return;
+    involvesStaff = value;
+    _notify();
+  }
+
   /// Guarda la alerta en el teléfono y empieza la entrega. Devuelve false si
   /// no pudo guardarse; en ese caso no se envía nada.
   Future<bool> send({StudentPiece? piece}) async {
@@ -203,6 +210,7 @@ class SupportFlow extends ChangeNotifier {
       'situation': type.name,
       'participation': role.name,
       'details': details.trim(),
+      'involvesStaff': involvesStaff,
     };
     final Map<String, Object?> delivery;
     try {
@@ -223,6 +231,7 @@ class SupportFlow extends ChangeNotifier {
     situation = null;
     participation = null;
     details = '';
+    involvesStaff = false;
     _resume();
     _notify();
     return true;
@@ -278,6 +287,7 @@ class SupportFlow extends ChangeNotifier {
             alert['participation']! as String,
           ),
           details: alert['details'] as String? ?? '',
+          involvesStaff: alert['involvesStaff'] == true,
           verifierHash: delivery['verifierHash']! as String,
           declaredAt: DateTime.parse(delivery['declaredAt']! as String),
           // La pieza viaja tal como se guardó al enviar la alerta.

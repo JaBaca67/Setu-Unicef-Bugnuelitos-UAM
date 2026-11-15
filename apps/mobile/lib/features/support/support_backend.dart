@@ -18,6 +18,7 @@ class AlertOutbox {
     required this.verifierHash,
     required this.declaredAt,
     required this.piece,
+    this.involvesStaff = false,
   });
 
   final String operationId;
@@ -27,6 +28,10 @@ class AlertOutbox {
   final String details;
   final String verifierHash;
   final DateTime declaredAt;
+
+  /// Verdadero si el estudiante indicó que la situación involucra a personal
+  /// del centro; en ese caso Dirección no ve el caso.
+  final bool involvesStaff;
 
   /// Pieza tal como quedó guardada al enviar la alerta (`StudentPiece.toJson`).
   /// Se reenvía sin reinterpretar, para no alterar alertas ya enviadas.
