@@ -191,7 +191,7 @@ class _HomeHeader extends StatelessWidget {
             '¡Hola!',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 42,
+              fontSize: 200,
               fontWeight: FontWeight.w700,
               height: 1.05,
               shadows: _textShadows,
@@ -202,7 +202,7 @@ class _HomeHeader extends StatelessWidget {
             '¿Qué querés hacer hoy?',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 60,
               fontWeight: FontWeight.w700,
               height: 1.25,
               shadows: _textShadows,
@@ -243,7 +243,7 @@ class _HomeHeader extends StatelessWidget {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        flex: 49,
+                        flex: 58,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 24, right: 6),
                           child: FittedBox(
