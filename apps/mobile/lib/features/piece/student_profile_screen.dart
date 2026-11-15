@@ -1,15 +1,14 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_nav.dart';
 import '../home/learning_progress.dart';
 import '../school_access/school_access_screen.dart' show SchoolCrest;
 import '../school_access/student_session.dart';
 import 'piece_editor_screen.dart';
+import 'piece_stage.dart';
 import 'student_piece.dart';
 
 const Color _line = Color(0xFFCBD5E1);
@@ -21,32 +20,26 @@ const TextStyle _label = TextStyle(
 
 String _days(int count) => count == 1 ? '1 día' : '$count días';
 
-/// «Mi perfil» (`/inicio/pieza`): la pieza con su apodo, el colegio activo,
-/// el nivel de aprendizaje y la personalización de la pieza. No pide nombre
-/// real, correo ni foto: todo vive cifrado en este teléfono.
+/// «Mi perfil» (`/inicio/pieza`): la pieza en su escenario, su nombre de juego,
+/// los accesorios que lleva, el progreso de aprendizaje y el colegio activo.
+/// No pide nombre real, correo ni foto: todo vive cifrado en este teléfono.
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({
     super.key,
     required this.session,
     required this.progress,
-    this.random,
   });
 
   final StudentSession session;
   final LearningProgress progress;
-  final math.Random? random;
 
   @override
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
-  late StudentPiece _draft = widget.session.piece.value;
-  late final TextEditingController _nickname = TextEditingController(
-    text: _draft.nickname,
-  );
-  bool _editing = false;
   bool _saved = false;
+  bool _schoolExpanded = false;
 
   @override
   void initState() {
@@ -54,32 +47,21 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     widget.progress.open();
   }
 
-  @override
-  void dispose() {
-    _nickname.dispose();
-    super.dispose();
+  Future<void> _openEditor(PieceEditorTab tab) async {
+    if (_saved) setState(() => _saved = false);
+    final bool? saved = await context.push<bool>(
+      '/inicio/pieza/editar?pestana=${tab.query}',
+    );
+    if (mounted && saved == true) {
+      setState(() => _saved = true);
+    }
   }
 
-  void _show({required bool editing}) => setState(() {
-    _editing = editing;
-    if (editing) {
-      _saved = false;
-      _draft = widget.session.piece.value;
-      _nickname.text = _draft.nickname;
+  Future<void> _openStreak() async {
+    final bool? openActivities = await context.push<bool>('/inicio/racha');
+    if (mounted && openActivities == true) {
+      context.go('/inicio', extra: HomeSectionRequest(HomeSection.actividades));
     }
-  });
-
-  void _save() {
-    final StudentPiece piece = _draft.copyWith(
-      nickname: StudentPiece.cleanNickname(_nickname.text),
-    );
-    widget.session.piece.value = piece;
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _draft = piece;
-      _editing = false;
-      _saved = true;
-    });
   }
 
   Future<void> _leaveSchool() async {
@@ -113,216 +95,84 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   @override
   Widget build(BuildContext context) => FlowScaffold(
-    header: const FlowHeader(
-      title: 'Mi perfil',
-      subtitle: 'Sin nombre real, correo ni foto.',
-    ),
-    bottom: _editing
-        ? FilledButton(
-            style: flowPrimaryStyle(),
-            onPressed: _save,
-            child: const Text('Guardar mi pieza'),
-          )
-        : null,
+    header: const FlowHeader(title: 'Mi perfil', trailing: _HeaderBrand()),
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: PieceTabButton(
-                label: 'Resumen',
-                selected: !_editing,
-                onTap: () => _show(editing: false),
+        if (_saved) ...<Widget>[
+          Semantics(
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: CureandoTheme.greenSoft,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: CureandoTheme.ink,
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(child: Text('Pieza guardada en este teléfono.')),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: PieceTabButton(
-                label: 'Mi pieza',
-                selected: _editing,
-                onTap: () => _show(editing: true),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (_editing) ..._editor() else ..._summary(),
-      ],
-    ),
-  );
-
-  List<Widget> _editor() => <Widget>[
-    const Text(
-      'Apodo de tu pieza',
-      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-    ),
-    const SizedBox(height: 8),
-    Semantics(
-      label: 'Apodo de tu pieza',
-      child: TextField(
-        controller: _nickname,
-        maxLength: StudentPiece.maxNickname,
-        textCapitalization: TextCapitalization.words,
-        textInputAction: TextInputAction.done,
-        inputFormatters: <TextInputFormatter>[
-          LengthLimitingTextInputFormatter(StudentPiece.maxNickname),
-        ],
-        style: const TextStyle(fontSize: 16),
-        decoration: InputDecoration(
-          hintText: 'Ej. Pulgin Valiente (no uses tu nombre real)',
-          hintStyle: const TextStyle(
-            color: Color(0xFF5F6F8A),
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
           ),
-          helperText:
-              'Es un nombre de juego. Si pedís apoyo, el equipo de escucha '
-              'lo ve junto a tu pieza.',
-          helperMaxLines: 3,
-          helperStyle: _label,
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      ),
-    ),
-    const SizedBox(height: 16),
-    PieceEditorPanel(
-      piece: _draft,
-      random: widget.random,
-      onChanged: (StudentPiece piece) => setState(() => _draft = piece),
-    ),
-  ];
-
-  List<Widget> _summary() => <Widget>[
-    if (_saved) ...<Widget>[
-      Semantics(
-        liveRegion: true,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: CureandoTheme.greenSoft,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: const Row(
-            children: <Widget>[
-              Icon(
-                Icons.check_circle_outline_rounded,
-                color: CureandoTheme.ink,
-              ),
-              SizedBox(width: 10),
-              Expanded(child: Text('Pieza guardada en este teléfono.')),
-            ],
-          ),
-        ),
-      ),
-      const SizedBox(height: 12),
-    ],
-    ListenableBuilder(
-      listenable: Listenable.merge(<Listenable>[
-        widget.session,
-        widget.session.piece,
-      ]),
-      builder: (BuildContext context, _) => _IdentityCard(
-        piece: widget.session.piece.value,
-        school: widget.session.school,
-      ),
-    ),
-    const SizedBox(height: 14),
-    ListenableBuilder(
-      listenable: widget.progress,
-      builder: (BuildContext context, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          _LevelCard(progress: widget.progress),
           const SizedBox(height: 12),
-          _Stats(progress: widget.progress),
         ],
-      ),
-    ),
-    const SizedBox(height: 18),
-    OutlinedButton.icon(
-      style: flowSecondaryStyle(),
-      onPressed: () => _show(editing: true),
-      icon: const Icon(Icons.edit_rounded),
-      label: const Text('Personalizar mi pieza'),
-    ),
-    if (widget.session.school != null) ...<Widget>[
-      const SizedBox(height: 8),
-      TextButton(
-        style: TextButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-        onPressed: _leaveSchool,
-        child: const Text(
-          'Cambiar o salir del colegio',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        ListenableBuilder(
+          listenable: widget.session.piece,
+          builder: (BuildContext context, _) {
+            final StudentPiece piece = widget.session.piece.value;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                PieceStage(
+                  piece: piece,
+                  figureHeight: 154,
+                  label: 'Nombre de mi pieza',
+                  name: PieceNamePill(
+                    name: piece.displayName,
+                    onTap: piece.displayName == null
+                        ? () => _openEditor(PieceEditorTab.name)
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  style: flowPrimaryStyle(),
+                  onPressed: () => _openEditor(PieceEditorTab.shape),
+                  child: const Text('Personalizar mi pieza'),
+                ),
+                const SizedBox(height: 14),
+                _EquippedSection(
+                  accessories: piece.accessories,
+                  onOpenAccessories: () =>
+                      _openEditor(PieceEditorTab.accessories),
+                ),
+              ],
+            );
+          },
         ),
-      ),
-    ],
-  ];
-}
-
-class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({required this.piece, required this.school});
-
-  final StudentPiece piece;
-  final ConfirmedSchool? school;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: <Color>[Color(0xFFDCEEFC), Color(0xFFC4E1F9)],
-      ),
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: const Color(0xFFB9D8F5)),
-    ),
-    child: Column(
-      children: <Widget>[
-        Semantics(
-          image: true,
-          label: 'Tu pieza: ${piece.description}',
-          child: PieceFigure(piece: piece, height: 170, sparks: true),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          piece.nickname,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 24,
-            height: 1.2,
-            fontWeight: FontWeight.w700,
+        const SizedBox(height: 14),
+        ListenableBuilder(
+          listenable: widget.progress,
+          builder: (BuildContext context, _) => _LearningCard(
+            progress: widget.progress,
+            onOpenStreak: _openStreak,
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SchoolCrest(school: school, size: 40),
-              const SizedBox(width: 10),
-              Flexible(
-                child: Text(
-                  school == null
-                      ? 'Sin colegio confirmado'
-                      : '${school!.displayName} · ${school!.municipality}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.25,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+        ListenableBuilder(
+          listenable: widget.session,
+          builder: (BuildContext context, _) => _SchoolSettingsCard(
+            school: widget.session.school,
+            expanded: _schoolExpanded,
+            onToggle: () =>
+                setState(() => _schoolExpanded = !_schoolExpanded),
+            onLeave: _leaveSchool,
           ),
         ),
       ],
@@ -330,142 +180,494 @@ class _IdentityCard extends StatelessWidget {
   );
 }
 
-class _LevelCard extends StatelessWidget {
-  const _LevelCard({required this.progress});
+class _HeaderBrand extends StatelessWidget {
+  const _HeaderBrand();
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Image.asset(
+          'assets/welcome/setu-symbol-white.png',
+          width: 24,
+          height: 24,
+        ),
+        const SizedBox(width: 6),
+        const Text(
+          'SéTú',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _EquippedSection extends StatelessWidget {
+  const _EquippedSection({
+    required this.accessories,
+    required this.onOpenAccessories,
+  });
+
+  final Set<PieceAccessory> accessories;
+  final VoidCallback onOpenAccessories;
+
+  static Color _tintFor(PieceAccessory accessory) => switch (accessory) {
+    PieceAccessory.cap => CureandoTheme.yellowSoft,
+    PieceAccessory.glasses => CureandoTheme.blueSoft,
+    PieceAccessory.bowTie => CureandoTheme.pinkSoft,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final List<PieceAccessory> equipped = PieceAccessory.values
+        .where(accessories.contains)
+        .toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Semantics(
+          header: true,
+          child: const Text(
+            'Lo que lleva',
+            style: TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+              color: CureandoTheme.ink,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (equipped.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: CureandoTheme.blueSoft,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFB9D8F5)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Text(
+                  'Tu pieza no lleva accesorios.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: CureandoTheme.ink,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  style: flowSecondaryStyle(),
+                  onPressed: onOpenAccessories,
+                  child: const Text('Probar accesorios'),
+                ),
+              ],
+            ),
+          )
+        else
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool largeText =
+                  MediaQuery.textScalerOf(context).scale(16) > 22;
+              final int columns = largeText || equipped.length == 1 ? 1 : 2;
+              final double itemWidth = columns == 1
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - 10) / 2;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: <Widget>[
+                  for (final PieceAccessory accessory in equipped)
+                    SizedBox(
+                      width: itemWidth,
+                      child: _EquippedTile(
+                        accessory: accessory,
+                        background: _tintFor(accessory),
+                        onTap: onOpenAccessories,
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _EquippedTile extends StatelessWidget {
+  const _EquippedTile({
+    required this.accessory,
+    required this.background,
+    required this.onTap,
+  });
+
+  final PieceAccessory accessory;
+  final Color background;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: '${accessory.fullLabel}. Tocá para cambiar accesorios.',
+    excludeSemantics: true,
+    child: Material(
+      color: background,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+          child: Stack(
+            children: <Widget>[
+              const Positioned(
+                top: 0,
+                right: 0,
+                child: CircleAvatar(
+                  radius: 11,
+                  backgroundColor: CureandoTheme.blue,
+                  child: Icon(
+                    Icons.check_rounded,
+                    size: 15,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const SizedBox(height: 8),
+                  Center(
+                    child: SizedBox(
+                      height: 54,
+                      child: Center(
+                        child: AccessoryFigure(
+                          accessory: accessory,
+                          width: accessory == PieceAccessory.bowTie ? 56 : 86,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      accessory.fullLabel,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: CureandoTheme.ink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _LearningCard extends StatelessWidget {
+  const _LearningCard({required this.progress, required this.onOpenStreak});
 
   final LearningProgress progress;
+  final VoidCallback onOpenStreak;
 
   @override
   Widget build(BuildContext context) {
     const int goal = LearningProgress.xpPerLevel;
     final int current = progress.levelXp;
-    final String title = 'Nivel ${progress.level} · ${progress.levelTitle}';
-    final String amount = '$current / $goal XP';
-    final String missing =
+    final String streakLabel = 'Racha de ${_days(progress.streak)}';
+    final String xpLabel = '${progress.xp} XP';
+    final String levelLabel = 'Nivel ${progress.level} · ${progress.levelTitle}';
+    final String semanticSummary =
+        'Mi aprendizaje. $streakLabel. $xpLabel. $levelLabel. '
+        '$current de $goal XP. '
         'Te faltan ${goal - current} XP para el nivel ${progress.level + 1}.';
-    return Semantics(
-      container: true,
-      label: '$title. $amount. $missing',
-      child: ExcludeSemantics(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _line),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    final bool largeText = MediaQuery.textScalerOf(context).scale(16) > 22;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: <Widget>[
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 12,
+              Semantics(
+                header: true,
+                child: const Text(
+                  'Mi aprendizaje',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                    color: CureandoTheme.ink,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onOpenStreak,
+                iconAlignment: IconAlignment.end,
+                style: TextButton.styleFrom(
+                  foregroundColor: CureandoTheme.blue,
+                  minimumSize: const Size(48, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                ),
+                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                label: const Text(
+                  'Ver mi racha',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Semantics(
+            container: true,
+            label: semanticSummary,
+            child: ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
+                  if (largeText) ...<Widget>[
+                    _StatLine(
+                      icon: Icons.local_fire_department_rounded,
+                      iconColor: const Color(0xFFF97316),
+                      text: streakLabel,
+                    ),
+                    const SizedBox(height: 6),
+                    _StatLine(
+                      icon: Icons.star_rounded,
+                      iconColor: const Color(0xFFFACC15),
+                      text: xpLabel,
+                    ),
+                  ] else
+                    IntrinsicHeight(
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            flex: 3,
+                            child: _StatLine(
+                              icon: Icons.local_fire_department_rounded,
+                              iconColor: const Color(0xFFF97316),
+                              text: streakLabel,
+                              centered: true,
+                            ),
+                          ),
+                          const VerticalDivider(
+                            width: 12,
+                            thickness: 1,
+                            color: _line,
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: _StatLine(
+                              icon: Icons.star_rounded,
+                              iconColor: const Color(0xFFFACC15),
+                              text: xpLabel,
+                              centered: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: current / goal,
+                      minHeight: 12,
+                      color: CureandoTheme.green,
+                      backgroundColor: const Color(0xFFE2E8F0),
                     ),
                   ),
+                  const SizedBox(height: 8),
                   Text(
-                    amount,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    levelLabel,
+                    textAlign: TextAlign.center,
+                    style: _label.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: CureandoTheme.blue,
+                      color: CureandoTheme.ink,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: current / goal,
-                  minHeight: 14,
-                  color: CureandoTheme.blue,
-                  backgroundColor: CureandoTheme.blueSoft,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(missing, style: _label),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _Stats extends StatelessWidget {
-  const _Stats({required this.progress});
+class _StatLine extends StatelessWidget {
+  const _StatLine({
+    required this.icon,
+    required this.iconColor,
+    required this.text,
+    this.centered = false,
+  });
 
-  final LearningProgress progress;
+  final IconData icon;
+  final Color iconColor;
+  final String text;
+  final bool centered;
 
   @override
-  Widget build(BuildContext context) {
-    final List<(IconData, String, String)> items = <(IconData, String, String)>[
-      (
-        Icons.local_fire_department_rounded,
-        'Racha actual',
-        _days(progress.streak),
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: centered
+        ? MainAxisAlignment.center
+        : MainAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: <Widget>[
+      Icon(icon, color: iconColor, size: 26),
+      const SizedBox(width: 6),
+      Flexible(
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: CureandoTheme.ink,
+          ),
+        ),
       ),
-      (Icons.emoji_events_rounded, 'Mejor racha', _days(progress.bestStreak)),
-      (Icons.bolt_rounded, 'XP total', '${progress.xp} XP'),
-      (
-        Icons.menu_book_rounded,
-        'Actividades y lecturas',
-        '${progress.completedCount}',
-      ),
-    ];
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        // Con letra grande las tarjetas pasan a una sola columna.
-        final bool single = MediaQuery.textScalerOf(context).scale(16) > 22;
-        final double width = single
-            ? constraints.maxWidth
-            : (constraints.maxWidth - 10) / 2;
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: <Widget>[
-            for (final (IconData icon, String label, String value) in items)
-              SizedBox(
-                width: width,
-                child: Semantics(
-                  container: true,
-                  label: '$label: $value',
-                  child: ExcludeSemantics(
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: CureandoTheme.blueSoft,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Icon(icon, color: CureandoTheme.blue, size: 26),
-                          const SizedBox(height: 6),
-                          Text(
-                            value,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(label, style: _label),
-                        ],
+    ],
+  );
+}
+
+class _SchoolSettingsCard extends StatelessWidget {
+  const _SchoolSettingsCard({
+    required this.school,
+    required this.expanded,
+    required this.onToggle,
+    required this.onLeave,
+  });
+
+  final ConfirmedSchool? school;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final VoidCallback onLeave;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: _line),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Semantics(
+          button: true,
+          toggled: expanded,
+          child: InkWell(
+            onTap: onToggle,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: <Widget>[
+                    const Icon(
+                      Icons.settings_outlined,
+                      color: CureandoTheme.blue,
+                      size: 26,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Mi colegio y ajustes',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: CureandoTheme.ink,
+                        ),
                       ),
                     ),
-                  ),
+                    Icon(
+                      expanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.chevron_right_rounded,
+                      color: CureandoTheme.blue,
+                    ),
+                  ],
                 ),
               ),
-          ],
-        );
-      },
-    );
-  }
+            ),
+          ),
+        ),
+        if (expanded) ...<Widget>[
+          const Divider(height: 1, color: _line),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    SchoolCrest(school: school, size: 42),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        school == null
+                            ? 'Sin colegio confirmado'
+                            : '${school!.displayName} · ${school!.municipality}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.25,
+                          fontWeight: FontWeight.w600,
+                          color: CureandoTheme.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (school != null) ...<Widget>[
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    style: flowSecondaryStyle(),
+                    onPressed: onLeave,
+                    child: const Text('Salir del colegio'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
 }

@@ -1,224 +1,426 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/flow_scaffold.dart';
+import 'piece_stage.dart';
 import 'student_piece.dart';
 
-enum _EditorTab {
-  shape('Forma'),
-  color('Color'),
-  accessories('Accesorios');
+/// Pestañas del editor. `query` es el valor de `?pestana=` en la ruta.
+enum PieceEditorTab {
+  shape('Forma', 'forma'),
+  color('Color', 'color'),
+  accessories('Accesorios', 'accesorios'),
+  name('Nombre', 'nombre');
 
-  const _EditorTab(this.label);
+  const PieceEditorTab(this.label, this.query);
   final String label;
+  final String query;
+
+  static PieceEditorTab fromQuery(String? value) => PieceEditorTab.values
+      .firstWhere((PieceEditorTab tab) => tab.query == value,
+          orElse: () => PieceEditorTab.shape);
 }
 
-/// Editor de «Mi pieza»: el estudiante arma un dibujo que lo acompaña en la
-/// app. No usa fotos, nombres reales ni cuentas. El borrador lo guarda quien
-/// lo contiene (`StudentProfileScreen`).
-class PieceEditorPanel extends StatefulWidget {
-  const PieceEditorPanel({
+/// Editor «Mi pieza» (`/inicio/pieza/editar`). Trabaja sobre un borrador:
+/// solo «Guardar mi pieza» lo escribe en la sesión. Volver atrás conserva la
+/// última versión guardada. No usa fotos, nombres reales ni cuentas.
+class PieceEditorScreen extends StatefulWidget {
+  const PieceEditorScreen({
     super.key,
     required this.piece,
-    required this.onChanged,
+    this.initialTab = PieceEditorTab.shape,
     this.random,
   });
 
-  final StudentPiece piece;
-  final ValueChanged<StudentPiece> onChanged;
+  final ValueNotifier<StudentPiece> piece;
+  final PieceEditorTab initialTab;
   final math.Random? random;
 
   @override
-  State<PieceEditorPanel> createState() => _PieceEditorPanelState();
+  State<PieceEditorScreen> createState() => _PieceEditorScreenState();
 }
 
-class _PieceEditorPanelState extends State<PieceEditorPanel> {
+class _PieceEditorScreenState extends State<PieceEditorScreen> {
   late final math.Random _random = widget.random ?? math.Random();
-  _EditorTab _tab = _EditorTab.shape;
+  late StudentPiece _draft = widget.piece.value;
+  late PieceEditorTab _tab = widget.initialTab;
+  late PieceNameNoun? _noun = _draft.name?.noun;
+  late PieceNameTrait? _trait = _draft.name?.trait;
+  String? _reaction;
+  int _hop = 0;
 
-  StudentPiece get _piece => widget.piece;
-  void _set(StudentPiece piece) => widget.onChanged(piece);
+  /// Eligió una sola de las dos palabras: falta la otra para guardar.
+  bool get _halfName => (_noun == null) != (_trait == null);
+
+  void _setName(PieceNameNoun? noun, PieceNameTrait? trait) => setState(() {
+    _noun = noun;
+    _trait = trait;
+    _draft = noun != null && trait != null
+        ? _draft.copyWith(name: PieceName(noun, trait))
+        : _draft.copyWith(clearName: true);
+  });
+
+  void _randomName() {
+    final PieceName name = PieceName.random(_random);
+    _setName(name.noun, name.trait);
+  }
+
+  void _toggle(PieceAccessory accessory) => setState(() {
+    final bool wearing = !_draft.accessories.contains(accessory);
+    _draft = _draft.toggle(accessory);
+    _reaction = wearing
+        ? 'Tu pieza se puso ${accessory.article}.'
+        : 'Tu pieza se quitó ${accessory.article}.';
+    if (wearing) _hop++;
+  });
+
+  void _save() {
+    widget.piece.value = _draft;
+    context.pop(true);
+  }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: <Widget>[
-      _Preview(
-        piece: _piece,
-        onRandom: () =>
-            _set(StudentPiece.random(_random, nickname: _piece.nickname)),
-      ),
-      const SizedBox(height: 16),
-      Row(
-        children: <Widget>[
-          for (final _EditorTab tab in _EditorTab.values) ...<Widget>[
-            if (tab.index > 0) const SizedBox(width: 8),
-            Expanded(
-              child: PieceTabButton(
-                label: tab.label,
-                selected: _tab == tab,
-                onTap: () => setState(() => _tab = tab),
+  Widget build(BuildContext context) => FlowScaffold(
+    header: const FlowHeader(title: 'Mi pieza'),
+    bottom: FilledButton(
+      style: flowPrimaryStyle(),
+      onPressed: _halfName ? null : _save,
+      child: const Text('Guardar mi pieza'),
+    ),
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        PieceStage(
+          piece: _draft,
+          hop: _hop,
+          figureHeight: 200,
+          name: Semantics(
+            liveRegion: true,
+            child: PieceNamePill(name: _draft.displayName),
+          ),
+        ),
+        if (_reaction != null) ...<Widget>[
+          const SizedBox(height: 10),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _reaction!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: CureandoTheme.ink,
               ),
             ),
-          ],
+          ),
         ],
-      ),
-      const SizedBox(height: 16),
-      GridView.count(
-        crossAxisCount: 3,
-        shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: _tab == _EditorTab.shape ? 1 : .82,
-        children: switch (_tab) {
-          _EditorTab.shape => <Widget>[
-            for (final PieceShape shape in PieceShape.values)
-              _OptionTile(
-                label: shape.label,
-                showLabel: false,
-                selected: _piece.shape == shape,
-                background: PieceColor.values[shape.index].soft,
-                onTap: () => _set(_piece.copyWith(shape: shape)),
-                child: PieceFigure(
-                  piece: StudentPiece(
-                    shape: shape,
-                    color: PieceColor.values[shape.index],
-                  ),
-                  face: false,
-                  height: 84,
-                ),
-              ),
-          ],
-          _EditorTab.color => <Widget>[
-            for (final PieceColor color in PieceColor.values)
-              _OptionTile(
-                label: color.label,
-                selected: _piece.color == color,
-                background: color.soft,
-                onTap: () => _set(_piece.copyWith(color: color)),
-                child: Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: color.color,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                  ),
-                ),
-              ),
-          ],
-          _EditorTab.accessories => <Widget>[
-            for (final PieceAccessory accessory in PieceAccessory.values)
-              _OptionTile(
-                label: accessory.label,
-                selected: _piece.accessories.contains(accessory),
-                background: CureandoTheme.blueSoft,
-                onTap: () => _set(_piece.toggle(accessory)),
-                child: PieceFigure(
-                  piece: StudentPiece(
-                    shape: _piece.shape,
-                    color: _piece.color,
-                    accessories: <PieceAccessory>{accessory},
-                  ),
-                  legs: false,
-                  height: 84,
-                ),
-              ),
-          ],
-        },
-      ),
-    ],
-  );
-}
-
-class _Preview extends StatelessWidget {
-  const _Preview({required this.piece, required this.onRandom});
-
-  final StudentPiece piece;
-  final VoidCallback onRandom;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: <Color>[Color(0xFFDCEEFC), Color(0xFFC4E1F9)],
-      ),
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: const Color(0xFFB9D8F5)),
+        const SizedBox(height: 16),
+        _Tabs(
+          selected: _tab,
+          onSelected: (PieceEditorTab tab) => setState(() => _tab = tab),
+        ),
+        const SizedBox(height: 16),
+        if (_tab == PieceEditorTab.name) _nameTab() else ..._appearanceTab(),
+      ],
     ),
-    padding: const EdgeInsets.only(top: 18, bottom: 14),
-    child: Column(
+  );
+
+  List<Widget> _appearanceTab() => <Widget>[
+    GridView.count(
+      crossAxisCount: 3,
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: _tab == PieceEditorTab.shape ? 1 : .82,
+      children: switch (_tab) {
+        PieceEditorTab.shape => <Widget>[
+          for (final PieceShape shape in PieceShape.values)
+            _OptionTile(
+              label: shape.label,
+              showLabel: false,
+              selected: _draft.shape == shape,
+              background: PieceColor.values[shape.index].soft,
+              onTap: () => setState(() => _draft = _draft.copyWith(shape: shape)),
+              child: PieceFigure(
+                piece: StudentPiece(
+                  shape: shape,
+                  color: PieceColor.values[shape.index],
+                ),
+                face: false,
+                height: 84,
+              ),
+            ),
+        ],
+        PieceEditorTab.color => <Widget>[
+          for (final PieceColor color in PieceColor.values)
+            _OptionTile(
+              label: color.label,
+              selected: _draft.color == color,
+              background: color.soft,
+              onTap: () => setState(() => _draft = _draft.copyWith(color: color)),
+              child: Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: color.color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                ),
+              ),
+            ),
+        ],
+        _ => <Widget>[
+          for (final PieceAccessory accessory in PieceAccessory.values)
+            _OptionTile(
+              label: accessory.label,
+              selected: _draft.accessories.contains(accessory),
+              background: CureandoTheme.blueSoft,
+              onTap: () => _toggle(accessory),
+              child: PieceFigure(
+                piece: StudentPiece(
+                  shape: _draft.shape,
+                  color: _draft.color,
+                  accessories: <PieceAccessory>{accessory},
+                ),
+                legs: false,
+                height: 84,
+              ),
+            ),
+        ],
+      },
+    ),
+    const SizedBox(height: 14),
+    Center(
+      child: _ShuffleButton(
+        label: 'Apariencia al azar',
+        onTap: () => setState(
+          () => _draft = StudentPiece.random(_random, name: _draft.name),
+        ),
+      ),
+    ),
+  ];
+
+  Widget _nameTab() {
+    final NameGender? gender = _noun?.gender;
+    String traitLabel(PieceNameTrait trait) {
+      if (gender != null) return trait.formFor(gender);
+      return trait.masculine == trait.feminine
+          ? trait.masculine
+          : '${trait.masculine} / ${trait.feminine}';
+    }
+
+    final Widget nounField = _NameDropdown<PieceNameNoun>(
+      key: ValueKey<Object?>(('noun', _noun)),
+      label: 'Nombre',
+      value: _noun,
+      items: PieceNameNoun.values,
+      itemLabel: (PieceNameNoun noun) => noun.label,
+      onChanged: (PieceNameNoun? noun) => _setName(noun, _trait),
+    );
+    final Widget traitField = _NameDropdown<PieceNameTrait>(
+      key: ValueKey<Object?>(('trait', _trait, gender)),
+      label: 'Apodo',
+      value: _trait,
+      items: PieceNameTrait.values,
+      itemLabel: traitLabel,
+      onChanged: (PieceNameTrait? trait) => _setName(_noun, trait),
+    );
+    final bool stacked = MediaQuery.textScalerOf(context).scale(16) > 22;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Semantics(
-          image: true,
-          liveRegion: true,
-          label: 'Tu pieza: ${piece.description}',
-          child: Stack(
-            alignment: Alignment.center,
+          header: true,
+          child: const Text(
+            PieceNamePill.placeholder,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (stacked) ...<Widget>[
+          nounField,
+          const SizedBox(height: 12),
+          traitField,
+        ] else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const Positioned(
-                left: 0,
-                right: 0,
-                bottom: 38,
-                child: DashedWave(color: Color(0xFFFF4FA3), height: 54),
+              Expanded(child: nounField),
+              const SizedBox(width: 10),
+              Expanded(child: traitField),
+            ],
+          ),
+        if (_halfName) ...<Widget>[
+          const SizedBox(height: 8),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _noun == null
+                  ? 'Elegí también el nombre para poder guardar.'
+                  : 'Elegí también el apodo para poder guardar.',
+              style: const TextStyle(
+                fontSize: 15,
+                color: CureandoTheme.secondaryInk,
               ),
-              Positioned(
-                bottom: 2,
-                child: Container(
-                  width: 150,
-                  height: 22,
-                  decoration: const BoxDecoration(
-                    color: Color(0x4D5BA8E8),
-                    borderRadius: BorderRadius.all(Radius.elliptical(75, 11)),
-                  ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        Center(child: _ShuffleButton(label: 'Al azar', onTap: _randomName)),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: CureandoTheme.blueSoft,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Icon(Icons.lock_outline_rounded, color: CureandoTheme.ink),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Usá un nombre de juego para tu pieza. Si pedís apoyo, el '
+                  'equipo de escucha lo ve junto a tu pieza.',
+                  style: TextStyle(fontSize: 15, height: 1.3),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: PieceFigure(piece: piece, height: 230, sparks: true),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 10),
-        Material(
-          color: Colors.white,
-          shape: const StadiumBorder(),
-          child: InkWell(
-            customBorder: const StadiumBorder(),
-            onTap: onRandom,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(Icons.shuffle_rounded, color: CureandoTheme.blue),
-                  SizedBox(width: 8),
-                  Text(
-                    'Al azar',
-                    style: TextStyle(
-                      color: CureandoTheme.blue,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ],
+    );
+  }
+}
+
+class _Tabs extends StatelessWidget {
+  const _Tabs({required this.selected, required this.onSelected});
+
+  final PieceEditorTab selected;
+  final ValueChanged<PieceEditorTab> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool large = MediaQuery.textScalerOf(context).scale(16) > 22;
+    final List<Widget> buttons = <Widget>[
+      for (final PieceEditorTab tab in PieceEditorTab.values)
+        PieceTabButton(
+          label: tab.label,
+          selected: selected == tab,
+          onTap: () => onSelected(tab),
+        ),
+    ];
+    if (large) {
+      // Con letra grande, dos pestañas por fila para que se lean completas.
+      return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) => Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            for (final Widget button in buttons)
+              SizedBox(width: (constraints.maxWidth - 8) / 2, child: button),
+          ],
+        ),
+      );
+    }
+    return Row(
+      children: <Widget>[
+        for (int i = 0; i < buttons.length; i++) ...<Widget>[
+          if (i > 0) const SizedBox(width: 6),
+          Expanded(child: buttons[i]),
+        ],
+      ],
+    );
+  }
+}
+
+class _NameDropdown<T> extends StatelessWidget {
+  const _NameDropdown({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.itemLabel,
+    required this.onChanged,
+  });
+
+  final String label;
+  final T? value;
+  final List<T> items;
+  final String Function(T) itemLabel;
+  final ValueChanged<T?> onChanged;
+
+  @override
+  Widget build(BuildContext context) => DropdownButtonFormField<T>(
+    initialValue: value,
+    isExpanded: true,
+    menuMaxHeight: 360,
+    borderRadius: BorderRadius.circular(14),
+    hint: const Text('Elegir'),
+    icon: const Icon(
+      Icons.keyboard_arrow_down_rounded,
+      color: CureandoTheme.blue,
     ),
+    style: const TextStyle(
+      fontFamily: 'Poppins',
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: CureandoTheme.ink,
+    ),
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFF9DBEF2), width: 1.5),
+      ),
+    ),
+    items: <DropdownMenuItem<T>>[
+      for (final T item in items)
+        DropdownMenuItem<T>(value: item, child: Text(itemLabel(item))),
+    ],
+    onChanged: onChanged,
   );
 }
 
-/// Pestaña de selección de «Mi perfil» y del editor de pieza.
+class _ShuffleButton extends StatelessWidget {
+  const _ShuffleButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: CureandoTheme.blue,
+      backgroundColor: Colors.white,
+      minimumSize: const Size(48, 50),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+      side: const BorderSide(color: CureandoTheme.blue, width: 1.5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      textStyle: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+    onPressed: onTap,
+    icon: const Icon(Icons.shuffle_rounded),
+    label: Text(label),
+  );
+}
+
+/// Pestaña de selección del editor de pieza.
 class PieceTabButton extends StatelessWidget {
   const PieceTabButton({
     super.key,
@@ -251,14 +453,16 @@ class PieceTabButton extends StatelessWidget {
           constraints: const BoxConstraints(minHeight: 52),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: selected ? Colors.white : CureandoTheme.ink,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? Colors.white : CureandoTheme.ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),

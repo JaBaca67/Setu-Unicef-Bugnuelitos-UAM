@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'features/home/learning_progress.dart';
 import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
+import 'features/piece/piece_editor_screen.dart';
 import 'features/piece/student_piece.dart';
 import 'features/piece/student_profile_screen.dart';
 import 'features/school_access/school_access_screen.dart';
@@ -43,6 +46,7 @@ class CureandoApp extends StatefulWidget {
     this.allowDesignCapture = false,
     this.allowSchoolSimulation = false,
     this.checkSchoolProximity = checkSchoolLocation,
+    this.pieceRandom,
   });
   final CureandoGateway? gateway;
   final LearningProgress? learningProgress;
@@ -63,6 +67,7 @@ class CureandoApp extends StatefulWidget {
   final bool allowDesignCapture;
   final bool allowSchoolSimulation;
   final Future<SchoolProximity> Function() checkSchoolProximity;
+  final math.Random? pieceRandom;
   @override
   State<CureandoApp> createState() => _CureandoAppState();
 }
@@ -227,6 +232,22 @@ class _CureandoAppState extends State<CureandoApp> {
               state,
               StudentProfileScreen(session: _session, progress: _learning),
             ),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'editar',
+                pageBuilder: (context, state) => studentTransition<bool>(
+                  context,
+                  state,
+                  PieceEditorScreen(
+                    piece: _piece,
+                    initialTab: PieceEditorTab.fromQuery(
+                      state.uri.queryParameters['pestana'],
+                    ),
+                    random: widget.pieceRandom,
+                  ),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'apoyo',
