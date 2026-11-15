@@ -125,12 +125,73 @@ void main() {
     expect(alert.details, 'Relato ficticio');
     expect(alert.situation, Situation.verbal);
     expect(alert.participation, Participation.own);
-    expect(alert.piece?.toJson(), StudentPiece.initial.toJson());
+    expect(alert.piece, StudentPiece.initial.toJson());
     expect(flow.delivery, AlertDelivery.received);
     expect(store.data!['received'], isTrue);
     expect(saved()['caseId'], 'case-${alert.operationId}');
     flow.dispose();
   });
+
+  test(
+    'si la pieza no tiene nombre válido omite displayName y conserva alertas previas',
+    () async {
+      const StudentPiece unnamed = StudentPiece(
+        shape: PieceShape.star,
+        color: PieceColor.pink,
+        name: null,
+      );
+      flow
+        ..selectSituation(Situation.talk)
+        ..selectParticipation(Participation.witness);
+      expect(await flow.send(piece: unnamed), isTrue);
+      await _settle();
+
+      final AlertOutbox sent = platform.alerts.single;
+      expect(sent.piece, isNotNull);
+      expect(sent.piece!['shape'], 'star');
+      expect(sent.piece!['color'], 'pink');
+      expect(sent.piece!.containsKey('displayName'), isFalse);
+      flow.dispose();
+
+      // Una alerta pendiente guardada antes de migrar no se altera al reenviar.
+      final _MemoryStore legacyStore = _MemoryStore();
+      legacyStore.data = <String, Object?>{
+        'version': 1,
+        'alert': <String, Object?>{
+          'situation': Situation.verbal.name,
+          'participation': Participation.own.name,
+          'details': 'Caso previo',
+        },
+        'delivery': <String, Object?>{
+          'operationId': 'alert-legacy',
+          'token': 'a' * 64,
+          'verifierHash': 'b' * 64,
+          'declaredAt': DateTime.utc(2026, 11, 10).toIso8601String(),
+          'schoolCode': 'AULA26',
+          'piece': <String, Object?>{
+            'displayName': 'Apodo Anterior',
+            'shape': 'puzzle',
+            'color': 'green',
+            'accessories': <String>['cap'],
+          },
+          'caseId': null,
+        },
+        'received': false,
+        'chatAvailable': false,
+        'caseClosed': false,
+      };
+      final _FakePlatform legacyPlatform = _FakePlatform();
+      final SupportFlow legacyFlow = SupportFlow(
+        openStore: () async => legacyStore,
+        backend: legacyPlatform,
+        schoolCode: 'AULA26',
+      );
+      await legacyFlow.open();
+      await _settle();
+      expect(legacyPlatform.alerts.single.piece?['displayName'], 'Apodo Anterior');
+      legacyFlow.dispose();
+    },
+  );
 
   test('si no puede guardar en el teléfono no envía nada', () async {
     store.failing = true;

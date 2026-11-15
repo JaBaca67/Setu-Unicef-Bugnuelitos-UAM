@@ -167,8 +167,9 @@ void main() {
       // Solo «Salir del colegio» libera la sesión.
       await tester.tap(find.byTooltip('Abrir mi perfil'));
       await tester.pumpAndSettle();
-      await _tap(tester, 'Cambiar o salir del colegio');
-      await tester.tap(find.text('Salir del colegio'));
+      await _tap(tester, 'Mi colegio y ajustes');
+      await _tap(tester, 'Salir del colegio');
+      await tester.tap(find.text('Salir del colegio').last);
       await tester.pumpAndSettle();
       expect(find.text('Ingreso estudiantil'), findsOneWidget);
       // Sin subtítulos bajo los botones de la bienvenida.

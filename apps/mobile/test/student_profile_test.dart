@@ -1,12 +1,21 @@
+import 'dart:io';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:cureando_mobile/app.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
+import 'package:cureando_mobile/features/piece/piece_editor_screen.dart';
 import 'package:cureando_mobile/features/piece/student_piece.dart';
+import 'package:cureando_mobile/features/piece/student_profile_screen.dart';
 import 'package:cureando_mobile/features/school_access/school_location.dart';
 import 'package:cureando_mobile/features/school_access/student_session.dart';
 import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
+import 'package:cureando_mobile/shared/theme/app_theme.dart';
 import 'package:cureando_mobile/shared/widgets/setu_bottom_nav.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _MemoryStore implements LocalStorePersistence {
@@ -24,6 +33,7 @@ CureandoApp _app({
   _MemoryStore? progressStore,
   SupportFlow? support,
   SchoolResolver? resolver,
+  math.Random? pieceRandom,
 }) => CureandoApp(
   checkSchoolProximity: () async => SchoolProximity.nearby,
   studentSession: StudentSession(
@@ -35,7 +45,41 @@ CureandoApp _app({
     openStore: () async => progressStore ?? _MemoryStore(),
     now: () => DateTime(2026, 11, 13),
   ),
+  pieceRandom: pieceRandom,
 );
+
+Future<void> _capture(WidgetTester tester, Key key, String name) async {
+  if (!const bool.fromEnvironment('SETU_CAPTURE_QA')) return;
+  final Finder capture = find.byKey(key);
+  final Finder images = find.descendant(
+    of: capture,
+    matching: find.byType(Image),
+  );
+  await tester.runAsync<void>(() async {
+    await precacheImage(
+      const AssetImage('assets/welcome/campaign-pattern.png'),
+      tester.element(capture),
+    );
+    for (final Element element in images.evaluate()) {
+      await precacheImage((element.widget as Image).image, element);
+    }
+  });
+  await tester.pumpAndSettle();
+  await tester.runAsync<void>(() async {
+    final RenderRepaintBoundary boundary = tester
+        .renderObject<RenderRepaintBoundary>(capture);
+    final ui.Image image = await boundary.toImage(pixelRatio: 1.5);
+    final ByteData? bytes = await image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+    image.dispose();
+    final Directory directory = Directory('build/qa');
+    await directory.create(recursive: true);
+    await File(
+      '${directory.path}/$name.png',
+    ).writeAsBytes(bytes!.buffer.asUint8List());
+  });
+}
 
 void _useTallView(WidgetTester tester) {
   tester.view.physicalSize = const Size(392, 850);
@@ -70,6 +114,21 @@ Future<void> _enterSchool(WidgetTester tester, String code) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    final FontLoader poppins = FontLoader('Poppins');
+    for (final String weight in <String>[
+      'Regular',
+      'Medium',
+      'SemiBold',
+      'Bold',
+    ]) {
+      poppins.addFont(rootBundle.load('assets/fonts/Poppins-$weight.ttf'));
+    }
+    await poppins.load();
+    await (FontLoader(
+      'MaterialIcons',
+    )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+  });
 
   group('SetuBottomNav', () {
     Future<List<HomeSection>> pumpNav(
@@ -176,7 +235,7 @@ void main() {
   });
 
   test(
-    'el nivel, la mejor racha y el apodo se calculan sin datos reales',
+    'el nivel, el catálogo de nombres y la migración funcionan sin datos reales',
     () async {
       DateTime now = DateTime(2026, 11, 10);
       final LearningProgress progress = LearningProgress(
@@ -204,15 +263,65 @@ void main() {
       expect(progress.bestStreak, 3);
       expect(progress.completedCount, 8);
 
-      expect(StudentPiece.cleanNickname('   '), StudentPiece.defaultNickname);
+      // Concordancia de género y catálogo cerrado sin duplicados.
       expect(
-        StudentPiece.cleanNickname('x' * 40).length,
-        StudentPiece.maxNickname,
+        const PieceName(
+          PieceNameNoun.chispa,
+          PieceNameTrait.cosmico,
+        ).displayName,
+        'Chispa Cósmica',
       );
       expect(
-        StudentPiece.initial.copyWith(nickname: 'Luna').toJson()['displayName'],
-        'Luna',
+        const PieceName(
+          PieceNameNoun.cometa,
+          PieceNameTrait.cosmico,
+        ).displayName,
+        'Cometa Cósmico',
       );
+      final List<String> names = PieceName.all
+          .map((PieceName n) => n.displayName)
+          .toList();
+      expect(names.length, 144);
+      expect(names.toSet().length, 144);
+      expect(PieceName.match('  pulgin   VALIENTE '), PieceName.initial);
+      expect(PieceName.match('Nombre Libre Demo'), isNull);
+
+      const StudentPiece unnamed = StudentPiece(
+        shape: PieceShape.star,
+        color: PieceColor.pink,
+        name: null,
+      );
+      expect(unnamed.displayName, isNull);
+      expect(unnamed.toJson().containsKey('displayName'), isFalse);
+
+      // Migración de perfil anterior: conserva apariencia y borra el apodo libre.
+      final _MemoryStore legacyStore = _MemoryStore();
+      legacyStore.data = <String, Object?>{
+        'version': 1,
+        'school': localSchoolCatalog.first.toJson(),
+        'piece': <String, Object?>{
+          'displayName': 'Apodo Libre Anterior',
+          'shape': 'flower',
+          'color': 'blue',
+          'accessories': <String>['bowTie'],
+        },
+      };
+      final StudentSession session = StudentSession(
+        openStore: () async => legacyStore,
+      );
+      addTearDown(session.dispose);
+      await session.open();
+      expect(session.piece.value.shape, PieceShape.flower);
+      expect(session.piece.value.color, PieceColor.blue);
+      expect(session.piece.value.accessories, <PieceAccessory>{
+        PieceAccessory.bowTie,
+      });
+      expect(session.piece.value.name, isNull);
+      final Map<String, Object?> savedPiece =
+          (legacyStore.data!['piece']! as Map<Object?, Object?>)
+              .cast<String, Object?>();
+      expect(savedPiece.containsKey('displayName'), isFalse);
+      expect(savedPiece['shape'], 'flower');
     },
   );
 
@@ -253,9 +362,10 @@ void main() {
   );
 
   testWidgets(
-    'el colegio confirmado persiste, llega a la alerta y se puede salir',
+    'primer ingreso, persistencia al reabrir, alertas y salir del colegio',
     (WidgetTester tester) async {
       _useTallView(tester);
+      const ValueKey<String> captureKey = ValueKey<String>('profile-capture');
       final _MemoryStore sessionStore = _MemoryStore();
       final _MemoryStore progressStore = _MemoryStore();
       final _MemoryStore alertStore = _MemoryStore();
@@ -264,10 +374,14 @@ void main() {
       final SupportFlow secondSupport = support();
 
       await tester.pumpWidget(
-        _app(
-          sessionStore: sessionStore,
-          progressStore: progressStore,
-          support: firstSupport,
+        RepaintBoundary(
+          key: captureKey,
+          child: _app(
+            sessionStore: sessionStore,
+            progressStore: progressStore,
+            support: firstSupport,
+            pieceRandom: math.Random(7),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -280,7 +394,42 @@ void main() {
         'AULA26',
       );
 
-      // La alerta se registra en el colegio activo, no en uno fijo.
+      // Primer ingreso a «Mi perfil»: datos reales en cero, accesorios y colegio al final.
+      await tester.tap(find.byTooltip('Abrir mi perfil'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pulgin Valiente'), findsOneWidget);
+      expect(find.text('Gorra amarilla'), findsOneWidget);
+      expect(find.text('Lentes azules'), findsOneWidget);
+      expect(find.text('Corbatín rosado'), findsNothing);
+      expect(find.text('Racha de 0 días'), findsOneWidget);
+      expect(find.text('0 XP'), findsOneWidget);
+      expect(find.text('Nivel 1 · Curioso'), findsOneWidget);
+      expect(
+        tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator)).value,
+        0,
+      );
+      await _capture(tester, captureKey, 'mi-perfil-inicial');
+
+      // Tocar un accesorio equipado abre el editor directo en «Accesorios».
+      await _tapLabel(tester, 'Gorra amarilla');
+      expect(find.text('Mi pieza'), findsOneWidget);
+      expect(find.text('Corbatín'), findsOneWidget);
+
+      // Cambiar a «Nombre», probar «Al azar» y elegir «Chispa Cósmica».
+      await _tapLabel(tester, 'Nombre');
+      await _capture(tester, captureKey, 'mi-pieza-nombre');
+      await _tapLabel(tester, 'Al azar');
+      expect(find.text('Pulgin Valiente'), findsNothing);
+      await _tapLabel(tester, 'Guardar mi pieza');
+      expect(find.text('Pieza guardada en este teléfono.'), findsOneWidget);
+      final String chosenName =
+          ((sessionStore.data?['piece']! as Map<Object?, Object?>)['displayName'])!
+              as String;
+      expect(find.text(chosenName), findsOneWidget);
+
+      // Volver a Inicio y enviar una alerta con el nombre de juego elegido.
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
       await _tapLabel(tester, 'Pedir apoyo');
       await _tapLabel(tester, 'Enviar una alerta');
       await _tapLabel(tester, 'Necesito hablar');
@@ -294,12 +443,12 @@ void main() {
       expect(delivery['schoolCode'], 'AULA26');
       expect(
         (delivery['piece']! as Map<Object?, Object?>)['displayName'],
-        'Pulgin Valiente',
+        chosenName,
       );
       await tester.pump(const Duration(seconds: 12));
       await tester.pumpAndSettle();
 
-      // Al reabrir la app entra directo al inicio, sin pedir el código.
+      // Al reabrir la app entra directo al inicio y conserva pieza y nombre.
       await tester.pumpWidget(const SizedBox.shrink());
       firstSupport.dispose();
       await tester.pumpWidget(
@@ -313,39 +462,31 @@ void main() {
       expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
       expect(find.text('Ingreso estudiantil'), findsNothing);
 
-      // El perfil muestra apodo, colegio con escudo, nivel y estadísticas.
       await tester.tap(find.byTooltip('Abrir mi perfil'));
       await tester.pumpAndSettle();
-      expect(find.text('Pulgin Valiente'), findsOneWidget);
+      expect(find.text(chosenName), findsOneWidget);
+
+      // «Mi colegio y ajustes» despliega el colegio, confirmación y conserva todo al salir.
+      await _tapLabel(tester, 'Mi colegio y ajustes');
       expect(find.text('Colegio Centro América · Managua'), findsOneWidget);
       expect(
         find.bySemanticsLabel('Escudo del Colegio Centro América'),
         findsOneWidget,
       );
-      expect(find.text('Nivel 1 · Curioso'), findsOneWidget);
-      expect(find.text('0 / 50 XP'), findsOneWidget);
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-      for (final String stat in <String>[
-        'Racha actual',
-        'Mejor racha',
-        'XP total',
-        'Actividades y lecturas',
-      ]) {
-        expect(find.text(stat), findsOneWidget);
-      }
-
-      // Salir pide confirmación y conserva la pieza guardada.
-      await _tapLabel(tester, 'Cambiar o salir del colegio');
+      await _tapLabel(tester, 'Salir del colegio');
       expect(find.text('¿Salir de este colegio?'), findsOneWidget);
       await tester.tap(find.text('Cancelar'));
       await tester.pumpAndSettle();
       expect(sessionStore.data?['school'], isNotNull);
-      await _tapLabel(tester, 'Cambiar o salir del colegio');
-      await tester.tap(find.text('Salir del colegio'));
+      await _tapLabel(tester, 'Salir del colegio');
+      await tester.tap(find.text('Salir del colegio').last);
       await tester.pumpAndSettle();
       expect(find.text('Ingreso estudiantil'), findsOneWidget);
       expect(sessionStore.data?['school'], isNull);
-      expect(sessionStore.data?['piece'], isNotNull);
+      expect(
+        (sessionStore.data?['piece']! as Map<Object?, Object?>)['displayName'],
+        chosenName,
+      );
       await _tapLabel(tester, 'Ingreso estudiantil');
       expect(find.text('Confirmá tu colegio'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -353,4 +494,232 @@ void main() {
       secondSupport.dispose();
     },
   );
+
+  testWidgets(
+    'perfil anterior sin nombre válido, calendario de racha y barra con umbrales reales',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      const ValueKey<String> captureKey = ValueKey<String>('legacy-capture');
+      final _MemoryStore sessionStore = _MemoryStore();
+      sessionStore.data = <String, Object?>{
+        'version': 1,
+        'school': localSchoolCatalog.first.toJson(),
+        'piece': <String, Object?>{
+          'displayName': 'Juanito Demo',
+          'shape': 'star',
+          'color': 'pink',
+          'accessories': <String>[],
+        },
+      };
+      final _MemoryStore progressStore = _MemoryStore();
+      progressStore.data = <String, Object?>{
+        'version': 1,
+        'activeDays': <String>['2026-11-11', '2026-11-12', '2026-11-13'],
+        'questionDays': <String>['2026-11-11', '2026-11-12', '2026-11-13'],
+        'resources': <String>['res-1', 'res-2', 'res-3', 'res-4', 'res-5', 'res-6', 'res-7', 'res-8'],
+      };
+      final _MemoryStore alertStore = _MemoryStore();
+      final SupportFlow support = SupportFlow(openStore: () async => alertStore);
+
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: captureKey,
+          child: _app(
+            sessionStore: sessionStore,
+            progressStore: progressStore,
+            support: support,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Abrir mi perfil'));
+      await tester.pumpAndSettle();
+      // Conserva apariencia sin accesorios, progreso real (3 días, 70 XP -> Nivel 2) y pide nombre.
+      expect(find.text('Elegí un nombre de juego'), findsOneWidget);
+      expect(find.text('Tu pieza no lleva accesorios.'), findsOneWidget);
+      expect(find.text('Probar accesorios'), findsOneWidget);
+      expect(find.text('Racha de 3 días'), findsOneWidget);
+      expect(find.text('70 XP'), findsOneWidget);
+      expect(find.text('Nivel 2 · Explorador'), findsOneWidget);
+      expect(
+        tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator)).value,
+        closeTo(0.4, 0.001),
+      );
+      await _capture(tester, captureKey, 'mi-perfil-sin-nombre-ni-accesorios');
+
+      // «Ver mi racha» abre el calendario actual y puede enviar a Actividades.
+      await _tapLabel(tester, 'Ver mi racha');
+      expect(find.text('Mi racha'), findsOneWidget);
+      expect(find.text('Noviembre 2026'), findsOneWidget);
+      expect(find.text('70 XP'), findsOneWidget);
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
+
+      // «Elegí un nombre de juego» abre el editor en la pestaña «Nombre».
+      await _tapLabel(tester, 'Elegí un nombre de juego');
+      expect(
+        find.textContaining('Usá un nombre de juego para tu pieza.'),
+        findsOneWidget,
+      );
+      // Seleccionar solo una palabra deshabilita guardar hasta elegir la segunda.
+      final Finder nounDropdown = find.byType(
+        DropdownButtonFormField<PieceNameNoun>,
+      );
+      await tester.ensureVisible(nounDropdown);
+      await tester.pumpAndSettle();
+      await tester.tap(nounDropdown);
+      await tester.pumpAndSettle();
+      await _tapLabel(tester, 'Chispa');
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Guardar mi pieza'),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        find.text('Elegí también el apodo para poder guardar.'),
+        findsOneWidget,
+      );
+      // Volver atrás sin guardar conserva el estado anterior sin nombre válido.
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
+      expect(find.text('Elegí un nombre de juego'), findsOneWidget);
+
+      // Nueva alerta mientras no elige nombre válido omite `displayName`.
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
+      await _tapLabel(tester, 'Pedir apoyo');
+      await _tapLabel(tester, 'Enviar una alerta');
+      await _tapLabel(tester, 'Necesito hablar');
+      await _tapLabel(tester, 'Continuar');
+      await _tapLabel(tester, 'Me pasó a mí');
+      await _tapLabel(tester, 'Continuar');
+      await _tapLabel(tester, 'Revisar alerta');
+      await _tapLabel(tester, 'Enviar alerta');
+      final Map<Object?, Object?> deliveryPiece =
+          (alertStore.data!['delivery']! as Map<Object?, Object?>)['piece']!
+              as Map<Object?, Object?>;
+      expect(deliveryPiece.containsKey('displayName'), isFalse);
+      expect(deliveryPiece['shape'], 'star');
+      expect(deliveryPiece['color'], 'pink');
+      await tester.pump(const Duration(seconds: 12));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      support.dispose();
+    },
+  );
+
+  testWidgets(
+    'accesibilidad: nombre largo, texto al 200 % y reacción con movimiento reducido',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      final _MemoryStore sessionStore = _MemoryStore();
+      sessionStore.data = <String, Object?>{
+        'version': 1,
+        'school': localSchoolCatalog.first.toJson(),
+        'piece': <String, Object?>{
+          'displayName': 'Guardabarranco Solidario',
+          'shape': 'puzzle',
+          'color': 'green',
+          'accessories': <String>[],
+        },
+      };
+      const ValueKey<String> captureKey = ValueKey<String>('a11y-capture');
+      final StudentSession session = StudentSession(
+        openStore: () async => sessionStore,
+      );
+      await session.open();
+      final LearningProgress progress = LearningProgress(
+        openStore: () async => _MemoryStore(),
+        now: () => DateTime(2026, 11, 13),
+      );
+      await progress.open();
+      addTearDown(session.dispose);
+      addTearDown(progress.dispose);
+
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: captureKey,
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: CureandoTheme.light,
+            home: MediaQuery(
+              data: const MediaQueryData(
+                disableAnimations: true,
+                textScaler: TextScaler.linear(2.0),
+              ),
+              child: Navigator(
+                onGenerateRoute: (_) => MaterialPageRoute<void>(
+                  builder: (_) => StudentProfileScreenWrapper(
+                    session: session,
+                    progress: progress,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Guardabarranco Solidario'), findsOneWidget);
+      expect(find.text('Tu pieza no lleva accesorios.'), findsOneWidget);
+      await _capture(tester, captureKey, 'mi-perfil-largo-200');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'probar accesorio muestra reacción en texto y respeta movimiento reducido',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      final ValueNotifier<StudentPiece> piece = ValueNotifier<StudentPiece>(
+        const StudentPiece(shape: PieceShape.puzzle, color: PieceColor.green),
+      );
+      addTearDown(piece.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: PieceEditorScreen(
+              piece: piece,
+              initialTab: PieceEditorTab.accessories,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Corbatín'));
+      await tester.pump();
+      expect(find.text('Tu pieza se puso el corbatín.'), findsOneWidget);
+      await tester.tap(find.byTooltip('Corbatín'));
+      await tester.pump();
+      expect(find.text('Tu pieza se quitó el corbatín.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+}
+
+class StudentProfileScreenWrapper extends StatelessWidget {
+  const StudentProfileScreenWrapper({
+    super.key,
+    required this.session,
+    required this.progress,
+  });
+
+  final StudentSession session;
+  final LearningProgress progress;
+
+  @override
+  Widget build(BuildContext context) =>
+      StudentProfileScreen(session: session, progress: progress);
 }

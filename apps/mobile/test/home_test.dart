@@ -336,7 +336,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Mi perfil arma la pieza con apodo, forma y color, sin foto', (
+  testWidgets('Mi perfil arma la pieza con nombre de catálogo, forma y color, sin foto', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
@@ -348,30 +348,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Mi perfil'), findsOneWidget);
     expect(find.text('Pulgin Valiente'), findsOneWidget);
-    await _tapLabel(tester, 'Mi pieza');
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).decoration?.hintText,
-      'Ej. Pulgin Valiente (no uses tu nombre real)',
-    );
-    await tester.enterText(find.byType(TextField), '  Estrella   Fugaz ');
-    await _tapLabel(tester, 'Al azar');
+    await _tapLabel(tester, 'Personalizar mi pieza');
+    expect(find.text('Mi pieza'), findsOneWidget);
+    await _tapLabel(tester, 'Nombre');
+    await _tapLabel(tester, 'Pulgin');
+    await _tapLabel(tester, 'Chispa');
+    await _tapLabel(tester, 'Valiente');
+    await _tapLabel(tester, 'Cósmica');
+    await _tapLabel(tester, 'Forma');
     await _tapTooltip(tester, 'Estrella');
     await _tapLabel(tester, 'Color');
     await _tapTooltip(tester, 'Rosa');
     await _tapLabel(tester, 'Guardar mi pieza');
     expect(find.text('Pieza guardada en este teléfono.'), findsOneWidget);
-    expect(find.text('Estrella Fugaz'), findsOneWidget);
+    expect(find.text('Chispa Cósmica'), findsOneWidget);
     expect(
       find.bySemanticsLabel(RegExp('Tu pieza: Estrella de color rosa')),
       findsOneWidget,
     );
-    // Los cambios sin guardar se descartan.
-    await _tapLabel(tester, 'Mi pieza');
+    // Los cambios sin guardar se descartan al volver atrás.
+    await _tapLabel(tester, 'Personalizar mi pieza');
     await _tapLabel(tester, 'Accesorios');
     await _tapTooltip(tester, 'Corbatín');
+    expect(find.text('Tu pieza se puso el corbatín.'), findsOneWidget);
     await _tapLabel(tester, 'Forma');
     await _tapTooltip(tester, 'Flor');
-    await _tapLabel(tester, 'Resumen');
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
     expect(
       find.bySemanticsLabel(RegExp('Tu pieza: Estrella de color rosa')),
       findsOneWidget,
@@ -380,7 +383,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       find.bySemanticsLabel(
-        RegExp('Tu pieza Estrella Fugaz: Estrella de color rosa'),
+        RegExp('Tu pieza Chispa Cósmica: Estrella de color rosa'),
       ),
       findsOneWidget,
     );
@@ -411,7 +414,7 @@ void main() {
     expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
     await tester.tap(find.byTooltip('Abrir mi perfil'));
     await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Mi pieza');
+    await _tapLabel(tester, 'Personalizar mi pieza');
     await _tapLabel(tester, 'Accesorios');
     await _tapLabel(tester, 'Guardar mi pieza');
     await tester.tap(find.byTooltip('Volver'));
