@@ -457,6 +457,64 @@ void main() {
     expect(route?.transitionDuration, Duration.zero);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'deslizar horizontalmente en el inicio cambia de pestaña en sincronía con la barra',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      await tester.pumpWidget(_app());
+      await tester.pumpAndSettle();
+      await _goHome(tester);
+
+      HomeSection? currentTab() =>
+          tester.widget<SetuBottomNav>(find.byType(SetuBottomNav)).selected;
+
+      expect(currentTab(), HomeSection.inicio);
+      expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
+
+      // En el extremo izquierdo, deslizar a la derecha no cambia de pestaña.
+      await tester.drag(find.byType(CustomScrollView), const Offset(220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.inicio);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.informacion);
+      expect(find.text('Catálogo de muestra'), findsOneWidget);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.actividades);
+      expect(find.text('Actividades de muestra'), findsOneWidget);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.ayuda);
+      expect(
+        find.textContaining('recursos de ayuda verificados'),
+        findsOneWidget,
+      );
+
+      // En el extremo derecho, deslizar a la izquierda mantiene Ayuda.
+      await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.ayuda);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.actividades);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.informacion);
+
+      await tester.drag(find.byType(CustomScrollView), const Offset(220, 0));
+      await tester.pumpAndSettle();
+      expect(currentTab(), HomeSection.inicio);
+      expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 CureandoApp _app({

@@ -3,9 +3,11 @@ import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/school_access/school_location.dart';
 import 'package:cureando_mobile/features/school_access/student_session.dart';
 import 'package:cureando_mobile/features/staff/demo_staff_backend.dart';
+import 'package:cureando_mobile/features/staff/staff_backend.dart';
 import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:cureando_mobile/shared/remote/setu_remote_models.dart';
+import 'package:cureando_mobile/shared/widgets/setu_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -24,17 +26,34 @@ class _MemoryStore implements LocalStorePersistence {
   Future<void> save(Map<String, Object?> value) async => data = value;
 }
 
+class _OfflineMembershipsBackend extends DemoStaffBackend {
+  @override
+  Future<List<StaffMembershipScope>> memberships() =>
+      throw StateError('offline');
+}
+
 CureandoApp _app({
   _MemoryStore? sessionStore,
+  _MemoryStore? staffStore,
   DemoStaffBackend? staff,
+  StaffSession? staffSession,
+  StudentSession? studentSession,
   bool simulation = false,
 }) => CureandoApp(
   checkSchoolProximity: () async => SchoolProximity.nearby,
   allowSchoolSimulation: simulation,
   staffBackend: staff,
-  studentSession: StudentSession(
-    openStore: () async => sessionStore ?? _MemoryStore(),
-  ),
+  staffSession:
+      staffSession ??
+      StaffSession(
+        staff ?? DemoStaffBackend(),
+        openStore: () async => staffStore ?? _MemoryStore(),
+      ),
+  studentSession:
+      studentSession ??
+      StudentSession(
+        openStore: () async => sessionStore ?? _MemoryStore(),
+      ),
   supportFlow: SupportFlow(openStore: () async => _MemoryStore()),
   learningProgress: LearningProgress(
     openStore: () async => _MemoryStore(),
@@ -389,4 +408,165 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  testWidgets(
+    'el botón Atrás en inicio estudiantil vuelve a Inicio y no regresa al login',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      final _MemoryStore sessionStore = _MemoryStore();
+      await tester.pumpWidget(_app(sessionStore: sessionStore));
+      await tester.pumpAndSettle();
+      await _go(tester, '/colegio/enlace/AULA26');
+      expect(find.text(_home), findsOneWidget);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(SetuBottomNav),
+          matching: find.text('Ayuda'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Personas y recursos que pueden acompañarte.'),
+        findsOneWidget,
+      );
+
+      // En otras pestañas del inicio, Atrás regresa a Inicio sin salir.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text(_home), findsOneWidget);
+      expect(
+        tester.widget<SetuBottomNav>(find.byType(SetuBottomNav)).selected,
+        HomeSection.inicio,
+      );
+
+      // En Inicio, Atrás no vuelve a la bienvenida ni al código de colegio.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text(_home), findsOneWidget);
+      expect(find.text('Ingreso estudiantil'), findsNothing);
+      expect(find.text('Ingresá el código de tu colegio'), findsNothing);
+
+      // Al reabrir con la sesión abierta antes de montar, arranca en /inicio.
+      await tester.pumpWidget(const SizedBox.shrink());
+      final StudentSession reopened = StudentSession(
+        openStore: () async => sessionStore,
+      );
+      await reopened.open();
+      await tester.pumpWidget(_app(studentSession: reopened));
+      await tester.pump();
+      expect(find.text(_home), findsOneWidget);
+      expect(find.text('Ingreso estudiantil'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'al reabrir como personal de un centro entra directo y Atrás no regresa al login',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      final _MemoryStore staffStore = _MemoryStore();
+      await tester.pumpWidget(_app(staffStore: staffStore));
+      await tester.pumpAndSettle();
+
+      await _signIn(tester, 'direccion.cca@setu.test');
+      expect(find.text('Avisos y fichas'), findsOneWidget);
+      expect(staffStore.data?['userId'], 'direccion.cca@setu.test');
+      expect(staffStore.data?['activeMembershipId'], isNotNull);
+
+      // En la raíz del rol, Atrás no vuelve al login ni a la bienvenida.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Avisos y fichas'), findsOneWidget);
+      expect(find.text('Ingresá con tu cuenta institucional.'), findsNothing);
+      expect(find.text('Ingreso estudiantil'), findsNothing);
+
+      // Las subrutas sí conservan Atrás hasta la bandeja del rol.
+      await tester.tap(find.byTooltip('Cartel QR del colegio'));
+      await tester.pumpAndSettle();
+      expect(find.byType(QrImageView), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Avisos y fichas'), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Avisos y fichas'), findsOneWidget);
+
+      // Al reabrir con un backend nuevo y el mismo almacén cifrado, entra directo.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(_app(staffStore: staffStore));
+      await tester.pumpAndSettle();
+      expect(find.text('Avisos y fichas'), findsOneWidget);
+      expect(find.text('Ingresá con tu cuenta institucional.'), findsNothing);
+      expect(find.text('Ingreso estudiantil'), findsNothing);
+
+      // Igual cuando la sesión se restaura antes de runApp (flujo de main.dart).
+      await tester.pumpWidget(const SizedBox.shrink());
+      final StaffSession preRestored = StaffSession(
+        DemoStaffBackend(),
+        openStore: () async => staffStore,
+      );
+      await preRestored.restore();
+      await tester.pumpWidget(_app(staffSession: preRestored));
+      await tester.pump();
+      expect(find.text('Avisos y fichas'), findsOneWidget);
+      expect(find.text('Ingreso estudiantil'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'con varios centros el ámbito persiste al reabrir, soporta error de red y Atrás no vuelve al login',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      final _MemoryStore staffStore = _MemoryStore();
+      await tester.pumpWidget(_app(staffStore: staffStore));
+      await tester.pumpAndSettle();
+
+      await _signIn(tester, _desk);
+      expect(find.text('¿Dónde vas a trabajar?'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('¿Dónde vas a trabajar?'), findsOneWidget);
+
+      await _tap(tester, 'Colegio de prueba A');
+      expect(find.text('Mis casos'), findsOneWidget);
+
+      // Atrás desde Mesa de Escucha no regresa a elegir ámbito ni al login.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Mis casos'), findsOneWidget);
+      expect(find.text('¿Dónde vas a trabajar?'), findsNothing);
+      expect(find.text('Ingresá con tu cuenta institucional.'), findsNothing);
+
+      // Reapertura limpia sin volver a pedir contraseña ni ámbito.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(_app(staffStore: staffStore));
+      await tester.pumpAndSettle();
+      expect(find.text('Mis casos'), findsOneWidget);
+      expect(find.text('¿Dónde vas a trabajar?'), findsNothing);
+      expect(find.text('Ingresá con tu cuenta institucional.'), findsNothing);
+
+      // Un fallo transitorio al refrescar membresías mantiene el acceso guardado.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(
+        _app(staff: _OfflineMembershipsBackend(), staffStore: staffStore),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Mis casos'), findsOneWidget);
+
+      // Solo Cerrar sesión limpia el almacén y devuelve a la bienvenida.
+      await _signOut(tester);
+      expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
+      expect(staffStore.data?['userId'], isNull);
+      expect(staffStore.data?['memberships'], isEmpty);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(_app(staffStore: staffStore));
+      await tester.pumpAndSettle();
+      expect(find.text('Ingreso estudiantil'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

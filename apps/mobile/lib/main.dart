@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'features/staff/demo_staff_backend.dart';
 import 'features/staff/remote_staff_backend.dart';
 import 'features/staff/staff_backend.dart';
 import 'features/school_access/student_session.dart';
@@ -60,11 +61,24 @@ Future<void> main() async {
     support = null;
     session = null;
   }
+  final StudentSession resolvedSession = session ?? StudentSession();
+  final SupportFlow resolvedSupport = support ?? SupportFlow();
+  final StaffSession resolvedStaffSession = StaffSession(
+    staff ?? DemoStaffBackend(),
+  );
+  // Restauramos las sesiones guardadas antes de montar las rutas para abrir
+  // directamente en la superficie activa sin pasar por la bienvenida o login.
+  await Future.wait(<Future<void>>[
+    resolvedSession.open(),
+    resolvedSupport.open(),
+    resolvedStaffSession.restore(),
+  ]);
   runApp(
     CureandoApp(
       staffBackend: staff,
-      supportFlow: support,
-      studentSession: session,
+      staffSession: resolvedStaffSession,
+      supportFlow: resolvedSupport,
+      studentSession: resolvedSession,
       showM1Verification: kDebugMode && bool.fromEnvironment('SETU_M1_QA'),
       allowDesignCapture:
           kDebugMode &&

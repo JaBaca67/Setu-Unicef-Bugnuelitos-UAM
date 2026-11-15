@@ -593,86 +593,89 @@ class StaffScopeScreen extends StatelessWidget {
   final StaffSession session;
 
   @override
-  Widget build(BuildContext context) => FlowScaffold(
-    header: const Padding(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 16),
-      child: Text(
-        '¿Dónde vas a trabajar?',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 26,
-          height: 1.15,
-          fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) => PopScope(
+    canPop: Navigator.of(context).canPop(),
+    child: FlowScaffold(
+      header: const Padding(
+        padding: EdgeInsets.fromLTRB(20, 14, 20, 16),
+        child: Text(
+          '¿Dónde vas a trabajar?',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            height: 1.15,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
-    ),
-    bottom: TextButton(
-      onPressed: session.signOut,
-      child: const Text('Cerrar sesión', style: _link),
-    ),
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        const Text(
-          'Tu cuenta tiene acceso a más de un centro. Elegí uno; podés '
-          'cambiarlo después desde «Mi sesión».',
-          style: _lead,
-        ),
-        const SizedBox(height: 16),
-        for (final StaffMembershipScope scope in session.memberships)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Material(
-              color: CureandoTheme.blueSoft,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: const BorderSide(color: Color(0xFFA5C1EF)),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () {
-                  session.choose(scope);
-                  context.go(scope.role.path);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: <Widget>[
-                      const Icon(
-                        Icons.school_outlined,
-                        size: 36,
-                        color: CureandoTheme.ink,
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              scope.place,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              scope.role.label,
-                              style: const TextStyle(fontSize: 15),
-                            ),
-                          ],
+      bottom: TextButton(
+        onPressed: session.signOut,
+        child: const Text('Cerrar sesión', style: _link),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          const Text(
+            'Tu cuenta tiene acceso a más de un centro. Elegí uno; podés '
+            'cambiarlo después desde «Mi sesión».',
+            style: _lead,
+          ),
+          const SizedBox(height: 16),
+          for (final StaffMembershipScope scope in session.memberships)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Material(
+                color: CureandoTheme.blueSoft,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: const BorderSide(color: Color(0xFFA5C1EF)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    session.choose(scope);
+                    context.go(scope.role.path);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: <Widget>[
+                        const Icon(
+                          Icons.school_outlined,
+                          size: 36,
+                          color: CureandoTheme.ink,
                         ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: CureandoTheme.blue,
-                      ),
-                    ],
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                scope.place,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                scope.role.label,
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: CureandoTheme.blue,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     ),
   );
 }

@@ -629,6 +629,17 @@ class DemoStaffBackend implements StaffBackend {
   @override
   Future<void> signOut() async => _user = null;
 
+  /// Restaura la sesión en memoria de una cuenta de demostración ya validada
+  /// previamente en el dispositivo.
+  void restoreUser(String? email) {
+    if (email == null) return;
+    final String key = _clean(email);
+    final _Account? account = _accounts[key];
+    if (account != null && account.confirmed) {
+      _user = key;
+    }
+  }
+
   @override
   Future<StaffActivationRedemption> redeemActivation(String code) async {
     _online();

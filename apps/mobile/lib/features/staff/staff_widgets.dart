@@ -248,59 +248,62 @@ class StaffAreaScaffold extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => FlowScaffold(
-    header: Padding(
-      padding: const EdgeInsets.fromLTRB(18, 10, 10, 12),
-      child: Row(
-        children: <Widget>[
-          const CampaignSymbol(size: 30, showUnicef: false),
-          const SizedBox(width: 8),
-          const ExcludeSemantics(
-            child: Text(
-              'SéTú',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Container(
-            width: 1.5,
-            height: 34,
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            color: Colors.white70,
-          ),
-          Expanded(
-            child: Semantics(
-              header: true,
+  Widget build(BuildContext context) => PopScope(
+    canPop: Navigator.of(context).canPop(),
+    child: FlowScaffold(
+      header: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 10, 10, 12),
+        child: Row(
+          children: <Widget>[
+            const CampaignSymbol(size: 30, showUnicef: false),
+            const SizedBox(width: 8),
+            const ExcludeSemantics(
               child: Text(
-                session.active?.role.label ?? 'Personal autorizado',
-                style: const TextStyle(
+                'SéTú',
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
-                  height: 1.15,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-          ),
-          IconButton(
-            tooltip: 'Mi sesión',
-            onPressed: () => _menu(context),
-            icon: const CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.white,
-              child: Icon(
-                Icons.person_outline_rounded,
-                color: CureandoTheme.ink,
+            Container(
+              width: 1.5,
+              height: 34,
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              color: Colors.white70,
+            ),
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  session.active?.role.label ?? 'Personal autorizado',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    height: 1.15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+            IconButton(
+              tooltip: 'Mi sesión',
+              onPressed: () => _menu(context),
+              icon: const CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.person_outline_rounded,
+                  color: CureandoTheme.ink,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+      bottom: bottom,
+      body: body,
     ),
-    bottom: bottom,
-    body: body,
   );
 }

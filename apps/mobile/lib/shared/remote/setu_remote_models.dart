@@ -545,6 +545,36 @@ class StaffMembershipScope {
       scopeLabel: _readString(json, 'scope_label'),
     );
   }
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'membership_id': membershipId,
+    'role': role.wireValue,
+    'institution_id': institutionId,
+    'institution_public_code': institutionPublicCode,
+    'institution_name': institutionName,
+    'scope_label': scopeLabel,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StaffMembershipScope &&
+          other.membershipId == membershipId &&
+          other.role == role &&
+          other.institutionId == institutionId &&
+          other.institutionPublicCode == institutionPublicCode &&
+          other.institutionName == institutionName &&
+          other.scopeLabel == scopeLabel;
+
+  @override
+  int get hashCode => Object.hash(
+    membershipId,
+    role,
+    institutionId,
+    institutionPublicCode,
+    institutionName,
+    scopeLabel,
+  );
 }
 
 /// Psicólogo o integrante habilitado de Mesa de Escucha para asignación por MINED.

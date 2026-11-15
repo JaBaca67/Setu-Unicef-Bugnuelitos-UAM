@@ -37,6 +37,7 @@ class CureandoApp extends StatefulWidget {
     this.supportFlow,
     this.studentSession,
     this.staffBackend,
+    this.staffSession,
     this.screenSecurity,
     this.showM1Verification = false,
     this.allowDesignCapture = false,
@@ -54,6 +55,9 @@ class CureandoApp extends StatefulWidget {
   /// Puerto de personal autorizado. Sin valor se usa la demostración en
   /// memoria; `main.dart` inyecta el adaptador de Supabase.
   final StaffBackend? staffBackend;
+
+  /// Sesión de personal restaurada antes de montar la app, si ya se abrió.
+  final StaffSession? staffSession;
   final ScreenSecurityController? screenSecurity;
   final bool showM1Verification;
   final bool allowDesignCapture;
@@ -68,16 +72,28 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
   late final SupportFlow _support = widget.supportFlow ?? SupportFlow();
-  late final StaffSession _staff = StaffSession(
-    widget.staffBackend ?? DemoStaffBackend(),
-  );
+  late final StaffSession _staff =
+      widget.staffSession ??
+      StaffSession(widget.staffBackend ?? DemoStaffBackend());
   late final StudentSession _session =
       widget.studentSession ?? StudentSession();
   ValueNotifier<StudentPiece> get _piece => _session.piece;
   late final ScreenSecurityController _security =
       widget.screenSecurity ?? ScreenSecurityController();
+
+  String get _initialLocation {
+    if (widget.showM1Verification) return '/verificacion-m1';
+    if (_staff.memberships.isNotEmpty) {
+      return _staff.active == null
+          ? '/personal/ambito'
+          : _staff.active!.role.path;
+    }
+    if (_session.school != null) return '/inicio';
+    return '/';
+  }
+
   late final GoRouter _router = GoRouter(
-    initialLocation: widget.showM1Verification ? '/verificacion-m1' : '/',
+    initialLocation: _initialLocation,
     // La guía de rutas se reevalúa al cambiar cualquiera de las sesiones.
     refreshListenable: Listenable.merge(<Listenable>[_staff, _session]),
     redirect: _sessionRedirect,
@@ -147,138 +163,6 @@ class _CureandoAppState extends State<CureandoApp> {
             ],
           ),
           GoRoute(
-            path: 'inicio',
-            pageBuilder: (context, state) => studentTransition(
-              context,
-              state,
-              StudentHomeScreen(
-                progress: _learning,
-                piece: _piece,
-                sectionRequest: state.extra is HomeSectionRequest
-                    ? state.extra! as HomeSectionRequest
-                    : null,
-              ),
-            ),
-            routes: <RouteBase>[
-              GoRoute(
-                path: 'racha',
-                pageBuilder: (context, state) => studentTransition<bool>(
-                  context,
-                  state,
-                  StreakScreen(progress: _learning),
-                ),
-              ),
-              GoRoute(
-                path: 'pieza',
-                pageBuilder: (context, state) => studentTransition(
-                  context,
-                  state,
-                  StudentProfileScreen(session: _session, progress: _learning),
-                ),
-              ),
-              GoRoute(
-                path: 'apoyo',
-                pageBuilder: (context, state) => studentTransition(
-                  context,
-                  state,
-                  SupportHomeScreen(flow: _support, piece: _piece),
-                ),
-                routes: <RouteBase>[
-                  for (final MapEntry<String, Widget Function()> step
-                      in <String, Widget Function()>{
-                        'alerta': () =>
-                            AlertSituationScreen(flow: _support, piece: _piece),
-                        'rol': () =>
-                            AlertRoleScreen(flow: _support, piece: _piece),
-                        'detalles': () =>
-                            AlertDetailsScreen(flow: _support, piece: _piece),
-                        'revisar': () =>
-                            AlertReviewScreen(flow: _support, piece: _piece),
-                        'recibida': () => AlertReceivedScreen(flow: _support),
-                        'chat': () =>
-                            SupportChatScreen(flow: _support, piece: _piece),
-                      }.entries)
-                    GoRoute(
-                      path: step.key,
-                      pageBuilder: (context, state) =>
-                          studentTransition(context, state, step.value()),
-                    ),
-                ],
-              ),
-              GoRoute(
-                path: 'recurso/:id',
-                pageBuilder: (context, state) => studentTransition(
-                  context,
-                  state,
-                  ResourcePreviewScreen(
-                    resourceId: state.pathParameters['id'] ?? '',
-                    progress: _learning,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          GoRoute(
-            path: 'personal/mined',
-            builder: (BuildContext context, GoRouterState state) =>
-                MinedInboxScreen(session: _staff),
-          ),
-          GoRoute(
-            path: 'personal/mesa',
-            builder: (BuildContext context, GoRouterState state) =>
-                DeskInboxScreen(session: _staff),
-            routes: <RouteBase>[
-              GoRoute(
-                path: 'caso/:id',
-                builder: (BuildContext context, GoRouterState state) =>
-                    DeskCaseScreen(
-                      session: _staff,
-                      caseId: state.pathParameters['id'] ?? '',
-                    ),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: 'chat',
-                    builder: (BuildContext context, GoRouterState state) =>
-                        DeskChatScreen(
-                          session: _staff,
-                          caseId: state.pathParameters['id'] ?? '',
-                        ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          GoRoute(
-            path: 'personal/direccion',
-            builder: (BuildContext context, GoRouterState state) =>
-                DirectorInboxScreen(session: _staff),
-            routes: <RouteBase>[
-              GoRoute(
-                path: 'cartel',
-                builder: (BuildContext context, GoRouterState state) {
-                  final StaffMembershipScope? scope = _staff.active;
-                  return SchoolQrPosterScreen(
-                    school: ConfirmedSchool(
-                      id: scope?.institutionId ?? '',
-                      publicCode: scope?.institutionPublicCode ?? '',
-                      name: scope?.institutionName ?? 'Tu colegio',
-                      municipality: '',
-                      department: '',
-                    ),
-                  );
-                },
-              ),
-              GoRoute(
-                path: 'caso/:id',
-                builder: (BuildContext context, GoRouterState state) =>
-                    DirectorCaseScreen(
-                      session: _staff,
-                      caseId: state.pathParameters['id'] ?? '',
-                    ),
-              ),
-            ],
-          ),
-          GoRoute(
             path: 'personal',
             builder: (BuildContext context, GoRouterState state) =>
                 StaffLoginScreen(session: _staff),
@@ -287,11 +171,6 @@ class _CureandoAppState extends State<CureandoApp> {
                 path: 'activar',
                 builder: (BuildContext context, GoRouterState state) =>
                     StaffActivationScreen(session: _staff),
-              ),
-              GoRoute(
-                path: 'ambito',
-                builder: (BuildContext context, GoRouterState state) =>
-                    StaffScopeScreen(session: _staff),
               ),
             ],
           ),
@@ -315,6 +194,145 @@ class _CureandoAppState extends State<CureandoApp> {
                         _home(context),
                   ),
             ),
+        ],
+      ),
+      // Las superficies raíz con sesión activa viven en el nivel superior para
+      // que `context.go(...)` reemplace la pila y «Atrás» no regrese al login.
+      GoRoute(
+        path: '/inicio',
+        pageBuilder: (context, state) => studentTransition(
+          context,
+          state,
+          StudentHomeScreen(
+            progress: _learning,
+            piece: _piece,
+            sectionRequest: state.extra is HomeSectionRequest
+                ? state.extra! as HomeSectionRequest
+                : null,
+          ),
+        ),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'racha',
+            pageBuilder: (context, state) => studentTransition<bool>(
+              context,
+              state,
+              StreakScreen(progress: _learning),
+            ),
+          ),
+          GoRoute(
+            path: 'pieza',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              StudentProfileScreen(session: _session, progress: _learning),
+            ),
+          ),
+          GoRoute(
+            path: 'apoyo',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              SupportHomeScreen(flow: _support, piece: _piece),
+            ),
+            routes: <RouteBase>[
+              for (final MapEntry<String, Widget Function()> step
+                  in <String, Widget Function()>{
+                    'alerta': () =>
+                        AlertSituationScreen(flow: _support, piece: _piece),
+                    'rol': () =>
+                        AlertRoleScreen(flow: _support, piece: _piece),
+                    'detalles': () =>
+                        AlertDetailsScreen(flow: _support, piece: _piece),
+                    'revisar': () =>
+                        AlertReviewScreen(flow: _support, piece: _piece),
+                    'recibida': () => AlertReceivedScreen(flow: _support),
+                    'chat': () =>
+                        SupportChatScreen(flow: _support, piece: _piece),
+                  }.entries)
+                GoRoute(
+                  path: step.key,
+                  pageBuilder: (context, state) =>
+                      studentTransition(context, state, step.value()),
+                ),
+            ],
+          ),
+          GoRoute(
+            path: 'recurso/:id',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              ResourcePreviewScreen(
+                resourceId: state.pathParameters['id'] ?? '',
+                progress: _learning,
+              ),
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/personal/ambito',
+        builder: (BuildContext context, GoRouterState state) =>
+            StaffScopeScreen(session: _staff),
+      ),
+      GoRoute(
+        path: '/personal/mined',
+        builder: (BuildContext context, GoRouterState state) =>
+            MinedInboxScreen(session: _staff),
+      ),
+      GoRoute(
+        path: '/personal/mesa',
+        builder: (BuildContext context, GoRouterState state) =>
+            DeskInboxScreen(session: _staff),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'caso/:id',
+            builder: (BuildContext context, GoRouterState state) =>
+                DeskCaseScreen(
+                  session: _staff,
+                  caseId: state.pathParameters['id'] ?? '',
+                ),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'chat',
+                builder: (BuildContext context, GoRouterState state) =>
+                    DeskChatScreen(
+                      session: _staff,
+                      caseId: state.pathParameters['id'] ?? '',
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/personal/direccion',
+        builder: (BuildContext context, GoRouterState state) =>
+            DirectorInboxScreen(session: _staff),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'cartel',
+            builder: (BuildContext context, GoRouterState state) {
+              final StaffMembershipScope? scope = _staff.active;
+              return SchoolQrPosterScreen(
+                school: ConfirmedSchool(
+                  id: scope?.institutionId ?? '',
+                  publicCode: scope?.institutionPublicCode ?? '',
+                  name: scope?.institutionName ?? 'Tu colegio',
+                  municipality: '',
+                  department: '',
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: 'caso/:id',
+            builder: (BuildContext context, GoRouterState state) =>
+                DirectorCaseScreen(
+                  session: _staff,
+                  caseId: state.pathParameters['id'] ?? '',
+                ),
+          ),
         ],
       ),
     ],
@@ -378,6 +396,7 @@ class _CureandoAppState extends State<CureandoApp> {
       },
     );
     _session.addListener(_syncSchool);
+    _syncSchool();
     // Al abrir, cada sesión guardada se restaura y la guía de rutas lleva a
     // su superficie: el colegio del estudiante o el ámbito del personal.
     _session.open();
@@ -438,7 +457,7 @@ class _CureandoAppState extends State<CureandoApp> {
       _security.dispose();
     }
     _router.dispose();
-    _staff.dispose();
+    if (widget.staffSession == null) _staff.dispose();
     _revision.dispose();
     super.dispose();
   }

@@ -12,6 +12,10 @@ class CampaignScreen extends StatelessWidget {
     this.bodyRadius,
     this.bottomNavigationBar,
     this.scrollController,
+    this.onHorizontalDragStart,
+    this.onHorizontalDragUpdate,
+    this.onHorizontalDragEnd,
+    this.onHorizontalDragCancel,
   });
 
   final Widget header;
@@ -19,54 +23,76 @@ class CampaignScreen extends StatelessWidget {
   final BorderRadius? bodyRadius;
   final Widget? bottomNavigationBar;
   final ScrollController? scrollController;
+  final GestureDragStartCallback? onHorizontalDragStart;
+  final GestureDragUpdateCallback? onHorizontalDragUpdate;
+  final GestureDragEndCallback? onHorizontalDragEnd;
+  final VoidCallback? onHorizontalDragCancel;
+
+  bool get _handlesHorizontalDrag =>
+      onHorizontalDragStart != null ||
+      onHorizontalDragUpdate != null ||
+      onHorizontalDragEnd != null ||
+      onHorizontalDragCancel != null;
 
   @override
-  Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
-    value: CureandoTheme.statusBarOverlayLight.copyWith(
-      systemNavigationBarColor: bottomNavigationBar == null
-          ? Colors.white
-          : Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-    child: Scaffold(
-      backgroundColor: Colors.white,
-      // La barra flota: el cuerpo se extiende por detrás y recibe el alto de
-      // la barra como margen inferior de `MediaQuery`, que el `SafeArea` del
-      // cuerpo convierte en espacio libre al final del desplazamiento.
-      extendBody: bottomNavigationBar != null,
-      bottomNavigationBar: bottomNavigationBar,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: SizedBox.expand(
-            child: CampaignBackground(
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: <Widget>[
-                  SliverToBoxAdapter(
-                    child: SafeArea(bottom: false, child: header),
-                  ),
-                  SliverToBoxAdapter(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: bodyRadius,
-                      ),
-                      child: SafeArea(top: false, child: body),
-                    ),
-                  ),
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: ColoredBox(color: Colors.white),
-                  ),
-                ],
+  Widget build(BuildContext context) {
+    final Widget scrollView = CustomScrollView(
+      controller: scrollController,
+      slivers: <Widget>[
+        SliverToBoxAdapter(
+          child: SafeArea(bottom: false, child: header),
+        ),
+        SliverToBoxAdapter(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: bodyRadius,
+            ),
+            child: SafeArea(top: false, child: body),
+          ),
+        ),
+        const SliverFillRemaining(
+          hasScrollBody: false,
+          child: ColoredBox(color: Colors.white),
+        ),
+      ],
+    );
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: CureandoTheme.statusBarOverlayLight.copyWith(
+        systemNavigationBarColor: bottomNavigationBar == null
+            ? Colors.white
+            : Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        // La barra flota: el cuerpo se extiende por detrás y recibe el alto de
+        // la barra como margen inferior de `MediaQuery`, que el `SafeArea` del
+        // cuerpo convierte en espacio libre al final del desplazamiento.
+        extendBody: bottomNavigationBar != null,
+        bottomNavigationBar: bottomNavigationBar,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: SizedBox.expand(
+              child: CampaignBackground(
+                child: _handlesHorizontalDrag
+                    ? GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onHorizontalDragStart: onHorizontalDragStart,
+                        onHorizontalDragUpdate: onHorizontalDragUpdate,
+                        onHorizontalDragEnd: onHorizontalDragEnd,
+                        onHorizontalDragCancel: onHorizontalDragCancel,
+                        child: scrollView,
+                      )
+                    : scrollView,
               ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class CampaignBackground extends StatelessWidget {

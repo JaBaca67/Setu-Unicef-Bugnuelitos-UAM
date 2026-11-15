@@ -40,6 +40,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   HomeSection _section = HomeSection.inicio;
   final GlobalKey _diceKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
+  double _dragDeltaX = 0;
 
   @override
   void initState() {
@@ -73,6 +74,33 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     setState(() => _section = section);
   }
 
+  void _onHorizontalDragStart(DragStartDetails details) {
+    _dragDeltaX = 0;
+  }
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    _dragDeltaX += details.delta.dx;
+  }
+
+  void _onHorizontalDragCancel() {
+    _dragDeltaX = 0;
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    final double velocity = details.velocity.pixelsPerSecond.dx;
+    final int current = HomeSection.values.indexOf(_section);
+    int next = current;
+    if (velocity <= -250 || (velocity <= 100 && _dragDeltaX <= -48)) {
+      next = current + 1;
+    } else if (velocity >= 250 || (velocity >= -100 && _dragDeltaX >= 48)) {
+      next = current - 1;
+    }
+    _dragDeltaX = 0;
+    if (next != current && next >= 0 && next < HomeSection.values.length) {
+      _open(HomeSection.values[next]);
+    }
+  }
+
   void _openDice() {
     _open(HomeSection.actividades);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -83,45 +111,57 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => CampaignScreen(
-    scrollController: _scrollController,
-    bodyRadius: _section == HomeSection.inicio
-        ? null
-        : const BorderRadius.vertical(top: Radius.circular(28)),
-    bottomNavigationBar: SetuBottomNav(selected: _section, onSelected: _open),
-    header: switch (_section) {
-      HomeSection.inicio => _HomeHeader(piece: widget.piece),
-      HomeSection.informacion => const _SectionHeader(
-        title: 'Información',
-        subtitle: 'Leé y mirá a tu ritmo. No hace falta reportar.',
-      ),
-      HomeSection.actividades => const _SectionHeader(
-        title: 'Actividades',
-        subtitle: 'Jugá y aprendé sobre emociones y convivencia.',
-      ),
-      HomeSection.ayuda => const _SectionHeader(
-        title: 'Ayuda',
-        subtitle: 'Personas y recursos que pueden acompañarte.',
-      ),
+  Widget build(BuildContext context) => PopScope(
+    canPop: false,
+    onPopInvokedWithResult: (bool didPop, Object? _) {
+      if (!didPop && _section != HomeSection.inicio) {
+        _open(HomeSection.inicio);
+      }
     },
-    body: Padding(
-      padding: _section == HomeSection.inicio
-          ? const EdgeInsets.fromLTRB(12, 14, 12, 16)
-          : const EdgeInsets.all(20),
-      child: switch (_section) {
-        HomeSection.inicio => _InicioTab(
-          onOpenSection: _open,
-          progress: widget.progress,
-          onOpenStreak: _showStreak,
-          onOpenDice: _openDice,
+    child: CampaignScreen(
+      scrollController: _scrollController,
+      onHorizontalDragStart: _onHorizontalDragStart,
+      onHorizontalDragUpdate: _onHorizontalDragUpdate,
+      onHorizontalDragEnd: _onHorizontalDragEnd,
+      onHorizontalDragCancel: _onHorizontalDragCancel,
+      bodyRadius: _section == HomeSection.inicio
+          ? null
+          : const BorderRadius.vertical(top: Radius.circular(28)),
+      bottomNavigationBar: SetuBottomNav(selected: _section, onSelected: _open),
+      header: switch (_section) {
+        HomeSection.inicio => _HomeHeader(piece: widget.piece),
+        HomeSection.informacion => const _SectionHeader(
+          title: 'Información',
+          subtitle: 'Leé y mirá a tu ritmo. No hace falta reportar.',
         ),
-        HomeSection.informacion => const _InformacionTab(),
-        HomeSection.actividades => ActivitiesTab(
-          progress: widget.progress,
-          diceKey: _diceKey,
+        HomeSection.actividades => const _SectionHeader(
+          title: 'Actividades',
+          subtitle: 'Jugá y aprendé sobre emociones y convivencia.',
         ),
-        HomeSection.ayuda => const _AyudaTab(),
+        HomeSection.ayuda => const _SectionHeader(
+          title: 'Ayuda',
+          subtitle: 'Personas y recursos que pueden acompañarte.',
+        ),
       },
+      body: Padding(
+        padding: _section == HomeSection.inicio
+            ? const EdgeInsets.fromLTRB(12, 14, 12, 16)
+            : const EdgeInsets.all(20),
+        child: switch (_section) {
+          HomeSection.inicio => _InicioTab(
+            onOpenSection: _open,
+            progress: widget.progress,
+            onOpenStreak: _showStreak,
+            onOpenDice: _openDice,
+          ),
+          HomeSection.informacion => const _InformacionTab(),
+          HomeSection.actividades => ActivitiesTab(
+            progress: widget.progress,
+            diceKey: _diceKey,
+          ),
+          HomeSection.ayuda => const _AyudaTab(),
+        },
+      ),
     ),
   );
 }

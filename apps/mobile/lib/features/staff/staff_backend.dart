@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../shared/local/encrypted_local_store.dart';
 import '../../shared/models/cureando_models.dart';
 import '../../shared/remote/case_capability_crypto.dart';
 import '../../shared/remote/setu_remote_models.dart';
+import 'demo_staff_backend.dart';
 
 /// Puerto de la interfaz de personal autorizado. Las pantallas solo conocen
 /// este contrato: en pruebas se usa la implementación en memoria y en el
@@ -328,10 +330,31 @@ String activationErrorMessage(String? error, {int? remainingAttempts}) {
 }
 
 /// Sesión del personal autorizado: membresías activas y ámbito elegido.
+///
+/// Guarda cifrado en el teléfono únicamente la sesión activa y el ámbito
+/// elegido (nunca contraseñas ni códigos privados) para no volver al ingreso
+/// al reabrir la app.
 class StaffSession extends ChangeNotifier {
-  StaffSession(this.backend);
+  StaffSession(
+    this.backend, {
+    Future<LocalStorePersistence> Function()? openStore,
+  }) : _openStore = openStore ?? _onDevice;
+
+  static Future<LocalStorePersistence> _onDevice() =>
+      EncryptedLocalStore.onDevice(
+        fileName: 'setu_staff_session.enc',
+        keyName: 'setu.staff.session.v1',
+      );
 
   final StaffBackend backend;
+  final Future<LocalStorePersistence> Function() _openStore;
+
+  LocalStorePersistence? _store;
+  Future<void>? _restoring;
+  bool _opened = false;
+  bool _touched = false;
+  bool _disposed = false;
+  String? _savedActiveMembershipId;
 
   List<StaffMembershipScope> _memberships = const <StaffMembershipScope>[];
   List<StaffMembershipScope> get memberships => _memberships;
@@ -346,6 +369,7 @@ class StaffSession extends ChangeNotifier {
 
   /// Ingresa y carga las membresías. Devuelve un texto de error o null.
   Future<String?> signIn(String email, String password) async {
+    _touched = true;
     try {
       await backend.signIn(email: email.trim(), password: password);
       return await refresh();
@@ -354,43 +378,149 @@ class StaffSession extends ChangeNotifier {
     }
   }
 
-  /// Al abrir la app: si el servidor conserva una sesión, recupera sus
-  /// membresías sin pedir la contraseña otra vez. Sin sesión no hace nada.
-  Future<void> restore() async {
-    if (backend.currentUserId == null) return;
-    await refresh();
+  /// Al abrir la app: restaura la sesión y el centro guardados y, si hay
+  /// usuario autenticado, verifica sus membresías sin pedir contraseña.
+  Future<void> restore() =>
+      _opened ? Future<void>.value() : _restoring ??= _load();
+
+  Future<void> _load() async {
+    try {
+      final LocalStorePersistence store =
+          await Future<LocalStorePersistence>.sync(_openStore);
+      _store = store;
+      final Map<String, Object?>? data = await store.load();
+      if (!_touched && data != null && data['version'] == 1) {
+        final String? savedUserId = data['userId'] as String?;
+        final String? savedActiveId = data['activeMembershipId'] as String?;
+        final List<StaffMembershipScope> savedMemberships = _parseMemberships(
+          data['memberships'],
+        );
+        final StaffBackend currentBackend = backend;
+        if (currentBackend.currentUserId == null &&
+            savedUserId != null &&
+            currentBackend is DemoStaffBackend) {
+          currentBackend.restoreUser(savedUserId);
+        }
+        if (currentBackend.currentUserId != null &&
+            savedUserId == currentBackend.currentUserId) {
+          _savedActiveMembershipId = savedActiveId;
+          if (savedMemberships.isNotEmpty) {
+            _memberships = List<StaffMembershipScope>.unmodifiable(
+              savedMemberships,
+            );
+            _active = _resolveActive(savedMemberships, savedActiveId);
+            _watchAssignments();
+            if (!_disposed) notifyListeners();
+          }
+        }
+      }
+    } on Object {
+      // Sin almacén la sesión vive solo mientras la app está abierta.
+    } finally {
+      _opened = true;
+      _restoring = null;
+    }
+    if (_disposed) return;
+    if (_touched) {
+      _save();
+      return;
+    }
+    if (backend.currentUserId != null) {
+      await refresh(preserveOnTransientError: _memberships.isNotEmpty);
+    }
   }
 
   /// Vuelve a leer las membresías que el servidor reconoce para la sesión.
-  Future<String?> refresh() async {
+  Future<String?> refresh({bool preserveOnTransientError = false}) async {
+    _touched = true;
     try {
       final List<StaffMembershipScope> found = await backend.memberships();
+      final String? keep = _active?.membershipId ?? _savedActiveMembershipId;
       _memberships = found;
-      final String? keep = _active?.membershipId;
-      _active = found.length == 1
-          ? found.single
-          : found
-                .where(
-                  (StaffMembershipScope scope) => scope.membershipId == keep,
-                )
-                .firstOrNull;
+      _active = _resolveActive(found, keep);
+      _savedActiveMembershipId = _active?.membershipId;
+      _save();
       _watchAssignments();
-      notifyListeners();
+      if (!_disposed) notifyListeners();
       if (found.isEmpty) {
         return 'Tu cuenta todavía no tiene un acceso activo. Si es tu primer '
             'ingreso, activá tu cuenta con el código que te entregaron.';
       }
       return null;
     } on Object catch (error) {
+      if (preserveOnTransientError && _isAuthOrRevokedError(error)) {
+        _memberships = const <StaffMembershipScope>[];
+        _active = null;
+        _savedActiveMembershipId = null;
+        _save();
+        _watchAssignments();
+        if (!_disposed) notifyListeners();
+      }
       return staffErrorMessage(error);
     }
   }
 
   void choose(StaffMembershipScope scope) {
     if (!_memberships.contains(scope)) return;
+    _touched = true;
     _active = scope;
+    _savedActiveMembershipId = scope.membershipId;
+    _save();
     _watchAssignments();
-    notifyListeners();
+    if (!_disposed) notifyListeners();
+  }
+
+  static List<StaffMembershipScope> _parseMemberships(Object? raw) {
+    if (raw is! List<Object?>) return const <StaffMembershipScope>[];
+    final List<StaffMembershipScope> parsed = <StaffMembershipScope>[];
+    for (final Object? entry in raw) {
+      if (entry is Map<Object?, Object?>) {
+        try {
+          parsed.add(
+            StaffMembershipScope.fromJson(entry.cast<String, Object?>()),
+          );
+        } on Object {
+          // Ignorar entradas dañadas al restaurar.
+        }
+      }
+    }
+    return parsed;
+  }
+
+  static StaffMembershipScope? _resolveActive(
+    List<StaffMembershipScope> found,
+    String? keep,
+  ) => found.length == 1
+      ? found.single
+      : found
+            .where((StaffMembershipScope scope) => scope.membershipId == keep)
+            .firstOrNull;
+
+  static bool _isAuthOrRevokedError(Object error) {
+    final String code = error is GatewayException
+        ? '${error.code} ${error.message}'.toLowerCase()
+        : error.toString().toLowerCase();
+    return code.contains('authentication_required') ||
+        code.contains('membership_revoked') ||
+        code.contains('forbidden') ||
+        code.contains('42501') ||
+        code.contains('jwt') ||
+        code.contains('session_not_found');
+  }
+
+  Future<void> _save() async {
+    try {
+      await _store?.save(<String, Object?>{
+        'version': 1,
+        'userId': _memberships.isEmpty ? null : backend.currentUserId,
+        'activeMembershipId': _active?.membershipId,
+        'memberships': <Map<String, Object?>>[
+          for (final StaffMembershipScope scope in _memberships) scope.toJson(),
+        ],
+      });
+    } on Object {
+      // Sin almacén disponible, la sesión sigue activa en memoria.
+    }
   }
 
   StreamSubscription<SetuAssignmentNotice>? _notices;
@@ -421,15 +551,19 @@ class StaffSession extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _notices?.cancel();
     super.dispose();
   }
 
   Future<void> signOut() async {
+    _touched = true;
     _memberships = const <StaffMembershipScope>[];
     _active = null;
+    _savedActiveMembershipId = null;
+    await _save();
     _watchAssignments();
-    notifyListeners();
+    if (!_disposed) notifyListeners();
     try {
       await backend.signOut();
     } on Object {
