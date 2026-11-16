@@ -460,12 +460,13 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: CureandoTheme.background,
+          Material(
+            color: CureandoTheme.background,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _line, width: 1.5),
+              side: const BorderSide(color: _line, width: 1.5),
             ),
+            clipBehavior: Clip.antiAlias,
             child: CheckboxListTile(
               value: widget.flow.involvesStaff,
               onChanged: (bool? value) =>
