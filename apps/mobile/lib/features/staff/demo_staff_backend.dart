@@ -136,6 +136,9 @@ class _DemoCase {
   int version = 1;
   DateTime? closedAt;
   String? closedReason;
+  DateTime? conversationEndedAt;
+  String? sheetDraft;
+  DateTime? sheetDraftUpdatedAt;
   final List<CaseChatMessageView> messages;
   final List<CaseInternalNoteView> notes = <CaseInternalNoteView>[];
 
@@ -164,6 +167,7 @@ class _DemoCase {
     receivedCentrallyAt: declaredAt,
     closedAt: closedAt,
     closedReason: closedReason,
+    conversationEndedAt: conversationEndedAt,
     studentPiece: piece,
   );
 }
@@ -353,9 +357,10 @@ class DemoStaffBackend implements StaffBackend {
       declaredAt: DateTime(2026, 11, 13, 10, 24),
       narrative: 'Se burlan de mí durante el recreo.',
       piece: const StudentPieceSnapshot(
+        displayName: 'Chispa Cósmica',
         shape: 'puzzle',
         color: 'green',
-        accessories: <String>[],
+        accessories: <String>['cap', 'glasses'],
       ),
       assignedTo: _desk,
       status: SetuCaseStatus.inListening,
@@ -1868,7 +1873,8 @@ class DemoStaffBackend implements StaffBackend {
     String? openingMessage,
   }) async {
     final _DemoCase found = _assigned(caseId);
-    if (found.status == SetuCaseStatus.closed) {
+    if (found.status == SetuCaseStatus.closed ||
+        found.conversationEndedAt != null) {
       throw const GatewayException('P0001', 'chat_not_available');
     }
     found
@@ -1895,7 +1901,9 @@ class DemoStaffBackend implements StaffBackend {
     required String body,
   }) async {
     final _DemoCase found = _assigned(caseId);
-    if (!found.chat || found.status == SetuCaseStatus.closed) {
+    if (!found.chat ||
+        found.status == SetuCaseStatus.closed ||
+        found.conversationEndedAt != null) {
       throw const GatewayException('P0001', 'chat_not_available');
     }
     final CaseChatMessageView message = CaseChatMessageView(
@@ -1957,7 +1965,9 @@ class DemoStaffBackend implements StaffBackend {
     if (assessment.closeCase) {
       found
         ..status = SetuCaseStatus.closed
+        ..chat = false
         ..closedAt = DateTime.now()
+        ..conversationEndedAt ??= DateTime.now()
         ..closedReason = assessment.closedReason.trim();
     } else if (assessment.issueSheet) {
       found.status = SetuCaseStatus.sheetSent;
@@ -1998,6 +2008,54 @@ class DemoStaffBackend implements StaffBackend {
         ),
       );
     }
+  }
+
+  @override
+  Future<CaseSheetDraftView?> sheetDraft(String caseId) async {
+    final _DemoCase found = _assigned(caseId);
+    final String? text = found.sheetDraft;
+    if (text == null) return null;
+    return CaseSheetDraftView(
+      caseId: found.id,
+      guidanceDraft: text,
+      updatedAt: found.sheetDraftUpdatedAt,
+    );
+  }
+
+  @override
+  Future<CaseSheetDraftView> saveSheetDraft({
+    required String caseId,
+    required String guidanceDraft,
+  }) async {
+    final _DemoCase found = _assigned(caseId);
+    final String clean = guidanceDraft.trim();
+    final DateTime now = DateTime.now();
+    found
+      ..sheetDraft = clean
+      ..sheetDraftUpdatedAt = now;
+    return CaseSheetDraftView(
+      caseId: found.id,
+      guidanceDraft: clean,
+      updatedAt: now,
+    );
+  }
+
+  @override
+  Future<void> endConversation({
+    required String operationId,
+    required String caseId,
+  }) async {
+    final _DemoCase found = _assigned(caseId);
+    if (found.level == null) {
+      throw const GatewayException(
+        'P0001',
+        'assessment_required_before_ending',
+      );
+    }
+    found
+      ..chat = false
+      ..conversationEndedAt ??= DateTime.now()
+      ..version += 1;
   }
 
   // --- Dirección del centro ------------------------------------------------
