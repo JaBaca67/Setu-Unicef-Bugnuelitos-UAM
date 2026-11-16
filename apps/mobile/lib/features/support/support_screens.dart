@@ -502,10 +502,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                     child: CampaignBackground(
                       child: SafeArea(
                         bottom: false,
-                        child: FlowHeader(
-                          title: 'Equipo de escucha',
-                          subtitle: 'Chat privado',
-                        ),
+                        child: FlowHeader(title: 'Equipo de escucha'),
                       ),
                     ),
                   ),

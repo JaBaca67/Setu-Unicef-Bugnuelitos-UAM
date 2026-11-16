@@ -130,18 +130,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       bottomNavigationBar: SetuBottomNav(selected: _section, onSelected: _open),
       header: switch (_section) {
         HomeSection.inicio => _HomeHeader(piece: widget.piece),
-        HomeSection.informacion => const _SectionHeader(
-          title: 'Información',
-          subtitle: 'Leé y mirá a tu ritmo. No hace falta reportar.',
-        ),
-        HomeSection.actividades => const _SectionHeader(
-          title: 'Actividades',
-          subtitle: 'Jugá y aprendé sobre emociones y convivencia.',
-        ),
-        HomeSection.ayuda => const _SectionHeader(
-          title: 'Ayuda',
-          subtitle: 'Personas y recursos que pueden acompañarte.',
-        ),
+        HomeSection.informacion => const _SectionHeader(title: 'Información'),
+        HomeSection.actividades => const _SectionHeader(title: 'Actividades'),
+        HomeSection.ayuda => const _SectionHeader(title: 'Ayuda'),
       },
       body: Padding(
         padding: _section == HomeSection.inicio
@@ -266,10 +257,9 @@ class _HomeHeader extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
+  const _SectionHeader({required this.title});
 
   final String title;
-  final String subtitle;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -289,15 +279,6 @@ class _SectionHeader extends StatelessWidget {
               fontWeight: FontWeight.w700,
               height: 1.2,
             ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          subtitle,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            height: 1.4,
           ),
         ),
       ],

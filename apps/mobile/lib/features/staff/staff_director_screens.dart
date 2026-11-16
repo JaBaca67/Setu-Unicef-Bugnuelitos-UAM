@@ -435,12 +435,6 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
           ],
         ),
         Text(session.active?.place ?? '', style: _text),
-        const SizedBox(height: 6),
-        const Text(
-          'Ves el aviso mínimo y las fichas autorizadas para tu centro. El '
-          'relato y la conversación del estudiante no llegan a la dirección.',
-          style: TextStyle(fontSize: 15, height: 1.4),
-        ),
         const SizedBox(height: 12),
         if (_bluetoothRequired) ...<Widget>[
           Container(

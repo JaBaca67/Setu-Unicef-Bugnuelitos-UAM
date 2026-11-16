@@ -19,10 +19,7 @@ class SchoolQrPosterScreen extends StatelessWidget {
     final String code = school.publicCode;
     final bool valid = extractSchoolCode(code) != null;
     return FlowScaffold(
-      header: const FlowHeader(
-        title: 'Cartel QR',
-        subtitle: 'Para mostrar o colocar en el colegio.',
-      ),
+      header: const FlowHeader(title: 'Cartel QR'),
       body: Container(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         decoration: BoxDecoration(

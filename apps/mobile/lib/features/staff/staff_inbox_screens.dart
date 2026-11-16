@@ -326,12 +326,6 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
           header: true,
           child: const Text('Alertas recibidas', style: _heading),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Ves datos mínimos de cada alerta. El relato y la conversación son '
-          'solo de la persona de Mesa de Escucha asignada.',
-          style: TextStyle(fontSize: 15, height: 1.4),
-        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 10,
@@ -1817,10 +1811,7 @@ class _DeskDeclinedScreenState extends State<DeskDeclinedScreen> {
         _records ?? const <DeclinedDispatchRecord>[];
     return FlowScaffold(
       onRefresh: _load,
-      header: const FlowHeader(
-        title: 'Declinadas recientes',
-        subtitle: 'Mesa de escucha',
-      ),
+      header: const FlowHeader(title: 'Declinadas recientes'),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[

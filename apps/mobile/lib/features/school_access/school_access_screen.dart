@@ -13,22 +13,14 @@ import 'school_qr_scanner.dart';
 import 'student_session.dart';
 
 enum SchoolAccessStep {
-  method(
-    '',
-    'Confirmá tu colegio',
-    'Usá el código público que te dio tu colegio.',
-  ),
-  scan('qr', 'Escaneá el QR', 'Colocá el código dentro del recuadro.'),
+  method('', 'Confirmá tu colegio'),
+  scan('qr', 'Escaneá el QR'),
   manual(
     'codigo',
     'Ingresá el código de tu colegio',
-    'Te lo dio tu colegio. No te pedimos nombre ni carné.',
+    'No te pedimos nombre ni carné.',
   ),
-  proximity(
-    'cercania',
-    'Comprobá si estás cerca',
-    'Primero revisá que este sea tu colegio.',
-  ),
+  proximity('cercania', 'Comprobá si estás cerca'),
   result('resultado', 'Colegio confirmado');
 
   const SchoolAccessStep(this.path, this.title, [this.subtitle]);
