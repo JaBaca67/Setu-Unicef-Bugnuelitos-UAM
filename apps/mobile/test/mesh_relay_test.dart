@@ -273,7 +273,7 @@ void main() {
       expect(saved, isTrue);
       expect(flow.delivery, AlertDelivery.pending);
       expect(flow.needsBluetoothForMesh, isTrue);
-      expect(relay.items.length, 1);
+      expect(relay.items.length, 2);
 
       final bool enabled = await flow.ensureBluetoothForMesh();
       expect(enabled, isTrue);
@@ -350,7 +350,7 @@ void main() {
 
       expect(saved, isTrue);
       expect(flow.needsBluetoothForMesh, isTrue);
-      expect(relay.items.length, 1);
+      expect(relay.items.length, 2);
 
       final bool btOk = await flow.ensureBluetoothForMesh();
       expect(btOk, isTrue);
@@ -361,6 +361,64 @@ void main() {
       await transport.dispose();
     },
   );
+
+  test('Dirección recibe alerta mínima por mesh sin internet y la omite si involucra personal', () async {
+    final _InMemoryMeshBus bus = _InMemoryMeshBus();
+    final _FakeMeshTransport tStudent = _FakeMeshTransport('student', bus);
+    final _FakeMeshTransport tDirector = _FakeMeshTransport('director', bus);
+
+    final MeshRelayService studentRelay = MeshRelayService(
+      transport: tStudent,
+      openStore: () async => _MemoryStore(),
+    );
+    final MeshRelayService directorRelay = MeshRelayService(
+      transport: tDirector,
+      openStore: () async => _MemoryStore(),
+    );
+    await directorRelay.setDirectorSchoolContext(
+      schoolCode: 'AULA24',
+      schoolKeyPair: await MeshSchoolKeys.demoSchoolKeyPair('AULA24'),
+    );
+    await studentRelay.start(endpointName: 'student');
+    await directorRelay.start(endpointName: 'director');
+    bus.connect('student', 'director');
+
+    final SupportFlow flow = SupportFlow(
+      openStore: () async => _MemoryStore(),
+      backend: _FailingSupportBackend(),
+      schoolCode: 'AULA24',
+      mesh: studentRelay,
+      resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+    );
+
+    // Caso 1: no involucra personal -> Dirección recibe alerta mínima local.
+    flow.selectSituation(Situation.verbal);
+    flow.selectParticipation(Participation.own);
+    flow.details = 'Relato privado que no debe llegar a Dirección';
+    expect(await flow.send(), isTrue);
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+
+    expect(directorRelay.directorAlerts, hasLength(1));
+    expect(directorRelay.directorAlerts.single.publicSchoolCode, 'AULA24');
+    expect(
+      directorRelay.directorAlerts.single.situationType,
+      'verbal_bullying',
+    );
+
+    // Caso 2: involucra personal -> no se genera sobre para Dirección.
+    flow.selectSituation(Situation.physical);
+    flow.selectParticipation(Participation.witness);
+    flow.setInvolvesStaff(true);
+    expect(await flow.send(), isTrue);
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+
+    expect(directorRelay.directorAlerts, hasLength(1));
+
+    await studentRelay.stop();
+    await directorRelay.stop();
+    await tStudent.dispose();
+    await tDirector.dispose();
+  });
 }
 
 class _FailingSupportBackend implements SupportBackend {
