@@ -269,6 +269,7 @@ void main() {
       flow.selectSituation(Situation.talk);
       flow.selectParticipation(Participation.own);
       final bool saved = await flow.send();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
 
       expect(saved, isTrue);
       expect(flow.delivery, AlertDelivery.pending);
@@ -347,6 +348,7 @@ void main() {
       flow.selectSituation(Situation.talk);
       flow.selectParticipation(Participation.own);
       final bool saved = await flow.send();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
 
       expect(saved, isTrue);
       expect(flow.needsBluetoothForMesh, isTrue);
