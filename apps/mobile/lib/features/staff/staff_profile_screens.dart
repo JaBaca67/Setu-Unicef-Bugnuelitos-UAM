@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/remote/push_notification_service.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
@@ -205,10 +206,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                     _error ?? 'No pudimos cargar tu perfil institucional.',
                   ),
                   const SizedBox(height: 12),
-                  StaffPrimaryButton(
-                    label: 'Reintentar',
-                    onPressed: _load,
-                  ),
+                  StaffPrimaryButton(label: 'Reintentar', onPressed: _load),
                 ],
               )
             : Column(
@@ -765,6 +763,8 @@ class _StaffAvailabilityScreenState extends State<StaffAvailabilityScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          const StaffPushDeviceCard(),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
@@ -855,6 +855,106 @@ class _StaffAvailabilityScreenState extends State<StaffAvailabilityScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Estado del registro push de este teléfono para el personal, con un botón
+/// para volver a registrarlo. No muestra el token ni datos de casos.
+class StaffPushDeviceCard extends StatefulWidget {
+  const StaffPushDeviceCard({super.key, this.service});
+
+  final PushNotificationService? service;
+
+  @override
+  State<StaffPushDeviceCard> createState() => _StaffPushDeviceCardState();
+}
+
+class _StaffPushDeviceCardState extends State<StaffPushDeviceCard> {
+  PushNotificationService get _service =>
+      widget.service ?? PushNotificationService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_service.staffStatus.value != StaffPushStatus.registered) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _service.registerStaffNow();
+      });
+    }
+  }
+
+  String _label(StaffPushStatus status) => switch (status) {
+    StaffPushStatus.registered =>
+      'Este teléfono recibe avisos de nuevas alertas y mensajes.',
+    StaffPushStatus.registering => 'Registrando este teléfono…',
+    StaffPushStatus.noSession =>
+      'Iniciá sesión de personal para recibir avisos en este teléfono.',
+    StaffPushStatus.noToken =>
+      'No se pudo obtener el permiso de avisos del teléfono. Revisá que las '
+          'notificaciones de SéTú estén activadas y volvé a intentar.',
+    StaffPushStatus.failed =>
+      'No se pudo registrar este teléfono. Revisá tu conexión y volvé a '
+          'intentar.',
+    StaffPushStatus.unknown => 'Comprobando avisos de este teléfono…',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<StaffPushStatus>(
+      valueListenable: _service.staffStatus,
+      builder: (BuildContext context, StaffPushStatus status, _) {
+        final bool ok = status == StaffPushStatus.registered;
+        final bool busy =
+            status == StaffPushStatus.registering ||
+            status == StaffPushStatus.unknown;
+        return Material(
+          key: const Key('staff-push-device-card'),
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: Color(0xFFD6E2F5)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      ok
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_off_outlined,
+                      color: ok ? CureandoTheme.green : CureandoTheme.blue,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Avisos en este teléfono',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: CureandoTheme.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(_label(status)),
+                if (!ok) ...<Widget>[
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: busy ? null : _service.registerStaffNow,
+                    child: const Text('Registrar este teléfono'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

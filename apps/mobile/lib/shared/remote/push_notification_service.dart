@@ -8,8 +8,21 @@ import 'setu_remote_gateway.dart';
 
 typedef ForegroundPushCallback = void Function(String? title, String? body);
 
+/// Estado visible del registro push del personal en este teléfono. No guarda
+/// el token ni datos del caso; solo el resultado del último intento.
+enum StaffPushStatus {
+  unknown,
+  registering,
+  registered,
+  noSession,
+  noToken,
+  failed,
+}
+
 @pragma('vm:entry-point')
-Future<void> setuFirebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> setuFirebaseMessagingBackgroundHandler(
+  RemoteMessage message,
+) async {
   try {
     await Firebase.initializeApp();
   } on Object {
@@ -44,6 +57,13 @@ class PushNotificationService {
   StreamSubscription<String>? _tokenRefreshSub;
   StreamSubscription<RemoteMessage>? _foregroundSub;
 
+  /// Resultado del último registro del personal, para mostrarlo en el perfil.
+  final ValueNotifier<StaffPushStatus> staffStatus =
+      ValueNotifier<StaffPushStatus>(StaffPushStatus.unknown);
+
+  /// Tipo del último error de registro (sin mensajes ni datos sensibles).
+  String? lastStaffErrorType;
+
   String get _platform => switch (defaultTargetPlatform) {
     TargetPlatform.iOS => 'ios',
     _ => 'android',
@@ -65,11 +85,7 @@ class PushNotificationService {
         setuFirebaseMessagingBackgroundHandler,
       );
       final FirebaseMessaging messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
       // `push-dispatch` envía vía FCM HTTP v1 usando `message.token` (sin modo FID
       // en el manifiesto), por eso obtenemos el token FCM de registro estándar.
       // ignore: deprecated_member_use
@@ -131,6 +147,43 @@ class PushNotificationService {
     }
   }
 
+  /// Fuerza el registro del token FCM del personal en este teléfono: vuelve a
+  /// pedir el token a Firebase, ignora la caché y devuelve el resultado.
+  Future<StaffPushStatus> registerStaffNow() async {
+    final SetuRemoteGateway? gateway = _gateway;
+    if (gateway == null || gateway.currentStaffUserId == null) {
+      staffStatus.value = StaffPushStatus.noSession;
+      return staffStatus.value;
+    }
+    staffStatus.value = StaffPushStatus.registering;
+    if (_fetchTokenOverride == null && Firebase.apps.isEmpty) {
+      try {
+        await Firebase.initializeApp();
+      } on Object catch (error) {
+        lastStaffErrorType = error.runtimeType.toString();
+      }
+    }
+    _lastSyncedStaffUserId = null;
+    final String? token = await _refreshToken();
+    if (token == null || token.isEmpty) {
+      staffStatus.value = StaffPushStatus.noToken;
+      return staffStatus.value;
+    }
+    try {
+      await gateway.registerStaffPushToken(
+        fcmToken: token,
+        platform: _platform,
+      );
+      _lastSyncedStaffUserId = '${gateway.currentStaffUserId}:$token';
+      lastStaffErrorType = null;
+      staffStatus.value = StaffPushStatus.registered;
+    } on Object catch (error) {
+      lastStaffErrorType = error.runtimeType.toString();
+      staffStatus.value = StaffPushStatus.failed;
+    }
+    return staffStatus.value;
+  }
+
   /// Registra el token FCM del personal autenticado cuando cambia la sesión o el token.
   Future<void> syncStaff({required bool hasActiveSession}) async {
     final SetuRemoteGateway? gateway = _gateway;
@@ -154,7 +207,10 @@ class PushNotificationService {
     }
 
     final String? token = await _ensureToken();
-    if (token == null || token.isEmpty) return;
+    if (token == null || token.isEmpty) {
+      staffStatus.value = StaffPushStatus.noToken;
+      return;
+    }
     final String cacheKey = '$userId:$token';
     if (_lastSyncedStaffUserId == cacheKey) return;
     try {
@@ -163,7 +219,11 @@ class PushNotificationService {
         platform: _platform,
       );
       _lastSyncedStaffUserId = cacheKey;
+      lastStaffErrorType = null;
+      staffStatus.value = StaffPushStatus.registered;
     } on Object catch (error) {
+      lastStaffErrorType = error.runtimeType.toString();
+      staffStatus.value = StaffPushStatus.failed;
       if (kDebugMode) {
         debugPrint(
           'SéTú push: fallo al sincronizar personal (${error.runtimeType}).',

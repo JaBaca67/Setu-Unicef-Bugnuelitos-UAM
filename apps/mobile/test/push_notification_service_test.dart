@@ -39,43 +39,47 @@ class _FakePushGateway implements SetuRemoteGateway {
 }
 
 void main() {
-  test('syncStaff obtiene token, evita duplicados, renueva y da de baja', () async {
-    final _FakePushGateway gateway = _FakePushGateway();
-    String? activeToken = 'fcm_token_inicial_ficticio_1234567890';
-    final PushNotificationService service = PushNotificationService.forTesting(
-      gateway: gateway,
-      fetchToken: () async => activeToken,
-    );
+  test(
+    'syncStaff obtiene token, evita duplicados, renueva y da de baja',
+    () async {
+      final _FakePushGateway gateway = _FakePushGateway();
+      String? activeToken = 'fcm_token_inicial_ficticio_1234567890';
+      final PushNotificationService service =
+          PushNotificationService.forTesting(
+            gateway: gateway,
+            fetchToken: () async => activeToken,
+          );
 
-    // Sin sesión activa no registra token.
-    await service.syncStaff(hasActiveSession: false);
-    expect(gateway.registeredStaff, isEmpty);
+      // Sin sesión activa no registra token.
+      await service.syncStaff(hasActiveSession: false);
+      expect(gateway.registeredStaff, isEmpty);
 
-    // Con sesión activa registra una sola vez por par usuario+token.
-    gateway.staffUserId = 'user-psicologo-1';
-    await service.syncStaff(hasActiveSession: true);
-    await service.syncStaff(hasActiveSession: true);
-    expect(gateway.registeredStaff, <String>[
-      'user-psicologo-1:fcm_token_inicial_ficticio_1234567890:android',
-    ]);
+      // Con sesión activa registra una sola vez por par usuario+token.
+      gateway.staffUserId = 'user-psicologo-1';
+      await service.syncStaff(hasActiveSession: true);
+      await service.syncStaff(hasActiveSession: true);
+      expect(gateway.registeredStaff, <String>[
+        'user-psicologo-1:fcm_token_inicial_ficticio_1234567890:android',
+      ]);
 
-    // Al rotar token limpia caché y vuelve a registrar.
-    int tokenNotifications = 0;
-    service.setListeners(onTokenChanged: () => tokenNotifications += 1);
-    activeToken = 'fcm_token_rotado_ficticio_9876543210';
-    service.handleTokenRefresh(activeToken);
-    expect(tokenNotifications, 1);
-    await service.syncStaff(hasActiveSession: true);
-    expect(gateway.registeredStaff, hasLength(2));
+      // Al rotar token limpia caché y vuelve a registrar.
+      int tokenNotifications = 0;
+      service.setListeners(onTokenChanged: () => tokenNotifications += 1);
+      activeToken = 'fcm_token_rotado_ficticio_9876543210';
+      service.handleTokenRefresh(activeToken);
+      expect(tokenNotifications, 1);
+      await service.syncStaff(hasActiveSession: true);
+      expect(gateway.registeredStaff, hasLength(2));
 
-    // Al cerrar sesión da de baja con el usuario todavía autenticado.
-    await service.unregisterStaff();
-    expect(gateway.unregisteredStaff, <String>[
-      'user-psicologo-1:fcm_token_rotado_ficticio_9876543210',
-    ]);
-  });
+      // Al cerrar sesión da de baja con el usuario todavía autenticado.
+      await service.unregisterStaff();
+      expect(gateway.unregisteredStaff, <String>[
+        'user-psicologo-1:fcm_token_rotado_ficticio_9876543210',
+      ]);
+    },
+  );
 
-  test('syncStudentCase reintenta si el token llega después y limpia al cerrar', () async {
+  test('registerStaffNow fuerza el registro y reporta el estado', () async {
     final _FakePushGateway gateway = _FakePushGateway();
     String? activeToken;
     final PushNotificationService service = PushNotificationService.forTesting(
@@ -83,41 +87,67 @@ void main() {
       fetchToken: () async => activeToken,
     );
 
-    // Primer intento cuando aún no hay token disponible: no cachea ni falla.
-    await service.syncStudentCase(
-      caseId: 'case-1',
-      capabilityToken: 'cap-secret-1',
-      active: true,
-    );
-    expect(gateway.registeredStudents, isEmpty);
+    expect(await service.registerStaffNow(), StaffPushStatus.noSession);
 
-    // Al reintentar cuando ya existe token FCM, sí sincroniza.
-    activeToken = 'fcm_token_estudiante_ficticio_123456';
-    await service.syncStudentCase(
-      caseId: 'case-1',
-      capabilityToken: 'cap-secret-1',
-      active: true,
-    );
-    await service.syncStudentCase(
-      caseId: 'case-1',
-      capabilityToken: 'cap-secret-1',
-      active: true,
-    );
-    expect(gateway.registeredStudents, <String>[
-      'case-1:cap-secret-1:fcm_token_estudiante_ficticio_123456:android',
-    ]);
+    gateway.staffUserId = 'user-psicologo-2';
+    expect(await service.registerStaffNow(), StaffPushStatus.noToken);
+    expect(gateway.registeredStaff, isEmpty);
 
-    // Al desactivar y reactivar el mismo caso vuelve a sincronizar.
-    await service.syncStudentCase(
-      caseId: null,
-      capabilityToken: null,
-      active: false,
-    );
-    await service.syncStudentCase(
-      caseId: 'case-1',
-      capabilityToken: 'cap-secret-1',
-      active: true,
-    );
-    expect(gateway.registeredStudents, hasLength(2));
+    activeToken = 'fcm_token_psicologo_ficticio_1234567890';
+    expect(await service.registerStaffNow(), StaffPushStatus.registered);
+    expect(service.staffStatus.value, StaffPushStatus.registered);
+    // Forzar de nuevo vuelve a registrar aunque ya esté en caché.
+    await service.registerStaffNow();
+    expect(gateway.registeredStaff, hasLength(2));
   });
+
+  test(
+    'syncStudentCase reintenta si el token llega después y limpia al cerrar',
+    () async {
+      final _FakePushGateway gateway = _FakePushGateway();
+      String? activeToken;
+      final PushNotificationService service =
+          PushNotificationService.forTesting(
+            gateway: gateway,
+            fetchToken: () async => activeToken,
+          );
+
+      // Primer intento cuando aún no hay token disponible: no cachea ni falla.
+      await service.syncStudentCase(
+        caseId: 'case-1',
+        capabilityToken: 'cap-secret-1',
+        active: true,
+      );
+      expect(gateway.registeredStudents, isEmpty);
+
+      // Al reintentar cuando ya existe token FCM, sí sincroniza.
+      activeToken = 'fcm_token_estudiante_ficticio_123456';
+      await service.syncStudentCase(
+        caseId: 'case-1',
+        capabilityToken: 'cap-secret-1',
+        active: true,
+      );
+      await service.syncStudentCase(
+        caseId: 'case-1',
+        capabilityToken: 'cap-secret-1',
+        active: true,
+      );
+      expect(gateway.registeredStudents, <String>[
+        'case-1:cap-secret-1:fcm_token_estudiante_ficticio_123456:android',
+      ]);
+
+      // Al desactivar y reactivar el mismo caso vuelve a sincronizar.
+      await service.syncStudentCase(
+        caseId: null,
+        capabilityToken: null,
+        active: false,
+      );
+      await service.syncStudentCase(
+        caseId: 'case-1',
+        capabilityToken: 'cap-secret-1',
+        active: true,
+      );
+      expect(gateway.registeredStudents, hasLength(2));
+    },
+  );
 }
