@@ -82,38 +82,54 @@ enum SchoolProximity {
 SchoolProximity classifySchoolDistance({
   required double distanceMeters,
   required double accuracyMeters,
+  double radiusMeters = demoSchoolRadiusMeters,
 }) {
-  if (!distanceMeters.isFinite ||
+  if (!radiusMeters.isFinite ||
+      radiusMeters <= 0 ||
+      !distanceMeters.isFinite ||
       distanceMeters < 0 ||
       !accuracyMeters.isFinite ||
       accuracyMeters <= 0 ||
-      accuracyMeters > demoSchoolRadiusMeters / 2) {
+      accuracyMeters > radiusMeters / 2) {
     return SchoolProximity.imprecise;
   }
-  if (distanceMeters + accuracyMeters <= demoSchoolRadiusMeters) {
+  if (distanceMeters + accuracyMeters <= radiusMeters) {
     return SchoolProximity.nearby;
   }
-  if (distanceMeters - accuracyMeters > demoSchoolRadiusMeters) {
+  if (distanceMeters - accuracyMeters > radiusMeters) {
     return SchoolProximity.outside;
   }
   return SchoolProximity.imprecise;
 }
 
-Future<SchoolProximity> checkSchoolLocation() async {
-  // Referencia pública del campus, no datos de ubicación de estudiantes.
-  final double? latitude = double.tryParse(
-    const String.fromEnvironment(
-      'SETU_DEMO_LATITUDE',
-      defaultValue: '12.098062',
-    ),
-  );
-  final double? longitude = double.tryParse(
-    const String.fromEnvironment(
-      'SETU_DEMO_LONGITUDE',
-      defaultValue: '-86.2641465',
-    ),
-  );
-  if (latitude == null ||
+Future<SchoolProximity> checkSchoolLocation({
+  double? targetLat,
+  double? targetLng,
+  double? radiusMeters,
+}) async {
+  // Referencia pública del colegio confirmado o del campus demo, nunca datos
+  // de ubicación de estudiantes.
+  final bool hasTarget = targetLat != null || targetLng != null;
+  final double? latitude = hasTarget
+      ? targetLat
+      : double.tryParse(
+          const String.fromEnvironment(
+            'SETU_DEMO_LATITUDE',
+            defaultValue: '12.098062',
+          ),
+        );
+  final double? longitude = hasTarget
+      ? targetLng
+      : double.tryParse(
+          const String.fromEnvironment(
+            'SETU_DEMO_LONGITUDE',
+            defaultValue: '-86.2641465',
+          ),
+        );
+  final double resolvedRadius = radiusMeters ?? demoSchoolRadiusMeters;
+  if (!resolvedRadius.isFinite ||
+      resolvedRadius <= 0 ||
+      latitude == null ||
       !latitude.isFinite ||
       latitude.abs() > 90 ||
       longitude == null ||
@@ -167,6 +183,7 @@ Future<SchoolProximity> checkSchoolLocation() async {
         longitude,
       ),
       accuracyMeters: position.accuracy,
+      radiusMeters: resolvedRadius,
     );
   } on LocationServiceDisabledException {
     return SchoolProximity.locationDisabled;

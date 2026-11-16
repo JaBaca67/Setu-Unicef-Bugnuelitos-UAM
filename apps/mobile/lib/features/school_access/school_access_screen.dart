@@ -323,7 +323,15 @@ class _ProximityCheckState extends State<_ProximityCheck> {
   Future<void> _check() async {
     if (_checking) return;
     setState(() => _checking = true);
-    final SchoolProximity result = await widget.check();
+    final ConfirmedSchool? school = widget.school;
+    final SchoolProximity result =
+        identical(widget.check, checkSchoolLocation) && school != null
+        ? await checkSchoolLocation(
+            targetLat: school.referenceLat,
+            targetLng: school.referenceLng,
+            radiusMeters: school.radiusMeters.toDouble(),
+          )
+        : await widget.check();
     if (!mounted) return;
     setState(() => _checking = false);
     if (ModalRoute.isCurrentOf(context) == true) _openResult(result);
@@ -458,8 +466,7 @@ class _ManualCodeFormState extends State<_ManualCodeForm> {
     setState(() => _searching = false);
     if (school == null) {
       setState(
-        () => _error =
-            'Ese código no corresponde a un colegio registrado. Revisá el código e intentá de nuevo.',
+        () => _error = 'Ese código no corresponde a un colegio registrado. Revisá el código e intentá de nuevo.',
       );
       _focus.requestFocus();
       return;

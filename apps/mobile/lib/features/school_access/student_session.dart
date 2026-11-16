@@ -16,6 +16,9 @@ class ConfirmedSchool {
     required this.name,
     required this.municipality,
     required this.department,
+    this.referenceLat,
+    this.referenceLng,
+    this.radiusMeters = 150,
   });
 
   final String id;
@@ -23,6 +26,9 @@ class ConfirmedSchool {
   final String name;
   final String municipality;
   final String department;
+  final double? referenceLat;
+  final double? referenceLng;
+  final int radiusMeters;
 
   static const String centroAmericaCode = 'AULA26';
 
@@ -48,6 +54,9 @@ class ConfirmedSchool {
     'name': name,
     'municipality': municipality,
     'department': department,
+    if (referenceLat != null) 'referenceLat': referenceLat,
+    if (referenceLng != null) 'referenceLng': referenceLng,
+    'radiusMeters': radiusMeters,
   };
 
   static ConfirmedSchool? tryParse(Object? raw) {
@@ -64,12 +73,18 @@ class ConfirmedSchool {
         department is! String) {
       return null;
     }
+    final Object? rawLat = raw['referenceLat'];
+    final Object? rawLng = raw['referenceLng'];
+    final Object? rawRadius = raw['radiusMeters'];
     return ConfirmedSchool(
       id: id,
       publicCode: code,
       name: name,
       municipality: municipality,
       department: department,
+      referenceLat: rawLat is num ? rawLat.toDouble() : null,
+      referenceLng: rawLng is num ? rawLng.toDouble() : null,
+      radiusMeters: rawRadius is num && rawRadius > 0 ? rawRadius.toInt() : 150,
     );
   }
 }
@@ -83,6 +98,9 @@ const List<ConfirmedSchool> localSchoolCatalog = <ConfirmedSchool>[
     name: 'Colegio Centro América',
     municipality: 'Managua',
     department: 'Managua',
+    referenceLat: 12.098062,
+    referenceLng: -86.2641465,
+    radiusMeters: 150,
   ),
   ConfirmedSchool(
     id: '11111111-1111-4111-8111-000000000024',
@@ -90,6 +108,9 @@ const List<ConfirmedSchool> localSchoolCatalog = <ConfirmedSchool>[
     name: 'Colegio Público Demo Centro América — CCE',
     municipality: 'Managua',
     department: 'Managua',
+    referenceLat: 12.098062,
+    referenceLng: -86.2641465,
+    radiusMeters: 150,
   ),
   ConfirmedSchool(
     id: '11111111-1111-4111-8111-000000000025',
@@ -97,6 +118,9 @@ const List<ConfirmedSchool> localSchoolCatalog = <ConfirmedSchool>[
     name: 'Colegio Público Demo Sur — CCE',
     municipality: 'Managua',
     department: 'Managua',
+    referenceLat: 12.082500,
+    referenceLng: -86.251200,
+    radiusMeters: 150,
   ),
 ];
 

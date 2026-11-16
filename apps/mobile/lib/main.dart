@@ -47,6 +47,9 @@ Future<void> main() async {
                 name: found.name,
                 municipality: found.municipality,
                 department: found.department,
+                referenceLat: found.referenceLat,
+                referenceLng: found.referenceLng,
+                radiusMeters: found.radiusMeters,
               );
       },
     );
@@ -58,7 +61,10 @@ Future<void> main() async {
         defaultValue: 'AULA24',
       ),
     );
-  } on Object {
+  } on Object catch (error) {
+    debugPrint(
+      'SéTú: cliente remoto no disponible (${error.runtimeType}); usando modo demostración.',
+    );
     staff = null;
     support = null;
     session = null;
