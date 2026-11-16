@@ -9,6 +9,9 @@ import 'features/staff/staff_backend.dart';
 import 'features/school_access/student_session.dart';
 import 'features/support/remote_support_backend.dart';
 import 'features/support/support_flow.dart';
+import 'shared/mesh/mesh_bridge_keys.dart';
+import 'shared/mesh/mesh_relay_service.dart';
+import 'shared/mesh/mesh_transport.dart';
 import 'shared/remote/push_notification_service.dart';
 import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/remote/setu_remote_models.dart';
@@ -26,7 +29,6 @@ Future<void> main() async {
   // en memoria, que se identifica en pantalla como datos ficticios.
   SetuRemoteGateway? remoteGateway;
   StaffBackend? staff;
-  SupportFlow? support;
   StudentSession? session;
   try {
     final SetuRemoteGateway gateway =
@@ -55,25 +57,28 @@ Future<void> main() async {
               );
       },
     );
-    support = SupportFlow(
-      backend: RemoteSupportBackend(gateway),
-      // Código inicial; la app lo reemplaza por el del colegio confirmado.
-      schoolCode: const String.fromEnvironment(
-        'SETU_SCHOOL_CODE',
-        defaultValue: 'AULA24',
-      ),
-    );
   } on Object catch (error) {
     debugPrint(
       'SéTú: cliente remoto no disponible (${error.runtimeType}); usando modo demostración.',
     );
     remoteGateway = null;
     staff = null;
-    support = null;
     session = null;
   }
+  final MeshRelayService meshRelay = MeshRelayService(
+    transport: NearbyMeshTransport(),
+    remoteGateway: remoteGateway,
+  );
   final StudentSession resolvedSession = session ?? StudentSession();
-  final SupportFlow resolvedSupport = support ?? SupportFlow();
+  final SupportFlow resolvedSupport = SupportFlow(
+    backend: remoteGateway == null ? null : RemoteSupportBackend(remoteGateway),
+    schoolCode: const String.fromEnvironment(
+      'SETU_SCHOOL_CODE',
+      defaultValue: 'AULA24',
+    ),
+    mesh: meshRelay,
+    resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+  );
   final StaffSession resolvedStaffSession = StaffSession(
     staff ?? DemoStaffBackend(),
   );
@@ -83,10 +88,12 @@ Future<void> main() async {
     resolvedSession.open(),
     resolvedSupport.open(),
     resolvedStaffSession.restore(),
+    meshRelay.open(),
   ]);
   runApp(
     CureandoApp(
       remoteGateway: remoteGateway,
+      meshRelay: meshRelay,
       staffBackend: staff,
       staffSession: resolvedStaffSession,
       supportFlow: resolvedSupport,
