@@ -106,7 +106,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
     header: Column(
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.only(left: 8, top: 4),
+          padding: const EdgeInsets.only(left: 8, top: 6),
           child: Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
@@ -118,35 +118,36 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
             ),
           ),
         ),
+        const SizedBox(height: 4),
         Semantics(
           label: 'SéTú',
           excludeSemantics: true,
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              CampaignSymbol(size: 50, showUnicef: false),
+              CampaignSymbol(size: 54, showUnicef: false),
               SizedBox(width: 12),
               Text(
                 'SéTú',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 40,
+                  fontSize: 42,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 22),
         const SizedBox(
-          height: 44,
+          height: 46,
           width: double.infinity,
           child: CustomPaint(painter: _WavePainter()),
         ),
       ],
     ),
     body: Padding(
-      padding: const EdgeInsets.fromLTRB(27, 4, 27, 40),
+      padding: const EdgeInsets.fromLTRB(27, 8, 27, 24),
       child: AutofillGroup(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -155,7 +156,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
               header: true,
               child: const Text('Personal autorizado', style: _title),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             const Text('Ingresá con tu cuenta institucional.', style: _lead),
             if (widget.session.backend.isDemo) ...<Widget>[
               const SizedBox(height: 12),
@@ -164,7 +165,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
                 error: false,
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             StaffField(
               label: 'Correo institucional',
               controller: _email,
@@ -207,7 +208,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
                 label: const Text('Continuar mi registro con código'),
               ),
             ],
-            const SizedBox(height: 18),
+            const SizedBox(height: 22),
             StaffPrimaryButton(
               label: 'Iniciar sesión',
               icon: Icons.login_rounded,

@@ -71,13 +71,13 @@ class FlowScaffold extends StatelessWidget {
                     final double bottomPadding = _floatingNav
                         ? 16 + math.max(mqPadding.bottom, systemBottom)
                         : bottom != null
-                        ? 24
-                        : 32 + systemBottom;
+                        ? 20
+                        : 20 + systemBottom;
                     final Widget scroll = SingleChildScrollView(
                       physics: onRefresh == null
                           ? null
                           : const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPadding),
+                      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding),
                       child: body,
                     );
                     if (onRefresh == null) return scroll;
@@ -94,7 +94,7 @@ class FlowScaffold extends StatelessWidget {
                   top: false,
                   maintainBottomViewPadding: true,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 26),
+                    padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
                     child: bottom,
                   ),
                 ),
