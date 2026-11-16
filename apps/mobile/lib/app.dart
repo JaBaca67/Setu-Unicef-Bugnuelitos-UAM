@@ -4,10 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+
 import 'features/home/learning_progress.dart';
 import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
+import 'features/mesh_test/mesh_test_screen.dart';
 import 'features/piece/piece_editor_screen.dart';
 import 'features/piece/student_piece.dart';
 import 'features/piece/student_profile_screen.dart';
@@ -28,8 +30,12 @@ import 'features/support/support_screens.dart';
 import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
+import 'shared/mesh/mesh_bridge_keys.dart';
+import 'shared/mesh/mesh_relay_service.dart';
+import 'shared/mesh/mesh_transport.dart';
 import 'shared/platform/screen_security_controller.dart';
 import 'shared/remote/push_notification_service.dart';
+import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/remote/setu_remote_models.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/setu_brand_mark.dart';
@@ -39,6 +45,9 @@ class CureandoApp extends StatefulWidget {
   const CureandoApp({
     super.key,
     this.gateway,
+    this.remoteGateway,
+    this.meshRelay,
+    this.meshRecipientPublicKey,
     this.learningProgress,
     this.supportFlow,
     this.studentSession,
@@ -52,6 +61,9 @@ class CureandoApp extends StatefulWidget {
     this.pieceRandom,
   });
   final CureandoGateway? gateway;
+  final SetuRemoteGateway? remoteGateway;
+  final MeshRelayService? meshRelay;
+  final List<int>? meshRecipientPublicKey;
   final LearningProgress? learningProgress;
   final SupportFlow? supportFlow;
 
@@ -80,7 +92,19 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
   StreamSubscription<void>? _staffAuthSubscription;
-  late final SupportFlow _support = widget.supportFlow ?? SupportFlow();
+  late final MeshRelayService _meshRelay =
+      widget.meshRelay ??
+      MeshRelayService(
+        transport: NearbyMeshTransport(),
+        remoteGateway: widget.remoteGateway,
+      );
+  late final SupportFlow _support =
+      widget.supportFlow ??
+      SupportFlow(
+        mesh: _meshRelay,
+        meshRecipientPublicKey: widget.meshRecipientPublicKey,
+        resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+      );
   late final StaffSession _staff =
       widget.staffSession ??
       StaffSession(widget.staffBackend ?? DemoStaffBackend());
@@ -183,6 +207,14 @@ class _CureandoAppState extends State<CureandoApp> {
               ),
             ],
           ),
+          GoRoute(
+            path: 'prueba-mesh',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              MeshTestScreen(remoteGateway: widget.remoteGateway),
+            ),
+          ),
           for (final WelcomeDestination destination
               in WelcomeDestination.values)
             GoRoute(
@@ -265,8 +297,7 @@ class _CureandoAppState extends State<CureandoApp> {
                   in <String, Widget Function()>{
                     'alerta': () =>
                         AlertSituationScreen(flow: _support, piece: _piece),
-                    'rol': () =>
-                        AlertRoleScreen(flow: _support, piece: _piece),
+                    'rol': () => AlertRoleScreen(flow: _support, piece: _piece),
                     'detalles': () =>
                         AlertDetailsScreen(flow: _support, piece: _piece),
                     'revisar': () =>
@@ -494,8 +525,30 @@ class _CureandoAppState extends State<CureandoApp> {
       _security.addListener(_refresh);
       _security.initialize();
       _open();
-    } else if (widget.allowDesignCapture) {
-      _security.setSecureScreen(false);
+    } else {
+      if (widget.allowDesignCapture) {
+        _security.setSecureScreen(false);
+      }
+      if (widget.supportFlow == null) {
+        unawaited(_bootstrapMesh());
+      }
+    }
+  }
+
+  Future<void> _bootstrapMesh() async {
+    try {
+      await _meshRelay.open();
+      final bool hasPending = _meshRelay.items.any(
+        (MeshQueueItem item) => item.state != MeshPacketState.centrallySynced,
+      );
+      if (!hasPending) return;
+      final bool perms = await _meshRelay.transport.hasRequiredPermissions();
+      final bool btOn = await _meshRelay.transport.isBluetoothEnabled();
+      if (perms && btOn && !_meshRelay.isRunning) {
+        await _meshRelay.start();
+      }
+    } on Object {
+      // En pruebas sin canal nativo o sin radio disponible, conserva la cola.
     }
   }
 
@@ -534,8 +587,7 @@ class _CureandoAppState extends State<CureandoApp> {
     } on Object {
       if (mounted) {
         _update(
-          () => _storageError =
-              'No se pudo abrir el almacenamiento protegido. No se borraron los datos.',
+          () => _storageError = 'No se pudo abrir el almacenamiento protegido. No se borraron los datos.',
         );
       }
     }
@@ -551,6 +603,7 @@ class _CureandoAppState extends State<CureandoApp> {
     _staff.removeListener(_syncPush);
     _support.removeListener(_syncPush);
     PushNotificationService.instance.setListeners();
+    if (widget.meshRelay == null) _meshRelay.dispose();
     if (widget.studentSession == null) _session.dispose();
     if (widget.showM1Verification) {
       _security.removeListener(_refresh);
@@ -670,28 +723,30 @@ class _CureandoAppState extends State<CureandoApp> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _section(context, 'Guardado protegido en este teléfono', <
-                    Widget
-                  >[
-                    Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        _storageError ??
-                            (_storageReady
-                                ? 'Almacenamiento local cifrado listo.'
-                                : 'Abriendo almacenamiento protegido…'),
+                  _section(
+                    context,
+                    'Guardado protegido en este teléfono',
+                    <Widget>[
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _storageError ??
+                              (_storageReady
+                                  ? 'Almacenamiento local cifrado listo.'
+                                  : 'Abriendo almacenamiento protegido…'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Los datos guardados permanecerán al cerrar la app. Todavía no se envían a un centro ni se sincronizan con otros dispositivos.',
-                    ),
-                    if (_storageError != null)
-                      TextButton(
-                        onPressed: _open,
-                        child: const Text('Reintentar apertura'),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Los datos guardados permanecerán al cerrar la app. Todavía no se envían a un centro ni se sincronizan con otros dispositivos.',
                       ),
-                  ]),
+                      if (_storageError != null)
+                        TextButton(
+                          onPressed: _open,
+                          child: const Text('Reintentar apertura'),
+                        ),
+                    ],
+                  ),
                   _section(context, 'Privacidad de pantalla', <Widget>[
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
@@ -775,17 +830,18 @@ class _CureandoAppState extends State<CureandoApp> {
     debugShowCheckedModeBanner: false,
     theme: CureandoTheme.light,
     routerConfig: _router,
-    builder: (BuildContext context, Widget? child) => AnnotatedRegion<SystemUiOverlayStyle>(
-      value: CureandoTheme.statusBarOverlayLight,
-      child: MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: CureandoTheme.readingScale(
-            MediaQuery.textScalerOf(context),
-            large: _large,
+    builder: (BuildContext context, Widget? child) =>
+        AnnotatedRegion<SystemUiOverlayStyle>(
+          value: CureandoTheme.statusBarOverlayLight,
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: CureandoTheme.readingScale(
+                MediaQuery.textScalerOf(context),
+                large: _large,
+              ),
+            ),
+            child: child ?? const SizedBox.shrink(),
           ),
         ),
-        child: child ?? const SizedBox.shrink(),
-      ),
-    ),
   );
 }
