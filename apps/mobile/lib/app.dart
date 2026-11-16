@@ -382,6 +382,9 @@ class _CureandoAppState extends State<CureandoApp> {
                     DeskChatScreen(
                       session: _staff,
                       caseId: state.pathParameters['id'] ?? '',
+                      initialTab: DeskCaseTab.fromQuery(
+                        state.uri.queryParameters['apartado'],
+                      ),
                     ),
               ),
             ],
