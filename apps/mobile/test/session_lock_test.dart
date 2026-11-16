@@ -445,7 +445,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(
-        find.text('Personas y recursos que pueden acompañarte.'),
+        find.textContaining('recursos de ayuda verificados'),
         findsOneWidget,
       );
 

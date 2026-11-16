@@ -226,7 +226,7 @@ void main() {
       findsOneWidget,
     );
     await _tapLabel(tester, 'Abrir chat');
-    expect(find.text('Chat privado'), findsOneWidget);
+    expect(find.text('Equipo de escucha'), findsOneWidget);
     expect(find.text('Hola. Soy parte del equipo de escucha.'), findsOneWidget);
     await _tapLabel(tester, 'Quiero contar algo');
     expect(
