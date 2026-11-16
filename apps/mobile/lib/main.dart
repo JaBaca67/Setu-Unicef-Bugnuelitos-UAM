@@ -24,12 +24,14 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(CureandoTheme.statusBarOverlayLight);
   // Si el cliente remoto no puede prepararse, la app abre con la demostración
   // en memoria, que se identifica en pantalla como datos ficticios.
+  SetuRemoteGateway? remoteGateway;
   StaffBackend? staff;
   SupportFlow? support;
   StudentSession? session;
   try {
     final SetuRemoteGateway gateway =
         await SupabaseSetuRemoteGateway.initialize();
+    remoteGateway = gateway;
     await PushNotificationService.instance.initialize(gateway: gateway);
     staff = RemoteStaffBackend(gateway);
     // El código del colegio se valida en la plataforma; sin red, la sesión
@@ -65,6 +67,7 @@ Future<void> main() async {
     debugPrint(
       'SéTú: cliente remoto no disponible (${error.runtimeType}); usando modo demostración.',
     );
+    remoteGateway = null;
     staff = null;
     support = null;
     session = null;
@@ -83,6 +86,7 @@ Future<void> main() async {
   ]);
   runApp(
     CureandoApp(
+      remoteGateway: remoteGateway,
       staffBackend: staff,
       staffSession: resolvedStaffSession,
       supportFlow: resolvedSupport,

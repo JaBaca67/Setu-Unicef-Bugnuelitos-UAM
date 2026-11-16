@@ -8,6 +8,8 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var nearbyMeshChannel: NearbyMeshChannel? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         super.onCreate(savedInstanceState)
@@ -38,5 +40,32 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+        nearbyMeshChannel = NearbyMeshChannel(
+            this,
+            flutterEngine.dartExecutor.binaryMessenger,
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        if (nearbyMeshChannel?.onRequestPermissionsResult(requestCode, grantResults) == true) {
+            return
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: android.content.Intent?,
+    ) {
+        if (nearbyMeshChannel?.onActivityResult(requestCode, resultCode) == true) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 }

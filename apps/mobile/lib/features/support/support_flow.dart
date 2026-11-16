@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../shared/local/encrypted_local_store.dart';
+import '../../shared/mesh/mesh_envelope.dart';
+import '../../shared/mesh/mesh_relay_service.dart';
 import '../../shared/remote/case_capability_crypto.dart';
 import '../../shared/theme/app_theme.dart';
 import '../piece/student_piece.dart';
@@ -12,25 +14,57 @@ import 'support_backend.dart';
 /// Situaciones que el estudiante puede elegir al enviar una alerta. El nivel
 /// de alerta lo asigna después una persona profesional, nunca la app.
 enum Situation {
-  physical('Acoso físico', Icons.back_hand_rounded, Color(0xFFF5B800)),
-  verbal('Acoso verbal', Icons.sms_rounded, CureandoTheme.pink),
-  social('Acoso social', Icons.group_rounded, CureandoTheme.green),
-  cyber('Ciberacoso', Icons.laptop_mac_rounded, CureandoTheme.blue),
-  sexual('Violencia sexual', Icons.gpp_maybe_rounded, CureandoTheme.pink),
-  talk('Necesito hablar', Icons.favorite_rounded, CureandoTheme.blue);
+  physical(
+    'Acoso físico',
+    Icons.back_hand_rounded,
+    Color(0xFFF5B800),
+    'physical_bullying',
+  ),
+  verbal(
+    'Acoso verbal',
+    Icons.sms_rounded,
+    CureandoTheme.pink,
+    'verbal_bullying',
+  ),
+  social(
+    'Acoso social',
+    Icons.group_rounded,
+    CureandoTheme.green,
+    'social_bullying',
+  ),
+  cyber(
+    'Ciberacoso',
+    Icons.laptop_mac_rounded,
+    CureandoTheme.blue,
+    'cyberbullying',
+  ),
+  sexual(
+    'Violencia sexual',
+    Icons.gpp_maybe_rounded,
+    CureandoTheme.pink,
+    'sexual_violence',
+  ),
+  talk(
+    'Necesito hablar',
+    Icons.favorite_rounded,
+    CureandoTheme.blue,
+    'need_to_talk',
+  );
 
-  const Situation(this.label, this.icon, this.color);
+  const Situation(this.label, this.icon, this.color, this.rpcValue);
   final String label;
   final IconData icon;
   final Color color;
+  final String rpcValue;
 }
 
 enum Participation {
-  own('Me pasó a mí'),
-  witness('Lo vi o supe de alguien');
+  own('Me pasó a mí', 'victim'),
+  witness('Lo vi o supe de alguien', 'solidarity_witness');
 
-  const Participation(this.label);
+  const Participation(this.label, this.rpcValue);
   final String label;
+  final String rpcValue;
 }
 
 /// Entrega de la alerta. «Recibida» es el acuse de la plataforma: no dice
@@ -61,6 +95,9 @@ class SupportFlow extends ChangeNotifier {
     this.schoolCode = demoSchoolCode,
     this.retryDelay = const Duration(seconds: 20),
     CaseCapabilityCrypto? crypto,
+    this.mesh,
+    this.meshRecipientPublicKey,
+    this.resolveMeshRecipientPublicKey,
   }) : _openStore = openStore ?? _onDevice,
        _ownsBackend = backend == null,
        backend =
@@ -83,6 +120,11 @@ class SupportFlow extends ChangeNotifier {
   final SupportBackend backend;
   final bool _ownsBackend;
   final CaseCapabilityCrypto _crypto;
+  final MeshRelayService? mesh;
+  final List<int>? meshRecipientPublicKey;
+  final Future<List<int>?> Function()? resolveMeshRecipientPublicKey;
+  bool _needsBluetoothForMesh = false;
+  bool get needsBluetoothForMesh => _needsBluetoothForMesh;
 
   /// Código público del colegio confirmado en el acceso escolar. La app lo
   /// actualiza cuando el estudiante confirma o cambia de colegio; cada
@@ -285,35 +327,37 @@ class SupportFlow extends ChangeNotifier {
     final Map<String, Object?>? delivery = _case;
     if (_delivering || alert == null || delivery == null) return;
     _delivering = true;
+    AlertOutbox? outbox;
     try {
       final Object? piece = delivery['piece'];
-      final String caseId = await backend.submitAlert(
-        AlertOutbox(
-          operationId: delivery['operationId']! as String,
-          schoolCode: delivery['schoolCode'] as String? ?? schoolCode,
-          situation: Situation.values.byName(alert['situation']! as String),
-          participation: Participation.values.byName(
-            alert['participation']! as String,
-          ),
-          details: alert['details'] as String? ?? '',
-          involvesStaff: alert['involvesStaff'] == true,
-          verifierHash: delivery['verifierHash']! as String,
-          declaredAt: DateTime.parse(delivery['declaredAt']! as String),
-          // La pieza viaja tal como se guardó al enviar la alerta.
-          piece: piece is Map<Object?, Object?>
-              ? piece.cast<String, Object?>()
-              : null,
+      outbox = AlertOutbox(
+        operationId: delivery['operationId']! as String,
+        schoolCode: delivery['schoolCode'] as String? ?? schoolCode,
+        situation: Situation.values.byName(alert['situation']! as String),
+        participation: Participation.values.byName(
+          alert['participation']! as String,
         ),
+        details: alert['details'] as String? ?? '',
+        involvesStaff: alert['involvesStaff'] == true,
+        verifierHash: delivery['verifierHash']! as String,
+        declaredAt: DateTime.parse(delivery['declaredAt']! as String),
+        // La pieza viaja tal como se guardó al enviar la alerta.
+        piece: piece is Map<Object?, Object?>
+            ? piece.cast<String, Object?>()
+            : null,
       );
+      final String caseId = await backend.submitAlert(outbox);
       // Si mientras tanto se envió otra alerta, este acuse ya no aplica.
       if (identical(_case, delivery)) {
         delivery['caseId'] = caseId;
         _delivery = AlertDelivery.received;
         _deliveryFailed = false;
+        _needsBluetoothForMesh = false;
         _persist();
       }
     } on Object {
       if (identical(_case, delivery)) _deliveryFailed = true;
+      if (outbox != null) await _enqueueMeshFallback(outbox);
     } finally {
       _delivering = false;
     }
@@ -325,6 +369,46 @@ class SupportFlow extends ChangeNotifier {
       _resume();
     }
     _notify();
+  }
+
+  Future<bool> ensureBluetoothForMesh() async {
+    final MeshRelayService? relay = mesh;
+    if (relay == null) return false;
+    final bool enabled = await relay.transport.requestEnableBluetooth();
+    _needsBluetoothForMesh = !enabled;
+    if (enabled && !relay.isRunning) {
+      await relay.start();
+    }
+    _notify();
+    return enabled;
+  }
+
+  Future<void> _enqueueMeshFallback(AlertOutbox outbox) async {
+    final MeshRelayService? relay = mesh;
+    final List<int>? recipientKey =
+        meshRecipientPublicKey ?? await resolveMeshRecipientPublicKey?.call();
+    if (relay == null || recipientKey == null) return;
+    try {
+      await relay.enqueueMinimalAlert(
+        MeshMinimalAlertPayload(
+          clientOperationId: outbox.operationId,
+          publicSchoolCode: outbox.schoolCode,
+          situationType: outbox.situation.rpcValue,
+          studentRole: outbox.participation.rpcValue,
+          involvesStaff: outbox.involvesStaff,
+          capabilityVerifierHash: outbox.verifierHash,
+          declaredAt: outbox.declaredAt,
+        ),
+        recipientPublicKeyBytes: recipientKey,
+      );
+      final bool btOn = await relay.transport.isBluetoothEnabled();
+      _needsBluetoothForMesh = !btOn;
+      if (btOn && !relay.isRunning) {
+        await relay.start();
+      }
+    } on Object {
+      // Permanece en la cola local cifrada.
+    }
   }
 
   /// Consulta de inmediato el estado y los mensajes nuevos del chat.
