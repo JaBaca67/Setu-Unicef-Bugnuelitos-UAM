@@ -38,6 +38,7 @@ import 'shared/remote/push_notification_service.dart';
 import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/remote/setu_remote_models.dart';
 import 'shared/theme/app_theme.dart';
+import 'shared/widgets/setu_bottom_alert.dart';
 import 'shared/widgets/setu_brand_mark.dart';
 import 'shared/widgets/student_transition.dart';
 
@@ -490,6 +491,8 @@ class _CureandoAppState extends State<CureandoApp> {
   bool _verified = false;
   bool _storageReady = false;
   String? _storageError;
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -498,24 +501,21 @@ class _CureandoAppState extends State<CureandoApp> {
       onResume: () {
         _learning.refreshDay();
         _support.refreshChat();
+        _syncPush();
       },
     );
     _session.addListener(_syncSchool);
     _syncSchool();
     _staff.addListener(_syncPush);
     _support.addListener(_syncPush);
+    _staff.onBeforeSignOut = PushNotificationService.instance.unregisterStaff;
     _staffAuthSubscription = _staff.backend.authStateChanges().listen((_) {
       if (mounted && _staff.isAuthenticated) {
         _staff.refresh();
       }
     });
     PushNotificationService.instance.setListeners(
-      onForegroundEvent: () {
-        _support.refreshChat();
-        if (_staff.memberships.isNotEmpty) {
-          _staff.refresh();
-        }
-      },
+      onForegroundEvent: _handleForegroundPush,
       onTokenChanged: _syncPush,
     );
     _syncPush();
@@ -559,6 +559,22 @@ class _CureandoAppState extends State<CureandoApp> {
   void _syncSchool() {
     final String? code = _session.school?.publicCode;
     if (code != null) _support.schoolCode = code;
+  }
+
+  void _handleForegroundPush(String? title, String? body) {
+    _support.refreshChat();
+    if (_staff.memberships.isNotEmpty) {
+      _staff.refresh();
+    }
+    final String rawBody = body?.trim() ?? '';
+    final String rawTitle = title?.trim() ?? '';
+    final String message = rawBody.isNotEmpty ? rawBody : rawTitle;
+    if (message.isEmpty) return;
+    _scaffoldMessengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        buildSetuBottomAlertSnackBar(message: message, kind: SetuAlertKind.info),
+      );
   }
 
   void _syncPush() {
@@ -605,6 +621,7 @@ class _CureandoAppState extends State<CureandoApp> {
     _session.removeListener(_syncSchool);
     _staff.removeListener(_syncPush);
     _support.removeListener(_syncPush);
+    _staff.onBeforeSignOut = null;
     PushNotificationService.instance.setListeners();
     if (widget.meshRelay == null) _meshRelay.dispose();
     if (widget.studentSession == null) _session.dispose();
@@ -831,6 +848,7 @@ class _CureandoAppState extends State<CureandoApp> {
   Widget build(BuildContext context) => MaterialApp.router(
     title: 'SéTú',
     debugShowCheckedModeBanner: false,
+    scaffoldMessengerKey: _scaffoldMessengerKey,
     theme: CureandoTheme.light,
     routerConfig: _router,
     builder: (BuildContext context, Widget? child) =>

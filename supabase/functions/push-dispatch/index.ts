@@ -196,6 +196,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const fcmUrl = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
   let sent = 0;
+  let failed = 0;
   const staleTokenIds: string[] = [];
 
   for (const row of tokens) {
@@ -227,7 +228,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
       continue;
     }
 
+    failed += 1;
     const errBody = await fcmRes.text();
+    let fcmErrorCode = "";
+    try {
+      const parsed = JSON.parse(errBody) as {
+        error?: { status?: string; details?: Array<{ errorCode?: string }> };
+      };
+      fcmErrorCode =
+        parsed.error?.details?.[0]?.errorCode ?? parsed.error?.status ?? "";
+    } catch {
+      fcmErrorCode = "";
+    }
+    console.error("push-dispatch FCM error", {
+      eventType: payload.event_type,
+      status: fcmRes.status,
+      fcmErrorCode,
+    });
     if (
       fcmRes.status === 404 ||
       errBody.includes("UNREGISTERED") ||
@@ -242,7 +259,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   return new Response(
-    JSON.stringify({ sent, pruned: staleTokenIds.length }),
+    JSON.stringify({ sent, pruned: staleTokenIds.length, failed }),
     {
       status: 200,
       headers: { "Content-Type": "application/json" },
