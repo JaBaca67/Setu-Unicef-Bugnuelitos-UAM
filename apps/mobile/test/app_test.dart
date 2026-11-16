@@ -78,10 +78,7 @@ void main() {
       expect(title, findsOneWidget);
     }
 
-    await _tapLabel(tester, 'Cómo cuidamos tu información');
-    expect(find.textContaining('equipo de escucha asignado'), findsOneWidget);
-    await tester.tap(find.text('Cerrar'));
-    await tester.pumpAndSettle();
+    expect(find.text('Cómo cuidamos tu información'), findsNothing);
     expect(title, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -234,7 +231,7 @@ void main() {
     expect(route?.reverseTransitionDuration, Duration.zero);
   });
 
-  testWidgets('la bienvenida permite abrir privacidad con texto al 200 %', (
+  testWidgets('la bienvenida no desborda acciones con texto al 200 %', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(320, 568);
@@ -245,13 +242,10 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await tester.pumpWidget(const CureandoApp());
     await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Cómo cuidamos tu información');
-    expect(find.textContaining('equipo de escucha asignado'), findsOneWidget);
-    final Finder close = find.text('Cerrar');
-    await tester.ensureVisible(close);
-    await tester.tap(close);
-    await tester.pumpAndSettle();
-    expect(find.textContaining('equipo de escucha asignado'), findsNothing);
+    expect(find.text('Ingreso estudiantil'), findsOneWidget);
+    expect(find.text('Personal autorizado'), findsOneWidget);
+    expect(find.text('Ayuda'), findsOneWidget);
+    expect(find.text('Cómo cuidamos tu información'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

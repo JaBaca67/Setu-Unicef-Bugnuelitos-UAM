@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 
 enum WelcomeDestination {
@@ -32,76 +31,6 @@ class WelcomeScreen extends StatelessWidget {
   /// ingreso estudiantil entra directo al inicio.
   final bool Function()? hasSchool;
 
-  void _showPrivacy(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      barrierLabel: 'Cerrar privacidad',
-      isScrollControlled: true,
-      useSafeArea: true,
-      sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
-          ? AnimationStyle.noAnimation
-          : null,
-      builder: (BuildContext context) => SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              ExcludeSemantics(
-                child: Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Semantics(
-                header: true,
-                child: Text(
-                  'Cómo cuidamos tu información',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Si pedís apoyo, solo vos y el equipo de escucha asignado pueden leer tu relato y tu chat. El MINED y tu colegio reciben datos limitados para dar seguimiento. Lo que escribás puede revelar quién sos.',
-                style: TextStyle(fontSize: 16, height: 1.5),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Esta es una prueba de navegación.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: CureandoTheme.secondaryInk,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(88, 48),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.centerLeft,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cerrar'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final TextStyle? buttonText = Theme.of(context).textTheme.labelLarge;
@@ -125,7 +54,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 34),
-            FilledButton(
+            FilledButton.icon(
               style: FilledButton.styleFrom(
                 minimumSize: const Size(48, 52),
                 shape: shape,
@@ -134,13 +63,14 @@ class WelcomeScreen extends StatelessWidget {
               onPressed: () => hasSchool?.call() ?? false
                   ? context.go('/inicio')
                   : context.push('/colegio'),
-              child: const Text(
+              icon: const Icon(Icons.school_rounded, size: 20),
+              label: const Text(
                 'Ingreso estudiantil',
                 textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton(
+            OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(48, 52),
                 shape: shape,
@@ -148,30 +78,20 @@ class WelcomeScreen extends StatelessWidget {
                 textStyle: buttonText,
               ),
               onPressed: () => context.go('/personal'),
-              child: const Text(
+              icon: const Icon(Icons.badge_outlined, size: 20),
+              label: const Text(
                 'Personal autorizado',
                 textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 12),
-            TextButton(
+            TextButton.icon(
               style: TextButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),
               onPressed: () => context.push('/${WelcomeDestination.help.path}'),
-              child: const Text('Ayuda'),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: CureandoTheme.secondaryInk,
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: () => _showPrivacy(context),
-              child: const Text(
-                'Cómo cuidamos tu información',
-                textAlign: TextAlign.center,
-              ),
+              icon: const Icon(Icons.help_outline_rounded, size: 20),
+              label: const Text('Ayuda'),
             ),
           ],
         ),
