@@ -1,6 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/mesh/mesh_bridge_keys.dart';
+import '../../shared/mesh/mesh_envelope.dart';
+import '../../shared/mesh/mesh_relay_service.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
@@ -51,9 +55,10 @@ String _situation(SetuSituationType type) =>
 /// Vista de Dirección (`/personal/direccion`): avisos mínimos y fichas
 /// autorizadas del centro. Nunca muestra relato, chat ni notas.
 class DirectorInboxScreen extends StatefulWidget {
-  const DirectorInboxScreen({super.key, required this.session});
+  const DirectorInboxScreen({super.key, required this.session, this.meshRelay});
 
   final StaffSession session;
+  final MeshRelayService? meshRelay;
 
   @override
   State<DirectorInboxScreen> createState() => _DirectorInboxScreenState();
@@ -62,10 +67,70 @@ class DirectorInboxScreen extends StatefulWidget {
 class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
   Set<String> _withSheet = const <String>{};
   SchoolCoverageStatusView? _coverage;
-  List<StaffActivationInviteView> _invites = const <StaffActivationInviteView>[];
+  List<StaffActivationInviteView> _invites =
+      const <StaffActivationInviteView>[];
+  bool _bluetoothRequired = false;
+  bool _meshActive = false;
 
   @override
   StaffSession get session => widget.session;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.meshRelay?.addListener(_onMeshChanged);
+    _ensureDirectorMesh();
+  }
+
+  @override
+  void dispose() {
+    widget.meshRelay?.removeListener(_onMeshChanged);
+    super.dispose();
+  }
+
+  void _onMeshChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _ensureDirectorMesh() async {
+    final MeshRelayService? relay = widget.meshRelay;
+    final String? schoolCode = session.active?.institutionPublicCode;
+    if (relay == null || schoolCode == null || schoolCode.trim().isEmpty) {
+      return;
+    }
+    try {
+      bool btOn = await relay.transport.isBluetoothEnabled();
+      if (!btOn) {
+        btOn = await relay.transport.requestEnableBluetooth();
+      }
+      if (!mounted) return;
+      if (!btOn) {
+        setState(() {
+          _bluetoothRequired = true;
+          _meshActive = false;
+        });
+        return;
+      }
+      final schoolKey = await MeshSchoolKeys.demoSchoolKeyPair(schoolCode);
+      await relay.setDirectorSchoolContext(
+        schoolCode: schoolCode,
+        schoolKeyPair: schoolKey,
+      );
+      if (!relay.isRunning) {
+        await relay.start(endpointName: 'dir-$schoolCode');
+      }
+      if (!mounted) return;
+      setState(() {
+        _bluetoothRequired = false;
+        _meshActive = true;
+      });
+    } on MissingPluginException {
+      // Entorno sin canal nativo Android (ej. pruebas de widgets en escritorio).
+    } on Object {
+      if (!mounted) return;
+      setState(() => _bluetoothRequired = true);
+    }
+  }
 
   @override
   Future<void> loadExtra() async {
@@ -86,8 +151,86 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
   }
 
   Future<void> _open(StaffCaseSummary item) async {
+    if (item.id.startsWith('mesh:')) {
+      await showDialog<void>(
+        context: context,
+        builder: (BuildContext dialogContext) => AlertDialog(
+          title: Text('${item.referenceCode} · Recibido por mesh'),
+          content: Text(
+            '${staffCaseKind(item.situationType, item.studentRole, origin: item.origin)}\n\n'
+            'Esta alerta mínima llegó por Bluetooth/mesh sin internet. '
+            'Cuando un teléfono puente tenga conexión, se sincronizará con la plataforma central.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     await context.push('/personal/direccion/caso/${item.id}');
     if (mounted) await load();
+  }
+
+  List<StaffCaseSummary> _visibleCases() {
+    final List<StaffCaseSummary> remote = cases ?? const <StaffCaseSummary>[];
+    final MeshRelayService? relay = widget.meshRelay;
+    final String? schoolCode = session.active?.institutionPublicCode
+        ?.trim()
+        .toUpperCase();
+    if (relay == null || schoolCode == null || schoolCode.isEmpty) {
+      return remote;
+    }
+    final List<MeshMinimalAlertPayload> localAlerts = relay.directorAlerts
+        .where(
+          (MeshMinimalAlertPayload alert) =>
+              !alert.involvesStaff &&
+              alert.publicSchoolCode.trim().toUpperCase() == schoolCode,
+        )
+        .toList(growable: false);
+    if (localAlerts.isEmpty) return remote;
+    final List<StaffCaseSummary> merged = <StaffCaseSummary>[...remote];
+    for (final MeshMinimalAlertPayload alert in localAlerts) {
+      final bool alreadySynced = remote.any(
+        (StaffCaseSummary existing) =>
+            existing.origin == SetuAlertOrigin.mesh &&
+            existing.situationType.wireValue == alert.situationType &&
+            existing.studentRole.wireValue == alert.studentRole &&
+            existing.declaredAt.difference(alert.declaredAt).abs() <
+                const Duration(seconds: 2),
+      );
+      if (alreadySynced) continue;
+      final String suffix = alert.clientOperationId.length >= 6
+          ? alert.clientOperationId
+                .substring(alert.clientOperationId.length - 6)
+                .toUpperCase()
+          : alert.clientOperationId.toUpperCase();
+      merged.insert(
+        0,
+        StaffCaseSummary(
+          id: 'mesh:${alert.clientOperationId}',
+          referenceCode: 'MESH-$suffix',
+          institutionId: session.active?.institutionId ?? '',
+          institutionPublicCode: schoolCode,
+          institutionName: session.active?.institutionName ?? '',
+          situationType: SetuSituationType.fromWire(alert.situationType),
+          studentRole: SetuStudentCaseRole.fromWire(alert.studentRole),
+          origin: SetuAlertOrigin.mesh,
+          status: SetuCaseStatus.received,
+          humanLevel: null,
+          involvesStaff: false,
+          assignedCounselorId: null,
+          assignedCounselorLabel: null,
+          declaredAt: alert.declaredAt,
+          receivedCentrallyAt: alert.declaredAt,
+          requiresAttention: true,
+        ),
+      );
+    }
+    return merged;
   }
 
   Future<void> _teacherNotice() async {
@@ -188,7 +331,10 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
               padding: EdgeInsets.only(top: 4),
               child: Text(
                 'MINED deshabilitó o pausó el apoyo externo para tu centro.',
-                style: TextStyle(fontSize: 13, color: CureandoTheme.secondaryInk),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: CureandoTheme.secondaryInk,
+                ),
               ),
             ),
         ],
@@ -297,6 +443,45 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
           style: TextStyle(fontSize: 15, height: 1.4),
         ),
         const SizedBox(height: 12),
+        if (_bluetoothRequired) ...<Widget>[
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF4E5),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFF5B800), width: 1.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Text(
+                  'Bluetooth requerido',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Activá el Bluetooth de este teléfono para recibir alertas mínimas del centro sin internet.',
+                  style: TextStyle(fontSize: 14, height: 1.35),
+                ),
+                const SizedBox(height: 10),
+                FilledButton.icon(
+                  onPressed: _ensureDirectorMesh,
+                  icon: const Icon(Icons.bluetooth_rounded),
+                  label: const Text('Activar Bluetooth'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+        ] else if (_meshActive) ...<Widget>[
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: StaffTag(
+              'Red mesh activa · escuchando alertas sin internet',
+              highlight: true,
+            ),
+          ),
+        ],
         if (_coverage != null) ...<Widget>[
           _coverageBanner(_coverage!),
           const SizedBox(height: 10),
@@ -307,12 +492,15 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
             side: const BorderSide(color: CureandoTheme.blue, width: 1.5),
           ),
           onPressed: _requestPlantInvite,
-          icon: const Icon(Icons.person_add_outlined, color: CureandoTheme.blue),
+          icon: const Icon(
+            Icons.person_add_outlined,
+            color: CureandoTheme.blue,
+          ),
           label: const Text('Solicitar invitación de planta'),
         ),
         const SizedBox(height: 16),
         ...listBody(
-          visible: cases ?? const <StaffCaseSummary>[],
+          visible: _visibleCases(),
           empty: 'No hay avisos para tu centro.',
           tile: _tile,
         ),
@@ -873,7 +1061,13 @@ class _DirectorCoverageSheetState extends State<_DirectorCoverageSheet> {
     );
     if (time == null || !mounted) return;
     setState(() {
-      _until = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _until = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 

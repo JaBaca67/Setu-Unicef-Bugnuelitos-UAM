@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../shared/local/encrypted_local_store.dart';
+import '../../shared/mesh/mesh_bridge_keys.dart';
 import '../../shared/mesh/mesh_envelope.dart';
 import '../../shared/mesh/mesh_relay_service.dart';
 import '../../shared/remote/case_capability_crypto.dart';
@@ -389,18 +390,27 @@ class SupportFlow extends ChangeNotifier {
         meshRecipientPublicKey ?? await resolveMeshRecipientPublicKey?.call();
     if (relay == null || recipientKey == null) return;
     try {
+      final MeshMinimalAlertPayload payload = MeshMinimalAlertPayload(
+        clientOperationId: outbox.operationId,
+        publicSchoolCode: outbox.schoolCode,
+        situationType: outbox.situation.rpcValue,
+        studentRole: outbox.participation.rpcValue,
+        involvesStaff: outbox.involvesStaff,
+        capabilityVerifierHash: outbox.verifierHash,
+        declaredAt: outbox.declaredAt,
+      );
       await relay.enqueueMinimalAlert(
-        MeshMinimalAlertPayload(
-          clientOperationId: outbox.operationId,
-          publicSchoolCode: outbox.schoolCode,
-          situationType: outbox.situation.rpcValue,
-          studentRole: outbox.participation.rpcValue,
-          involvesStaff: outbox.involvesStaff,
-          capabilityVerifierHash: outbox.verifierHash,
-          declaredAt: outbox.declaredAt,
-        ),
+        payload,
         recipientPublicKeyBytes: recipientKey,
       );
+      if (!outbox.involvesStaff && outbox.schoolCode.trim().isNotEmpty) {
+        final List<int> schoolKey =
+            await MeshSchoolKeys.resolveSchoolPublicKeyBytes(outbox.schoolCode);
+        await relay.enqueueMinimalAlert(
+          payload,
+          recipientPublicKeyBytes: schoolKey,
+        );
+      }
       final bool btOn = await relay.transport.isBluetoothEnabled();
       _needsBluetoothForMesh = !btOn;
       if (btOn && !relay.isRunning) {

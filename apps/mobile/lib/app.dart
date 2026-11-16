@@ -391,7 +391,7 @@ class _CureandoAppState extends State<CureandoApp> {
       GoRoute(
         path: '/personal/direccion',
         builder: (BuildContext context, GoRouterState state) =>
-            DirectorInboxScreen(session: _staff),
+            DirectorInboxScreen(session: _staff, meshRelay: _meshRelay),
         routes: <RouteBase>[
           GoRoute(
             path: 'cartel',

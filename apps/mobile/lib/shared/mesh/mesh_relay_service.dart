@@ -64,11 +64,17 @@ class MeshRelayService extends ChangeNotifier {
   final Map<String, MeshQueueItem> _queue = <String, MeshQueueItem>{};
   final Set<String> _seenPacketIds = <String>{};
   final Set<String> _connectedPeers = <String>{};
+  final Map<String, MeshMinimalAlertPayload> _directorAlerts =
+      <String, MeshMinimalAlertPayload>{};
+  String? _directorSchoolCode;
+  SimpleKeyPair? _directorSchoolKeyPair;
 
   bool get isRunning => _running;
   int get connectedPeerCount => _connectedPeers.length;
   List<MeshQueueItem> get items =>
       List<MeshQueueItem>.unmodifiable(_queue.values);
+  List<MeshMinimalAlertPayload> get directorAlerts =>
+      List<MeshMinimalAlertPayload>.unmodifiable(_directorAlerts.values);
 
   Future<void> open() =>
       _store != null ? Future<void>.value() : _opening ??= _load();
@@ -92,6 +98,17 @@ class MeshRelayService extends ChangeNotifier {
             (data['seen'] as List<Object?>?) ?? const <Object?>[];
         for (final Object? id in rawSeen) {
           if (id is String) _seenPacketIds.add(id);
+        }
+        final List<Object?> rawDirector =
+            (data['directorAlerts'] as List<Object?>?) ?? const <Object?>[];
+        for (final Object? entry in rawDirector) {
+          if (entry is Map<Object?, Object?>) {
+            final MeshMinimalAlertPayload payload =
+                MeshMinimalAlertPayload.fromJson(
+                  Map<String, Object?>.from(entry),
+                );
+            _directorAlerts[payload.clientOperationId] = payload;
+          }
         }
       }
       _store = store;
@@ -192,6 +209,50 @@ class MeshRelayService extends ChangeNotifier {
     return uploaded;
   }
 
+  Future<void> setDirectorSchoolContext({
+    required String schoolCode,
+    required SimpleKeyPair schoolKeyPair,
+  }) async {
+    await open();
+    _directorSchoolCode = schoolCode.trim().toUpperCase();
+    _directorSchoolKeyPair = schoolKeyPair;
+    bool changed = false;
+    for (final MeshQueueItem item in _queue.values) {
+      if (await _tryOpenAsDirector(item.envelope)) {
+        changed = true;
+      }
+    }
+    if (changed) {
+      await _persist();
+      _notify();
+    }
+  }
+
+  void clearDirectorSchoolContext() {
+    _directorSchoolCode = null;
+    _directorSchoolKeyPair = null;
+  }
+
+  Future<bool> _tryOpenAsDirector(MeshEnvelope envelope) async {
+    final SimpleKeyPair? keyPair = _directorSchoolKeyPair;
+    final String? schoolCode = _directorSchoolCode;
+    if (keyPair == null || schoolCode == null) return false;
+    try {
+      final MeshMinimalAlertPayload payload = await envelope.open(
+        recipientKeyPair: keyPair,
+      );
+      if (payload.involvesStaff) return false;
+      if (payload.publicSchoolCode.trim().toUpperCase() != schoolCode) {
+        return false;
+      }
+      if (_directorAlerts.containsKey(payload.clientOperationId)) return false;
+      _directorAlerts[payload.clientOperationId] = payload;
+      return true;
+    } on Object {
+      return false;
+    }
+  }
+
   Future<void> _handleEvent(MeshTransportEvent event) async {
     switch (event) {
       case MeshPeerConnected(:final String endpointId):
@@ -278,6 +339,10 @@ class MeshRelayService extends ChangeNotifier {
     // Persiste antes de confirmar custodia al vecino.
     await _persist();
 
+    if (await _tryOpenAsDirector(envelope)) {
+      await _persist();
+    }
+
     bool syncedNow = false;
     if (bridgeKeyPair != null && remoteGateway != null) {
       syncedNow = (await syncPendingAsBridge()) > 0;
@@ -326,6 +391,9 @@ class MeshRelayService extends ChangeNotifier {
           .map((MeshQueueItem item) => item.toJson())
           .toList(growable: false),
       'seen': _seenPacketIds.toList(growable: false),
+      'directorAlerts': _directorAlerts.values
+          .map((MeshMinimalAlertPayload item) => item.toJson())
+          .toList(growable: false),
     });
   }
 
