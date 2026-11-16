@@ -209,6 +209,12 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
               onPressed: _openRegistration,
               child: const Text('Registrar cuenta'),
             ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              style: flowSecondaryStyle(),
+              onPressed: () => context.push('/personal/solicitar'),
+              child: const Text('Solicitar acceso'),
+            ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => context.push('/personal/ayuda'),
@@ -1058,4 +1064,382 @@ class StaffScopeScreen extends StatelessWidget {
       ),
     ),
   );
+}
+
+enum _AccessRequestRoleOption {
+  schoolDirector(
+    label: 'Dirección de colegio',
+    subtitle: 'Gestión de alertas y actuaciones escolares en un colegio.',
+    role: SetuStaffRole.schoolDirector,
+    staffTier: 'school_director',
+    requiresSchool: true,
+    allowsOptionalSchool: false,
+  ),
+  schoolPlant(
+    label: 'Psicólogo/a de planta del colegio',
+    subtitle: 'Atención de primera línea asignada a un centro escolar.',
+    role: SetuStaffRole.counselingDesk,
+    staffTier: 'school_plant',
+    requiresSchool: true,
+    allowsOptionalSchool: false,
+  ),
+  externalNetwork(
+    label: 'Psicólogo/a de red externa',
+    subtitle: 'Mesa de escucha MINED / MINSA de cobertura compartida.',
+    role: SetuStaffRole.counselingDesk,
+    staffTier: 'external_network',
+    requiresSchool: false,
+    allowsOptionalSchool: false,
+  ),
+  practicante5to(
+    label: 'Practicante de 5.º año',
+    subtitle: 'Apoyo en formación bajo tutoría asignada por el MINED.',
+    role: SetuStaffRole.counselingDesk,
+    staffTier: 'practicante_5to',
+    requiresSchool: false,
+    allowsOptionalSchool: true,
+  );
+
+  const _AccessRequestRoleOption({
+    required this.label,
+    required this.subtitle,
+    required this.role,
+    required this.staffTier,
+    required this.requiresSchool,
+    required this.allowsOptionalSchool,
+  });
+
+  final String label;
+  final String subtitle;
+  final SetuStaffRole role;
+  final String staffTier;
+  final bool requiresSchool;
+  final bool allowsOptionalSchool;
+}
+
+/// Formulario público (`/personal/solicitar`) para pedir alta al MINED con
+/// nombre completo, correo, rol y colegio antes de recibir código individual.
+class StaffAccessRequestScreen extends StatefulWidget {
+  const StaffAccessRequestScreen({super.key, required this.session});
+
+  final StaffSession session;
+
+  @override
+  State<StaffAccessRequestScreen> createState() =>
+      _StaffAccessRequestScreenState();
+}
+
+class _StaffAccessRequestScreenState extends State<StaffAccessRequestScreen> {
+  final TextEditingController _fullName = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _program = TextEditingController();
+
+  _AccessRequestRoleOption _option = _AccessRequestRoleOption.schoolDirector;
+  Map<String, String> _schools = const <String, String>{};
+  String? _institutionId;
+  bool _loadingSchools = true;
+  bool _busy = false;
+  bool _submitted = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSchools();
+  }
+
+  Future<void> _loadSchools() async {
+    setState(() {
+      _loadingSchools = true;
+      _error = null;
+    });
+    try {
+      final Map<String, String> schools = await widget.session.backend
+          .institutionNames();
+      if (!mounted) return;
+      setState(() {
+        _schools = schools;
+        _institutionId = schools.isEmpty ? null : schools.keys.first;
+        _loadingSchools = false;
+      });
+    } on Object catch (failure) {
+      if (!mounted) return;
+      setState(() {
+        _loadingSchools = false;
+        _error = staffErrorMessage(failure);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _fullName.dispose();
+    _email.dispose();
+    _program.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    final String fullName = _fullName.text.trim();
+    final String email = _email.text.trim();
+    if (fullName.length < 3) {
+      setState(() => _error = 'Escribí tu nombre completo.');
+      return;
+    }
+    if (!email.contains('@') || !email.contains('.')) {
+      setState(() => _error = 'Escribí un correo válido.');
+      return;
+    }
+    if (_option.requiresSchool &&
+        (_institutionId == null || _institutionId!.isEmpty)) {
+      setState(() => _error = 'Elegí el colegio al que pertenecés.');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final String? selectedSchoolId =
+          (_option.requiresSchool || _option.allowsOptionalSchool)
+          ? _institutionId
+          : null;
+      await widget.session.backend.submitAccessRequest(
+        fullName: fullName,
+        email: email,
+        role: _option.role,
+        institutionId: selectedSchoolId,
+        staffTier: _option.staffTier,
+        requesterProgramLabel: _program.text.trim().isEmpty
+            ? null
+            : _program.text.trim(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _submitted = true;
+      });
+    } on Object catch (failure) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = staffErrorMessage(failure);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool showSchoolPicker =
+        _option.requiresSchool || _option.allowsOptionalSchool;
+    return FlowScaffold(
+      header: const FlowHeader(title: 'Solicitar acceso de personal'),
+      bottom: _submitted
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                StaffPrimaryButton(
+                  label: 'Volver al ingreso',
+                  onPressed: () => context.go('/personal'),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  style: flowSecondaryStyle(),
+                  onPressed: () => context.pushReplacement('/personal/activar'),
+                  child: const Text('Registrar cuenta'),
+                ),
+              ],
+            )
+          : StaffPrimaryButton(
+              label: 'Enviar solicitud al MINED',
+              busy: _busy,
+              onPressed: _loadingSchools ? null : _submit,
+            ),
+      body: _submitted
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Icon(
+                  Icons.mark_email_read_outlined,
+                  size: 56,
+                  color: CureandoTheme.blue,
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  header: true,
+                  child: const Text('Solicitud enviada', style: _title),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Registramos tu solicitud a nombre de ${_fullName.text.trim()} '
+                  '(${_email.text.trim()}) como ${_option.label}.',
+                  style: _lead,
+                ),
+                const SizedBox(height: 12),
+                const StaffNotice(
+                  'El equipo supervisor del MINED revisará tu solicitud y '
+                  'emitirá tu código individual de activación vinculado a tu '
+                  'colegio y rol.',
+                  error: false,
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Text(
+                  'Completá tus datos para que supervisión del MINED apruebe y '
+                  'emita tu código individual de acceso. Las cuentas centrales '
+                  'del MINED no se solicitan desde aquí.',
+                  style: _lead,
+                ),
+                const SizedBox(height: 18),
+                StaffField(
+                  label: 'Nombre completo',
+                  controller: _fullName,
+                  hint: 'Ej. Ana María López',
+                  capitalization: TextCapitalization.words,
+                ),
+                const SizedBox(height: 16),
+                StaffField(
+                  label: 'Correo institucional o de contacto',
+                  controller: _email,
+                  hint: 'nombre@colegio.edu.ni',
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Rol solicitado',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<_AccessRequestRoleOption>(
+                  initialValue: _option,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFA5C1EF),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  items: <DropdownMenuItem<_AccessRequestRoleOption>>[
+                    for (final _AccessRequestRoleOption item
+                        in _AccessRequestRoleOption.values)
+                      DropdownMenuItem<_AccessRequestRoleOption>(
+                        value: item,
+                        child: Text(item.label),
+                      ),
+                  ],
+                  onChanged: (_AccessRequestRoleOption? next) {
+                    if (next == null) return;
+                    setState(() {
+                      _option = next;
+                      if (_option.requiresSchool &&
+                          (_institutionId == null || _institutionId!.isEmpty) &&
+                          _schools.isNotEmpty) {
+                        _institutionId = _schools.keys.first;
+                      }
+                      _error = null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _option.subtitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: CureandoTheme.secondaryInk,
+                  ),
+                ),
+                if (showSchoolPicker) ...<Widget>[
+                  const SizedBox(height: 16),
+                  Text(
+                    _option.requiresSchool
+                        ? 'Colegio'
+                        : 'Colegio referencial (opcional)',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_loadingSchools)
+                    const Center(child: CircularProgressIndicator())
+                  else if (_schools.isEmpty)
+                    Row(
+                      children: <Widget>[
+                        const Expanded(
+                          child: Text('No pudimos cargar la lista de colegios.'),
+                        ),
+                        TextButton(
+                          onPressed: _loadSchools,
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    )
+                  else
+                    DropdownButtonFormField<String?>(
+                      key: ValueKey<String>('school-${_option.requiresSchool}'),
+                      initialValue: _option.requiresSchool
+                          ? _institutionId
+                          : _institutionId,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFA5C1EF),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      items: <DropdownMenuItem<String?>>[
+                        if (!_option.requiresSchool)
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('Sin colegio específico (cobertura general)'),
+                          ),
+                        for (final MapEntry<String, String> entry
+                            in _schools.entries)
+                          DropdownMenuItem<String?>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                      ],
+                      onChanged: (String? value) {
+                        setState(() => _institutionId = value);
+                      },
+                    ),
+                ],
+                if (_option == _AccessRequestRoleOption.practicante5to ||
+                    _option == _AccessRequestRoleOption.externalNetwork) ...<Widget>[
+                  const SizedBox(height: 16),
+                  StaffField(
+                    label: _option == _AccessRequestRoleOption.practicante5to
+                        ? 'Universidad o programa de práctica (opcional)'
+                        : 'Institución o red (opcional)',
+                    controller: _program,
+                    hint: _option == _AccessRequestRoleOption.practicante5to
+                        ? 'Ej. Psicología 5.º año · UAM / UNAN'
+                        : 'Ej. MINSA / Red de apoyo',
+                    capitalization: TextCapitalization.sentences,
+                  ),
+                ],
+                if (_error != null) ...<Widget>[
+                  const SizedBox(height: 16),
+                  StaffNotice(_error!),
+                ],
+              ],
+            ),
+    );
+  }
 }

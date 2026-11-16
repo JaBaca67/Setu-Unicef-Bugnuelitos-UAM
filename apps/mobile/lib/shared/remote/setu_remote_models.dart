@@ -1580,6 +1580,173 @@ class StaffInviteIssueResult {
   }
 }
 
+/// Fila de entrada para emisión masiva de invitaciones desde CSV.
+class BulkInviteRowDraft {
+  const BulkInviteRowDraft({
+    required this.institutionalEmail,
+    required this.role,
+    required this.staffTier,
+    this.fullName,
+    this.schoolRef,
+    this.supervisorEmail,
+  });
+
+  final String institutionalEmail;
+  final String role;
+  final String staffTier;
+  final String? fullName;
+  final String? schoolRef;
+  final String? supervisorEmail;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'institutional_email': institutionalEmail,
+    'role': role,
+    'staff_tier': staffTier,
+    if (fullName != null && fullName!.trim().isNotEmpty)
+      'full_name': fullName!.trim(),
+    if (schoolRef != null && schoolRef!.trim().isNotEmpty)
+      'school_ref': schoolRef!.trim(),
+    if (supervisorEmail != null && supervisorEmail!.trim().isNotEmpty)
+      'supervisor_email': supervisorEmail!.trim(),
+  };
+}
+
+/// Resultado por fila de `issue_staff_invites_bulk`.
+class BulkInviteRowResult {
+  const BulkInviteRowResult({
+    required this.index,
+    required this.ok,
+    required this.institutionalEmail,
+    this.fullName,
+    this.inviteId,
+    this.activationCode,
+    this.scopeLabel,
+    this.role,
+    this.staffTier,
+    this.expiresAt,
+    this.error,
+  });
+
+  final int index;
+  final bool ok;
+  final String institutionalEmail;
+  final String? fullName;
+  final String? inviteId;
+  final String? activationCode;
+  final String? scopeLabel;
+  final SetuStaffRole? role;
+  final String? staffTier;
+  final DateTime? expiresAt;
+  final String? error;
+
+  factory BulkInviteRowResult.fromJson(Map<String, Object?> json) {
+    final String? rawRole = _readNullableString(json, 'role');
+    return BulkInviteRowResult(
+      index: _readInt(json, 'index', fallback: 0),
+      ok: _readBool(json, 'ok'),
+      institutionalEmail: _readString(json, 'institutional_email'),
+      fullName: _readNullableString(json, 'full_name'),
+      inviteId: _readNullableString(json, 'invite_id'),
+      activationCode: _readNullableString(json, 'activation_code'),
+      scopeLabel: _readNullableString(json, 'scope_label'),
+      role: rawRole == null || rawRole.isEmpty
+          ? null
+          : SetuStaffRole.fromWire(rawRole),
+      staffTier: _readNullableString(json, 'staff_tier'),
+      expiresAt: _readNullableDateTime(json, 'expires_at'),
+      error: _readNullableString(json, 'error'),
+    );
+  }
+}
+
+/// Respuesta consolidada de `issue_staff_invites_bulk`.
+class BulkInviteResult {
+  const BulkInviteResult({
+    required this.ok,
+    required this.issuedCount,
+    required this.errorCount,
+    required this.results,
+  });
+
+  final bool ok;
+  final int issuedCount;
+  final int errorCount;
+  final List<BulkInviteRowResult> results;
+
+  factory BulkInviteResult.fromJson(Map<String, Object?> json) {
+    return BulkInviteResult(
+      ok: _readBool(json, 'ok', fallback: true),
+      issuedCount: _readInt(json, 'issued_count', fallback: 0),
+      errorCount: _readInt(json, 'error_count', fallback: 0),
+      results: List<BulkInviteRowResult>.unmodifiable(<BulkInviteRowResult>[
+        for (final Object? entry in _readList(json, 'results'))
+          if (entry is Map<dynamic, dynamic>)
+            BulkInviteRowResult.fromJson(_castMap(entry)),
+      ]),
+    );
+  }
+}
+
+/// Destinatario para envío automático de código vía Edge Function `invite-email`.
+class InviteEmailRecipient {
+  const InviteEmailRecipient({
+    required this.institutionalEmail,
+    required this.activationCode,
+    this.inviteId,
+    this.fullName,
+    this.roleLabel,
+    this.scopeLabel,
+    this.expiresAt,
+  });
+
+  final String? inviteId;
+  final String institutionalEmail;
+  final String? fullName;
+  final String? roleLabel;
+  final String? scopeLabel;
+  final String activationCode;
+  final DateTime? expiresAt;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    if (inviteId != null) 'invite_id': inviteId,
+    'institutional_email': institutionalEmail,
+    if (fullName != null && fullName!.trim().isNotEmpty) 'full_name': fullName,
+    if (roleLabel != null && roleLabel!.trim().isNotEmpty)
+      'role_label': roleLabel,
+    if (scopeLabel != null && scopeLabel!.trim().isNotEmpty)
+      'scope_label': scopeLabel,
+    'activation_code': activationCode,
+    if (expiresAt != null) 'expires_at': expiresAt!.toIso8601String(),
+  };
+}
+
+/// Respuesta del envío de correos de invitación (`invite-email`).
+class InviteEmailDispatchResult {
+  const InviteEmailDispatchResult({
+    required this.ok,
+    required this.configured,
+    required this.sentCount,
+    required this.failedCount,
+    this.reason,
+  });
+
+  final bool ok;
+  final bool configured;
+  final int sentCount;
+  final int failedCount;
+  final String? reason;
+
+  factory InviteEmailDispatchResult.fromJson(Map<String, Object?> json) {
+    return InviteEmailDispatchResult(
+      ok: _readBool(json, 'ok'),
+      configured: _readBool(json, 'configured'),
+      sentCount: _readInt(json, 'sent_count', fallback: 0),
+      failedCount: _readInt(json, 'failed_count', fallback: 0),
+      reason: _readNullableString(json, 'reason'),
+    );
+  }
+}
+
 /// Elemento de «Declinadas recientes» en Mesa de Escucha.
 class DeclinedDispatchRecord {
   const DeclinedDispatchRecord({

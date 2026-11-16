@@ -41,6 +41,8 @@ String _tierLabel(String tier) => switch (tier) {
   _ => tier,
 };
 
+enum _InviteFilter { all, pending, active }
+
 class _MinedInvitesSheet extends StatefulWidget {
   const _MinedInvitesSheet({required this.session});
 
@@ -54,6 +56,7 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
   List<StaffActivationInviteView>? _invites;
   Map<String, String> _schools = const <String, String>{};
   List<AssignableCounselor> _counselors = const <AssignableCounselor>[];
+  _InviteFilter _filter = _InviteFilter.all;
   bool _loading = true;
   bool _busy = false;
   String? _error;
@@ -90,7 +93,10 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
     }
   }
 
-  Future<void> _showIssuedCodeDialog(StaffInviteIssueResult issued) async {
+  Future<void> _showIssuedCodeDialog(
+    StaffInviteIssueResult issued, {
+    InviteEmailDispatchResult? emailResult,
+  }) async {
     await showDialog<void>(
       context: context,
       builder: (BuildContext dialog) => AlertDialog(
@@ -131,6 +137,21 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
                   color: CureandoTheme.secondaryInk,
                 ),
               ),
+            if (emailResult != null) ...<Widget>[
+              const SizedBox(height: 8),
+              StaffNotice(
+                emailResult.ok && emailResult.sentCount > 0
+                    ? 'Código enviado automáticamente por correo a '
+                          '${issued.institutionalEmail}.'
+                    : !emailResult.configured
+                    ? 'Envío automático por Gmail SMTP aún no configurado; '
+                          'copiá y entregá el código en privado.'
+                    : 'No pudimos enviar el correo automático '
+                          '(${emailResult.reason ?? 'error SMTP'}). Copiá y '
+                          'entregá el código en privado.',
+                error: !(emailResult.ok && emailResult.sentCount > 0),
+              ),
+            ],
             const SizedBox(height: 8),
             const Text(
               'Entregalo en privado al correo institucional vinculado. El código '
@@ -192,6 +213,136 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
     }
   }
 
+  Future<void> _openBulkCsvImport() async {
+    final _BulkCsvImportDraft? draft = await showDialog<_BulkCsvImportDraft>(
+      context: context,
+      builder: (BuildContext dialog) => const _BulkCsvImportDialog(),
+    );
+    if (draft == null || draft.rows.isEmpty || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final BulkInviteResult bulk = await widget.session.backend
+          .issueInvitesBulk(rows: draft.rows);
+      InviteEmailDispatchResult? emailResult;
+      if (draft.sendEmail) {
+        final List<InviteEmailRecipient> recipients = <InviteEmailRecipient>[
+          for (final BulkInviteRowResult row in bulk.results)
+            if (row.ok &&
+                row.activationCode != null &&
+                row.activationCode!.isNotEmpty)
+              InviteEmailRecipient(
+                inviteId: row.inviteId,
+                institutionalEmail: row.institutionalEmail,
+                fullName: row.fullName,
+                roleLabel: row.role == null
+                    ? null
+                    : '${row.role!.label} · ${_tierLabel(row.staffTier ?? '')}',
+                scopeLabel: row.scopeLabel,
+                activationCode: row.activationCode!,
+                expiresAt: row.expiresAt,
+              ),
+        ];
+        if (recipients.isNotEmpty) {
+          emailResult = await widget.session.backend.sendInviteEmails(
+            recipients: recipients,
+          );
+        }
+      }
+      if (!mounted) return;
+      setState(() => _busy = false);
+      await _showBulkImportSummary(bulk, emailResult);
+      await _load();
+    } on Object catch (failure) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(staffErrorMessage(failure))));
+    }
+  }
+
+  Future<void> _showBulkImportSummary(
+    BulkInviteResult bulk,
+    InviteEmailDispatchResult? emailResult,
+  ) async {
+    final String exportLines = <String>[
+      for (final BulkInviteRowResult r in bulk.results)
+        if (r.ok && r.activationCode != null)
+          '${r.fullName ?? ''};${r.institutionalEmail};${r.activationCode};${r.scopeLabel ?? ''}',
+    ].join('\n');
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialog) => AlertDialog(
+        title: const Text('Resultado de importación CSV'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                'Emitidas: ${bulk.issuedCount} · Con error: ${bulk.errorCount}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (emailResult != null) ...<Widget>[
+                const SizedBox(height: 8),
+                StaffNotice(
+                  emailResult.configured
+                      ? 'Correos enviados: ${emailResult.sentCount} · Fallidos: ${emailResult.failedCount}'
+                      : 'Gmail SMTP aún no configurado en Supabase; podés copiar la lista de códigos.',
+                  error: !emailResult.ok,
+                ),
+              ],
+              const SizedBox(height: 12),
+              for (final BulkInviteRowResult r in bulk.results.take(15))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    r.ok
+                        ? '✓ ${r.institutionalEmail} → ${r.activationCode}'
+                        : '✕ ${r.institutionalEmail}: ${r.error ?? 'error'}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: r.ok ? CureandoTheme.ink : CureandoTheme.pink,
+                    ),
+                  ),
+                ),
+              if (bulk.results.length > 15)
+                Text(
+                  '... y ${bulk.results.length - 15} filas más.',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: CureandoTheme.secondaryInk,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          if (exportLines.isNotEmpty)
+            TextButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: exportLines));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lista de códigos copiada al portapapeles.'),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.copy_rounded),
+              label: const Text('Copiar códigos'),
+            ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialog).pop(),
+            child: const Text('Listo'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _approveRequest(StaffActivationInviteView invite) async {
     String? supervisorId = invite.supervisorUserId;
     if (invite.staffTier == 'practicante_5to' &&
@@ -206,9 +357,25 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
             pendingInviteId: invite.inviteId,
             supervisorUserId: supervisorId,
           );
+      InviteEmailDispatchResult? emailResult;
+      if (!widget.session.backend.isDemo) {
+        emailResult = await widget.session.backend.sendInviteEmails(
+          recipients: <InviteEmailRecipient>[
+            InviteEmailRecipient(
+              inviteId: issued.inviteId,
+              institutionalEmail: issued.institutionalEmail,
+              fullName: invite.fullName,
+              roleLabel: '${issued.role.label} · ${_tierLabel(issued.staffTier)}',
+              scopeLabel: issued.scopeLabel,
+              activationCode: issued.activationCode,
+              expiresAt: issued.expiresAt,
+            ),
+          ],
+        );
+      }
       if (!mounted) return;
       setState(() => _busy = false);
-      await _showIssuedCodeDialog(issued);
+      await _showIssuedCodeDialog(issued, emailResult: emailResult);
       await _load();
     } on Object catch (failure) {
       if (!mounted) return;
@@ -306,15 +473,23 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
     }
   }
 
-  Future<void> _revoke(StaffActivationInviteView invite) async {
+  Future<void> _revoke(
+    StaffActivationInviteView invite, {
+    bool rejectRequest = false,
+  }) async {
     final bool confirm =
         await showDialog<bool>(
           context: context,
           builder: (BuildContext dialog) => AlertDialog(
-            title: const Text('Revocar invitación'),
+            title: Text(
+              rejectRequest ? 'Rechazar solicitud' : 'Revocar invitación',
+            ),
             content: Text(
-              'El código pendiente para ${invite.institutionalEmail} dejará de '
-              'funcionar de inmediato.',
+              rejectRequest
+                  ? 'La solicitud de ${invite.fullName ?? invite.institutionalEmail} '
+                        'quedará marcada como rechazada.'
+                  : 'El código pendiente para ${invite.institutionalEmail} dejará de '
+                        'funcionar de inmediato.',
             ),
             actions: <Widget>[
               TextButton(
@@ -323,7 +498,7 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
               ),
               FilledButton(
                 onPressed: () => Navigator.of(dialog).pop(true),
-                child: const Text('Revocar'),
+                child: Text(rejectRequest ? 'Rechazar' : 'Revocar'),
               ),
             ],
           ),
@@ -334,7 +509,9 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
     try {
       await widget.session.backend.revokeInvite(
         inviteId: invite.inviteId,
-        reason: 'Revocada por MINED central',
+        reason: rejectRequest
+            ? 'Solicitud rechazada por MINED central'
+            : 'Revocada por MINED central',
       );
       if (!mounted) return;
       setState(() => _busy = false);
@@ -379,7 +556,9 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
             runSpacing: 6,
             children: <Widget>[
               Text(
-                invite.institutionalEmail,
+                (invite.fullName != null && invite.fullName!.trim().isNotEmpty)
+                    ? invite.fullName!.trim()
+                    : invite.institutionalEmail,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -391,6 +570,14 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
               ),
             ],
           ),
+          if (invite.fullName != null && invite.fullName!.trim().isNotEmpty)
+            Text(
+              invite.institutionalEmail,
+              style: const TextStyle(
+                fontSize: 14,
+                color: CureandoTheme.secondaryInk,
+              ),
+            ),
           const SizedBox(height: 6),
           Text(
             '${invite.role.label} · ${_tierLabel(invite.staffTier)}',
@@ -399,6 +586,15 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
           if (schoolLabel.isNotEmpty)
             Text(
               'Ámbito: $schoolLabel',
+              style: const TextStyle(
+                fontSize: 14,
+                color: CureandoTheme.secondaryInk,
+              ),
+            ),
+          if (invite.requesterProgramLabel != null &&
+              invite.requesterProgramLabel!.isNotEmpty)
+            Text(
+              'Programa / referencia: ${invite.requesterProgramLabel}',
               style: const TextStyle(
                 fontSize: 14,
                 color: CureandoTheme.secondaryInk,
@@ -442,8 +638,10 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
                   ),
                 if (canReplaceOrRevoke)
                   TextButton(
-                    onPressed: _busy ? null : () => _revoke(invite),
-                    child: const Text('Revocar'),
+                    onPressed: _busy
+                        ? null
+                        : () => _revoke(invite, rejectRequest: pendingRequest),
+                    child: Text(pendingRequest ? 'Rechazar' : 'Revocar'),
                   ),
               ],
             ),
@@ -455,8 +653,28 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final List<StaffActivationInviteView> list =
+    final List<StaffActivationInviteView> allInvites =
         _invites ?? const <StaffActivationInviteView>[];
+    final int pendingCount = allInvites
+        .where(
+          (StaffActivationInviteView i) =>
+              i.requestStatus == StaffInviteRequestStatus.pendingApproval &&
+              i.revokedAt == null,
+        )
+        .length;
+    final List<StaffActivationInviteView> list = switch (_filter) {
+      _InviteFilter.all => allInvites,
+      _InviteFilter.pending => allInvites
+          .where(
+            (StaffActivationInviteView i) =>
+                i.requestStatus == StaffInviteRequestStatus.pendingApproval &&
+                i.revokedAt == null,
+          )
+          .toList(),
+      _InviteFilter.active => allInvites
+          .where((StaffActivationInviteView i) => i.isActiveForRedemption)
+          .toList(),
+    };
     return SafeArea(
       top: false,
       child: SizedBox(
@@ -487,11 +705,52 @@ class _MinedInvitesSheetState extends State<_MinedInvitesSheet> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: FilledButton.icon(
-                style: flowPrimaryStyle(),
-                onPressed: _loading || _busy ? null : _createInvite,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Emitir invitación'),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  FilledButton.icon(
+                    style: flowPrimaryStyle(),
+                    onPressed: _loading || _busy ? null : _createInvite,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Emitir invitación'),
+                  ),
+                  OutlinedButton.icon(
+                    style: flowSecondaryStyle(),
+                    onPressed: _loading || _busy ? null : _openBulkCsvImport,
+                    icon: const Icon(Icons.upload_file_rounded),
+                    label: const Text('Importar CSV'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: <Widget>[
+                  ChoiceChip(
+                    label: Text('Todas (${allInvites.length})'),
+                    selected: _filter == _InviteFilter.all,
+                    onSelected: (_) =>
+                        setState(() => _filter = _InviteFilter.all),
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: Text('Por aprobar ($pendingCount)'),
+                    selected: _filter == _InviteFilter.pending,
+                    onSelected: (_) =>
+                        setState(() => _filter = _InviteFilter.pending),
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Text('Vigentes'),
+                    selected: _filter == _InviteFilter.active,
+                    onSelected: (_) =>
+                        setState(() => _filter = _InviteFilter.active),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
@@ -1028,6 +1287,216 @@ class _MinedCoverageSheetState extends State<_MinedCoverageSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BulkCsvImportDraft {
+  const _BulkCsvImportDraft({required this.rows, required this.sendEmail});
+
+  final List<BulkInviteRowDraft> rows;
+  final bool sendEmail;
+}
+
+class _BulkCsvParseOutput {
+  const _BulkCsvParseOutput({required this.rows, required this.errors});
+
+  final List<BulkInviteRowDraft> rows;
+  final List<String> errors;
+}
+
+const String _csvTemplateText =
+    'nombre_completo,correo,rol,equipo,colegio_codigo,tutor_correo\n'
+    'Ana María López,ana.lopez@colegio.edu.ni,school_director,school_director,AULA26,\n'
+    'Carlos Ruiz,carlos.ruiz@minsa.gob.ni,counseling_desk,external_network,,';
+
+_BulkCsvParseOutput _parseInviteCsv(String raw) {
+  final List<String> lines = raw
+      .split(RegExp(r'\r?\n'))
+      .map((String l) => l.trim())
+      .where((String l) => l.isNotEmpty)
+      .toList();
+  final List<BulkInviteRowDraft> rows = <BulkInviteRowDraft>[];
+  final List<String> errors = <String>[];
+  if (lines.isEmpty) {
+    return const _BulkCsvParseOutput(rows: <BulkInviteRowDraft>[], errors: <String>[]);
+  }
+
+  for (int idx = 0; idx < lines.length; idx++) {
+    final String line = lines[idx];
+    final String sep =
+        line.contains(';') && !line.contains(',') ? ';' : ',';
+    final List<String> cols = line
+        .split(sep)
+        .map((String c) => c.trim().replaceAll(RegExp(r'^"|"$'), '').trim())
+        .toList();
+    if (idx == 0 &&
+        cols.length >= 2 &&
+        (cols[0].toLowerCase().contains('nombre') ||
+            cols[1].toLowerCase().contains('correo') ||
+            cols[1].toLowerCase().contains('email'))) {
+      continue;
+    }
+    if (cols.length < 2) {
+      errors.add('Línea ${idx + 1}: faltan columnas (mínimo nombre,correo).');
+      continue;
+    }
+    final String fullName = cols[0];
+    final String email = cols[1];
+    final String rawRole = cols.length > 2 ? cols[2].toLowerCase() : 'counseling_desk';
+    final String rawTier = cols.length > 3 ? cols[3].toLowerCase() : '';
+    final String schoolRef = cols.length > 4 ? cols[4] : '';
+    final String supervisorEmail = cols.length > 5 ? cols[5] : '';
+    if (!email.contains('@') || !email.contains('.')) {
+      errors.add('Línea ${idx + 1}: correo inválido ($email).');
+      continue;
+    }
+    final String role = switch (rawRole) {
+      'school_director' || 'director' || 'direccion' || 'dirección' =>
+        'school_director',
+      'mined_supervisor' || 'mined' => 'mined_supervisor',
+      _ => 'counseling_desk',
+    };
+    final String tier = switch (rawTier) {
+      '' => role == 'school_director'
+          ? 'school_director'
+          : role == 'mined_supervisor'
+          ? 'mined_central'
+          : 'school_plant',
+      'planta' || 'school_plant' => 'school_plant',
+      'externa' || 'red externa' || 'external_network' => 'external_network',
+      'practicante' || 'practicante_5to' => 'practicante_5to',
+      'director' || 'school_director' => 'school_director',
+      'mined' || 'mined_central' => 'mined_central',
+      _ => rawTier,
+    };
+    rows.add(
+      BulkInviteRowDraft(
+        fullName: fullName,
+        institutionalEmail: email,
+        role: role,
+        staffTier: tier,
+        schoolRef: schoolRef,
+        supervisorEmail: supervisorEmail,
+      ),
+    );
+  }
+  return _BulkCsvParseOutput(rows: rows, errors: errors);
+}
+
+class _BulkCsvImportDialog extends StatefulWidget {
+  const _BulkCsvImportDialog();
+
+  @override
+  State<_BulkCsvImportDialog> createState() => _BulkCsvImportDialogState();
+}
+
+class _BulkCsvImportDialogState extends State<_BulkCsvImportDialog> {
+  final TextEditingController _csv = TextEditingController();
+  bool _sendEmail = true;
+
+  @override
+  void dispose() {
+    _csv.dispose();
+    super.dispose();
+  }
+
+  void _insertTemplate() {
+    setState(() => _csv.text = _csvTemplateText);
+  }
+
+  void _copyTemplate() {
+    Clipboard.setData(const ClipboardData(text: _csvTemplateText));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Plantilla CSV copiada para abrir o pegar en Excel.'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final _BulkCsvParseOutput parsed = _parseInviteCsv(_csv.text);
+    return AlertDialog(
+      title: const Text('Importar invitaciones CSV'),
+      content: SizedBox(
+        width: 440,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const Text(
+                'Pegá filas exportadas de Excel (.csv) con columnas: '
+                'nombre_completo, correo, rol, equipo, colegio_codigo, tutor_correo.',
+                style: TextStyle(fontSize: 14, height: 1.35),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: <Widget>[
+                  TextButton.icon(
+                    onPressed: _insertTemplate,
+                    icon: const Icon(Icons.playlist_add_rounded),
+                    label: const Text('Cargar ejemplo'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _copyTemplate,
+                    icon: const Icon(Icons.copy_rounded),
+                    label: const Text('Copiar plantilla'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              StaffField(
+                label: 'Contenido CSV',
+                controller: _csv,
+                hint: 'nombre_completo,correo,rol,equipo,colegio_codigo',
+                maxLines: 6,
+                textInputAction: TextInputAction.newline,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 10),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _sendEmail,
+                onChanged: (bool value) => setState(() => _sendEmail = value),
+                title: const Text(
+                  'Enviar códigos automáticamente (Gmail SMTP)',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              ),
+              if (parsed.rows.isNotEmpty)
+                StaffNotice(
+                  '${parsed.rows.length} fila(s) listas para emitir.',
+                  error: false,
+                ),
+              if (parsed.errors.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 8),
+                StaffNotice(parsed.errors.take(3).join('\n')),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: parsed.rows.isEmpty
+              ? null
+              : () => Navigator.of(context).pop(
+                  _BulkCsvImportDraft(
+                    rows: parsed.rows,
+                    sendEmail: _sendEmail,
+                  ),
+                ),
+          child: Text('Importar (${parsed.rows.length})'),
+        ),
+      ],
     );
   }
 }

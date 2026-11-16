@@ -182,6 +182,29 @@ abstract interface class SetuRemoteGateway {
     String? reason,
   });
 
+  /// Solicitud pública pre-login para personal de centro o mesa de escucha
+  /// (nunca habilita MINED central).
+  Future<Map<String, Object?>> submitStaffAccessRequest({
+    required String fullName,
+    required String institutionalEmail,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? requesterProgramLabel,
+  });
+
+  /// Emisión masiva de invitaciones desde CSV validado en panel MINED.
+  Future<BulkInviteResult> issueStaffInvitesBulk({
+    required List<BulkInviteRowDraft> rows,
+    int expiresInHours = 72,
+  });
+
+  /// Dispara el envío automático por Gmail SMTP (`invite-email`) cuando está
+  /// configurado en Supabase.
+  Future<InviteEmailDispatchResult> sendStaffInviteEmails({
+    required List<InviteEmailRecipient> recipients,
+  });
+
   Future<CounselorDispatchCasesResult> listCounselorDispatchCases();
 
   Future<CaseDispatchRecoverResult> recoverDeclinedCaseDispatch(String caseId);
@@ -836,6 +859,95 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
       return StaffInviteIssueResult.fromJson(_requireMap(response));
     } catch (error) {
       throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<Map<String, Object?>> submitStaffAccessRequest({
+    required String fullName,
+    required String institutionalEmail,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? requesterProgramLabel,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'submit_staff_access_request',
+        params: <String, Object?>{
+          'p_full_name': fullName.trim(),
+          'p_institutional_email': institutionalEmail.trim(),
+          'p_role': role.wireValue,
+          'p_institution_id': institutionId,
+          'p_staff_tier': staffTier,
+          'p_requester_program_label': requesterProgramLabel?.trim().isEmpty == true
+              ? null
+              : requesterProgramLabel?.trim(),
+        },
+      );
+      return _requireMap(response);
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<BulkInviteResult> issueStaffInvitesBulk({
+    required List<BulkInviteRowDraft> rows,
+    int expiresInHours = 72,
+  }) async {
+    try {
+      final Object? response = await _client.rpc<Object?>(
+        'issue_staff_invites_bulk',
+        params: <String, Object?>{
+          'p_rows': <Map<String, Object?>>[
+            for (final BulkInviteRowDraft row in rows) row.toJson(),
+          ],
+          'p_expires_in_hours': expiresInHours,
+        },
+      );
+      return BulkInviteResult.fromJson(_requireMap(response));
+    } catch (error) {
+      throw _mapError(error);
+    }
+  }
+
+  @override
+  Future<InviteEmailDispatchResult> sendStaffInviteEmails({
+    required List<InviteEmailRecipient> recipients,
+  }) async {
+    try {
+      final FunctionResponse response = await _client.functions.invoke(
+        'invite-email',
+        body: <String, Object?>{
+          'recipients': <Map<String, Object?>>[
+            for (final InviteEmailRecipient item in recipients) item.toJson(),
+          ],
+        },
+      );
+      final Object? data = response.data;
+      if (data is Map<dynamic, dynamic>) {
+        final Map<String, Object?> map = <String, Object?>{
+          for (final MapEntry<dynamic, dynamic> entry in data.entries)
+            '${entry.key}': entry.value,
+        };
+        return InviteEmailDispatchResult.fromJson(map);
+      }
+      return InviteEmailDispatchResult(
+        ok: false,
+        configured: false,
+        sentCount: 0,
+        failedCount: recipients.length,
+        reason: 'invalid_response',
+      );
+    } catch (error) {
+      return InviteEmailDispatchResult(
+        ok: false,
+        configured: false,
+        sentCount: 0,
+        failedCount: recipients.length,
+        reason: error.toString(),
+      );
     }
   }
 

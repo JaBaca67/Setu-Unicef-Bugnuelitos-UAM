@@ -169,6 +169,37 @@ class RemoteStaffBackend implements StaffBackend {
   );
 
   @override
+  Future<void> submitAccessRequest({
+    required String fullName,
+    required String email,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? requesterProgramLabel,
+  }) => _gateway.submitStaffAccessRequest(
+    fullName: fullName,
+    institutionalEmail: email,
+    role: role,
+    institutionId: institutionId,
+    staffTier: staffTier,
+    requesterProgramLabel: requesterProgramLabel,
+  );
+
+  @override
+  Future<BulkInviteResult> issueInvitesBulk({
+    required List<BulkInviteRowDraft> rows,
+    int expiresInHours = 72,
+  }) => _gateway.issueStaffInvitesBulk(
+    rows: rows,
+    expiresInHours: expiresInHours,
+  );
+
+  @override
+  Future<InviteEmailDispatchResult> sendInviteEmails({
+    required List<InviteEmailRecipient> recipients,
+  }) => _gateway.sendStaffInviteEmails(recipients: recipients);
+
+  @override
   Future<CounselorDispatchCasesResult> counselorDispatches() =>
       _gateway.listCounselorDispatchCases();
 

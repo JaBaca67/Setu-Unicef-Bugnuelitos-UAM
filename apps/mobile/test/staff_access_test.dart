@@ -313,6 +313,38 @@ void main() {
     expect(find.text('Reenviar enlace de confirmación'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'solicitud extendida pre-login excluye MINED y se aprueba en el panel MINED',
+    (WidgetTester tester) async {
+      await open(tester);
+      await _tap(tester, 'Solicitar acceso');
+      expect(find.text('Solicitar acceso de personal'), findsOneWidget);
+      expect(find.textContaining('Supervisor MINED'), findsNothing);
+
+      await _type(tester, 'Nombre completo', 'Elena Torres Gómez');
+      await _type(
+        tester,
+        'Correo institucional o de contacto',
+        'elena.torres@example.org',
+      );
+      await _tap(tester, 'Enviar solicitud al MINED');
+      expect(find.text('Solicitud enviada'), findsOneWidget);
+
+      await _tap(tester, 'Volver al ingreso');
+      await signIn(tester, 'mined.demo@example.org');
+      await _tap(tester, 'Invitaciones de personal');
+      expect(find.text('Por aprobar (1)'), findsOneWidget);
+      await _tap(tester, 'Por aprobar (1)');
+      expect(find.text('Elena Torres Gómez'), findsOneWidget);
+      await _tap(tester, 'Aprobar y emitir');
+      expect(find.text('Código de activación emitido'), findsOneWidget);
+      await _tap(tester, 'Listo');
+      await tester.tap(find.byTooltip('Cerrar'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 TextField _password(WidgetTester tester) => tester.widget<TextField>(

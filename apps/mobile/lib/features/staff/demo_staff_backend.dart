@@ -1135,6 +1135,7 @@ class DemoStaffBackend implements StaffBackend {
       );
       pending
         ..requestStatus = StaffInviteRequestStatus.approved
+        ..supervisorUserId = supervisorUserId ?? pending.supervisorUserId
         ..approvedBy = _user
         ..approvedAt = now
         ..expiresAt = now.add(Duration(hours: expiresInHours));
@@ -1204,7 +1205,194 @@ class DemoStaffBackend implements StaffBackend {
       ..state = 'revoked'
       ..revokedAt = DateTime.now().toUtc()
       ..revokedBy = _user
-      ..revokedReason = reason;
+      ..revokedReason = reason
+      ..requestStatus =
+          found.requestStatus == StaffInviteRequestStatus.pendingApproval
+          ? StaffInviteRequestStatus.rejected
+          : found.requestStatus;
+  }
+
+  @override
+  Future<void> submitAccessRequest({
+    required String fullName,
+    required String email,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? requesterProgramLabel,
+  }) async {
+    _online();
+    final String cleanFullName = fullName.trim();
+    if (cleanFullName.length < 3) {
+      throw const GatewayException('22023', 'invalid_full_name');
+    }
+    final String cleanEmail = _clean(email);
+    if (!cleanEmail.contains('@')) {
+      throw const GatewayException('22023', 'invalid_institutional_email');
+    }
+    if (role == SetuStaffRole.minedSupervisor || staffTier == 'mined_central') {
+      throw const GatewayException('42501', 'forbidden_mined_self_request');
+    }
+    if ((role == SetuStaffRole.schoolDirector || staffTier == 'school_plant') &&
+        (institutionId == null || institutionId.isEmpty)) {
+      throw const GatewayException('22023', 'institution_required_for_role');
+    }
+    final bool duplicate = _invites.values.any(
+      (_Invite item) =>
+          item.email == cleanEmail &&
+          item.revokedAt == null &&
+          item.redeemedAt == null &&
+          item.replacedByInviteId == null &&
+          (item.requestStatus == StaffInviteRequestStatus.pendingApproval ||
+              item.expiresAt.isAfter(DateTime.now().toUtc())),
+    );
+    if (duplicate) {
+      throw const GatewayException('23505', 'duplicate_pending_staff_request');
+    }
+    final String resolvedTier = role == SetuStaffRole.schoolDirector
+        ? 'school_director'
+        : staffTier;
+    final String code = 'REQ${++_sequence}2026';
+    final String schoolLabel = institutionId == schoolA.id
+        ? schoolA.name
+        : institutionId == cca.id
+        ? cca.name
+        : resolvedTier == 'practicante_5to'
+        ? 'Practicante 5.º año · Mesa de escucha'
+        : 'Red externa nacional';
+    _invites[code] = _Invite(
+      'inv-req-$_sequence',
+      cleanEmail,
+      role,
+      staffTier: resolvedTier,
+      institutionId: institutionId,
+      fullName: cleanFullName,
+      requesterProgramLabel: requesterProgramLabel?.trim().isEmpty == true
+          ? null
+          : requesterProgramLabel?.trim(),
+      requestStatus: StaffInviteRequestStatus.pendingApproval,
+      scopeLabel: schoolLabel,
+    )
+      ..events.add(
+        StaffInviteEventView(
+          id: 'evt-${++_sequence}',
+          eventType: 'requested',
+          details: 'Solicitud enviada para aprobación del MINED',
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
+  }
+
+  @override
+  Future<BulkInviteResult> issueInvitesBulk({
+    required List<BulkInviteRowDraft> rows,
+    int expiresInHours = 72,
+  }) async {
+    _online();
+    if (!_has(SetuStaffRole.minedSupervisor)) {
+      throw const GatewayException('42501', 'forbidden_mined_required');
+    }
+    if (rows.isEmpty || rows.length > 200) {
+      throw const GatewayException('22023', 'invalid_bulk_rows_count');
+    }
+    final List<BulkInviteRowResult> results = <BulkInviteRowResult>[];
+    int issued = 0;
+    int errors = 0;
+    for (int i = 0; i < rows.length; i++) {
+      final BulkInviteRowDraft row = rows[i];
+      try {
+        final String cleanEmail = _clean(row.institutionalEmail);
+        if (!cleanEmail.contains('@')) {
+          throw const GatewayException('22023', 'invalid_institutional_email');
+        }
+        final String rawRole = row.role.trim().toLowerCase();
+        final SetuStaffRole role =
+            rawRole == 'school_director' || rawRole == 'director'
+            ? SetuStaffRole.schoolDirector
+            : rawRole == 'mined_supervisor' || rawRole == 'mined'
+            ? SetuStaffRole.minedSupervisor
+            : SetuStaffRole.counselingDesk;
+        final String tier = role == SetuStaffRole.schoolDirector
+            ? 'school_director'
+            : role == SetuStaffRole.minedSupervisor
+            ? 'mined_central'
+            : (row.staffTier.trim().isEmpty ? 'school_plant' : row.staffTier);
+        String? instId;
+        String scope = role == SetuStaffRole.minedSupervisor
+            ? 'MINED central'
+            : 'Red externa nacional';
+        final String ref = (row.schoolRef ?? '').trim().toLowerCase();
+        if (ref.isNotEmpty) {
+          if (ref == cca.id || ref == 'aula26' || ref.contains('centro am')) {
+            instId = cca.id;
+            scope = cca.name;
+          } else if (ref == schoolA.id || ref == 'aula24' || ref.contains('demo')) {
+            instId = schoolA.id;
+            scope = schoolA.name;
+          } else {
+            throw const GatewayException('P0002', 'institution_not_found');
+          }
+        }
+        if ((role == SetuStaffRole.schoolDirector || tier == 'school_plant') &&
+            instId == null) {
+          throw const GatewayException('22023', 'institution_required_for_role');
+        }
+        final StaffInviteIssueResult out = await issueInvite(
+          email: cleanEmail,
+          role: role,
+          institutionId: instId,
+          staffTier: tier,
+          scopeLabel: scope,
+          fullName: row.fullName,
+          expiresInHours: expiresInHours,
+        );
+        issued++;
+        results.add(
+          BulkInviteRowResult(
+            index: i + 1,
+            ok: true,
+            institutionalEmail: out.institutionalEmail,
+            fullName: row.fullName,
+            inviteId: out.inviteId,
+            activationCode: out.activationCode,
+            scopeLabel: out.scopeLabel,
+            role: out.role,
+            staffTier: out.staffTier,
+            expiresAt: out.expiresAt,
+          ),
+        );
+      } on Object catch (failure) {
+        errors++;
+        results.add(
+          BulkInviteRowResult(
+            index: i + 1,
+            ok: false,
+            institutionalEmail: row.institutionalEmail,
+            fullName: row.fullName,
+            error: staffErrorMessage(failure),
+          ),
+        );
+      }
+    }
+    return BulkInviteResult(
+      ok: true,
+      issuedCount: issued,
+      errorCount: errors,
+      results: List<BulkInviteRowResult>.unmodifiable(results),
+    );
+  }
+
+  @override
+  Future<InviteEmailDispatchResult> sendInviteEmails({
+    required List<InviteEmailRecipient> recipients,
+  }) async {
+    _online();
+    return InviteEmailDispatchResult(
+      ok: true,
+      configured: true,
+      sentCount: recipients.length,
+      failedCount: 0,
+    );
   }
 
   @override

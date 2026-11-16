@@ -188,6 +188,15 @@ void main() {
     await _tap(tester, 'Emitir código');
     expect(find.text('Código de activación emitido'), findsOneWidget);
     await _tap(tester, 'Listo');
+
+    await _tap(tester, 'Importar CSV');
+    expect(find.text('Importar invitaciones CSV'), findsOneWidget);
+    await _tap(tester, 'Cargar ejemplo');
+    await _tap(tester, 'Importar (2)');
+    expect(find.text('Resultado de importación CSV'), findsOneWidget);
+    expect(find.text('Emitidas: 2 · Con error: 0'), findsOneWidget);
+    await _tap(tester, 'Listo');
+
     await tester.tap(find.byTooltip('Cerrar'));
     await tester.pumpAndSettle();
 

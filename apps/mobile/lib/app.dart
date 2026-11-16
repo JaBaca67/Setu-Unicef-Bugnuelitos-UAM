@@ -309,6 +309,11 @@ class _CureandoAppState extends State<CureandoApp> {
             StaffAccessHelpScreen(session: _staff),
       ),
       GoRoute(
+        path: '/personal/solicitar',
+        builder: (BuildContext context, GoRouterState state) =>
+            StaffAccessRequestScreen(session: _staff),
+      ),
+      GoRoute(
         path: '/personal/perfil',
         builder: (BuildContext context, GoRouterState state) =>
             StaffProfileScreen(session: _staff),
@@ -419,6 +424,7 @@ class _CureandoAppState extends State<CureandoApp> {
       if (!personal) return '/personal/activar';
       if (location == '/personal' ||
           location == '/personal/activar' ||
+          location == '/personal/solicitar' ||
           location == '/personal/ayuda') {
         return null;
       }
@@ -432,6 +438,7 @@ class _CureandoAppState extends State<CureandoApp> {
     if (!personal ||
         location == '/personal' ||
         location == '/personal/activar' ||
+        location == '/personal/solicitar' ||
         location == '/personal/ayuda') {
       return null;
     }

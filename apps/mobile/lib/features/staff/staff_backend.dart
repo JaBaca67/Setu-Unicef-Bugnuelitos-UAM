@@ -98,6 +98,24 @@ abstract interface class StaffBackend {
     String? reason,
   });
 
+  Future<void> submitAccessRequest({
+    required String fullName,
+    required String email,
+    required SetuStaffRole role,
+    String? institutionId,
+    String staffTier = 'school_plant',
+    String? requesterProgramLabel,
+  });
+
+  Future<BulkInviteResult> issueInvitesBulk({
+    required List<BulkInviteRowDraft> rows,
+    int expiresInHours = 72,
+  });
+
+  Future<InviteEmailDispatchResult> sendInviteEmails({
+    required List<InviteEmailRecipient> recipients,
+  });
+
   Future<CounselorDispatchCasesResult> counselorDispatches();
 
   Future<CaseDispatchRecoverResult> recoverDeclinedDispatch(String caseId);
@@ -370,6 +388,24 @@ String staffErrorMessage(Object error) {
   }
   if (has('supervisor_required') || has('invalid_supervisor_for_practicante')) {
     return 'Un practicante de 5.º año requiere un psicólogo de planta activo como tutor.';
+  }
+  if (has('forbidden_mined_self_request')) {
+    return 'Las cuentas de supervisión MINED solo se asignan por invitación directa.';
+  }
+  if (has('duplicate_pending_staff_request')) {
+    return 'Ya existe una solicitud pendiente o invitación vigente para ese correo.';
+  }
+  if (has('invalid_full_name')) {
+    return 'Escribí tu nombre completo (mínimo 3 caracteres).';
+  }
+  if (has('institution_required_for_role')) {
+    return 'Elegí el colegio al que pertenecés para ese rol.';
+  }
+  if (has('invalid_institutional_email') || has('fake_test_email_not_allowed')) {
+    return 'Escribí un correo electrónico real válido.';
+  }
+  if (has('invalid_bulk_rows_count')) {
+    return 'El archivo debe tener entre 1 y 200 filas para importar.';
   }
   if (has('first_and_last_name_required') || has('name_required')) {
     return 'Completá tu nombre y apellidos para activar la cuenta.';
