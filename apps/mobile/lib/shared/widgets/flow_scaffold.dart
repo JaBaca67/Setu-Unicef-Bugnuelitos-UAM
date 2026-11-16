@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -57,19 +59,25 @@ class FlowScaffold extends StatelessWidget {
                 // margen inferior: el último elemento no queda tapado.
                 child: Builder(
                   builder: (BuildContext inner) {
+                    final EdgeInsets mqPadding = MediaQuery.paddingOf(inner);
+                    final EdgeInsets mqViewPadding = MediaQuery.viewPaddingOf(
+                      inner,
+                    );
+                    final bool keyboardOpen =
+                        MediaQuery.viewInsetsOf(inner).bottom > 0;
+                    final double systemBottom = keyboardOpen
+                        ? 0
+                        : math.max(mqPadding.bottom, mqViewPadding.bottom);
+                    final double bottomPadding = _floatingNav
+                        ? 16 + math.max(mqPadding.bottom, systemBottom)
+                        : bottom != null
+                        ? 24
+                        : 32 + systemBottom;
                     final Widget scroll = SingleChildScrollView(
                       physics: onRefresh == null
                           ? null
                           : const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(
-                        20,
-                        20,
-                        20,
-                        16 +
-                            (_floatingNav
-                                ? MediaQuery.paddingOf(inner).bottom
-                                : 0),
-                      ),
+                      padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPadding),
                       child: body,
                     );
                     if (onRefresh == null) return scroll;
@@ -84,8 +92,9 @@ class FlowScaffold extends StatelessWidget {
               if (bottom != null)
                 SafeArea(
                   top: false,
+                  maintainBottomViewPadding: true,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 26),
                     child: bottom,
                   ),
                 ),

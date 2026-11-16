@@ -79,7 +79,7 @@ class SchoolAccessScreen extends StatelessWidget {
         subtitle: step.subtitle,
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 36),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.start,

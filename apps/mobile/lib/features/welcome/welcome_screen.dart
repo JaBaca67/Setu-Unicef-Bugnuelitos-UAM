@@ -41,7 +41,7 @@ class WelcomeScreen extends StatelessWidget {
     return CampaignScreen(
       header: const _CampaignHeader(),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(27, 24, 27, 24),
+        padding: const EdgeInsets.fromLTRB(27, 16, 27, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -53,7 +53,7 @@ class WelcomeScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 17, height: 1.5),
               ),
             ),
-            const SizedBox(height: 34),
+            const SizedBox(height: 20),
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 minimumSize: const Size(48, 52),
@@ -121,9 +121,9 @@ class _CampaignHeader extends StatelessWidget {
       ),
       Column(
         children: <Widget>[
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           const CampaignSymbol(size: 38),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Semantics(

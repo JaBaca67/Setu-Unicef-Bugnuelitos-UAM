@@ -48,7 +48,11 @@ class CampaignScreen extends StatelessWidget {
               color: Colors.white,
               borderRadius: bodyRadius,
             ),
-            child: SafeArea(top: false, child: body),
+            child: SafeArea(
+              top: false,
+              maintainBottomViewPadding: true,
+              child: body,
+            ),
           ),
         ),
         const SliverFillRemaining(
