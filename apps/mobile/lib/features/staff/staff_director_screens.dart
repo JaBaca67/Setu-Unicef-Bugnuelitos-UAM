@@ -198,7 +198,7 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
         (StaffCaseSummary existing) =>
             existing.origin == SetuAlertOrigin.mesh &&
             existing.situationType.wireValue == alert.situationType &&
-            existing.studentRole.wireValue == alert.studentRole &&
+            existing.studentRole?.wireValue == alert.studentRole &&
             existing.declaredAt.difference(alert.declaredAt).abs() <
                 const Duration(seconds: 2),
       );
@@ -214,8 +214,6 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
           id: 'mesh:${alert.clientOperationId}',
           referenceCode: 'MESH-$suffix',
           institutionId: session.active?.institutionId ?? '',
-          institutionPublicCode: schoolCode,
-          institutionName: session.active?.institutionName ?? '',
           situationType: SetuSituationType.fromWire(alert.situationType),
           studentRole: SetuStudentCaseRole.fromWire(alert.studentRole),
           origin: SetuAlertOrigin.mesh,
@@ -223,10 +221,11 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
           humanLevel: null,
           involvesStaff: false,
           assignedCounselorId: null,
-          assignedCounselorLabel: null,
+          chatAvailableNotice: false,
+          urgentReferralTriggered: false,
+          concurrencyVersion: 0,
           declaredAt: alert.declaredAt,
           receivedCentrallyAt: alert.declaredAt,
-          requiresAttention: true,
         ),
       );
     }
