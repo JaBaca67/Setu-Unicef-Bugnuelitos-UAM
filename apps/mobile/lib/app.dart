@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -78,6 +79,7 @@ class _CureandoAppState extends State<CureandoApp> {
   late final LearningProgress _learning =
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
+  StreamSubscription<void>? _staffAuthSubscription;
   late final SupportFlow _support = widget.supportFlow ?? SupportFlow();
   late final StaffSession _staff =
       widget.staffSession ??
@@ -468,6 +470,11 @@ class _CureandoAppState extends State<CureandoApp> {
     _syncSchool();
     _staff.addListener(_syncPush);
     _support.addListener(_syncPush);
+    _staffAuthSubscription = _staff.backend.authStateChanges().listen((_) {
+      if (mounted && _staff.isAuthenticated) {
+        _staff.refresh();
+      }
+    });
     PushNotificationService.instance.setListeners(
       onForegroundEvent: () {
         _support.refreshChat();
@@ -536,6 +543,7 @@ class _CureandoAppState extends State<CureandoApp> {
 
   @override
   void dispose() {
+    _staffAuthSubscription?.cancel();
     _learningLifecycle.dispose();
     if (widget.learningProgress == null) _learning.dispose();
     if (widget.supportFlow == null) _support.dispose();

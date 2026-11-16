@@ -685,6 +685,9 @@ class DemoStaffBackend implements StaffBackend {
   /// Simula una caída de conexión en las pruebas.
   bool offline = false;
 
+  final StreamController<void> _authChanges =
+      StreamController<void>.broadcast();
+
   void _seed(
     String email,
     List<StaffMembershipScope> memberships, {
@@ -704,8 +707,26 @@ class DemoStaffBackend implements StaffBackend {
     _accounts[email] = account;
   }
 
-  /// Simula que la persona abrió el enlace de confirmación de su correo.
-  void confirmEmail(String email) => _accounts[_clean(email)]?.confirmed = true;
+  /// Simula que la persona abrió el enlace de confirmación desde otro lugar.
+  void confirmEmail(String email) {
+    final _Account? account = _accounts[_clean(email)];
+    if (account != null) {
+      account.confirmed = true;
+      _authChanges.add(null);
+    }
+  }
+
+  /// Simula el retorno por deep link `setu://login-callback` que confirma e
+  /// inicia sesión automáticamente en el dispositivo mediante PKCE.
+  void simulateLoginCallback(String email) {
+    final String key = _clean(email);
+    final _Account? account = _accounts[key];
+    if (account != null) {
+      account.confirmed = true;
+      _user = key;
+      _authChanges.add(null);
+    }
+  }
 
   static String _clean(String email) => email.trim().toLowerCase();
 
@@ -728,6 +749,9 @@ class DemoStaffBackend implements StaffBackend {
   @override
   bool get isEmailConfirmed =>
       _user != null && (_accounts[_user]?.confirmed ?? false);
+
+  @override
+  Stream<void> authStateChanges() => _authChanges.stream;
 
   @override
   Future<StaffActivationPreview> previewActivation(

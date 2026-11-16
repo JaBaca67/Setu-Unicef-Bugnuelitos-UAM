@@ -345,6 +345,58 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'retorno automático tras confirmar correo avanza al paso 3 y cada paso '
+    'tiene máximo 2 botones',
+    (WidgetTester tester) async {
+      final DemoStaffBackend backend = await open(tester);
+      await _tap(tester, 'Registrar cuenta');
+
+      int actionButtonCount() {
+        final Finder scope = find.byType(StaffActivationScreen);
+        return find
+                .descendant(of: scope, matching: find.byType(FilledButton))
+                .evaluate()
+                .length +
+            find
+                .descendant(of: scope, matching: find.byType(OutlinedButton))
+                .evaluate()
+                .length +
+            find
+                .descendant(of: scope, matching: find.byType(TextButton))
+                .evaluate()
+                .length;
+      }
+
+      // Paso 1: máximo 2 botones.
+      expect(actionButtonCount(), lessThanOrEqualTo(2));
+
+      await _type(tester, 'Correo institucional', 'invitada.cca@example.org');
+      await _type(tester, 'Contraseña nueva', 'Clave-Ficticia-1');
+      await _type(tester, 'Repetí la contraseña', 'Clave-Ficticia-1');
+      await _tap(tester, 'Crear mi cuenta');
+      expect(find.text('Revisá tu correo institucional'), findsOneWidget);
+
+      // Paso 2: máximo 2 botones.
+      expect(actionButtonCount(), lessThanOrEqualTo(2));
+
+      // Simula retorno por deep link setu://login-callback mientras Auth emite
+      // la confirmación asíncrona después de montar la pantalla.
+      final GoRouter router = GoRouter.of(
+        tester.element(find.byType(StaffActivationScreen)),
+      );
+      router.go('setu://login-callback?code=demo-pkce');
+      await tester.pumpAndSettle();
+      backend.simulateLoginCallback('invitada.cca@example.org');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Código y datos personales'), findsOneWidget);
+      // Paso 3: máximo 2 botones.
+      expect(actionButtonCount(), lessThanOrEqualTo(2));
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 TextField _password(WidgetTester tester) => tester.widget<TextField>(

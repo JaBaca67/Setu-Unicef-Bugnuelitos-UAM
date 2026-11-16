@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -280,6 +282,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
 
   late _ActivationStep _step;
   AppLifecycleListener? _lifecycle;
+  StreamSubscription<void>? _authSubscription;
   StaffActivationPreview? _preview;
   bool _hidden = true;
   bool _busy = false;
@@ -299,26 +302,62 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     } else {
       _step = _ActivationStep.account;
     }
+    _authSubscription = _backend.authStateChanges().listen((_) {
+      _syncConfirmedFromAuth();
+    });
     _lifecycle = AppLifecycleListener(onResume: _checkConfirmedOnResume);
   }
 
-  Future<void> _checkConfirmedOnResume() async {
-    if (!mounted || _busy || _step != _ActivationStep.email) return;
+  void _syncConfirmedFromAuth() {
+    if (!mounted) return;
     if (_backend.currentUserId == null) return;
-    try {
-      await _backend.refreshAuthSession();
-    } on Object {
+    final String activeEmail = (_backend.currentUserEmail ?? '').trim();
+    if (activeEmail.isNotEmpty && _email.text.trim().isEmpty) {
+      _email.text = activeEmail;
+    }
+    if (_backend.isEmailConfirmed && _step != _ActivationStep.codeAndProfile) {
+      setState(() {
+        _step = _ActivationStep.codeAndProfile;
+        _error = null;
+        _info = null;
+      });
+    } else if (!_backend.isEmailConfirmed && _step == _ActivationStep.account) {
+      setState(() {
+        _step = _ActivationStep.email;
+        _error = null;
+      });
+    }
+  }
+
+  Future<void> _checkConfirmedOnResume() async {
+    if (!mounted || _busy || _step == _ActivationStep.codeAndProfile) return;
+    if (_backend.currentUserId != null) {
+      try {
+        await _backend.refreshAuthSession();
+      } on Object {
+        return;
+      }
+      _syncConfirmedFromAuth();
       return;
     }
-    if (!mounted || !_backend.isEmailConfirmed) return;
-    setState(() {
-      _step = _ActivationStep.codeAndProfile;
-      _error = null;
-    });
+    if (_step == _ActivationStep.email &&
+        _email.text.trim().contains('@') &&
+        _password.text.isNotEmpty) {
+      try {
+        await _backend.signIn(
+          email: _email.text.trim(),
+          password: _password.text,
+        );
+      } on Object {
+        return;
+      }
+      _syncConfirmedFromAuth();
+    }
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _lifecycle?.dispose();
     _email.dispose();
     _password.dispose();
@@ -611,13 +650,6 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
         'individual, tu cuenta no tendrá acceso al área de personal.',
         style: _lead,
       ),
-      const SizedBox(height: 16),
-      OutlinedButton.icon(
-        style: flowSecondaryStyle(),
-        onPressed: _busy ? null : () => _run(_resendLink),
-        icon: const Icon(Icons.forward_to_inbox_rounded),
-        label: const Text('Reenviar enlace de confirmación'),
-      ),
     ];
   }
 
@@ -727,19 +759,30 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
             busy: _busy,
             onPressed: () => _run(action),
           ),
-          TextButton(
-            onPressed: () => context.push('/personal/ayuda'),
-            child: const Text('Necesito ayuda con mi acceso', style: _link),
-          ),
-          if (_step != _ActivationStep.account)
+          if (_step == _ActivationStep.account)
+            TextButton(
+              onPressed: () => context.push('/personal/ayuda'),
+              child: const Text('Necesito ayuda con mi acceso', style: _link),
+            )
+          else if (_step == _ActivationStep.email) ...<Widget>[
+            const SizedBox(height: 10),
+            OutlinedButton(
+              style: flowSecondaryStyle(),
+              onPressed: _busy ? null : () => _run(_resendLink),
+              child: const Text('Reenviar enlace de confirmación'),
+            ),
+          ] else if (_backend.currentUserId != null)
             TextButton(
               onPressed: _busy ? null : _restart,
-              child: Text(
-                _backend.currentUserId != null
-                    ? 'Cerrar sesión y usar otra cuenta'
-                    : 'Volver al paso anterior',
+              child: const Text(
+                'Cerrar sesión y usar otra cuenta',
                 style: _link,
               ),
+            )
+          else
+            TextButton(
+              onPressed: () => context.push('/personal/ayuda'),
+              child: const Text('Necesito ayuda con mi acceso', style: _link),
             ),
         ],
       ),

@@ -68,6 +68,8 @@ abstract interface class SetuRemoteGateway {
 
   bool get isCurrentStaffEmailConfirmed;
 
+  Stream<void> get staffAuthStateChanges;
+
   Future<StaffActivationPreview> previewStaffActivationCode({
     required String activationCode,
     String? institutionalEmail,
@@ -385,6 +387,10 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
     final String? confirmedAt = _client.auth.currentUser?.emailConfirmedAt;
     return confirmedAt != null && confirmedAt.isNotEmpty;
   }
+
+  @override
+  Stream<void> get staffAuthStateChanges =>
+      _client.auth.onAuthStateChange.map((_) {});
 
   @override
   Future<PublicSchoolResolution?> resolvePublicSchool(String publicCode) async {

@@ -24,6 +24,8 @@ abstract interface class StaffBackend {
 
   bool get isEmailConfirmed;
 
+  Stream<void> authStateChanges();
+
   Future<StaffActivationPreview> previewActivation(
     String code, {
     String? email,

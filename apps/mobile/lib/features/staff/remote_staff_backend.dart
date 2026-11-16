@@ -24,6 +24,9 @@ class RemoteStaffBackend implements StaffBackend {
   bool get isEmailConfirmed => _gateway.isCurrentStaffEmailConfirmed;
 
   @override
+  Stream<void> authStateChanges() => _gateway.staffAuthStateChanges;
+
+  @override
   Future<StaffActivationPreview> previewActivation(
     String code, {
     String? email,
