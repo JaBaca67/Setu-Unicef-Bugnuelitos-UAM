@@ -259,7 +259,7 @@ void main() {
     'marca involucramiento de personal del colegio y lo envía en AlertOutbox',
     () async {
       final _MemoryStore store = _MemoryStore();
-      final _SpySupportBackend backend = _SpySupportBackend();
+      final _FakePlatform backend = _FakePlatform();
       final SupportFlow flow = SupportFlow(
         openStore: () async => store,
         backend: backend,
