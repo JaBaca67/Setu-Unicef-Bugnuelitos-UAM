@@ -498,6 +498,22 @@ class StaffSession extends ChangeNotifier {
   StaffMembershipScope? _active;
   StaffProfileView? _profile;
 
+  String pendingFirstName = '';
+  String pendingLastName = '';
+  String pendingStaffTier = 'school_director';
+  String? pendingInstitutionId;
+  String pendingEmail = '';
+  String pendingPassword = '';
+
+  void clearPendingRegistration() {
+    pendingFirstName = '';
+    pendingLastName = '';
+    pendingStaffTier = 'school_director';
+    pendingInstitutionId = null;
+    pendingEmail = '';
+    pendingPassword = '';
+  }
+
   /// Ámbito con el que la persona está trabajando; null si no hay sesión o
   /// falta elegir entre varios centros.
   StaffMembershipScope? get active => _active;

@@ -126,6 +126,139 @@ class StaffField extends StatelessWidget {
   );
 }
 
+/// Selector desplegable estilizado como `StaffField`, siempre expandido para
+/// evitar desbordamientos horizontales con nombres largos de centros.
+class StaffDropdown<T> extends StatelessWidget {
+  const StaffDropdown({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final String label;
+  final T value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+
+  static OutlineInputBorder _border(Color color, double width) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      ExcludeSemantics(
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+      ),
+      const SizedBox(height: 8),
+      Semantics(
+        label: label,
+        child: DropdownButtonFormField<T>(
+          key: ValueKey<T?>(value),
+          initialValue: value,
+          isExpanded: true,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+            color: CureandoTheme.ink,
+          ),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: CureandoTheme.blue,
+          ),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: _border(const Color(0xFFA5C1EF), 1.5),
+            enabledBorder: _border(const Color(0xFFA5C1EF), 1.5),
+            focusedBorder: _border(CureandoTheme.blue, 2),
+          ),
+          selectedItemBuilder: (BuildContext context) => <Widget>[
+            for (final DropdownMenuItem<T> item in items)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: DefaultTextStyle(
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    color: CureandoTheme.ink,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  child: item.child,
+                ),
+              ),
+          ],
+          items: items,
+          onChanged: onChanged,
+        ),
+      ),
+    ],
+  );
+}
+
+/// Barra compacta de pasos (ej. 1 de 4) acorde al estilo visual de SéTú.
+class StaffStepProgress extends StatelessWidget {
+  const StaffStepProgress({
+    super.key,
+    required this.current,
+    required this.total,
+    this.caption,
+  });
+
+  final int current;
+  final int total;
+  final String? caption;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      Row(
+        children: <Widget>[
+          for (int i = 1; i <= total; i++) ...<Widget>[
+            Expanded(
+              child: Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: i <= current
+                      ? CureandoTheme.blue
+                      : const Color(0xFFDCE7FA),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            if (i < total) const SizedBox(width: 6),
+          ],
+        ],
+      ),
+      if (caption != null) ...<Widget>[
+        const SizedBox(height: 8),
+        Text(
+          caption!,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: CureandoTheme.secondaryInk,
+          ),
+        ),
+      ],
+    ],
+  );
+}
+
 /// Aviso con icono y texto; el color nunca es el único indicador.
 class StaffNotice extends StatelessWidget {
   const StaffNotice(this.text, {super.key, this.error = true});

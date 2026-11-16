@@ -86,6 +86,23 @@ abstract final class CureandoTheme {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
     ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      elevation: 2,
+      backgroundColor: blueSoft,
+      contentTextStyle: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 14.5,
+        height: 1.35,
+        fontWeight: FontWeight.w600,
+        color: ink,
+      ),
+      actionTextColor: blue,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: Color(0xFFA5C1EF), width: 1.5),
+      ),
+    ),
   );
 
   static TextScaler readingScale(TextScaler system, {required bool large}) =>

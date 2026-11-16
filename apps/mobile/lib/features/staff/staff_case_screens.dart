@@ -8,6 +8,7 @@ import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
 import '../piece/student_piece.dart';
 import 'staff_backend.dart';
 import 'staff_inbox_screens.dart';
@@ -824,9 +825,11 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
       await _refresh();
     } on Object catch (failure) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        showSetuBottomAlert(
           context,
-        ).showSnackBar(SnackBar(content: Text(staffErrorMessage(failure))));
+          staffErrorMessage(failure),
+          kind: SetuAlertKind.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _enablingChat = false);

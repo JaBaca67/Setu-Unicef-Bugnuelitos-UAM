@@ -105,6 +105,7 @@ class FlowHeader extends StatelessWidget {
     this.showBrand = false,
     this.brandTrailing,
     this.trailing,
+    this.onBack,
   });
 
   final String title;
@@ -112,6 +113,7 @@ class FlowHeader extends StatelessWidget {
   final bool showBrand;
   final Widget? brandTrailing;
   final Widget? trailing;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +144,7 @@ class FlowHeader extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back_ios_new_rounded),
                 color: Colors.white,
                 tooltip: 'Volver',
-                onPressed: () => context.pop(),
+                onPressed: onBack ?? () => context.pop(),
               ),
               Expanded(
                 child: Semantics(

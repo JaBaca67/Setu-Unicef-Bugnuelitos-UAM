@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
 import 'staff_backend.dart';
 import 'staff_mined_sheets.dart';
 import 'staff_widgets.dart';
@@ -200,6 +201,7 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
         );
     if (chosen == null || !mounted) return;
     String message = 'Caso ${item.referenceCode} asignado.';
+    SetuAlertKind kind = SetuAlertKind.success;
     try {
       final String key = '${item.id}|${chosen.userId}';
       await session.backend.assignCounselor(
@@ -210,11 +212,10 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
       _operations.done();
     } on Object catch (failure) {
       message = staffErrorMessage(failure);
+      kind = SetuAlertKind.error;
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showSetuBottomAlert(context, message, kind: kind);
     await load();
   }
 
@@ -771,9 +772,7 @@ class AssignmentBanner extends StatelessWidget {
     final String? error = await session.refresh();
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error)));
+      showSetuBottomAlert(context, error, kind: SetuAlertKind.error);
       return;
     }
     session.clearAssignment();
@@ -909,11 +908,9 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     }
   }
 
-  void _say(String message) {
+  void _say(String message, {SetuAlertKind kind = SetuAlertKind.info}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showSetuBottomAlert(context, message, kind: kind);
   }
 
   Future<void> _claim(CaseDispatchRecord record) async {
@@ -921,25 +918,32 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     final String reference = record.referenceCode ?? 'la alerta';
     setState(() => _busyCase = record.caseId);
     String message;
+    SetuAlertKind kind = SetuAlertKind.info;
     try {
       final CaseClaimResult result = await session.backend.claimCase(
         operationId: _operations.idFor('claim|${record.caseId}'),
         caseId: record.caseId,
       );
       _operations.done();
-      message = result.isAlreadyTaken
-          ? 'Otra persona de Mesa de Escucha tomó $reference antes. Ya no '
-                'está disponible.'
-          : result.claimed || result.alreadyAssignedToYou
-          ? 'Tomaste $reference. Ya está en «Mis casos».'
-          : 'No pudimos tomar $reference. Actualizá la bandeja e intentá de '
-                'nuevo.';
+      if (result.isAlreadyTaken) {
+        message =
+            'Otra persona de Mesa de Escucha tomó $reference antes. Ya no está disponible.';
+        kind = SetuAlertKind.warning;
+      } else if (result.claimed || result.alreadyAssignedToYou) {
+        message = 'Tomaste $reference. Ya está en «Mis casos».';
+        kind = SetuAlertKind.success;
+      } else {
+        message =
+            'No pudimos tomar $reference. Actualizá la bandeja e intentá de nuevo.';
+        kind = SetuAlertKind.warning;
+      }
     } on Object catch (failure) {
       message = staffErrorMessage(failure);
+      kind = SetuAlertKind.error;
     }
     if (!mounted) return;
     setState(() => _busyCase = null);
-    _say(message);
+    _say(message, kind: kind);
     await load();
   }
 
@@ -949,16 +953,20 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
           .recoverDeclinedDispatch(caseId);
       if (!mounted) return;
       if (res.ok) {
-        _say('La alerta volvió a tu bandeja «Por tomar».');
+        _say(
+          'La alerta volvió a tu bandeja «Por tomar».',
+          kind: SetuAlertKind.success,
+        );
       } else {
         _say(
           res.availabilityState?.label ??
               'Ya no pudimos recuperar esta alerta.',
+          kind: SetuAlertKind.warning,
         );
       }
       await load();
     } on Object catch (failure) {
-      if (mounted) _say(staffErrorMessage(failure));
+      if (mounted) _say(staffErrorMessage(failure), kind: SetuAlertKind.error);
     }
   }
 
@@ -998,24 +1006,18 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     await load();
     if (!mounted) return;
     if (!declined) {
-      _say(errorMessage ?? 'No pudimos declinar la alerta.');
+      _say(
+        errorMessage ?? 'No pudimos declinar la alerta.',
+        kind: SetuAlertKind.error,
+      );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: CureandoTheme.ink,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        content: const Text(
-          'Alerta declinada',
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
-        ),
-        action: SnackBarAction(
-          label: 'Deshacer',
-          textColor: const Color(0xFF93C5FD),
-          onPressed: () => _recoverAndReload(record.caseId),
-        ),
-      ),
+    showSetuBottomAlert(
+      context,
+      'Alerta declinada',
+      kind: SetuAlertKind.info,
+      actionLabel: 'Deshacer',
+      onAction: () => _recoverAndReload(record.caseId),
     );
   }
 
@@ -1678,28 +1680,28 @@ class _DeskDeclinedScreenState extends State<DeskDeclinedScreen> {
       if (!mounted) return;
       setState(() => _busyCaseId = null);
       if (res.ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Alerta devuelta a tu bandeja «Por tomar».'),
-          ),
+        showSetuBottomAlert(
+          context,
+          'Alerta devuelta a tu bandeja «Por tomar».',
+          kind: SetuAlertKind.success,
         );
         context.pop();
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            res.availabilityState?.label ?? 'La alerta ya no está disponible.',
-          ),
-        ),
+      showSetuBottomAlert(
+        context,
+        res.availabilityState?.label ?? 'La alerta ya no está disponible.',
+        kind: SetuAlertKind.warning,
       );
       await _load();
     } on Object catch (failure) {
       if (!mounted) return;
       setState(() => _busyCaseId = null);
-      ScaffoldMessenger.of(
+      showSetuBottomAlert(
         context,
-      ).showSnackBar(SnackBar(content: Text(staffErrorMessage(failure))));
+        staffErrorMessage(failure),
+        kind: SetuAlertKind.error,
+      );
     }
   }
 

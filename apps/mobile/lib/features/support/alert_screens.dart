@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
 import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'support_flow.dart';
@@ -490,12 +491,10 @@ class _AlertReviewScreenState extends State<AlertReviewScreen> {
       return;
     }
     setState(() => _sending = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'No se pudo guardar la alerta en este teléfono. Intentá de nuevo.',
-        ),
-      ),
+    showSetuBottomAlert(
+      context,
+      'No se pudo guardar la alerta en este teléfono. Intentá de nuevo.',
+      kind: SetuAlertKind.error,
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
 import 'school_location.dart';
 import 'school_qr_scanner.dart';
 import 'student_session.dart';
@@ -216,8 +217,10 @@ void enterConfirmedSchool(BuildContext context, StudentSession session) {
   final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(context);
   session.confirmCandidate();
   context.go('/inicio');
-  messenger?.showSnackBar(
-    SnackBar(content: Text('Entraste a ${school.displayName}.')),
+  showSetuBottomAlertOnMessenger(
+    messenger,
+    'Entraste a ${school.displayName}.',
+    kind: SetuAlertKind.success,
   );
 }
 

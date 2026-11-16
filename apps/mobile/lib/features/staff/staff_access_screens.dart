@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/models/cureando_models.dart';
@@ -8,6 +10,7 @@ import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
 import 'staff_backend.dart';
 import 'staff_widgets.dart';
 
@@ -212,15 +215,23 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
               child: const Text('Registrar cuenta'),
             ),
             const SizedBox(height: 10),
-            OutlinedButton(
-              style: flowSecondaryStyle(),
-              onPressed: () => context.push('/personal/solicitar'),
-              child: const Text('Solicitar acceso'),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => context.push('/personal/ayuda'),
-              child: const Text('Necesito ayuda con mi acceso', style: _link),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 4,
+              children: <Widget>[
+                TextButton(
+                  onPressed: () => context.push('/personal/solicitar'),
+                  child: const Text('Solicitar acceso', style: _link),
+                ),
+                TextButton(
+                  onPressed: () => context.push('/personal/ayuda'),
+                  child: const Text(
+                    'Necesito ayuda con mi acceso',
+                    style: _link,
+                  ),
+                ),
+              ],
             ),
             TextButton(
               onPressed: _leaveToWelcome,
@@ -255,12 +266,13 @@ class _WavePainter extends CustomPainter {
   bool shouldRepaint(_WavePainter oldDelegate) => false;
 }
 
-enum _ActivationStep { account, email, codeAndProfile }
+enum _ActivationStep { profileAndRole, account, email, code }
 
-/// Primer ingreso (`/personal/activar`): crear cuenta con correo institucional
-/// y contraseña, confirmar el correo mediante el enlace, validar el código de
-/// un solo uso y completar nombre y apellidos antes de entrar. El rol y el
-/// ámbito provienen siempre del servidor.
+/// Primer ingreso (`/personal/activar`):
+/// 1) Nombre, apellidos y rol/colegio al que aplica;
+/// 2) Correo y contraseña;
+/// 3) Confirmación de correo;
+/// 4) Código individual en casillas (o envío de solicitud al MINED).
 class StaffActivationScreen extends StatefulWidget {
   const StaffActivationScreen({super.key, required this.session});
 
@@ -273,14 +285,19 @@ class StaffActivationScreen extends StatefulWidget {
 class _StaffActivationScreenState extends State<StaffActivationScreen> {
   static const int _minPassword = 8;
 
+  final TextEditingController _firstName = TextEditingController();
+  final TextEditingController _lastName = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   final TextEditingController _repeat = TextEditingController();
   final TextEditingController _code = TextEditingController();
-  final TextEditingController _firstName = TextEditingController();
-  final TextEditingController _lastName = TextEditingController();
+  final FocusNode _codeFocus = FocusNode();
 
   late _ActivationStep _step;
+  _AccessRequestRoleOption _roleOption = _AccessRequestRoleOption.schoolDirector;
+  Map<String, String> _schools = const <String, String>{};
+  String? _institutionId;
+  bool _loadingSchools = true;
   AppLifecycleListener? _lifecycle;
   StreamSubscription<void>? _authSubscription;
   StaffActivationPreview? _preview;
@@ -294,18 +311,58 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
   @override
   void initState() {
     super.initState();
+    final StaffSession session = widget.session;
+    if (session.pendingFirstName.isNotEmpty) {
+      _firstName.text = session.pendingFirstName;
+    }
+    if (session.pendingLastName.isNotEmpty) {
+      _lastName.text = session.pendingLastName;
+    }
+    if (session.pendingEmail.isNotEmpty) {
+      _email.text = session.pendingEmail;
+    }
+    if (session.pendingPassword.isNotEmpty) {
+      _password.text = session.pendingPassword;
+      _repeat.text = session.pendingPassword;
+    }
+    for (final _AccessRequestRoleOption opt
+        in _AccessRequestRoleOption.values) {
+      if (opt.staffTier == session.pendingStaffTier) {
+        _roleOption = opt;
+        break;
+      }
+    }
+    _institutionId = session.pendingInstitutionId;
+
     if (_backend.currentUserId != null) {
-      _email.text = _backend.currentUserEmail ?? '';
+      final String activeEmail = (_backend.currentUserEmail ?? '').trim();
+      if (activeEmail.isNotEmpty) _email.text = activeEmail;
       _step = _backend.isEmailConfirmed
-          ? _ActivationStep.codeAndProfile
+          ? _ActivationStep.code
           : _ActivationStep.email;
     } else {
-      _step = _ActivationStep.account;
+      _step = _ActivationStep.profileAndRole;
     }
+    _loadSchools();
     _authSubscription = _backend.authStateChanges().listen((_) {
       _syncConfirmedFromAuth();
     });
     _lifecycle = AppLifecycleListener(onResume: _checkConfirmedOnResume);
+  }
+
+  Future<void> _loadSchools() async {
+    try {
+      final Map<String, String> schools = await _backend.institutionNames();
+      if (!mounted) return;
+      setState(() {
+        _schools = schools;
+        _institutionId ??= schools.isEmpty ? null : schools.keys.first;
+        _loadingSchools = false;
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() => _loadingSchools = false);
+    }
   }
 
   void _syncConfirmedFromAuth() {
@@ -315,13 +372,15 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     if (activeEmail.isNotEmpty && _email.text.trim().isEmpty) {
       _email.text = activeEmail;
     }
-    if (_backend.isEmailConfirmed && _step != _ActivationStep.codeAndProfile) {
+    if (_backend.isEmailConfirmed && _step != _ActivationStep.code) {
       setState(() {
-        _step = _ActivationStep.codeAndProfile;
+        _step = _ActivationStep.code;
         _error = null;
         _info = null;
       });
-    } else if (!_backend.isEmailConfirmed && _step == _ActivationStep.account) {
+    } else if (!_backend.isEmailConfirmed &&
+        (_step == _ActivationStep.account ||
+            _step == _ActivationStep.profileAndRole)) {
       setState(() {
         _step = _ActivationStep.email;
         _error = null;
@@ -330,7 +389,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
   }
 
   Future<void> _checkConfirmedOnResume() async {
-    if (!mounted || _busy || _step == _ActivationStep.codeAndProfile) return;
+    if (!mounted || _busy || _step == _ActivationStep.code) return;
     if (_backend.currentUserId != null) {
       try {
         await _backend.refreshAuthSession();
@@ -359,17 +418,16 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
   void dispose() {
     _authSubscription?.cancel();
     _lifecycle?.dispose();
+    _codeFocus.dispose();
+    _firstName.dispose();
+    _lastName.dispose();
     _email.dispose();
     _password.dispose();
     _repeat.dispose();
     _code.dispose();
-    _firstName.dispose();
-    _lastName.dispose();
     super.dispose();
   }
 
-  /// Ejecuta una acción con espera visible. La acción devuelve el texto de
-  /// error o null.
   Future<void> _run(Future<String?> Function() action) async {
     if (_busy) return;
     setState(() {
@@ -390,22 +448,42 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     });
   }
 
+  Future<String?> _completeProfileStep() async {
+    if (_firstName.text.trim().length < 2 || _lastName.text.trim().length < 2) {
+      return 'Escribí tu nombre y apellidos.';
+    }
+    if (_roleOption.requiresSchool &&
+        (_institutionId == null || _institutionId!.isEmpty)) {
+      return 'Elegí el colegio al que aplicás.';
+    }
+    widget.session
+      ..pendingFirstName = _firstName.text.trim()
+      ..pendingLastName = _lastName.text.trim()
+      ..pendingStaffTier = _roleOption.staffTier
+      ..pendingInstitutionId = _institutionId;
+    _step = _backend.currentUserId != null && _backend.isEmailConfirmed
+        ? _ActivationStep.code
+        : _ActivationStep.account;
+    return null;
+  }
+
   Future<String?> _createAccount() async {
     final String email = _email.text.trim();
-    if (!email.contains('@')) return 'Escribí tu correo institucional.';
+    if (!email.contains('@')) return 'Escribí un correo válido.';
     if (_password.text.length < _minPassword) {
       return 'La contraseña necesita al menos $_minPassword caracteres.';
     }
     if (_password.text != _repeat.text) {
       return 'Las dos contraseñas no coinciden.';
     }
+    widget.session
+      ..pendingEmail = email
+      ..pendingPassword = _password.text;
     try {
       await _backend.signUp(email: email, password: _password.text);
     } on GatewayException catch (failure) {
       final String text = '${failure.code} ${failure.message}'.toLowerCase();
       if (!text.contains('already')) rethrow;
-      // Si la cuenta ya existe, intenta iniciar sesión o avanzar a confirmar
-      // correo si todavía está pendiente.
       try {
         await _backend.signIn(email: email, password: _password.text);
       } on GatewayException catch (signFailure) {
@@ -422,10 +500,9 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
       final String? membershipError = await widget.session.refresh();
       if (membershipError == null && widget.session.memberships.isNotEmpty) {
         await widget.session.signOut();
-        return 'Esta cuenta ya completó su registro. Volvé atrás y usá '
-            '«Iniciar sesión» para ingresar.';
+        return 'Esta cuenta ya completó su registro. Volvé atrás e iniciá sesión.';
       }
-      _step = _ActivationStep.codeAndProfile;
+      _step = _ActivationStep.code;
       return null;
     }
     _step = _ActivationStep.email;
@@ -435,11 +512,10 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
   Future<String?> _resendLink() async {
     final String email = (_backend.currentUserEmail ?? _email.text).trim();
     if (!email.contains('@')) {
-      return 'Escribí tu correo institucional para reenviar el enlace.';
+      return 'Escribí tu correo para reenviar el enlace.';
     }
     await _backend.resendConfirmationEmail(email: email);
-    _info = 'Si la cuenta está pendiente de verificación, reenviamos el '
-        'enlace a $email.';
+    _info = 'Reenviamos el enlace de confirmación a $email.';
     return null;
   }
 
@@ -449,50 +525,46 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
       await _backend.refreshAuthSession();
     } else {
       if (!email.contains('@') || _password.text.isEmpty) {
-        return 'Ingresá con tu correo y contraseña luego de abrir el enlace.';
+        return 'Iniciá sesión luego de confirmar tu correo.';
       }
       await _backend.signIn(email: email, password: _password.text);
     }
     if (_backend.currentUserId == null || !_backend.isEmailConfirmed) {
-      return 'Todavía no vemos tu correo confirmado. Abrí el enlace que te '
-          'enviamos e intentá de nuevo.';
+      return 'Todavía no vemos tu correo confirmado. Abrí el enlace e intentá de nuevo.';
     }
     final String? membershipError = await widget.session.refresh();
     if (membershipError == null && widget.session.memberships.isNotEmpty) {
       if (mounted) enterStaffArea(context, widget.session);
       return null;
     }
-    _step = _ActivationStep.codeAndProfile;
+    _step = _ActivationStep.code;
     return null;
   }
 
-  Future<String?> _validateCode() async {
-    if (_code.text.trim().isEmpty) {
-      return 'Escribí el código de activación que recibiste.';
+  Future<String?> _activateWithCode() async {
+    final String cleanCode = _code.text.trim();
+    if (cleanCode.isEmpty) {
+      return 'Ingresá el código individual que recibiste.';
     }
-    final StaffActivationPreview preview = await _backend.previewActivation(
-      _code.text.trim(),
-    );
-    if (!preview.ok) {
-      return activationErrorMessage(
-        preview.error,
-        remainingAttempts: preview.remainingAttempts,
+    if (_firstName.text.trim().length < 2 || _lastName.text.trim().length < 2) {
+      return 'Completá tu nombre y apellidos para continuar.';
+    }
+    if (_preview == null) {
+      final StaffActivationPreview preview = await _backend.previewActivation(
+        cleanCode,
       );
-    }
-    _preview = preview;
-    return null;
-  }
-
-  Future<String?> _redeemWithProfile() async {
-    if (_code.text.trim().isEmpty) {
-      return 'Escribí el código de activación que recibiste.';
-    }
-    if (_firstName.text.trim().isEmpty || _lastName.text.trim().isEmpty) {
-      return 'Completá tu nombre y apellidos para entrar al área autorizada.';
+      if (!preview.ok) {
+        return activationErrorMessage(
+          preview.error,
+          remainingAttempts: preview.remainingAttempts,
+        );
+      }
+      _preview = preview;
+      if (mounted) setState(() {});
     }
     final StaffActivationRedemption result = await _backend
         .redeemActivationWithProfile(
-          code: _code.text.trim(),
+          code: cleanCode,
           firstName: _firstName.text.trim(),
           lastName: _lastName.text.trim(),
         );
@@ -503,17 +575,60 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
       );
     }
     final String? error = await widget.session.refresh();
-    if (error == null && mounted) enterStaffArea(context, widget.session);
+    if (error == null) {
+      widget.session.clearPendingRegistration();
+      if (mounted) enterStaffArea(context, widget.session);
+    }
     return error;
+  }
+
+  Future<String?> _requestAccessFromCodeStep() async {
+    final String email = (_backend.currentUserEmail ?? _email.text).trim();
+    final String fullName =
+        '${_firstName.text.trim()} ${_lastName.text.trim()}'.trim();
+    if (fullName.length < 3 || !email.contains('@')) {
+      if (mounted) context.push('/personal/solicitar');
+      return null;
+    }
+    if (_roleOption.requiresSchool &&
+        (_institutionId == null || _institutionId!.isEmpty)) {
+      if (mounted) context.push('/personal/solicitar');
+      return null;
+    }
+    await _backend.submitAccessRequest(
+      fullName: fullName,
+      email: email,
+      role: _roleOption.role,
+      institutionId:
+          (_roleOption.requiresSchool || _roleOption.allowsOptionalSchool)
+          ? _institutionId
+          : null,
+      staffTier: _roleOption.staffTier,
+    );
+    _info = 'Solicitud enviada al MINED para $email. Al aprobarse recibirás tu código.';
+    if (mounted) {
+      showSetuBottomAlert(
+        context,
+        'Solicitud enviada al MINED.',
+        kind: SetuAlertKind.success,
+      );
+    }
+    return null;
   }
 
   Future<void> _restart() async {
     if (_backend.currentUserId != null) {
       await widget.session.signOut();
     }
+    widget.session.clearPendingRegistration();
     if (!mounted) return;
     setState(() {
-      _step = _ActivationStep.account;
+      _firstName.clear();
+      _lastName.clear();
+      _email.clear();
+      _password.clear();
+      _repeat.clear();
+      _step = _ActivationStep.profileAndRole;
       _preview = null;
       _code.clear();
       _error = null;
@@ -526,20 +641,21 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     return Semantics(
       container: true,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFDDEAFB),
+          color: CureandoTheme.blueSoft,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFA5C1EF)),
         ),
         child: IntrinsicHeight(
           child: Row(
             children: <Widget>[
               StaffSchoolLogo(
                 schoolName: preview.institutionName,
-                size: 48,
+                size: 44,
               ),
               const VerticalDivider(
-                width: 28,
+                width: 24,
                 thickness: 1.5,
                 color: CureandoTheme.blue,
               ),
@@ -549,20 +665,13 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      preview.institutionName == null
-                          ? 'Ámbito asignado'
-                          : 'Colegio asignado',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
                       preview.institutionName ??
                           preview.scopeLabel ??
-                          'Sin centro específico',
-                      style: const TextStyle(fontSize: 16),
+                          'Centro asignado',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     if (preview.role != null)
                       Text(
@@ -570,7 +679,7 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
                             ? preview.role!.label
                             : '${preview.role!.label} · $tierLabel',
                         style: const TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           color: CureandoTheme.secondaryInk,
                         ),
                       ),
@@ -584,35 +693,124 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     );
   }
 
+  List<Widget> _profileAndRoleStep() {
+    final bool showSchool =
+        _roleOption.requiresSchool || _roleOption.allowsOptionalSchool;
+    return <Widget>[
+      const StaffStepProgress(
+        current: 1,
+        total: 4,
+        caption: 'Paso 1 de 4 · Tus datos y rol',
+      ),
+      const SizedBox(height: 14),
+      Semantics(
+        header: true,
+        child: const Text('¿Quién sos?', style: _title),
+      ),
+      const SizedBox(height: 16),
+      StaffField(
+        label: 'Nombre',
+        controller: _firstName,
+        hint: 'Tu nombre',
+        capitalization: TextCapitalization.words,
+        autofillHints: const <String>[AutofillHints.givenName],
+      ),
+      const SizedBox(height: 14),
+      StaffField(
+        label: 'Apellidos',
+        controller: _lastName,
+        hint: 'Tus apellidos',
+        capitalization: TextCapitalization.words,
+        autofillHints: const <String>[AutofillHints.familyName],
+      ),
+      const SizedBox(height: 14),
+      StaffDropdown<_AccessRequestRoleOption>(
+        label: 'Rol al que aplicás',
+        value: _roleOption,
+        items: <DropdownMenuItem<_AccessRequestRoleOption>>[
+          for (final _AccessRequestRoleOption item
+              in _AccessRequestRoleOption.values)
+            DropdownMenuItem<_AccessRequestRoleOption>(
+              value: item,
+              child: Text(item.label),
+            ),
+        ],
+        onChanged: (_AccessRequestRoleOption? next) {
+          if (next == null) return;
+          setState(() {
+            _roleOption = next;
+            if (_roleOption.requiresSchool &&
+                (_institutionId == null || _institutionId!.isEmpty) &&
+                _schools.isNotEmpty) {
+              _institutionId = _schools.keys.first;
+            }
+            _error = null;
+          });
+        },
+      ),
+      if (showSchool) ...<Widget>[
+        const SizedBox(height: 14),
+        if (_loadingSchools)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_schools.isNotEmpty)
+          StaffDropdown<String?>(
+            label: _roleOption.requiresSchool
+                ? 'Colegio'
+                : 'Colegio (opcional)',
+            value: _institutionId,
+            items: <DropdownMenuItem<String?>>[
+              if (!_roleOption.requiresSchool)
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Sin colegio específico'),
+                ),
+              for (final MapEntry<String, String> entry in _schools.entries)
+                DropdownMenuItem<String?>(
+                  value: entry.key,
+                  child: Text(entry.value),
+                ),
+            ],
+            onChanged: (String? value) =>
+                setState(() => _institutionId = value),
+          ),
+      ],
+    ];
+  }
+
   List<Widget> _accountStep() => <Widget>[
+    const StaffStepProgress(
+      current: 2,
+      total: 4,
+      caption: 'Paso 2 de 4 · Correo y contraseña',
+    ),
+    const SizedBox(height: 14),
     Semantics(
       header: true,
-      child: const Text('Creá tu cuenta', style: _title),
+      child: const Text('Tu correo de acceso', style: _title),
     ),
-    const SizedBox(height: 10),
-    const Text(
-      'Paso 1 de 3. Registrá el correo institucional vinculado a tu invitación '
-      'y elegí una contraseña. Luego confirmás el correo y activás tu código.',
-      style: _lead,
-    ),
-    const SizedBox(height: 20),
+    const SizedBox(height: 6),
+    const Text('Usá tu Gmail o correo institucional.', style: _lead),
+    const SizedBox(height: 18),
     StaffField(
       label: 'Correo institucional',
       controller: _email,
-      hint: 'nombre@colegio.edu.ni',
+      hint: 'nombre@gmail.com',
       keyboardType: TextInputType.emailAddress,
       autofillHints: const <String>[AutofillHints.email],
     ),
-    const SizedBox(height: 18),
+    const SizedBox(height: 16),
     StaffField(
       label: 'Contraseña nueva',
       controller: _password,
-      hint: 'Al menos $_minPassword caracteres',
+      hint: 'Mínimo $_minPassword caracteres',
       obscure: _hidden,
       onToggleObscure: () => setState(() => _hidden = !_hidden),
       autofillHints: const <String>[AutofillHints.newPassword],
     ),
-    const SizedBox(height: 18),
+    const SizedBox(height: 16),
     StaffField(
       label: 'Repetí la contraseña',
       controller: _repeat,
@@ -627,108 +825,122 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
     final String activeEmail = (_backend.currentUserEmail ?? _email.text)
         .trim();
     return <Widget>[
+      const StaffStepProgress(
+        current: 3,
+        total: 4,
+        caption: 'Paso 3 de 4 · Confirmación',
+      ),
+      const SizedBox(height: 20),
       const Icon(
         Icons.mark_email_unread_outlined,
-        size: 56,
+        size: 54,
         color: CureandoTheme.blue,
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 14),
       Semantics(
         header: true,
-        child: const Text('Revisá tu correo institucional', style: _title),
+        child: const Text('Confirmá tu correo', style: _title),
       ),
       const SizedBox(height: 10),
       Text(
-        'Paso 2 de 3. Enviamos un enlace de confirmación a '
-        '${activeEmail.isEmpty ? 'tu correo institucional' : activeEmail}. '
-        'Abrilo y después volvé a SéTú.',
-        style: _lead,
-      ),
-      const SizedBox(height: 10),
-      const Text(
-        'Mientras tu correo no esté confirmado ni hayas canjeado tu código '
-        'individual, tu cuenta no tendrá acceso al área de personal.',
+        'Abrí el enlace enviado a '
+        '${activeEmail.isEmpty ? 'tu correo' : activeEmail} '
+        'y volvé a SéTú.',
         style: _lead,
       ),
     ];
   }
 
-  List<Widget> _codeAndProfileStep() {
+  List<Widget> _codeStep() {
     final StaffActivationPreview? preview = _preview;
     final String confirmedEmail = (_backend.currentUserEmail ?? _email.text)
         .trim();
+    final bool needsNameInputs =
+        _firstName.text.trim().length < 2 || _lastName.text.trim().length < 2;
     return <Widget>[
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE8F7ED),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: <Widget>[
-            const Icon(
-              Icons.check_circle_rounded,
-              color: Color(0xFF008F30),
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                confirmedEmail.isEmpty
-                    ? 'Correo confirmado · Sin membresía activa aún'
-                    : 'Correo confirmado: $confirmedEmail',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: CureandoTheme.ink,
+      const StaffStepProgress(
+        current: 4,
+        total: 4,
+        caption: 'Paso 4 de 4 · Código individual',
+      ),
+      const SizedBox(height: 14),
+      if (confirmedEmail.isNotEmpty) ...<Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: CureandoTheme.greenSoft,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF4ADE80)),
+          ),
+          child: Row(
+            children: <Widget>[
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF008F30),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  confirmedEmail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: CureandoTheme.ink,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      const SizedBox(height: 18),
+        const SizedBox(height: 14),
+      ],
       if (preview != null) ...<Widget>[
         _assigned(preview),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
       ],
       Semantics(
         header: true,
-        child: const Text('Código y datos personales', style: _title),
+        child: const Text('Ingresá tu código', style: _title),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 6),
       const Text(
-        'Paso 3 de 3. Ingresá tu código individual de un solo uso y completá '
-        'tu nombre y apellidos.',
+        'Escribí o pegá el código de 12 caracteres.',
         style: _lead,
       ),
-      const SizedBox(height: 18),
-      StaffField(
-        label: 'Código de activación',
+      const SizedBox(height: 16),
+      _ActivationCodeSlots(
         controller: _code,
-        hint: 'Ej. SETU-XXXX-XXXX',
-        capitalization: TextCapitalization.characters,
-        textInputAction: TextInputAction.done,
-        onChanged: (_) {
-          if (_preview != null) setState(() => _preview = null);
+        focusNode: _codeFocus,
+        onChanged: () {
+          if (_preview != null || _error != null) {
+            setState(() {
+              _preview = null;
+              _error = null;
+            });
+          }
         },
-        onSubmitted: (_) => _run(_validateCode),
+        onSubmitted: () => _run(_activateWithCode),
       ),
-      if (preview != null) ...<Widget>[
-        const SizedBox(height: 18),
+      if (needsNameInputs) ...<Widget>[
+        const SizedBox(height: 16),
         StaffField(
           label: 'Nombre',
           controller: _firstName,
           hint: 'Tu nombre',
+          capitalization: TextCapitalization.words,
           autofillHints: const <String>[AutofillHints.givenName],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         StaffField(
           label: 'Apellidos',
           controller: _lastName,
           hint: 'Tus apellidos',
+          capitalization: TextCapitalization.words,
           autofillHints: const <String>[AutofillHints.familyName],
           textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _run(_redeemWithProfile),
+          onSubmitted: (_) => _run(_activateWithCode),
         ),
       ],
     ];
@@ -737,17 +949,15 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
   @override
   Widget build(BuildContext context) {
     final (String label, Future<String?> Function() action) = switch (_step) {
+      _ActivationStep.profileAndRole => ('Continuar', _completeProfileStep),
       _ActivationStep.account => ('Crear mi cuenta', _createAccount),
       _ActivationStep.email => ('Ya confirmé mi correo', _confirmEmail),
-      _ActivationStep.codeAndProfile when _preview == null => (
-        'Validar código',
-        _validateCode,
-      ),
-      _ActivationStep.codeAndProfile => (
-        'Activar cuenta',
-        _redeemWithProfile,
-      ),
+      _ActivationStep.code => ('Activar cuenta', _activateWithCode),
     };
+    final bool canSelfRequestFromStep4 =
+        _firstName.text.trim().length >= 2 &&
+        _lastName.text.trim().length >= 2 &&
+        (_backend.currentUserEmail ?? _email.text).trim().contains('@');
     return FlowScaffold(
       header: const FlowHeader(title: 'Registrar cuenta'),
       bottom: Column(
@@ -759,30 +969,44 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
             busy: _busy,
             onPressed: () => _run(action),
           ),
-          if (_step == _ActivationStep.account)
+          if (_step == _ActivationStep.profileAndRole)
             TextButton(
               onPressed: () => context.push('/personal/ayuda'),
               child: const Text('Necesito ayuda con mi acceso', style: _link),
             )
-          else if (_step == _ActivationStep.email) ...<Widget>[
+          else if (_step == _ActivationStep.account) ...<Widget>[
+            const SizedBox(height: 10),
+            OutlinedButton(
+              style: flowSecondaryStyle(),
+              onPressed: _busy
+                  ? null
+                  : () => setState(() {
+                      _step = _ActivationStep.profileAndRole;
+                      _error = null;
+                    }),
+              child: const Text('Volver al paso anterior'),
+            ),
+          ] else if (_step == _ActivationStep.email) ...<Widget>[
             const SizedBox(height: 10),
             OutlinedButton(
               style: flowSecondaryStyle(),
               onPressed: _busy ? null : () => _run(_resendLink),
               child: const Text('Reenviar enlace de confirmación'),
             ),
-          ] else if (_backend.currentUserId != null)
+          ] else if (canSelfRequestFromStep4) ...<Widget>[
+            const SizedBox(height: 10),
+            OutlinedButton(
+              style: flowSecondaryStyle(),
+              onPressed: _busy ? null : () => _run(_requestAccessFromCodeStep),
+              child: const Text('No tengo código · Solicitar'),
+            ),
+          ] else
             TextButton(
               onPressed: _busy ? null : _restart,
               child: const Text(
                 'Cerrar sesión y usar otra cuenta',
                 style: _link,
               ),
-            )
-          else
-            TextButton(
-              onPressed: () => context.push('/personal/ayuda'),
-              child: const Text('Necesito ayuda con mi acceso', style: _link),
             ),
         ],
       ),
@@ -791,16 +1015,17 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             ...switch (_step) {
+              _ActivationStep.profileAndRole => _profileAndRoleStep(),
               _ActivationStep.account => _accountStep(),
               _ActivationStep.email => _emailStep(),
-              _ActivationStep.codeAndProfile => _codeAndProfileStep(),
+              _ActivationStep.code => _codeStep(),
             },
             if (_info != null) ...<Widget>[
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               StaffNotice(_info!, error: false),
             ],
             if (_error != null) ...<Widget>[
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               StaffNotice(_error!),
             ],
           ],
@@ -808,6 +1033,130 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
       ),
     );
   }
+}
+
+/// Casillas estilizadas al estilo SéTú (3 grupos de 4 caracteres) para
+/// códigos individuales (`SETU-XXXX-XXXX` o códigos cortos de prueba).
+class _ActivationCodeSlots extends StatelessWidget {
+  const _ActivationCodeSlots({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+    required this.onSubmitted,
+  });
+
+  static const int _maxRawLength = 14;
+  static const int _slotCount = 12;
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onChanged;
+  final VoidCallback onSubmitted;
+
+  String _normalized(String raw) =>
+      raw.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    alignment: Alignment.center,
+    children: <Widget>[
+      Positioned.fill(
+        child: Semantics(
+          label: 'Código de activación',
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            enableSuggestions: false,
+            showCursor: false,
+            style: const TextStyle(color: Colors.transparent),
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-]')),
+              LengthLimitingTextInputFormatter(_maxRawLength),
+            ],
+            onChanged: (_) => onChanged(),
+            onSubmitted: (_) => onSubmitted(),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              filled: false,
+            ),
+          ),
+        ),
+      ),
+      IgnorePointer(
+        child: ExcludeSemantics(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: ListenableBuilder(
+              listenable: Listenable.merge(<Listenable>[controller, focusNode]),
+              builder: (BuildContext context, _) {
+                final String chars = _normalized(controller.text);
+                final int activeIndex = math.min(chars.length, _slotCount - 1);
+                return Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: <Widget>[
+                    for (int group = 0; group < 3; group++)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          for (int offset = 0; offset < 4; offset++) ...<Widget>[
+                            Builder(
+                              builder: (BuildContext context) {
+                                final int index = group * 4 + offset;
+                                final String char =
+                                    index < chars.length ? chars[index] : '';
+                                final bool isCurrent =
+                                    focusNode.hasFocus && index == activeIndex;
+                                final bool filled = char.isNotEmpty;
+                                return Container(
+                                  width: 24,
+                                  height: 44,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: filled || isCurrent
+                                        ? CureandoTheme.blueSoft
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isCurrent
+                                          ? CureandoTheme.blue
+                                          : filled
+                                          ? const Color(0xFF7CA9F5)
+                                          : const Color(0xFFC7D7F2),
+                                      width: isCurrent ? 2 : 1.5,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    char,
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w700,
+                                      color: CureandoTheme.ink,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            if (offset < 3) const SizedBox(width: 4),
+                          ],
+                        ],
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 enum _AccessHelpMode { resendLink, replaceCode, resetPassword }
@@ -1353,25 +1702,9 @@ class _StaffAccessRequestScreenState extends State<StaffAccessRequestScreen> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Rol solicitado',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<_AccessRequestRoleOption>(
-                  initialValue: _option,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFA5C1EF),
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
+                StaffDropdown<_AccessRequestRoleOption>(
+                  label: 'Rol solicitado',
+                  value: _option,
                   items: <DropdownMenuItem<_AccessRequestRoleOption>>[
                     for (final _AccessRequestRoleOption item
                         in _AccessRequestRoleOption.values)
@@ -1403,16 +1736,6 @@ class _StaffAccessRequestScreenState extends State<StaffAccessRequestScreen> {
                 ),
                 if (showSchoolPicker) ...<Widget>[
                   const SizedBox(height: 16),
-                  Text(
-                    _option.requiresSchool
-                        ? 'Colegio'
-                        : 'Colegio referencial (opcional)',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   if (_loadingSchools)
                     const Center(child: CircularProgressIndicator())
                   else if (_schools.isEmpty)
@@ -1428,23 +1751,11 @@ class _StaffAccessRequestScreenState extends State<StaffAccessRequestScreen> {
                       ],
                     )
                   else
-                    DropdownButtonFormField<String?>(
-                      key: ValueKey<String>('school-${_option.requiresSchool}'),
-                      initialValue: _option.requiresSchool
-                          ? _institutionId
-                          : _institutionId,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFA5C1EF),
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
+                    StaffDropdown<String?>(
+                      label: _option.requiresSchool
+                          ? 'Colegio'
+                          : 'Colegio referencial (opcional)',
+                      value: _institutionId,
                       items: <DropdownMenuItem<String?>>[
                         if (!_option.requiresSchool)
                           const DropdownMenuItem<String?>(
