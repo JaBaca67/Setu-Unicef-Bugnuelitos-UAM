@@ -135,8 +135,10 @@ figure { margin: 0; }
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
 }
 /* Zona de seguridad del logotipo: margen libre alrededor del identificador */
-.nav__brand { display: block; padding: 6px; margin-left: -6px; }
+.nav__brand { display: flex; align-items: center; gap: 0.55rem; padding: 6px; margin-left: -6px; text-decoration: none; }
 .nav__brand img { height: 34px; width: auto; }
+.nav__iso { transition: transform 0.5s cubic-bezier(.34,1.56,.64,1); }
+@media (hover: hover) { .nav__brand:hover .nav__iso { transform: rotate(-14deg) scale(1.08); } }
 
 .nav__toggle {
   display: inline-grid; place-items: center;
@@ -584,6 +586,8 @@ video { display: block; width: 100%; height: auto; background: var(--setu-blue);
     margin-inline: -1.25rem; padding: 0.25rem 1.25rem 0.75rem; scroll-padding-inline: 1.25rem;
   }
   .tile { flex: 0 0 min(82%, 360px); scroll-snap-align: start; min-height: 470px; }
+  /* En el carrusel las tarjetas fuera de pantalla no deben quedar ocultas. */
+  html.js .bento > [data-reveal] { opacity: 1; transform: none; }
 }
 @media (min-width: 900px) { .explore .carousel-hint { display: none; } }
 @media (max-width: 559px) {
@@ -595,6 +599,56 @@ video { display: block; width: 100%; height: auto; background: var(--setu-blue);
   .fact img { width: 52px; height: 43px; margin: -6px 0 -4px -9px; }
 }
 
+
+/* ---------- ANIMACIONES ----------
+   Todas se apagan con «reducir movimiento» (regla global al final). */
+@keyframes subir { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes balanceo { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+/* Portada: entrada escalonada del texto. */
+.hero-in { animation: subir 0.8s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d, 0) * 120ms + 100ms); }
+
+/* Flores y adornos con movimiento suave. */
+.ribbon::after { animation: girar 18s linear infinite; }
+.fact img { transition: transform 0.6s cubic-bezier(.34,1.56,.64,1); }
+@media (hover: hover) { .fact:hover img { transform: rotate(60deg) scale(1.12); } }
+.deco--compare, .deco--explore { animation: balanceo 7s ease-in-out infinite; }
+.deco--steps { animation: girar 30s linear infinite; }
+.compare__pieza { animation: flotar 4s ease-in-out infinite; }
+.footer__pieces img { animation: flotar 3.6s ease-in-out infinite; }
+.footer__pieces img:nth-child(2) { animation-delay: -0.9s; }
+.footer__pieces img:nth-child(3) { animation-delay: -1.8s; }
+.footer__pieces img:nth-child(4) { animation-delay: -2.7s; }
+.download__art { animation: flotar 5s ease-in-out infinite; }
+.pillar__clay { animation: latido 3.2s ease-in-out infinite; transform-origin: left center; }
+
+/* Tarjetas y piezas de campaña al pasar el cursor. */
+@media (hover: hover) {
+  .campaign__strip img { transition: transform 0.35s ease, box-shadow 0.35s ease; }
+  .campaign__strip li:hover img { transform: translateY(-8px) rotate(-1deg); box-shadow: 0 18px 30px rgb(12 98 235 / 0.25); }
+  .role, .video-card, .compare__col, .faq details { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .role:hover, .video-card:hover { transform: translateY(-6px); box-shadow: 0 16px 30px rgb(12 98 235 / 0.16); }
+  .value { transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
+  .value:hover { transform: rotate(0) scale(1.08); }
+  .kit-banner { transition: transform 0.35s ease; }
+  .kit-banner:hover { transform: scale(1.015); }
+}
+
+/* Aparición escalonada de listas (valores, flujo institucional, mosaico, datos). */
+html.js [data-stagger] > * { opacity: 0; transform: translateY(16px) scale(0.96); transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.34,1.4,.64,1); }
+html.js [data-stagger].is-visible > * { opacity: 1; transform: none; }
+html.js [data-stagger].is-visible > .value:nth-child(odd) { transform: rotate(-1.5deg); }
+html.js [data-stagger].is-visible > .value:nth-child(even) { transform: rotate(1.5deg); }
+[data-stagger] > :nth-child(2), .bento > :nth-child(2), .pillars__grid > :nth-child(2), .compare__grid > :nth-child(2) { transition-delay: 0.1s; }
+[data-stagger] > :nth-child(3), .bento > :nth-child(3), .pillars__grid > :nth-child(3) { transition-delay: 0.2s; }
+[data-stagger] > :nth-child(4), .bento > :nth-child(4) { transition-delay: 0.3s; }
+[data-stagger] > :nth-child(5) { transition-delay: 0.4s; }
+
+/* Preguntas: la respuesta aparece suave al abrir. */
+.faq details[open] p { animation: subir 0.35s ease both; }
+
 /* ---------- APARICIÓN AL HACER SCROLL ---------- */
 html.js [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
 html.js [data-reveal].is-visible { opacity: 1; transform: none; }
@@ -602,6 +656,6 @@ html.js [data-reveal].is-visible { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
-  html.js [data-reveal] { opacity: 1; transform: none; }
+  html.js [data-reveal], html.js [data-stagger] > * { opacity: 1; transform: none; }
   .btn:hover, .sos__call:hover, .tile:hover .tile__phone { transform: none; }
 }
