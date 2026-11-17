@@ -24,6 +24,8 @@ Abre http://localhost:8000 (con file:// el navegador bloquea las fuentes).
 - El QR usa `https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/#descargar`; debe comprobarse sobre el despliegue final después de integrar la rama. No es el QR de acceso a un colegio.
 - Metadatos Open Graph/Twitter con URLs absolutas y favicon SVG oficial. No se incorporan paquetes al sitio estático.
 - Verificación local: Chromium/Playwright a 360, 390, 768, 1024, 1440 y 1920 px; carga de imágenes, destinos de anclas, ausencia de desbordamientos de textos y botones, menú con Escape y FAQ. La prueba local no verifica instalación del APK ni transporte mesh físico.
-- Los teléfonos de emergencia siguen ADR 0025: 118 y 128. Territorio Nicaragua; verificados el 16-nov-2026; responsable editorial Bugñuelitos. No se publica 133 sin validación vigente.
+- Las líneas de ayuda siguen la actualización más reciente de ADR 0025: Policía 118 y orientación del Ministerio de la Familia 133, con fuente MINED. Territorio Nicaragua; verificados el 16-nov-2026; responsable editorial Bugñuelitos. El catálogo se describe según ADR 0026 (adaptaciones UNICEF/MINED pendientes de revisión profesional); la versión del APK puede anteceder a esos cambios.
 
 La landing se publica al integrar cambios en `main`; una rama o un PR no actualiza GitHub Pages. El Figma se edita directamente y conserva el resto de pantallas de la app.
+
+Verificación adicional: los cuatro videos se reproducen en Chromium a 1280 × 720 sin errores. Axe no detecta violaciones automáticas WCAG A/AA/2.1 AA en 390 y 1440 px. Esto no sustituye pruebas manuales con tecnologías de apoyo.
