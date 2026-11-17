@@ -51,7 +51,6 @@
   var screens = document.querySelectorAll(".steps__screens img");
   var flores = document.querySelectorAll(".steps__flores img");
   var bars = document.querySelectorAll(".steps__progress span");
-  var dots = document.querySelectorAll(".steps__dots span");
   var current = 0;
   var mark = function (list, i) { list.forEach(function (el, k) { el.classList.toggle("is-active", k === i); }); };
   var activate = function (i) {
@@ -74,16 +73,48 @@
       }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
       steps.forEach(function (s) { stepIO.observe(s); });
     }
-    var list = document.querySelector(".steps__list");
-    var syncDots = function () {
-      if (!list || list.scrollWidth <= list.clientWidth) return;
-      var w = steps[0].getBoundingClientRect().width + 16;
-      var i = Math.max(0, Math.min(steps.length - 1, Math.round(list.scrollLeft / w)));
-      mark(dots, i);
-      steps.forEach(function (s, k) { s.classList.toggle("is-current", k === i); });
-    };
-    if (list) { list.addEventListener("scroll", syncDots, { passive: true }); syncDots(); }
   }
+
+  /* ---------- Carruseles en celular: puntos que siguen el deslizamiento ---------- */
+  document.querySelectorAll("[data-carousel]").forEach(function (list) {
+    var items = Array.prototype.slice.call(list.children);
+    if (items.length < 2) return;
+    var dotsBox = document.createElement("div");
+    dotsBox.className = "carousel-dots";
+    dotsBox.setAttribute("aria-hidden", "true");
+    items.forEach(function () { dotsBox.appendChild(document.createElement("span")); });
+    list.insertAdjacentElement("afterend", dotsBox);
+    var spans = dotsBox.querySelectorAll("span");
+    var sync = function () {
+      var scrollable = list.scrollWidth > list.clientWidth + 4;
+      dotsBox.hidden = !scrollable;
+      if (!scrollable) return;
+      var max = list.scrollWidth - list.clientWidth;
+      var i = Math.round((list.scrollLeft / max) * (items.length - 1));
+      if (list.scrollLeft >= max - 2) i = items.length - 1;
+      i = Math.max(0, Math.min(items.length - 1, i));
+      mark(spans, i);
+      items.forEach(function (it, k) { it.classList.toggle("is-current", k === i); });
+    };
+    list.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    sync();
+  });
+
+  /* ---------- Videos: botón de play propio; los controles nativos aparecen al reproducir ---------- */
+  document.querySelectorAll(".video-wrap").forEach(function (wrap) {
+    var video = wrap.querySelector("video");
+    var btn = wrap.querySelector(".video-play");
+    if (!video || !btn) return;
+    video.removeAttribute("controls");
+    btn.addEventListener("click", function () {
+      wrap.classList.add("is-playing");
+      video.setAttribute("controls", "");
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {});
+      video.focus();
+    });
+  });
 
   /* ---------- Mapa de la red: sin animación si se pidió reducir movimiento ---------- */
   if (reduceMotion) {
