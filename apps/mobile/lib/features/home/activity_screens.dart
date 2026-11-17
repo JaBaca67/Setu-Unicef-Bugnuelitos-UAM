@@ -17,9 +17,6 @@ import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_alert.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_dialog.dart';
-import 'learning_progress.dart';
-import 'streak_screen.dart';
-import 'student_activities.dart';
 
 const String _puzzlePair = 'assets/home/activities/rompecabezas_pareja.png';
 
@@ -1055,29 +1052,6 @@ class _KindnessPuzzleScreenState extends State<KindnessPuzzleScreen> {
               : null,
         ),
       ],
-    ],
-  );
-}
-
-/// Conserva las reglas y el almacenamiento de la pregunta educativa diaria.
-class DailyQuestionScreen extends StatelessWidget {
-  const DailyQuestionScreen({super.key, required this.progress});
-  final LearningProgress progress;
-  @override
-  Widget build(BuildContext context) => _ActivityPage(
-    title: 'Pregunta del día',
-    sticker: 'assets/home/activities/sticker_pregunta_hd.png',
-    children: <Widget>[
-      ListenableBuilder(
-        listenable: progress,
-        builder: (context, _) => progress.ready
-            ? DailyQuestionCard(
-                key: ValueKey<DateTime>(progress.today),
-                progress: progress,
-                day: progress.today,
-              )
-            : LearningProgressStatus(progress: progress),
-      ),
     ],
   );
 }
