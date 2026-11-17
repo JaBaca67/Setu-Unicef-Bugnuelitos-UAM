@@ -12,64 +12,111 @@ void main() {
 
   final Map<String, dynamic> source =
       jsonDecode(
-            File('../../docs/contenido/catalogo_informacion.json').readAsStringSync(),
+            File(
+              '../../docs/contenido/catalogo_informacion.json',
+            ).readAsStringSync(),
           )
           as Map<String, dynamic>;
   final List<Map<String, dynamic>> resources =
       (source['resources'] as List<dynamic>).cast<Map<String, dynamic>>();
 
-  test(
-    'catálogo contiene exactamente los 21 verificados y conserva sus textos',
-    () {
-      final List<Map<String, dynamic>> verified = resources
-          .where((Map<String, dynamic> r) => r['verified'] == true)
-          .toList();
-      expect(infoCatalog, hasLength(21));
-      expect(
-        infoCatalog.map((InfoResource r) => r.id),
-        verified.map((Map<String, dynamic> r) => r['id']),
-      );
-      for (final Map<String, dynamic> data in verified) {
-        final InfoResource resource = infoResourceById(data['id'] as String)!;
-        expect(resource.verified, isTrue);
-        expect(resource.title, data['title']);
-        expect(resource.summary, data['summary']);
-        expect(resource.points.map((InfoPoint p) => p.body), data['keyPoints']);
-        expect(resource.organization, data['organization']);
-        expect(resource.notes, data['notes']);
-        expect(resource.url, data['url']);
-        expect(resource.minutes, data['minutes']);
+  test('catálogo conserva ids, fuentes y verificación de los 21 recursos', () {
+    final List<Map<String, dynamic>> verified = resources
+        .where((Map<String, dynamic> r) => r['verified'] == true)
+        .toList();
+    expect(infoCatalog, hasLength(21));
+    expect(
+      infoCatalog.map((InfoResource r) => r.id),
+      verified.map((Map<String, dynamic> r) => r['id']),
+    );
+    for (final Map<String, dynamic> data in verified) {
+      final InfoResource resource = infoResourceById(data['id'] as String)!;
+      expect(resource.verified, isTrue);
+      expect(resource.organization, data['organization']);
+      expect(resource.notes, data['notes']);
+      expect(resource.url, data['url']);
+      expect(resource.minutes, data['minutes']);
       expect(resource.offline, !resource.isVideo);
-        expect(
-          resource.meta,
-          resource.isVideo ? 'Video' : 'Guía · ${resource.minutes} min',
-        );
-        for (final String? asset in <String?>[
-          resource.thumbAsset,
-          resource.cardAsset,
-          resource.bannerAsset,
-        ]) {
-          expect(asset, isNotNull);
-          expect(File(asset!).existsSync(), isTrue);
+      expect(
+        resource.meta,
+        resource.isVideo ? 'Video' : 'Guía · ${resource.minutes} min',
+      );
+      for (final String? asset in <String?>[
+        resource.thumbAsset,
+        resource.cardAsset,
+        resource.bannerAsset,
+      ]) {
+        expect(asset, isNotNull);
+        expect(File(asset!).existsSync(), isTrue);
+      }
+    }
+    for (final Map<String, dynamic> data in resources.where(
+      (Map<String, dynamic> r) => r['verified'] == false,
+    )) {
+      expect(infoResourceById(data['id'] as String), isNull);
+    }
+    expect(InfoTopic.values.map((InfoTopic t) => t.label), <String>[
+      'Acoso escolar',
+      'Ansiedad',
+      'Depresión',
+      'Ciberacoso',
+      'Emociones',
+      'Apoyo',
+    ]);
+    // El JSON es una entrada editorial de desarrollo; no se empaqueta en la app.
+    expect(
+      File('pubspec.yaml').readAsStringSync(),
+      isNot(contains('catalogo_informacion.json')),
+    );
+  });
+
+  test('lectura fácil: títulos, resúmenes y hasta tres ideas breves', () {
+    for (final InfoResource resource in infoCatalog) {
+      expect(
+        resource.title.trim().split(RegExp(r'\s+')).length,
+        lessThanOrEqualTo(6),
+        reason: resource.id,
+      );
+      expect(resource.title, isNot(contains('UNICEF')));
+      expect(resource.title, isNot(contains('MINED')));
+      expect(
+        resource.summary.length,
+        lessThanOrEqualTo(70),
+        reason: resource.id,
+      );
+      expect(
+        resource.points.length,
+        inInclusiveRange(1, 3),
+        reason: resource.id,
+      );
+      for (final InfoPoint point in resource.points) {
+        expect(point.body.length, lessThanOrEqualTo(90), reason: resource.id);
+      }
+    }
+  });
+
+  test(
+    'cada tema tiene ilustraciones distintas en tarjetas, miniaturas y lector',
+    () {
+      for (final InfoTopic topic in InfoTopic.values) {
+        final List<InfoResource> resources = infoCatalog
+            .where((InfoResource r) => r.topic == topic)
+            .toList();
+        for (final String? Function(InfoResource) asset
+            in <String? Function(InfoResource)>[
+              (InfoResource r) => r.cardAsset,
+              (InfoResource r) => r.thumbAsset,
+              (InfoResource r) => r.bannerAsset,
+            ]) {
+          final List<String?> images = resources.map(asset).toList();
+          expect(images.toSet(), hasLength(images.length), reason: topic.label);
+          expect(images, isNot(contains(contains('fondo-homepage-banner'))));
+          expect(images, isNot(contains(contains('home-header-girl'))));
         }
       }
-      for (final Map<String, dynamic> data in resources.where(
-        (Map<String, dynamic> r) => r['verified'] == false,
-      )) {
-        expect(infoResourceById(data['id'] as String), isNull);
-      }
-      expect(InfoTopic.values.map((InfoTopic t) => t.label), <String>[
-        'Acoso escolar',
-        'Ansiedad',
-        'Depresión',
-        'Ciberacoso',
-        'Emociones',
-        'Apoyo',
-      ]);
-      // El JSON es una entrada editorial de desarrollo; no se empaqueta en la app.
       expect(
         File('pubspec.yaml').readAsStringSync(),
-        isNot(contains('catalogo_informacion.json')),
+        contains('    - assets/home/info/stickers/'),
       );
     },
   );

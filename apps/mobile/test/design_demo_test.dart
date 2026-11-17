@@ -1,4 +1,6 @@
 import 'package:cureando_mobile/features/home/information_tab.dart';
+import 'package:cureando_mobile/features/home/info_artwork.dart';
+import 'package:cureando_mobile/features/home/info_catalog.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/streak_screen.dart';
 import 'package:cureando_mobile/features/home/student_home_screen.dart';
@@ -191,6 +193,94 @@ void main() {
       tester.getSize(find.byType(InformationHeader)).height,
       greaterThanOrEqualTo(360 * 308 / 780),
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Elegí tu ruta: cuatro temas, estados, piezas y medalla', (
+    WidgetTester tester,
+  ) async {
+    _view(tester);
+    final LearningProgress progress = _progress();
+    addTearDown(progress.dispose);
+    await progress.open();
+    for (final String id in infoRoutes.first.steps.take(2)) {
+      await progress.completeResource(id);
+    }
+    await progress.completeRoute(infoRoutes.first.id);
+    await progress.completeResource(infoRoutes[1].steps.first);
+    await tester.pumpWidget(
+      _app(
+        Scaffold(
+          body: SingleChildScrollView(
+            child: InformationTab(progress: progress),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rutas'));
+    await tester.pumpAndSettle();
+    expect(find.text('+20 XP ganados'), findsOneWidget);
+    expect(find.byIcon(Icons.extension_rounded), findsAtLeastNWidgets(3));
+    await tester.tap(find.text('Cambiar tema'));
+    await tester.pumpAndSettle();
+    expect(find.text('Elegí tu ruta'), findsOneWidget);
+    expect(find.text('¡Completada!'), findsOneWidget);
+    expect(find.text('En curso'), findsOneWidget);
+    expect(find.text('Nueva'), findsNWidgets(2));
+    Finder choice(String id) =>
+        find.byKey(ValueKey<String>('route-choice-$id'));
+    expect(
+      tester.getTopLeft(choice('acoso')).dy,
+      tester.getTopLeft(choice('ansiedad')).dy,
+    );
+    expect(
+      tester.getTopLeft(choice('depresion')).dy,
+      tester.getTopLeft(choice('ciberacoso')).dy,
+    );
+    for (int i = 0; i < infoRoutes.length; i++) {
+      final InfoRoute route = infoRoutes[i];
+      final Finder card = choice(route.id);
+      await tester.ensureVisible(card);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: card, matching: find.text(route.topic.label)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: _asset(route.topic.sticker)),
+        findsOneWidget,
+      );
+      final Semantics semantics = tester.widget<Semantics>(
+        find
+            .descendant(
+              of: card,
+              matching: find.byWidgetPredicate(
+                (Widget w) => w is Semantics && w.properties.label != null,
+              ),
+            )
+            .first,
+      );
+      expect(
+        semantics.properties.label,
+        contains('${<int>[3, 1, 0, 0][i]} de 3 pasos'),
+      );
+      expect(semantics.properties.selected, i == 0);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byIcon(Icons.workspace_premium_rounded),
+        ),
+        i == 0 ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byIcon(Icons.extension_rounded),
+        ),
+        findsNWidgets(<int>[3, 1, 0, 0][i]),
+      );
+    }
     expect(tester.takeException(), isNull);
   });
 

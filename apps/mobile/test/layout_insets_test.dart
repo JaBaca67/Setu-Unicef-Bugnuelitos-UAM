@@ -148,6 +148,28 @@ void main() {
       expect(selected.selectedColor, CureandoTheme.yellow);
       expect(selected.labelStyle!.color, CureandoTheme.ink);
       expect(selected.showCheckmark, isTrue);
+      await tester.tap(find.text('Rutas'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Cambiar tema'));
+      await tester.tap(find.text('Cambiar tema'));
+      await tester.pumpAndSettle();
+      expect(find.text('Elegí tu ruta'), findsOneWidget);
+      await _capture(tester, capture, 'e10-selector-$width');
+      for (final InfoRoute route in infoRoutes) {
+        final Finder choice = find.byKey(
+          ValueKey<String>('route-choice-${route.id}'),
+        );
+        await tester.ensureVisible(choice);
+        await tester.pumpAndSettle();
+        expect(tester.getRect(choice).left, greaterThanOrEqualTo(0));
+        expect(tester.getRect(choice).right, lessThanOrEqualTo(width));
+        expect(choice.hitTestable(), findsOneWidget);
+      }
+      await tester.ensureVisible(find.text('Cerrar'));
+      await tester.tap(find.text('Cerrar'));
+      await tester.pumpAndSettle();
+      await _capture(tester, capture, 'e10-rutas-$width');
+      expect(tester.takeException(), isNull);
       for (final InfoResource r in infoCatalog) {
         await tester.pumpWidget(
           _app(
@@ -301,8 +323,10 @@ void main() {
   );
 }
 
-Widget _app(Widget child) =>
-    MaterialApp(theme: CureandoTheme.light, home: child);
+Widget _app(Widget child) => RepaintBoundary(
+  key: const ValueKey<String>('qa-full-app'),
+  child: MaterialApp(theme: CureandoTheme.light, home: child),
+);
 
 LearningProgress _progress() => LearningProgress(
   openStore: () async => _MemoryStore(),
@@ -326,7 +350,11 @@ void _view(WidgetTester tester, double width, double height, double inset) {
 
 Future<void> _capture(WidgetTester tester, Key key, String name) async {
   if (!const bool.fromEnvironment('SETU_CAPTURE_QA')) return;
-  final Finder target = find.byKey(key);
+  final Finder target = find.byKey(
+    name.startsWith('e10-selector')
+        ? const ValueKey<String>('qa-full-app')
+        : key,
+  );
   await tester.runAsync<void>(() async {
     for (final Element e
         in find

@@ -34,6 +34,7 @@ flutter:
     - assets/brand/nav/
     - assets/home/
     - assets/home/info/
+    - assets/home/info/stickers/
     - assets/schools/
     - assets/welcome/
   fonts:
