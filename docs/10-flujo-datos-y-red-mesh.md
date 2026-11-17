@@ -1,8 +1,8 @@
 # Flujo de datos y red mesh de SéTú
 
-**Estado:** especificación propuesta, 2026-11-09. ADR 0005 decide el modo sin internet; este documento concreta opciones técnicas para revisión. No hay red mesh implementada ni autorización para recibir casos reales.
+**Estado:** actualizado 2026-11-16. Nearby/Kotlin, sobres E2EE y cola cifrada implementados; entrega directa a Mesa/Dirección y custodia opaca desarrolladas localmente en [ADR 0023](decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md). Migración 0012 sin aplicar al remoto y prueba física integral pendiente. Solo datos ficticios.
 
-Los [DFD de Kendall y Kendall](12-modelado-dfd-kendall.md) separan contexto/diagrama 0 del transporte, con diccionario y balance T01–T10. Es un modelo lógico: no confundirlo con los rombos de conectividad del flujo físico. [ADR 0008](decisiones/0008-stack-web-y-modelado-logico-propuesto.md) y el [catálogo técnico](13-recursos-tecnicos.md) proponen evaluar Nearby Connections/Cluster mediante Kotlin y canal Flutter; no existe integración instalada. Paneles React/TypeScript/Vite propuestos; receptor local puente–dirección todavía sin tecnología seleccionada.
+Los [DFD de Kendall y Kendall](12-modelado-dfd-kendall.md) separan contexto/diagrama 0 del transporte. La integración actual usa Nearby Connections/Cluster mediante Kotlin y canal Flutter; la entrega mínima local usa las bandejas Android. Los paneles web y la entrega LAN a computadoras siguen pendientes.
 
 ## 1. Datos que viajan
 
@@ -22,29 +22,21 @@ App → API de recepción → validación y persistencia central → recibo esta
 
 La ficha posterior va del circuito profesional al MINED y al colegio autorizado. Las actuaciones vuelven a supervisión y a una respuesta estudiantil separada. La simultaneidad de avisos significa publicación desde una recepción central; no garantiza que dos pantallas se actualicen al mismo milisegundo.
 
-## 3. Ruta sin internet y ambigüedad pendiente
+## 3. Ruta sin internet implementada para la demo
 
-Drive describe estudiante → celulares → teléfono puente → dirección, seguido de sincronización con MINED al volver internet. Su manual de despliegue restringe la alerta local a tipo, rol y hora y dice que el puente solo retransmite. Se requiere confirmar cómo se conserva esa separación criptográfica.
+Estudiante → celulares que retransmiten ciphertext → receptor institucional preparado. Mesa/Dirección descifran únicamente la alerta mínima de su ámbito. Si el puente con internet es otro teléfono, sube el sobre opaco a Supabase y el destinatario staff lo recupera, descifra y registra. El puente no recibe la clave privada del destinatario.
 
-| Opción por revisar | Qué puede ocurrir offline | Consecuencia |
-| --- | --- | --- |
-| Sobre solo para receptor central | Puente conserva ciphertext hasta sincronizar | Menor superficie local, pero no permite que dirección lea la alerta antes de internet. No cumple por sí sola toda la ruta local descrita. |
-| Alerta mínima local separada | Dirección autenticada descifra solo esa proyección; relato queda reservado | Requiere claves por destinatario y alta confiable de dirección/puente, más conciliación central. Es la opción recomendada para discusión. |
-| Ficha local autorizada | Dirección recibe una ficha emitida por un profesional habilitado | Requiere atención y firma profesional offline; no equivale a inferir una ficha automáticamente. Mayor alcance. |
-
-Ninguna opción concede al teléfono de un compañero acceso al contenido. La selección queda pendiente; los diagramas señalan el contrato local como tal. Si el centro está implicado, resolver la ruta alternativa antes de notificarlo.
-
-La entrega mínima local a dirección ya está descrita como comportamiento de producto en la reunión de la tarde y los manuales; lo pendiente es su contrato técnico, destinatarios, autenticación y claves. La opción de solo custodia central se conserva para comparar sus límites, sin sustituir esa decisión de producto por conveniencia de implementación.
+Se usan sobres independientes por clave pública registrada. Si `involvesStaff=true`, el directorio excluye planta y dirección del colegio: solo devuelve MINED o red externa autorizada. El relato, la pieza y el chat no viajan en estos sobres. La asignación profesional permanece en servidor. No se implementa una ficha profesional offline.
 
 ## 4. Preparación previa
 
-Para emitir offline de forma segura, el teléfono necesita configuración escolar y claves públicas auténticas. Propuestas: configuración precargada en una demo; o QR firmado validable contra raíz pública confiable. Un QR con un simple código público no suministra por sí solo claves confiables ni autorización de lectura.
+Para emitir offline, el teléfono prepara por HTTPS las listas de claves públicas de su colegio y ruta de conflicto y las guarda en caché. El receptor staff publica su clave pública antes de preparar al estudiante. Su clave privada se genera y conserva en almacenamiento seguro del dispositivo. Un QR con código público no suministra claves ni autorización de lectura; sin preparación previa no se inventa una clave compartida.
 
 Resolver primer uso desconectado, caducidad, rotación y revocación. Una configuración validada antes de perder internet puede estar desactualizada. No descargar una clave ofrecida por cualquier vecino y tratarla como oficial. Nunca incluir claves privadas de recepción central/dirección en el APK estudiantil.
 
-## 5. Sobre de transporte propuesto
+## 5. Sobre de transporte
 
-Contrato conceptual; formato binario/JSON, algoritmo de sobre y versiones quedan por aprobar. El límite debe incluir cifrado y metadatos, no solo el relato.
+La demo usa JSON v1 de hasta 4096 bytes, X25519 + HKDF-SHA256 + AES-GCM-256, ID aleatorio, TTL inicial 5 y fingerprint público de destinatario. Operación, colegio, tipo, rol, fecha, conflicto y verificador van cifrados. Vigencia, caducidad y presupuesto de copias de la tabla siguen siendo endurecimiento pendiente.
 
 | Campo lógico | Visibilidad | Regla propuesta |
 | --- | --- | --- |
@@ -56,7 +48,7 @@ Contrato conceptual; formato binario/JSON, algoritmo de sobre y versiones quedan
 | Operación y prueba del emisor | Dentro del contenido protegido o mecanismo aprobado | Permite autorizar/idempotencia central sin usar la identidad del puente. |
 | Límite de saltos y presupuesto de reenvío | Transporte local | Reducir bucles y consumo. No confiar solo en un contador modificable por vecinos. |
 
-Si hay dos destinatarios, el diseño puede usar sobres separados o claves de contenido envueltas por destinatario, pero **el relato no se cifra para dirección**. No se selecciona un esquema criptográfico artesanal: elegir un mecanismo revisado y compatible, con revisión técnica antes de código.
+Se emite un sobre por destinatario; **el relato no se cifra para dirección** ni viaja por mesh. Las primitivas provienen de `cryptography`; su implementación y límites requieren revisión antes de operar con casos reales.
 
 AES-GCM-256 de M1 protege un archivo local; no es un protocolo de intercambio de claves. El cifrado de Nearby protege el enlace entre vecinos, pero el sobre debe seguir protegido después de que un vecino termine ese enlace.
 
@@ -98,7 +90,7 @@ Son textos propuestos para validar por edad. No se dice “te están atendiendo�
 | Recepción central | Servidor autorizado | Operación persistida de forma única; no acredita lectura humana. |
 | Actuación/lectura | Circuito autorizado de aplicación | Acontecimiento institucional distinto del transporte. |
 
-La demo debe fijar qué equipo puede emitir cada acuse y cómo se verifica. IDs y firmas no deben revelar claves o capacidades privadas. Un intermediario malicioso no puede fabricar recepción central aceptable. El retorno mesh requiere su propia cola, caducidad y deduplicación; puede fallar aunque la alerta haya llegado.
+La demo acepta ACK Nearby solo como custodia y confirma recepción central únicamente con respuesta HTTPS de la RPC. La custodia opaca remota tampoco equivale a un caso registrado. El retorno mesh firmado del recibo central sigue pendiente; el emisor confirma al reconectarse y reintentar con su operación original.
 
 ## 9. Reintentos, duplicados y concurrencia
 
@@ -118,7 +110,7 @@ Si dirección usa computadora sin internet, necesita un cliente ya disponible y 
 
 ## 11. Restricciones y prueba de tecnología
 
-[Nearby Connections](https://developers.google.com/nearby/connections/overview) ofrece transferencia cercana sin internet. [Cluster](https://developers.google.com/nearby/connections/strategies) es candidato para varios vecinos. No se ha elegido plugin Flutter ni se ha probado que los teléfonos objetivo sean compatibles.
+[Nearby Connections](https://developers.google.com/nearby/connections/overview) permite transferencia cercana sin internet; Cluster está integrado mediante canal Kotlin. La prueba física integral del corte actual sigue pendiente; las simulaciones no prueban compatibilidad, alcance ni segundo plano.
 
 Evaluar Google Play services, [permisos por versión](https://developers.google.com/nearby/connections/android/get-started), descubrimiento simultáneo, reinicio, radios, fallos y [trabajo en segundo plano](https://developer.android.com/develop/connectivity/bluetooth/ble/background). La documentación de Google también describe métricas de uso recogidas por su SDK: evaluarlas antes de seleccionar transporte para menores.
 
