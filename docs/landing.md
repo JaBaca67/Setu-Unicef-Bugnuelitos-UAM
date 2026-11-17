@@ -9,6 +9,13 @@ desde `main` por el workflow `.github/workflows/deploy-landing.yml`. Todo lo que
 - Poppins (licencia OFL) se sirve desde `landing/assets/fonts/`.
 - Clayful tiene licencia de uso personal, así que **no se sube el archivo de la fuente**: los titulares en Clayful están incrustados en `landing/index.html` como trazos SVG.
 
+## Diseño vigente · 17 de noviembre de 2026
+
+- La landing sigue el frame de Figma «SéTú · Landing conectada con la app» (archivo `8TbZNgIetXg3O5f7Cba2vh`, nodo `196:1797`): portada «Todos podemos encajar», Explorá con Mi pieza y racha, problema vs. solución, Así funciona con pantallas de la app, pilares de privacidad, campaña, instituciones con el banner del kit, FAQ, SOS y pie. Se conservan la sección de descargas, los videos y el QR del stand.
+- Los recursos exportados de Figma viven en `landing/assets/landing/` (WebP y SVG, ~0,5 MB). Las pantallas de «Así funciona» son exportaciones 2x de los mockups con datos ficticios.
+- Los textos no se copian literalmente de Figma: donde el diseño prometía supervisión del MINED en cada caso, entrega garantizada sin internet, respuesta asegurada o mostraba logos institucionales, se conservan los textos alineados con los ADR vigentes. El botón del encabezado sigue siendo «Probar SéTú» (no hay ingreso web con código).
+- Contraste: el texto pequeño sobre magenta va en negro (AA); el blanco solo se usa en texto grande y en negrita.
+
 ## Probar en local
     cd landing
     python3 -m http.server 8000

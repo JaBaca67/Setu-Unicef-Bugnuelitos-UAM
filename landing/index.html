@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>SéTú · Información y apoyo para estudiantes</title>
+  <title>SéTú · Todos podemos encajar</title>
   <meta name="description" content="Conoce SéTú: información, actividades y una propuesta de escucha humana para estudiantes. Prueba el prototipo Android y consulta los manuales del equipo Bugñuelitos · UAM 2026.">
   <meta name="theme-color" content="#0C62EB">
-  <meta property="og:title" content="SéTú: pide ayuda sin miedo">
+  <meta property="og:title" content="SéTú: todos podemos encajar">
   <meta property="og:description" content="Explora, aprende y conoce cómo pedir apoyo. Prototipo académico de Bugñuelitos · UAM 2026. APK y manuales disponibles.">
   <meta property="og:image" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/assets/demo/inicio.webp">
   <link rel="canonical" href="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/">
@@ -15,13 +15,14 @@
   <meta property="og:site_name" content="SéTú">
   <meta property="og:image:alt" content="Inicio del prototipo de SéTú con racha educativa, Información y Actividades">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SéTú · Información y apoyo para estudiantes">
+  <meta name="twitter:title" content="SéTú · Todos podemos encajar">
   <meta name="twitter:description" content="Explora el prototipo Android y los manuales de SéTú, proyecto académico de Bugñuelitos · UAM 2026.">
   <meta name="twitter:image" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/assets/demo/inicio.webp">
   <meta property="og:locale" content="es_NI">
   <link rel="icon" type="image/svg+xml" href="assets/brand/setu-isotipo-azul.svg">
   <link rel="preload" href="assets/fonts/poppins-bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/poppins-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/landing/hero-encajar.webp" as="image">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -30,7 +31,7 @@
   <header class="nav" id="inicio">
     <div class="nav__inner">
       <a class="nav__brand" href="#inicio" aria-label="SéTú, ir al inicio">
-        <img src="assets/brand/setu-logotipo-azul.svg" alt="SéTú" width="113" height="44">
+        <img src="assets/brand/setu-logotipo-azul.svg" alt="SéTú" width="88" height="34">
       </a>
       <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu">
         <span class="nav__toggle-bars" aria-hidden="true"></span>
@@ -49,37 +50,59 @@
 
   <main id="contenido">
 
+    <!-- PORTADA -->
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero__inner">
-        <div class="hero__copy">
-          <p class="eyebrow">SéTú · Bugñuelitos · UAM 2026</p>
-          <h1 id="hero-title" class="hero__title">Pedir ayuda<br>puede empezar aquí.</h1>
-          <p class="hero__lead">Información, actividades y una propuesta de escucha humana para estudiantes. Entra con el código de tu colegio, sin crear una cuenta.</p>
-          <div class="hero__actions actions">
-            <a class="btn btn--yellow btn--lg" href="https://drive.google.com/file/d/1WmzyJUg0ABflmlN6s4Q4G6YVK37buif4/view">Descargar SéTú para Android</a>
-            <a class="btn btn--light" href="#descargar">Ver manuales y recursos</a>
-          </div>
-          <p class="hero__note">Prototipo académico · APK de prueba, 194 MB · Android 7 o superior. Usa datos ficticios para la demostración.</p>
-          <a class="stand-qr" href="#descargar"><img src="assets/demo/qr-setu.png" width="136" height="136" alt="QR para abrir esta landing y sus descargas"><span><strong>¿Nos ves desde el stand?</strong><br>Escanea y lleva SéTú contigo.<br><span class="small">APK y manuales en tu celular</span></span></a>
-        </div>
-        <figure class="hero__preview">
-          <video controls playsinline preload="none" poster="assets/demo/inicio.webp" width="1920" height="1080" aria-label="Demostración visual del inicio de SéTú">
-            <source src="assets/demo/inicio.mp4" type="video/mp4">
-            <a href="assets/demo/inicio.mp4">Ver video del inicio de SéTú</a>
-          </video>
-          <figcaption>La app por dentro: pedir apoyo, racha educativa, Información y Actividades. Pantallas con datos de prueba.</figcaption>
-        </figure>
+      <div class="hero__copy">
+        <h1 id="hero-title" class="hero__title">
+          <img src="assets/landing/hero-encajar.webp" width="1799" height="720" alt="Todos podemos encajar">
+        </h1>
+        <a class="btn btn--magenta btn--lg" href="https://drive.google.com/file/d/1WmzyJUg0ABflmlN6s4Q4G6YVK37buif4/view">
+          <img src="assets/landing/icono-descarga.svg" width="22" height="22" alt="" aria-hidden="true">
+          Descargar SéTú para Android
+        </a>
       </div>
     </section>
 
+    <!-- EXPLORÁ -->
     <section class="explore" id="explorar" aria-labelledby="explore-title">
       <div class="wrap">
         <p class="eyebrow">No es solo para los días difíciles</p>
         <h2 class="h2" id="explore-title">Un espacio para conocerte mejor</h2>
-        <div class="resource-grid">
-          <article class="resource-card"><img src="assets/demo/informacion.webp" width="960" height="540" alt="Biblioteca y rutas de Información de SéTú" loading="lazy"><div><h3>Información, a tu ritmo</h3><p>Artículos, guías y testimonios editoriales para entender emociones y situaciones. Puedes explorar sin enviar un reporte.</p><a href="#videos">Ver recorrido de Información</a><p class="small">El catálogo actual incluye adaptaciones de fuentes UNICEF/MINED; la revisión profesional está pendiente. Las capturas pueden mostrar una versión anterior.</p></div></article>
-          <article class="resource-card"><img src="assets/home/banner-dado-emociones.webp" width="495" height="261" alt="Dado de emociones de SéTú" loading="lazy"><div><h3>Cuidarme · Actividades</h3><p>Dado emocional y pregunta diaria para aprender a tu ritmo. La racha y los XP reconocen aprendizaje voluntario, nunca reportes ni emociones.</p><p class="small">El semáforo forma parte del kit presencial y sigue en adaptación digital.</p></div></article>
-          <article class="resource-card"><img src="assets/elements/personaje-pieza.svg" width="140" height="170" alt="Personaje de rompecabezas de SéTú" loading="lazy" class="resource-card__mascot"><div><h3>Mi pieza, mi espacio</h3><p>Elige una pieza y sus accesorios. No necesitas foto, nombre civil ni una cuenta para explorar el prototipo.</p><a href="#campana">Conocer Todos Podemos Encajar</a></div></article>
+        <p class="lead">Información, actividades y una pieza que podés hacer tuya. Lo mismo que vas a encontrar al abrir SéTú.</p>
+
+        <div class="explore__grid">
+          <div class="explore__app">
+            <article class="kit-card">
+              <img src="assets/landing/kit-guia-emociones.webp" width="560" height="294" alt="Niña hace un corazón con las manos entre piezas de colores" loading="lazy">
+              <p class="kit-card__label">Guía · Tema: Emociones</p>
+              <h3>Entendé tus emociones</h3>
+            </article>
+            <article class="kit-card">
+              <img src="assets/landing/kit-video-convivencia.webp" width="560" height="294" alt="Dos niñas conversan sentadas entre piezas de colores" loading="lazy">
+              <p class="kit-card__label">Video · Tema: Convivencia</p>
+              <h3>Convivencia escolar</h3>
+            </article>
+            <img class="explore__btn" src="assets/landing/boton-pregunta-del-dia.webp" width="594" height="170" alt="Pregunta del día" loading="lazy">
+            <img class="explore__btn" src="assets/landing/boton-dado-emociones.webp" width="594" height="170" alt="Dado de emociones" loading="lazy">
+          </div>
+
+          <article class="pieza">
+            <h3>Mi pieza</h3>
+            <p class="pieza__text">Todas las piezas<br>tienen un lugar.</p>
+            <img class="pieza__art" src="assets/landing/mi-pieza.svg" alt="" aria-hidden="true">
+            <p class="pieza__label">Forma · Color · Accesorios</p>
+            <div class="racha" aria-label="Ejemplo de racha semanal: 3 días seguidos, 15 XP">
+              <div class="racha__top">
+                <img src="assets/landing/racha-fuego.svg" width="18" height="28" alt="" aria-hidden="true">
+                <strong>Racha de 3 días</strong>
+                <span class="racha__xp">15 XP</span>
+                <img src="assets/landing/racha-flecha.svg" width="11" height="17" alt="" aria-hidden="true">
+              </div>
+              <ol class="racha__days" aria-hidden="true">
+                <li class="is-done">L</li><li class="is-done">M</li><li class="is-done">X</li><li class="is-today">J</li><li>V</li><li>S</li><li>D</li>
+              </ol>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -87,10 +110,7 @@
     <!-- PROBLEMA VS SOLUCIÓN -->
     <section class="compare" aria-labelledby="compare-title">
       <div class="wrap">
-        <h2 id="compare-title" class="h2">
-          Pedir ayuda no debería
-          <span class="tape tape--yellow tape--blue-ink"><svg focusable="false" viewBox="25 -1510 8974 1510" role="img" aria-label="dar miedo"><path fill="currentColor" d="M1004 -1358H745V-1008C659 -1106 560 -1155 448 -1155C280 -1155 162 -1062 94 -926C60 -857 40 -796 34 -741C28 -686 25 -644 25 -616C25 -471 59 -342 128 -229C211 -92 345 0 530 0H1004ZM530 -259C426 -259 356 -328 318 -424C280 -520 282 -590 282 -614C282 -716 305 -795 351 -850C376 -881 409 -896 448 -896C539 -896 612 -839 669 -726C720 -623 745 -510 745 -389V-261Z M2065 -700C2065 -838 2029 -946 1956 -1025C1883 -1103 1778 -1142 1641 -1142C1549 -1142 1467 -1121 1396 -1080C1316 -1033 1276 -970 1276 -890C1276 -786 1333 -711 1447 -666C1491 -657 1513 -642 1513 -621C1513 -605 1495 -596 1459 -595L1425 -596C1372 -596 1298 -592 1223 -555C1148 -518 1095 -444 1095 -305C1095 -230 1113 -170 1150 -125C1223 -36 1349 0 1489 0C1613 0 1723 -42 1819 -127V0H2065ZM1511 -227C1464 -227 1424 -236 1391 -254C1358 -271 1341 -296 1341 -327C1341 -386 1405 -414 1489 -415C1596 -417 1678 -449 1734 -510C1757 -535 1768 -567 1768 -608C1768 -673 1743 -720 1693 -749C1649 -774 1599 -789 1558 -812C1534 -827 1522 -845 1522 -868C1522 -904 1558 -942 1646 -942C1690 -942 1728 -926 1759 -895C1790 -864 1806 -820 1806 -763V-528C1806 -428 1774 -351 1709 -297C1654 -252 1588 -228 1511 -227Z M2485 -389C2485 -562 2506 -701 2558 -790C2602 -863 2669 -897 2736 -897C2796 -897 2850 -853 2881 -772L3115 -880C3052 -1038 2927 -1155 2739 -1155C2638 -1155 2554 -1125 2485 -1066V-1155H2226V0H2485Z  M5203 -616C5203 -765 5172 -890 5109 -989C5039 -1100 4938 -1155 4805 -1155C4672 -1155 4567 -1090 4491 -960C4422 -1090 4315 -1155 4170 -1155C4078 -1155 3999 -1123 3933 -1058V-1155H3674V0H3933V-389C3933 -525 3949 -637 3980 -726C4019 -839 4083 -896 4170 -896C4206 -896 4234 -883 4255 -857C4291 -810 4309 -733 4309 -627V0H4568V-424C4569 -550 4587 -656 4620 -741C4659 -844 4721 -896 4805 -896C4913 -896 4944 -763 4944 -616V0H5203Z M5492 -1197C5535 -1197 5572 -1212 5603 -1243C5634 -1274 5649 -1311 5649 -1354C5649 -1397 5634 -1434 5603 -1465C5572 -1495 5535 -1510 5492 -1510C5449 -1510 5412 -1495 5382 -1465C5351 -1434 5336 -1397 5336 -1354C5336 -1311 5351 -1274 5382 -1243C5412 -1212 5449 -1197 5492 -1197ZM5621 -1142H5363V0H5621Z M6262 0C6502 0 6645 -89 6812 -240L6654 -438C6537 -331 6430 -259 6262 -259C6195 -259 6135 -279 6084 -320C6032 -360 5995 -412 5974 -477C6055 -433 6141 -411 6232 -411C6361 -411 6467 -447 6548 -518C6625 -589 6664 -678 6665 -786C6662 -863 6642 -929 6604 -984C6527 -1094 6397 -1155 6262 -1155C6161 -1155 6069 -1129 5986 -1077C5903 -1025 5837 -955 5788 -868C5739 -781 5714 -684 5714 -577C5714 -471 5739 -374 5788 -287C5837 -200 5903 -130 5986 -78C6069 -26 6161 0 6262 0ZM6232 -670C6151 -670 6078 -700 6013 -760C6069 -843 6159 -896 6262 -896C6301 -896 6333 -888 6359 -873C6400 -848 6420 -818 6420 -781C6420 -770 6417 -757 6411 -741C6398 -708 6339 -670 6232 -670Z M7750 -1358H7491V-1008C7405 -1106 7306 -1155 7194 -1155C7026 -1155 6908 -1062 6840 -926C6806 -857 6786 -796 6780 -741C6774 -686 6771 -644 6771 -616C6771 -471 6805 -342 6874 -229C6957 -92 7091 0 7276 0H7750ZM7276 -259C7172 -259 7102 -328 7064 -424C7026 -520 7028 -590 7028 -614C7028 -716 7051 -795 7097 -850C7122 -881 7155 -896 7194 -896C7285 -896 7358 -839 7415 -726C7466 -623 7491 -510 7491 -389V-261Z M8422 0C8528 0 8625 -26 8712 -78C8799 -130 8869 -200 8921 -287C8973 -374 8999 -471 8999 -577C8999 -686 8974 -784 8925 -871C8875 -958 8807 -1027 8720 -1078C8633 -1129 8533 -1155 8422 -1155C8315 -1155 8218 -1129 8131 -1077C8044 -1025 7974 -955 7923 -868C7871 -781 7845 -684 7845 -577C7845 -471 7871 -374 7923 -287C7974 -200 8044 -130 8131 -78C8218 -26 8315 0 8422 0ZM8422 -259C8334 -259 8259 -290 8197 -352C8134 -414 8103 -489 8103 -577C8103 -665 8134 -740 8197 -803C8259 -865 8334 -896 8422 -896C8511 -896 8586 -865 8648 -803C8709 -740 8740 -665 8740 -577C8740 -489 8709 -414 8647 -352C8585 -290 8510 -259 8422 -259Z"/></svg></span>
-        </h2>
+        <h2 id="compare-title" class="h2">Pedir ayuda no debería dar miedo</h2>
         <p class="lead">Hablar puede costar cuando hay miedo, vergüenza o dudas sobre quién va a escuchar. SéTú propone un primer paso privado, con información y acompañamiento humano.</p>
 
         <div class="compare__grid">
@@ -104,6 +124,7 @@
             </ul>
           </article>
           <article class="compare__col compare__col--after">
+            <img class="compare__pieza" src="assets/elements/elemento-04-pieza-verde.svg" alt="" aria-hidden="true">
             <h3>Con SéTú</h3>
             <ul class="checks checks--yes">
               <li><strong>Entras con el código del colegio.</strong> Sin cuentas ni datos personales.</li>
@@ -116,28 +137,55 @@
       </div>
     </section>
 
-    <section class="steps" id="como-funciona" aria-labelledby="steps-title"><div class="wrap">
-      <h2 id="steps-title" class="h2">Entrar es sencillo. Tú marcas el ritmo.</h2>
-      <ol class="steps__list">
-        <li class="step step--blue"><span class="step__num" aria-hidden="true">1</span><h3>Usa el código de tu colegio</h3><p>Escanea su QR o escribe el código único del centro. Confirma el colegio antes de continuar.</p></li>
-        <li class="step step--magenta"><span class="step__num" aria-hidden="true">2</span><h3>Sin crear una cuenta</h3><p>No te pedimos nombre civil, correo ni teléfono para entrar. También puedes explorar Información sin enviar una alerta.</p></li>
-        <li class="step step--green"><span class="step__num" aria-hidden="true">3</span><h3>Decide qué compartir</h3><p>Si pides apoyo, revisa tu mensaje antes de enviarlo. Tú eliges qué contar; recuerda que el relato puede revelar tu identidad.</p></li>
-      </ol>
-    </div></section>
+    <!-- CÓMO FUNCIONA -->
+    <section class="steps" id="como-funciona" aria-labelledby="steps-title">
+      <div class="wrap steps__inner">
+        <div class="steps__copy">
+          <p class="eyebrow">Pedir apoyo, paso a paso</p>
+          <h2 id="steps-title" class="h2">Así funciona</h2>
+          <ol class="steps__list">
+            <li class="step">
+              <span class="step__num">01</span>
+              <h3>Recibe el código de tu colegio</h3>
+              <p>Escanea el cartel QR de tu centro o escribe su código único. Confirma el colegio antes de continuar; no te pedimos nombre civil, correo ni teléfono.</p>
+            </li>
+            <li class="step">
+              <span class="step__num">02</span>
+              <h3>Conéctate con o sin internet</h3>
+              <p>Con señal, la alerta se envía por internet. Sin señal, se guarda cifrada e intenta viajar de celular a celular hasta un teléfono puente. La entrega no está garantizada; el chat requiere internet.</p>
+            </li>
+            <li class="step">
+              <span class="step__num">03</span>
+              <h3>Pide apoyo y decide qué compartir</h3>
+              <p>Elige si te está pasando a ti o si quieres ayudar a alguien. La propuesta contempla una mesa de escucha humana con disponibilidad definida, y unas tarjetas te ayudan a empezar cuando faltan las palabras.</p>
+            </li>
+          </ol>
+        </div>
+        <div class="steps__phones">
+          <figure>
+            <img src="assets/landing/mockup-alerta.webp" width="603" height="1357" loading="lazy" alt="Pantalla «Enviar una alerta», paso 1 de 3: ¿Qué está pasando? con opciones como acoso físico, acoso verbal, ciberacoso y necesito hablar.">
+            <figcaption>Contá qué está pasando</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/landing/mockup-chat.webp" width="603" height="1357" loading="lazy" alt="Pantalla «Equipo de escucha», chat privado con ideas para empezar como «No sé por dónde empezar».">
+            <figcaption>Conversá con el equipo</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
 
     <!-- PILARES -->
     <section class="pillars" id="privacidad" aria-labelledby="pillars-title">
       <div class="wrap">
-        <h2 id="pillars-title" class="h2 h2--light">Tu privacidad va primero</h2>
+        <h2 id="pillars-title" class="visually-hidden">Tu privacidad va primero</h2>
         <div class="pillars__grid">
           <article class="pillar">
-            <img class="pillar__icon" src="assets/elements/elemento-02-pieza-amarilla.svg" alt="" aria-hidden="true">
             <h3>Sin cuentas ni datos personales</h3>
             <p>Usas el código de tu colegio, no tu nombre. La ubicación solo sirve para confirmar que estás en tu centro educativo.</p>
           </article>
           <article class="pillar pillar--mesh">
-            <span class="pillar__clay" aria-hidden="true"><svg focusable="false" viewBox="8 -1510 9959 1510" role="img" aria-label="sin internet"><path fill="currentColor" d="M491 -3C699 -3 947 -132 947 -365C947 -488 894 -580 788 -641C708 -687 614 -710 506 -710L436 -707C421 -707 404 -708 383 -711C362 -714 341 -722 321 -735C301 -748 291 -767 291 -794C291 -813 303 -833 327 -853C363 -882 410 -896 468 -896C513 -896 552 -890 587 -878C656 -853 730 -800 802 -753L942 -970L834 -1040C718 -1115 608 -1155 468 -1155C349 -1155 248 -1121 164 -1053C84 -989 32 -897 32 -794C32 -693 73 -608 155 -537C230 -478 323 -448 434 -448C449 -448 463 -449 478 -450C485 -451 494 -451 503 -451C542 -451 576 -448 605 -441C661 -427 689 -402 689 -365C689 -345 674 -325 644 -305C601 -276 550 -262 491 -262C451 -262 412 -268 373 -279C295 -302 230 -356 159 -407L8 -197L113 -121C224 -42 350 -3 491 -3Z M1160 -1197C1203 -1197 1240 -1212 1271 -1243C1302 -1274 1317 -1311 1317 -1354C1317 -1397 1302 -1434 1271 -1465C1240 -1495 1203 -1510 1160 -1510C1117 -1510 1080 -1495 1050 -1465C1019 -1434 1004 -1397 1004 -1354C1004 -1311 1019 -1274 1050 -1243C1080 -1212 1117 -1197 1160 -1197ZM1289 -1142H1031V0H1289Z M2419 -616C2418 -763 2383 -887 2312 -989C2235 -1100 2129 -1155 1995 -1155C1901 -1155 1816 -1120 1740 -1051V-1155H1482V0H1740V-644C1788 -783 1874 -896 1995 -896C2103 -896 2161 -763 2161 -616H2160V0H2419Z  M3215 -1197C3258 -1197 3295 -1212 3326 -1243C3357 -1274 3372 -1311 3372 -1354C3372 -1397 3357 -1434 3326 -1465C3295 -1495 3258 -1510 3215 -1510C3172 -1510 3135 -1495 3105 -1465C3074 -1434 3059 -1397 3059 -1354C3059 -1311 3074 -1274 3105 -1243C3135 -1212 3172 -1197 3215 -1197ZM3344 -1142H3086V0H3344Z M4474 -616C4473 -763 4438 -887 4367 -989C4290 -1100 4184 -1155 4050 -1155C3956 -1155 3871 -1120 3795 -1051V-1155H3537V0H3795V-644C3843 -783 3929 -896 4050 -896C4158 -896 4216 -763 4216 -616H4215V0H4474Z M4995 0C5086 0 5161 -21 5221 -64L5089 -294C5062 -261 5031 -244 4996 -244C4955 -244 4915 -262 4891 -321C4866 -380 4865 -457 4865 -525V-896H5115V-1155H4865V-1322H4607V-1155H4483V-896H4607V-540C4607 -256 4652 0 4995 0Z M5677 0C5917 0 6060 -89 6227 -240L6069 -438C5952 -331 5845 -259 5677 -259C5610 -259 5550 -279 5499 -320C5447 -360 5410 -412 5389 -477C5470 -433 5556 -411 5647 -411C5776 -411 5882 -447 5963 -518C6040 -589 6079 -678 6080 -786C6077 -863 6057 -929 6019 -984C5942 -1094 5812 -1155 5677 -1155C5576 -1155 5484 -1129 5401 -1077C5318 -1025 5252 -955 5203 -868C5154 -781 5129 -684 5129 -577C5129 -471 5154 -374 5203 -287C5252 -200 5318 -130 5401 -78C5484 -26 5576 0 5677 0ZM5647 -670C5566 -670 5493 -700 5428 -760C5484 -843 5574 -896 5677 -896C5716 -896 5748 -888 5774 -873C5815 -848 5835 -818 5835 -781C5835 -770 5832 -757 5826 -741C5813 -708 5754 -670 5647 -670Z M6537 -389C6537 -562 6558 -701 6610 -790C6654 -863 6721 -897 6788 -897C6848 -897 6902 -853 6933 -772L7167 -880C7104 -1038 6979 -1155 6791 -1155C6690 -1155 6606 -1125 6537 -1066V-1155H6278V0H6537Z M8132 -616C8131 -763 8096 -887 8025 -989C7948 -1100 7842 -1155 7708 -1155C7614 -1155 7529 -1120 7453 -1051V-1155H7195V0H7453V-644C7501 -783 7587 -896 7708 -896C7816 -896 7874 -763 7874 -616H7873V0H8132Z M8770 0C9010 0 9153 -89 9320 -240L9162 -438C9045 -331 8938 -259 8770 -259C8703 -259 8643 -279 8592 -320C8540 -360 8503 -412 8482 -477C8563 -433 8649 -411 8740 -411C8869 -411 8975 -447 9056 -518C9133 -589 9172 -678 9173 -786C9170 -863 9150 -929 9112 -984C9035 -1094 8905 -1155 8770 -1155C8669 -1155 8577 -1129 8494 -1077C8411 -1025 8345 -955 8296 -868C8247 -781 8222 -684 8222 -577C8222 -471 8247 -374 8296 -287C8345 -200 8411 -130 8494 -78C8577 -26 8669 0 8770 0ZM8740 -670C8659 -670 8586 -700 8521 -760C8577 -843 8667 -896 8770 -896C8809 -896 8841 -888 8867 -873C8908 -848 8928 -818 8928 -781C8928 -770 8925 -757 8919 -741C8906 -708 8847 -670 8740 -670Z M9741 0C9832 0 9907 -21 9967 -64L9835 -294C9808 -261 9777 -244 9742 -244C9701 -244 9661 -262 9637 -321C9612 -380 9611 -457 9611 -525V-896H9861V-1155H9611V-1322H9353V-1155H9229V-896H9353V-540C9353 -256 9398 0 9741 0Z"/></svg></span>
-            <h3>Modo sin internet · Red mesh</h3>
+            <img class="pillar__clay" src="assets/landing/sin-internet.svg" alt="Sin internet">
+            <h3>Tu alerta intenta llegar igual</h3>
             <p>La alerta se guarda cifrada e intenta viajar de celular a celular hasta un teléfono puente. Necesita dispositivos cercanos con SéTú y permisos de conexión. La entrega no está garantizada; el chat requiere internet.</p>
             <svg class="mesh-map" viewBox="0 0 320 70" role="img" aria-label="La alerta pasa de tu celular a otros dos celulares y llega al colegio">
               <path d="M24 46 L104 22 L190 48 L292 26" fill="none" stroke="#0C62EB" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
@@ -148,7 +196,6 @@
             </svg>
           </article>
           <article class="pillar">
-            <img class="pillar__icon" src="assets/elements/elemento-03-pieza-rosa.svg" alt="" aria-hidden="true">
             <h3>Tú decides qué compartir</h3>
             <p>El colegio recibe el tipo de situación, tu rol y la hora, nunca tu conversación. Solo tú y la mesa de escucha asignada pueden leer el relato y el chat. Lo que escribas puede identificarte. Una situación de riesgo puede requerir activar protección.</p>
           </article>
@@ -158,12 +205,12 @@
 
     <!-- CAMPAÑA -->
     <section class="campaign" id="campana" aria-labelledby="campaign-title">
-      <div class="wrap campaign__head">
-        <h2 id="campaign-title" class="h2">
+      <div class="wrap">
+        <h2 id="campaign-title" class="h2 campaign__title">
           Todos podemos
-          <span class="tape tape--magenta"><svg focusable="false" viewBox="21 -1510 6777 2004" role="img" aria-label="encajar"><path fill="currentColor" d="M569 0C809 0 952 -89 1119 -240L961 -438C844 -331 737 -259 569 -259C502 -259 442 -279 391 -320C339 -360 302 -412 281 -477C362 -433 448 -411 539 -411C668 -411 774 -447 855 -518C932 -589 971 -678 972 -786C969 -863 949 -929 911 -984C834 -1094 704 -1155 569 -1155C468 -1155 376 -1129 293 -1077C210 -1025 144 -955 95 -868C46 -781 21 -684 21 -577C21 -471 46 -374 95 -287C144 -200 210 -130 293 -78C376 -26 468 0 569 0ZM539 -670C458 -670 385 -700 320 -760C376 -843 466 -896 569 -896C608 -896 640 -888 666 -873C707 -848 727 -818 727 -781C727 -770 724 -757 718 -741C705 -708 646 -670 539 -670Z M2107 -616C2106 -763 2071 -887 2000 -989C1923 -1100 1817 -1155 1683 -1155C1589 -1155 1504 -1120 1428 -1051V-1155H1170V0H1428V-644C1476 -783 1562 -896 1683 -896C1791 -896 1849 -763 1849 -616H1848V0H2107Z M2734 0C2829 0 2916 -24 2996 -73C3075 -122 3139 -187 3188 -269L3253 -381L3030 -512L2965 -400C2916 -316 2831 -259 2734 -259C2678 -259 2629 -275 2588 -306C2504 -368 2455 -473 2455 -577C2455 -630 2467 -680 2490 -729C2537 -826 2622 -896 2734 -896C2784 -896 2830 -882 2873 -853L2981 -781L3124 -996L3017 -1068C2930 -1126 2835 -1155 2734 -1155C2630 -1155 2538 -1128 2457 -1074C2376 -1019 2312 -948 2266 -860C2220 -772 2197 -678 2197 -577C2197 -476 2220 -382 2266 -295C2312 -207 2376 -136 2457 -82C2538 -27 2630 0 2734 0Z M4257 -700C4257 -838 4221 -946 4148 -1025C4075 -1103 3970 -1142 3833 -1142C3741 -1142 3659 -1121 3588 -1080C3508 -1033 3468 -970 3468 -890C3468 -786 3525 -711 3639 -666C3683 -657 3705 -642 3705 -621C3705 -605 3687 -596 3651 -595L3617 -596C3564 -596 3490 -592 3415 -555C3340 -518 3287 -444 3287 -305C3287 -230 3305 -170 3342 -125C3415 -36 3541 0 3681 0C3805 0 3915 -42 4011 -127V0H4257ZM3703 -227C3656 -227 3616 -236 3583 -254C3550 -271 3533 -296 3533 -327C3533 -386 3597 -414 3681 -415C3788 -417 3870 -449 3926 -510C3949 -535 3960 -567 3960 -608C3960 -673 3935 -720 3885 -749C3841 -774 3791 -789 3750 -812C3726 -827 3714 -845 3714 -868C3714 -904 3750 -942 3838 -942C3882 -942 3920 -926 3951 -895C3982 -864 3998 -820 3998 -763V-528C3998 -428 3966 -351 3901 -297C3846 -252 3780 -228 3703 -227Z M4533 -1197C4576 -1197 4612 -1212 4643 -1243C4674 -1274 4689 -1311 4689 -1354C4689 -1397 4674 -1434 4643 -1465C4612 -1495 4576 -1510 4533 -1510C4490 -1510 4453 -1495 4422 -1465C4391 -1434 4376 -1397 4376 -1354C4376 -1311 4391 -1274 4422 -1243C4453 -1212 4490 -1197 4533 -1197ZM4199 494C4343 485 4458 432 4544 334C4630 235 4673 115 4673 -27V-1155H4414V-27C4414 43 4396 103 4359 152C4322 201 4269 228 4199 235Z M5748 -700C5748 -838 5712 -946 5639 -1025C5566 -1103 5461 -1142 5324 -1142C5232 -1142 5150 -1121 5079 -1080C4999 -1033 4959 -970 4959 -890C4959 -786 5016 -711 5130 -666C5174 -657 5196 -642 5196 -621C5196 -605 5178 -596 5142 -595L5108 -596C5055 -596 4981 -592 4906 -555C4831 -518 4778 -444 4778 -305C4778 -230 4796 -170 4833 -125C4906 -36 5032 0 5172 0C5296 0 5406 -42 5502 -127V0H5748ZM5194 -227C5147 -227 5107 -236 5074 -254C5041 -271 5024 -296 5024 -327C5024 -386 5088 -414 5172 -415C5279 -417 5361 -449 5417 -510C5440 -535 5451 -567 5451 -608C5451 -673 5426 -720 5376 -749C5332 -774 5282 -789 5241 -812C5217 -827 5205 -845 5205 -868C5205 -904 5241 -942 5329 -942C5373 -942 5411 -926 5442 -895C5473 -864 5489 -820 5489 -763V-528C5489 -428 5457 -351 5392 -297C5337 -252 5271 -228 5194 -227Z M6168 -389C6168 -562 6189 -701 6241 -790C6285 -863 6352 -897 6419 -897C6479 -897 6533 -853 6564 -772L6798 -880C6735 -1038 6610 -1155 6422 -1155C6321 -1155 6237 -1125 6168 -1066V-1155H5909V0H6168Z"/></svg></span>
+          <span class="tape tape--magenta"><img src="assets/landing/encajar.svg" width="193" height="57" alt="encajar"></span>
         </h2>
-        <p class="lead">La app es una parte. La otra es una campaña permanente para que hablar de salud mental deje de ser tabú: TikTok e Instagram para jóvenes, Facebook para madres y padres, radio local y el kit «Pieza a Pieza» en las aulas.</p>
+        <p class="lead lead--blue">La app es una parte. La otra es una campaña permanente para que hablar de salud mental deje de ser tabú: TikTok e Instagram para jóvenes, Facebook para madres y padres, radio local y el kit «Pieza a Pieza» en las aulas.</p>
       </div>
       <ul class="campaign__strip" tabindex="0" aria-label="Artes de la campaña; desplázate para ver más">
         <li><img src="assets/campaign/redes-2.webp" width="720" height="900" loading="lazy" alt="Arte de campaña: una adolescente hace el gesto de silencio bajo el texto «No te quedes callado»."></li>
@@ -182,7 +229,7 @@
             <h3>Panel de Dirección</h3>
             <p>En el modelo, recibe avisos mínimos y fichas autorizadas del centro; documenta actuaciones sin acceder al relato ni al chat.</p>
           </article>
-          <article class="role role--accent">
+          <article class="role">
             <h3>Panel del MINED</h3>
             <p>El modelo lo sitúa como primer intermediario: seguimiento de fichas y actuaciones autorizadas, sin acceso al relato ni al chat.</p>
           </article>
@@ -191,28 +238,12 @@
             <p>Información, actividades y solicitudes privadas de apoyo. La propuesta contempla chat humano con una mesa de escucha asignada y disponibilidad definida.</p>
           </article>
         </div>
-        <div class="kit">
-          <img src="assets/elements/personaje-flor.svg" alt="" aria-hidden="true" class="kit__art">
-          <div>
-            <h3>Kit «Pieza a Pieza» para el aula</h3>
-            <p>Para colegios donde no se usa el celular: semáforo y dado de emociones, hojas de dibujo libre y cinco dinámicas de 5 a 10 minutos que guía la o el docente.</p>
-            <a class="btn btn--primary" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">Consultar manuales del kit</a>
-          </div>
-        </div>
+        <a class="kit-banner" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">
+          <img class="kit-banner__bg" src="assets/landing/kit-fondo.webp" width="1160" height="286" alt="" loading="lazy">
+          <img class="kit-banner__title" src="assets/landing/kit-titulo.webp" width="1000" height="491" alt="Kit pieza a pieza: consultar manuales del kit para el aula" loading="lazy">
+        </a>
       </div>
     </section>
-
-    <section class="downloads" id="descargar" aria-labelledby="downloads-title"><div class="wrap">
-      <p class="eyebrow">Pruébalo en el stand o llévalo contigo</p><h2 class="h2" id="downloads-title">SéTú: descarga y recursos</h2>
-      <p class="lead">Todo en un lugar para estudiantes, docentes y jurado.</p>
-      <div class="resource-grid">
-        <article class="download-card"><span class="resource-label">01 · Prototipo Android</span><h3>Prueba SéTú</h3><p>APK de prueba del 16 de noviembre. Android 7 o superior · 194 MB. Descarga por wifi y usa solo datos ficticios.</p><p class="small">Drive abre el archivo y puede mostrar un aviso por su tamaño. Esta demo no recibe casos reales.</p><a class="btn btn--primary" href="https://drive.google.com/file/d/1WmzyJUg0ABflmlN6s4Q4G6YVK37buif4/view">Descargar APK de SéTú</a></article>
-        <article class="download-card"><span class="resource-label">02 · Identidad visual</span><h3>Manual de Marca</h3><p>La identidad de SéTú: logotipos, paleta inclusiva, tipografías y usos de la marca.</p><a class="btn btn--ghost" href="https://drive.google.com/file/d/11vE2_hviWBnT79giw6Y8mgofxUckyae6/view">Abrir Manual de Marca</a></article>
-        <article class="download-card"><span class="resource-label">03 · Guías del equipo</span><h3>Manuales operativos</h3><p>Documentación para Colegio, MINED, Mesa de Escucha y actividades del kit «Pieza a Pieza».</p><a class="btn btn--ghost" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">Consultar manuales</a></article>
-      </div>
-    </div></section>
-    <section class="explore" id="videos" aria-labelledby="videos-title"><div class="wrap"><h2 class="h2" id="videos-title">Mira el prototipo en acción</h2><p class="lead">Recorridos visuales con datos de prueba. Pulsa reproducir para ver cada uno.</p><div class="resource-grid">
-<figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/alerta.webp" width="1920" height="1080" aria-label="De la alerta a la escucha"><source src="assets/demo/alerta.mp4" type="video/mp4"><a href="assets/demo/alerta.mp4">Ver De la alerta a la escucha</a></video><figcaption><h3>De la alerta a la escucha</h3><p>Elegir situación, revisar y enviar; chat humano cuando hay disponibilidad.</p></figcaption></figure><figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/informacion.webp" width="1920" height="1080" aria-label="Información y rutas"><source src="assets/demo/informacion.mp4" type="video/mp4"><a href="assets/demo/informacion.mp4">Ver Información y rutas</a></video><figcaption><h3>Información y rutas</h3><p>Explorar temas, guías y rutas sin necesidad de enviar un reporte.</p></figcaption></figure><figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/recorrido.webp" width="1920" height="1080" aria-label="Una mirada a SéTú"><source src="assets/demo/recorrido.mp4" type="video/mp4"><a href="assets/demo/recorrido.mp4">Ver Una mirada a SéTú</a></video><figcaption><h3>Una mirada a SéTú</h3><p>Inicio, biblioteca y apoyo en una sola experiencia.</p></figcaption></figure></div></div></section>
 
     <!-- FAQ -->
     <section class="faq" id="preguntas" aria-labelledby="faq-title">
@@ -247,6 +278,33 @@
       </div>
     </section>
 
+    <!-- DESCARGAS -->
+    <section class="downloads" id="descargar" aria-labelledby="downloads-title">
+      <div class="wrap">
+        <p class="eyebrow">Pruébalo en el stand o llévalo contigo</p>
+        <h2 class="h2" id="downloads-title">SéTú: descarga y recursos</h2>
+        <p class="lead">Todo en un lugar para estudiantes, docentes y jurado.</p>
+        <div class="resource-grid">
+          <article class="download-card"><span class="resource-label">01 · Prototipo Android</span><h3>Prueba SéTú</h3><p>APK de prueba del 16 de noviembre. Android 7 o superior · 194 MB. Descarga por wifi y usa solo datos ficticios.</p><p class="small">Drive abre el archivo y puede mostrar un aviso por su tamaño. Esta demo no recibe casos reales.</p><a class="btn btn--primary" href="https://drive.google.com/file/d/1WmzyJUg0ABflmlN6s4Q4G6YVK37buif4/view">Descargar APK de SéTú</a></article>
+          <article class="download-card"><span class="resource-label">02 · Identidad visual</span><h3>Manual de Marca</h3><p>La identidad de SéTú: logotipos, paleta inclusiva, tipografías y usos de la marca.</p><a class="btn btn--ghost" href="https://drive.google.com/file/d/11vE2_hviWBnT79giw6Y8mgofxUckyae6/view">Abrir Manual de Marca</a></article>
+          <article class="download-card"><span class="resource-label">03 · Guías del equipo</span><h3>Manuales operativos</h3><p>Documentación para Colegio, MINED, Mesa de Escucha y actividades del kit «Pieza a Pieza».</p><a class="btn btn--ghost" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">Consultar manuales</a></article>
+        </div>
+        <a class="stand-qr" href="#descargar"><img src="assets/demo/qr-setu.png" width="136" height="136" alt="QR para abrir esta landing y sus descargas"><span><strong>¿Nos ves desde el stand?</strong><br>Escanea y lleva SéTú contigo.<br><span class="small">APK y manuales en tu celular</span></span></a>
+      </div>
+    </section>
+
+    <section class="videos" id="videos" aria-labelledby="videos-title">
+      <div class="wrap">
+        <h2 class="h2" id="videos-title">Mira el prototipo en acción</h2>
+        <p class="lead">Recorridos visuales con datos de prueba. Pulsa reproducir para ver cada uno.</p>
+        <div class="resource-grid">
+          <figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/alerta.webp" width="1920" height="1080" aria-label="De la alerta a la escucha"><source src="assets/demo/alerta.mp4" type="video/mp4"><a href="assets/demo/alerta.mp4">Ver De la alerta a la escucha</a></video><figcaption><h3>De la alerta a la escucha</h3><p>Elegir situación, revisar y enviar; chat humano cuando hay disponibilidad.</p></figcaption></figure>
+          <figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/informacion.webp" width="1920" height="1080" aria-label="Información y rutas"><source src="assets/demo/informacion.mp4" type="video/mp4"><a href="assets/demo/informacion.mp4">Ver Información y rutas</a></video><figcaption><h3>Información y rutas</h3><p>Explorar temas, guías y rutas sin necesidad de enviar un reporte.</p></figcaption></figure>
+          <figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/recorrido.webp" width="1920" height="1080" aria-label="Una mirada a SéTú"><source src="assets/demo/recorrido.mp4" type="video/mp4"><a href="assets/demo/recorrido.mp4">Ver Una mirada a SéTú</a></video><figcaption><h3>Una mirada a SéTú</h3><p>Inicio, biblioteca y apoyo en una sola experiencia.</p></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
     <aside class="sos" aria-labelledby="sos-title">
       <div class="wrap sos__inner">
         <h2 id="sos-title">¿Estás en peligro ahora?</h2>
@@ -258,20 +316,16 @@
   <footer class="footer">
     <div class="wrap footer__inner">
       <div class="footer__brand">
-        <div class="footer__logos">
-          <img src="assets/brand/setu-imagotipo-blanco.svg" alt="SéTú" width="108" height="110">
-
-
-        </div>
+        <img src="assets/brand/setu-logotipo-blanco.svg" alt="SéTú" width="88" height="34">
         <p>Prototipo académico de Bugñuelitos · UAM, presentado en la Jornada Académica y Social UAM – UNICEF 2026. No es un servicio operativo ni un producto oficial o avalado por UNICEF, MINED o MINSA.</p>
       </div>
       <nav class="footer__links" aria-label="Enlaces rápidos">
         <h2>Enlaces</h2>
-        <a href="#descargar">Descargar SéTú y manuales</a>
         <a href="#como-funciona">Cómo funciona</a>
         <a href="#privacidad">Tu privacidad</a>
         <a href="#instituciones">Para instituciones</a>
         <a href="#preguntas">Preguntas frecuentes</a>
+        <a href="#descargar">Descargar SéTú y manuales</a>
         <a href="https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM" rel="noopener">Código en GitHub</a>
       </nav>
       <div class="footer__team">
