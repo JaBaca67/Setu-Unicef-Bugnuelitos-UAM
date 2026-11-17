@@ -1,4 +1,4 @@
--- Solo demo ficticia. No se aplica al remoto desde este bloque.
+-- Solo demo ficticia. Aplicada al remoto el 2026-11-16 como `setu_mesh_delivery` tras prueba en seco.
 -- Custodia opaca para puentes sin clave; claves privadas solo en el receptor.
 CREATE TABLE public.mesh_recipient_keys (
   key_id text PRIMARY KEY CHECK (key_id ~ '^[0-9a-f]{64}$'),
