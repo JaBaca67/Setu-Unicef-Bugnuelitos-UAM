@@ -417,6 +417,10 @@ class MeshRelayService extends ChangeNotifier {
                   involvesStaff: payload.involvesStaff,
                   declaredAt: payload.declaredAt,
                   capabilityVerifierHash: payload.capabilityVerifierHash,
+                  narrativeText: payload.narrativeText,
+                  studentPiece: payload.studentPiece == null
+                      ? null
+                      : StudentPieceSnapshot.fromJson(payload.studentPiece!),
                 ),
               )
               .timeout(const Duration(seconds: 8));

@@ -1,5 +1,7 @@
 # 0016 · Esquema Supabase por dominios de confidencialidad, RLS y acceso privado por caso
 
+> **Actualización 17 nov 2026:** superado en parte por [ADR 0028](0028-relato-y-pieza-por-mesh-cifrado.md). La carga mesh puede llevar relato breve y pieza, siempre dentro del sobre cifrado para personal autorizado.
+
 **Fecha:** 2026-11-12 · **Estado:** aprobado e implementado en la Oleada 1 (`supabase/migrations/` y proyecto `rliiwzovgpnxhrkdkmus`). Amplía [ADR 0005](0005-alineacion-con-decisiones-del-equipo-drive.md), [ADR 0009](0009-espacio-informativo-confirmado.md) y [ADR 0013](0013-inicio-estudiantil-e03.md).
 
 ## Contexto

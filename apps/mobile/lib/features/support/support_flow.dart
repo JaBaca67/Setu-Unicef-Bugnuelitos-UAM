@@ -472,6 +472,11 @@ class SupportFlow extends ChangeNotifier {
         involvesStaff: outbox.involvesStaff,
         capabilityVerifierHash: outbox.verifierHash,
         declaredAt: outbox.declaredAt,
+        // ADR 0028: relato y pieza viajan cifrados para el personal autorizado.
+        narrativeText: resolver == null
+            ? null
+            : MeshMinimalAlertPayload.fitNarrative(outbox.details),
+        studentPiece: resolver == null ? null : outbox.piece,
       );
       for (final List<int> key in keys) {
         await relay.enqueueMinimalAlert(payload, recipientPublicKeyBytes: key);
@@ -483,7 +488,7 @@ class SupportFlow extends ChangeNotifier {
         final List<int> schoolKey =
             await MeshSchoolKeys.resolveSchoolPublicKeyBytes(outbox.schoolCode);
         await relay.enqueueMinimalAlert(
-          payload,
+          payload.withoutPrivateFields(),
           recipientPublicKeyBytes: schoolKey,
         );
       }
