@@ -17,12 +17,12 @@ enum StudentCover {
   question(
     Color(0xFFE9E0FD),
     Icons.contact_support_outlined,
-    'assets/home/pregunta-del-dia.png',
+    'assets/home/banner-pregunta-del-dia.png',
   ),
   dice(
     Color(0xFFDBFBE3),
     Icons.casino_rounded,
-    'assets/home/dado-de-emociones.png',
+    'assets/home/banner-dado-emociones.png',
   );
 
   const StudentCover(this.color, this.icon, this.assetPath);
@@ -66,51 +66,44 @@ class StudentPreviewCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           );
-    return SetuCard(
-      onTap: onTap,
-      color: compact ? cover.color : Colors.white,
-      child: compact
-          ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-              child: Row(
+    return Semantics(
+      button: compact,
+      label: compact ? [title, ?detail].join('. ') : null,
+      excludeSemantics: compact,
+      onTap: compact ? onTap : null,
+      child: SetuCard(
+        onTap: onTap,
+        color: compact ? CureandoTheme.blue : Colors.white,
+        borderColor: compact ? Colors.transparent : const Color(0xFFE1E6EF),
+        child: compact
+            ? AspectRatio(
+                aspectRatio: 495 / 261,
+                child: Image.asset(
+                  cover.assetPath,
+                  fit: BoxFit.cover,
+                  excludeFromSemantics: true,
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  _CoverIcon(cover: cover, size: 44),
-                  const SizedBox(width: 8),
-                  Expanded(
+                  _ResourceArtwork(cover: cover),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        label,
                         if (caption != null) ...<Widget>[
-                          const SizedBox(height: 3),
                           caption,
+                          const SizedBox(height: 2),
                         ],
+                        label,
                       ],
                     ),
                   ),
                 ],
               ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _ResourceArtwork(cover: cover),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      if (caption != null) ...<Widget>[
-                        caption,
-                        const SizedBox(height: 2),
-                      ],
-                      label,
-                    ],
-                  ),
-                ),
-              ],
-            ),
+      ),
     );
   }
 }
@@ -135,30 +128,6 @@ class _ResourceArtwork extends StatelessWidget {
             filterQuality: FilterQuality.medium,
             excludeFromSemantics: true,
           ),
-        ),
-      ),
-    ),
-  );
-}
-
-class _CoverIcon extends StatelessWidget {
-  const _CoverIcon({required this.cover, required this.size});
-
-  final StudentCover cover;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Image.asset(
-          cover.assetPath,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.medium,
-          excludeFromSemantics: true,
         ),
       ),
     ),

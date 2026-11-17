@@ -68,12 +68,6 @@ class _InformationTabState extends State<InformationTab> {
       ),
       const SizedBox(height: 12),
       if (_routes) _routeView() else ..._library(),
-      const SizedBox(height: 16),
-      const Text(
-        'Catálogo de muestra · En revisión editorial. Leer no envía alertas. '
-        'Los XP se guardan solo en este teléfono, sin cuenta.',
-        style: TextStyle(fontSize: 11, color: CureandoTheme.secondaryInk),
-      ),
     ],
   );
 
@@ -97,14 +91,14 @@ class _InformationTabState extends State<InformationTab> {
             Icons.search_rounded,
             color: CureandoTheme.blue,
           ),
-          suffixIcon: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Chip(
-              label: Text(
-                '${resources.length} recursos',
-                style: const TextStyle(fontSize: 10),
-              ),
-            ),
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 10,
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 44,
+            minHeight: 44,
           ),
           filled: true,
           fillColor: Colors.white,
@@ -114,15 +108,19 @@ class _InformationTabState extends State<InformationTab> {
         ),
       ),
       const SizedBox(height: 8),
-      Wrap(
-        spacing: 6,
-        children: <Widget>[
-          _filter(null, 'Todos', CureandoTheme.blue),
-          _filter(InfoTopic.acoso, 'Acoso escolar', CureandoTheme.yellow),
-          _filter(InfoTopic.ciberacoso, 'Ciberacoso', CureandoTheme.pink),
-          _filter(InfoTopic.emociones, 'Emociones', CureandoTheme.green),
-          _filter(InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
-        ],
+      SingleChildScrollView(
+        key: const ValueKey<String>('information-categories'),
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          spacing: 6,
+          children: <Widget>[
+            _filter(null, 'Todos', CureandoTheme.blue),
+            _filter(InfoTopic.acoso, 'Acoso escolar', CureandoTheme.yellow),
+            _filter(InfoTopic.ciberacoso, 'Ciberacoso', CureandoTheme.pink),
+            _filter(InfoTopic.emociones, 'Emociones', CureandoTheme.green),
+            _filter(InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
+          ],
+        ),
       ),
       const SizedBox(height: 10),
       if (filtered) ...<Widget>[
@@ -550,13 +548,15 @@ class InformationHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (BuildContext context, BoxConstraints constraints) => ConstrainedBox(
+      // Igual que Inicio: el Stack toma la altura del contenido y el arte
+      // llena el banner hasta el borde de la hoja blanca, sin recortar figuras.
       constraints: BoxConstraints(minHeight: constraints.maxWidth * 308 / 780),
       child: Stack(
         children: <Widget>[
           Positioned.fill(
             child: Image.asset(
               'assets/home/info/e10a_header_figures.png',
-              fit: BoxFit.fitWidth,
+              fit: BoxFit.contain,
               alignment: Alignment.bottomRight,
               excludeFromSemantics: true,
             ),
@@ -568,22 +568,21 @@ class InformationHeader extends StatelessWidget {
               children: <Widget>[
                 const CampaignSymbol(size: 28),
                 const SizedBox(height: 30),
-                // El título queda en su propia superficie; al ampliar el texto
-                // puede crecer sin competir con las figuras de la derecha.
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: CureandoTheme.blue,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    child: Text(
-                      'Información',
-                      style: TextStyle(
-                        fontSize: 28,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
+                Semantics(
+                  header: true,
+                  child: const Text(
+                    'Información',
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      shadows: <Shadow>[
+                        Shadow(
+                          color: Color(0x40002B7A),
+                          blurRadius: 8,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
                 ),

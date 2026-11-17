@@ -51,9 +51,9 @@ void main() {
             );
             await tester.pumpAndSettle();
             final Map<HomeSection, Finder> endings = <HomeSection, Finder>{
-              HomeSection.inicio: find.text('Dado de emociones'),
-              HomeSection.informacion: find.textContaining(
-                'Catálogo de muestra',
+              HomeSection.inicio: find.bySemanticsLabel('Dado de emociones'),
+              HomeSection.informacion: find.text(
+                'Qué pasa al enviar una alerta en SéTú',
               ),
               HomeSection.actividades: find.textContaining(
                 'El equipo diseñó otros materiales',
