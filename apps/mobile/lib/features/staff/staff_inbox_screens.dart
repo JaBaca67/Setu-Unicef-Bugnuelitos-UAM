@@ -974,7 +974,11 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String? _selectedInstitutionId;
-  bool _oldestFirst = true;
+
+  /// Cuántas tarjetas se ven antes de «Ver más» en cada pestaña.
+  static const int _previewCount = 3;
+  bool _showAllToClaim = false;
+  bool _showAllMine = false;
   final OperationIds _operations = OperationIds();
   List<CaseDispatchRecord> _pending = const <CaseDispatchRecord>[];
   List<PracticanteSupervisorNoticeView> _supervisorNotices =
@@ -1228,12 +1232,27 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
                     .contains(q)))
           r,
     ];
-    items.sort((CaseDispatchRecord a, CaseDispatchRecord b) {
-      final int cmp = a.notifiedAt.compareTo(b.notifiedAt);
-      return _oldestFirst ? cmp : -cmp;
-    });
     return items;
   }
+
+  /// Botón «Ver más» / «Ver menos» bajo una lista recortada.
+  Widget _showMoreButton({
+    required int hidden,
+    required bool expanded,
+    required VoidCallback onPressed,
+  }) => Center(
+    child: TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(
+        expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+        size: 20,
+      ),
+      label: Text(
+        expanded ? 'Ver menos' : 'Ver más ($hidden)',
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+      ),
+    ),
+  );
 
   String _hhmm(DateTime value) {
     final DateTime local = value.toLocal();
@@ -1724,6 +1743,26 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     final List<CaseDispatchRecord> filteredPending = _filteredPending();
     final List<MeshMinimalAlertPayload> localMeshAlerts = _localMeshAlerts();
     final int totalToClaim = _pending.length + localMeshAlerts.length;
+    // «Por tomar»: alertas mesh locales y despachadas en una sola lista,
+    // siempre de la más reciente a la más antigua.
+    final List<(DateTime, Widget Function())> toClaimTiles =
+        <(DateTime, Widget Function())>[
+          for (final MeshMinimalAlertPayload alert in localMeshAlerts)
+            (alert.declaredAt, () => _meshDispatchTile(alert)),
+          for (final CaseDispatchRecord record in filteredPending)
+            (record.notifiedAt, () => _dispatchTile(record)),
+        ]..sort(
+          (
+            (DateTime, Widget Function()) a,
+            (DateTime, Widget Function()) b,
+          ) => b.$1.compareTo(a.$1),
+        );
+    // «Mis casos»: también de la más reciente a la más antigua.
+    final List<StaffCaseSummary> myCases =
+        (cases ?? const <StaffCaseSummary>[]).where(_matches).toList()..sort(
+          (StaffCaseSummary a, StaffCaseSummary b) =>
+              b.receivedCentrallyAt.compareTo(a.receivedCentrallyAt),
+        );
     final Map<String, String> pendingSchools = <String, String>{
       for (final CaseDispatchRecord r in _pending)
         r.institutionId:
@@ -1853,20 +1892,10 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
                         setState(() => _selectedInstitutionId = value),
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: () => setState(() => _oldestFirst = !_oldestFirst),
-                  icon: const Icon(Icons.swap_vert_rounded, size: 18),
-                  label: Text(
-                    _oldestFirst
-                        ? 'Más antiguas primero'
-                        : 'Más recientes primero',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 12),
-            if (filteredPending.isEmpty && localMeshAlerts.isEmpty)
+            if (toClaimTiles.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 18),
                 child: Text(
@@ -1879,10 +1908,18 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
                 ),
               )
             else ...<Widget>[
-              for (final MeshMinimalAlertPayload alert in localMeshAlerts)
-                _meshDispatchTile(alert),
-              for (final CaseDispatchRecord record in filteredPending)
-                _dispatchTile(record),
+              for (final (DateTime, Widget Function()) entry
+                  in _showAllToClaim
+                      ? toClaimTiles
+                      : toClaimTiles.take(_previewCount))
+                entry.$2(),
+              if (toClaimTiles.length > _previewCount)
+                _showMoreButton(
+                  hidden: toClaimTiles.length - _previewCount,
+                  expanded: _showAllToClaim,
+                  onPressed: () =>
+                      setState(() => _showAllToClaim = !_showAllToClaim),
+                ),
             ],
             Center(
               child: TextButton(
@@ -1926,12 +1963,18 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
             ),
             const SizedBox(height: 16),
             ...listBody(
-              visible: (cases ?? const <StaffCaseSummary>[])
-                  .where(_matches)
-                  .toList(),
+              visible: _showAllMine
+                  ? myCases
+                  : myCases.take(_previewCount).toList(),
               empty: _filter.empty,
               tile: _tile,
             ),
+            if (error == null && myCases.length > _previewCount)
+              _showMoreButton(
+                hidden: myCases.length - _previewCount,
+                expanded: _showAllMine,
+                onPressed: () => setState(() => _showAllMine = !_showAllMine),
+              ),
           ],
         ],
       ),
