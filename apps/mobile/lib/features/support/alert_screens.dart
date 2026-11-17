@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_alert.dart';
-import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'support_flow.dart';
 
@@ -210,7 +209,11 @@ class _SituationTile extends StatelessWidget {
 FlowHeader _stepHeader(String step, StudentPiece piece) => FlowHeader(
   title: 'Enviar una alerta',
   subtitle: step,
-  trailing: PieceFigure(piece: piece, height: 86, sparks: true),
+  trailing: Image.asset(
+    'assets/brand/png/personaje-01.png',
+    height: 86,
+    excludeFromSemantics: true,
+  ),
 );
 
 /// Pantalla 3 · Paso 2 de 3: cómo se relaciona con lo que pasó.
@@ -241,13 +244,11 @@ class AlertRoleScreen extends StatelessWidget {
             role: Participation.own,
             selected: flow.participation == Participation.own,
             onTap: () => flow.selectParticipation(Participation.own),
-            art: const PieceFigure(
-              piece: StudentPiece(
-                shape: PieceShape.puzzle,
-                color: PieceColor.blue,
-              ),
+            art: Image.asset(
+              'assets/brand/png/personaje-08.png',
+              width: 90,
               height: 104,
-              sparks: true,
+              semanticLabel: 'Personaje de SéTú',
             ),
           ),
           const SizedBox(height: 14),
@@ -256,24 +257,11 @@ class AlertRoleScreen extends StatelessWidget {
             tag: 'Testigo solidario',
             selected: flow.participation == Participation.witness,
             onTap: () => flow.selectParticipation(Participation.witness),
-            art: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                PieceFigure(
-                  piece: StudentPiece(
-                    shape: PieceShape.doublePuzzle,
-                    color: PieceColor.yellow,
-                  ),
-                  height: 84,
-                ),
-                PieceFigure(
-                  piece: StudentPiece(
-                    shape: PieceShape.star,
-                    color: PieceColor.blue,
-                  ),
-                  height: 84,
-                ),
-              ],
+            art: Image.asset(
+              'assets/brand/png/personaje-14.png',
+              width: 112,
+              height: 104,
+              semanticLabel: 'Dos personajes de SéTú acompañándose',
             ),
           ),
         ],
@@ -318,7 +306,7 @@ class _RoleCard extends StatelessWidget {
           child: Stack(
             children: <Widget>[
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 20, 40, 20),
+                padding: const EdgeInsets.fromLTRB(12, 20, 16, 20),
                 child: Row(
                   children: <Widget>[
                     if (!largeText) ...<Widget>[
@@ -341,19 +329,23 @@ class _RoleCard extends StatelessWidget {
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                                horizontal: 6,
                                 vertical: 5,
                               ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFDCE9FB),
                                 borderRadius: BorderRadius.circular(999),
                               ),
-                              child: Text(
-                                tag!,
-                                style: const TextStyle(
-                                  color: CureandoTheme.blue,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  tag!,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    color: CureandoTheme.blue,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ),
@@ -533,7 +525,12 @@ class _AlertReviewScreenState extends State<AlertReviewScreen> {
       header: FlowHeader(
         title: 'Revisá tu alerta',
         showBrand: true,
-        trailing: const SizedBox(width: 132, child: CampaignCharacters()),
+        trailing: Image.asset(
+          'assets/brand/png/personaje-14.png',
+          width: 132,
+          height: 92,
+          excludeFromSemantics: true,
+        ),
       ),
       bottom: FilledButton(
         style: flowPrimaryStyle(),

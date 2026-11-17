@@ -17,6 +17,8 @@
 
 **Revisión:** 16 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación por colegio, inicio estudiantil E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza*, recorrido *Pedir apoyo* conectado al cliente remoto (con `involvesStaff` y respaldo en red mesh `Nearby Connections` + E2EE), superficies móviles de personal autorizado (`/personal/*`) y notificaciones push FCM.
 
+**Actividades E06 (bloque local aprobado, 17 nov):** cinco actividades voluntarias bajo `/inicio/actividades/`, respuestas y dibujos temporales, sin XP adicionales. La pregunta diaria conserva sus reglas desde Inicio. Personajes originales PNG incorporados al flujo de apoyo; tablero del rompecabezas pendiente de segunda pasada gráfica. [Detalle de diseño](docs/06-guia-diseno.md#actividades-e06-y-personajes-de-apoyo-17-nov-2026).
+
 **Estado:** app Android conectada a Supabase (`supabase_flutter`), notificaciones push FCM y red mesh automática integrada; esquema Supabase/RLS/RPCs (`0001`–`0012`; 0012 aplicada según confirmación del usuario) y Edge Functions (`invite-email`, `push-dispatch`) implementados; pendientes los paneles web y la prueba física integral de extremo a extremo. El bloque de automatización no consultó ni modificó el remoto.
 
 [Índice](#indice) · [Diagramas de datos](#dfd) · [Desarrollo técnico](#stack) · [Ejecutar la app](#instalacion)

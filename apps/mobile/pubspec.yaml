@@ -29,6 +29,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand/
+    - assets/brand/png/
     - assets/brand/characters/
     - assets/brand/elements/
     - assets/brand/nav/

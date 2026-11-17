@@ -55,9 +55,7 @@ void main() {
               HomeSection.informacion: find.byKey(
                 const ValueKey<String>('banner-apoyo-hablar-con-confianza'),
               ),
-              HomeSection.actividades: find.textContaining(
-                'El equipo diseñó otros materiales',
-              ),
+              HomeSection.actividades: find.text('Dibujo libre'),
               HomeSection.ayuda: find.text('¿Qué puedo hacer sin internet?'),
             };
             for (final MapEntry<HomeSection, Finder> entry in endings.entries) {
