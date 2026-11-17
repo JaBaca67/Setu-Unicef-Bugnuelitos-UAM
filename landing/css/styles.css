@@ -95,6 +95,7 @@ figure { margin: 0; }
 .h2 { font-size: var(--fs-xl); line-height: 1.15; letter-spacing: -0.01em; color: var(--setu-blue); }
 .lead { font-size: var(--fs-md); line-height: 1.6; max-width: 62ch; margin-top: 0.9rem; color: var(--setu-black); }
 .lead--blue { color: var(--setu-blue); }
+.h2--light { color: var(--setu-white); }
 .small { font-size: var(--fs-sm); }
 
 /* Cinta de color detrás de titulares en Clayful */
@@ -177,33 +178,49 @@ figure { margin: 0; }
 }
 
 /* ---------- PORTADA ---------- */
-/* Fondo 1920×684 escalado a la altura de la portada y anclado a la derecha (mano y flor). */
+/* Celular y tableta (< 1024 px): composición vertical propia, sin corte entre el patrón y la foto.
+   Escritorio (>= 1024 px): fondo 1920×684 anclado a la derecha; el texto se limita para no tocar la mano. */
+/* La imagen móvil (900×1198) ocupa el ancho y se ancla abajo; la mano empieza al 55 % de su alto.
+   El texto reserva ese espacio (59,4vw) y un degradado funde el borde superior de la foto con el azul. */
 .hero {
   position: relative;
-  background: var(--setu-blue) url("../assets/landing/hero-fondo.webp") right center / cover no-repeat;
-  min-height: clamp(560px, 45.36vw, 871px);
-  margin-bottom: clamp(0px, 2.55vw, 49px);
+  background:
+    linear-gradient(to bottom, var(--setu-blue) calc(100% - 133.2vw), rgb(12 98 235 / 0) calc(100% - 133.2vw + 30vw)),
+    url("../assets/landing/hero-movil.webp") right bottom / 100% auto no-repeat,
+    var(--setu-blue);
+  color: var(--setu-white);
 }
+.hero__inner { display: flex; align-items: flex-start; }
 .hero__copy {
-  display: flex; flex-direction: column; align-items: center;
-  width: min(975px, 100% - 2rem);
-  margin-left: max(1rem, 2.43vw);
-  padding-top: clamp(2.5rem, 9.1vw, 175px);
+  display: flex; flex-direction: column; align-items: flex-start;
+  width: min(560px, 100%);
+  padding-top: 2.25rem; padding-bottom: calc(59.4vw + 1.5rem);
 }
-.hero__title { width: 100%; }
+.hero__tag {
+  display: inline-block; background: var(--setu-white); color: var(--setu-blue);
+  font-size: var(--fs-sm); font-weight: 600; line-height: 1.3;
+  padding: 0.4rem 0.85rem; border-radius: var(--radius-pill);
+}
+.hero__title { width: 100%; margin-top: 1.25rem; }
 .hero__title img { width: 100%; }
-.hero__copy .btn { margin-top: clamp(1.5rem, 2.8vw, 54px); }
+.hero__lead {
+  margin-top: 1.1rem; max-width: 34ch;
+  font-size: clamp(1.125rem, 1rem + 0.45vw, 1.375rem); font-weight: 600; line-height: 1.45;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.hero__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.6rem; }
+.btn--light { background: transparent; color: var(--setu-white); border-color: var(--setu-white); }
 
-@media (max-width: 759px) {
-  /* En celular la mano queda abajo a la derecha y el titular arriba. */
-  .hero {
-    background:
-      url("../assets/landing/hero-fondo.webp") 82% bottom / auto 300px no-repeat,
-      var(--setu-blue) url("../assets/brand/patron-ondas.svg") repeat;
-    min-height: 620px;
-  }
-  .hero__copy { width: calc(100% - 2rem); margin-inline: auto; padding-top: 2.5rem; }
-  .hero__copy .btn { width: 100%; }
+@media (max-width: 559px) {
+  .hero__actions { width: 100%; flex-direction: column; }
+  .hero__actions .btn { width: 100%; }
+  .hero__actions .btn--light { min-height: 48px; font-size: var(--fs-base); }
+}
+
+@media (min-width: 1024px) {
+  .hero { background: var(--setu-blue) url("../assets/landing/hero-fondo.webp") right center / auto 100% no-repeat; }
+  .hero__inner { min-height: clamp(560px, 45.36vw, 871px); align-items: center; }
+  .hero__copy { width: clamp(360px, 46vw - 90px, 590px); padding-block: 3rem; }
 }
 
 /* ---------- EXPLORÁ ---------- */
@@ -328,10 +345,13 @@ figure { margin: 0; }
 .pillar__clay { width: 274px; max-width: 100%; height: auto; }
 .mesh-map { display: block; width: 100%; height: auto; margin-top: var(--space-2); }
 
+/* Panel azul detrás del texto blanco: el fondo con textura bajaba el contraste a 3,6:1. */
+.pillars__grid { margin-top: var(--space-4); }
+.pillar:not(.pillar--mesh) { background: rgb(12 98 235 / 0.88); border-radius: var(--radius-lg); }
 @media (min-width: 900px) {
-  .pillars { min-height: 602px; padding-top: 153px; }
+  .pillars { min-height: 602px; }
   .pillars__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
-  .pillar:not(.pillar--mesh) { padding: 65px 15px 0 26px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); }
+  .pillar:not(.pillar--mesh) { padding: 2rem 1.5rem; margin-top: 2.5rem; }
 }
 
 /* ---------- CAMPAÑA ---------- */
@@ -411,9 +431,19 @@ video { display: block; width: 100%; height: auto; background: var(--setu-blue);
 /* ---------- SOS ---------- */
 /* Texto pequeño en negro sobre magenta: el blanco no alcanza contraste AA a 16 px. */
 .sos { background: var(--setu-magenta); color: var(--setu-black); padding: var(--space-4) 0; }
-.sos__inner { display: grid; gap: 0.5rem; }
+.sos__inner { display: grid; gap: 0.75rem; }
 .sos h2 { font-size: var(--fs-lg); color: var(--setu-white); }
-.sos a { font-weight: 700; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.sos__body { display: grid; gap: 0.85rem; }
+.sos__calls { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.sos__call {
+  display: inline-flex; align-items: center; gap: 0.6rem; min-height: 52px;
+  padding: 0.55rem 1.2rem; border-radius: var(--radius-pill);
+  background: var(--setu-white); color: var(--setu-black); text-decoration: none; font-weight: 600;
+}
+.sos__call strong { font-size: 1.375rem; color: var(--setu-blue); }
+@media (hover: hover) { .sos__call:hover { box-shadow: 0 4px 0 var(--setu-black); transform: translateY(-2px); } }
+.sos__source { font-size: var(--fs-sm); }
+@media (max-width: 559px) { .sos__call { width: 100%; } }
 @media (min-width: 860px) { .sos__inner { grid-template-columns: auto 1fr; gap: var(--space-4); align-items: center; } }
 
 /* ---------- FOOTER ---------- */
@@ -422,8 +452,8 @@ video { display: block; width: 100%; height: auto; background: var(--setu-blue);
 .footer h2 { font-size: var(--fs-md); margin-bottom: 0.75rem; }
 .footer__brand img { height: 34px; width: auto; margin-bottom: var(--space-3); }
 .footer__brand p { max-width: 422px; font-size: var(--fs-sm); }
-.footer__links { display: grid; gap: 0.35rem; align-content: start; }
-.footer__links a { text-decoration: none; padding: 0.2rem 0; }
+.footer__links { display: grid; gap: 0; align-content: start; }
+.footer__links a { text-decoration: none; min-height: 44px; display: flex; align-items: center; }
 .footer__links a:hover { text-decoration: underline; }
 .footer__team ul { display: grid; gap: 0.25rem; font-size: var(--fs-sm); }
 .footer__legal { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 2px solid var(--setu-white); font-size: var(--fs-sm); }
