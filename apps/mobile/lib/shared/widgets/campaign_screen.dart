@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -39,19 +41,27 @@ class CampaignScreen extends StatelessWidget {
     final Widget scrollView = CustomScrollView(
       controller: scrollController,
       slivers: <Widget>[
-        SliverToBoxAdapter(
-          child: SafeArea(bottom: false, child: header),
-        ),
+        SliverToBoxAdapter(child: SafeArea(bottom: false, child: header)),
         SliverToBoxAdapter(
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: bodyRadius,
             ),
-            child: SafeArea(
-              top: false,
-              maintainBottomViewPadding: true,
-              child: body,
+            child: Builder(
+              builder: (BuildContext inner) => Padding(
+                // Leer dentro del Scaffold: extendBody incluye aquí el alto
+                // real de la barra flotante, además del margen del sistema.
+                padding: EdgeInsets.only(
+                  bottom:
+                      16 +
+                      math.max(
+                        MediaQuery.paddingOf(inner).bottom,
+                        MediaQuery.viewPaddingOf(inner).bottom,
+                      ),
+                ),
+                child: SafeArea(top: false, bottom: false, child: body),
+              ),
             ),
           ),
         ),
@@ -71,8 +81,8 @@ class CampaignScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         // La barra flota: el cuerpo se extiende por detrás y recibe el alto de
-        // la barra como margen inferior de `MediaQuery`, que el `SafeArea` del
-        // cuerpo convierte en espacio libre al final del desplazamiento.
+        // la barra como margen inferior de `MediaQuery`, que el cuerpo
+        // convierte en espacio libre al final del desplazamiento.
         extendBody: bottomNavigationBar != null,
         bottomNavigationBar: bottomNavigationBar,
         body: Center(

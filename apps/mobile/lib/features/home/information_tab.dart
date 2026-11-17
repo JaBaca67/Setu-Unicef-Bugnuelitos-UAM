@@ -93,7 +93,10 @@ class _InformationTabState extends State<InformationTab> {
         onChanged: (String value) => setState(() => _query = value),
         decoration: InputDecoration(
           hintText: 'Buscá un tema',
-          prefixIcon: const Icon(Icons.search_rounded),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: CureandoTheme.blue,
+          ),
           suffixIcon: Padding(
             padding: const EdgeInsets.all(8),
             child: Chip(
@@ -104,8 +107,10 @@ class _InformationTabState extends State<InformationTab> {
             ),
           ),
           filled: true,
-          fillColor: CureandoTheme.background,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          fillColor: Colors.white,
+          border: _searchBorder,
+          enabledBorder: _searchBorder,
+          focusedBorder: _searchBorder,
         ),
       ),
       const SizedBox(height: 8),
@@ -113,10 +118,10 @@ class _InformationTabState extends State<InformationTab> {
         spacing: 6,
         children: <Widget>[
           _filter(null, 'Todos', CureandoTheme.blue),
-          _filter(InfoTopic.acoso, 'Acoso escolar', CureandoTheme.blue),
-          _filter(InfoTopic.emociones, 'Emociones', CureandoTheme.yellow),
+          _filter(InfoTopic.acoso, 'Acoso escolar', CureandoTheme.yellow),
           _filter(InfoTopic.ciberacoso, 'Ciberacoso', CureandoTheme.pink),
-          _filter(InfoTopic.apoyo, 'Apoyo', CureandoTheme.green),
+          _filter(InfoTopic.emociones, 'Emociones', CureandoTheme.green),
+          _filter(InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
         ],
       ),
       const SizedBox(height: 10),
@@ -196,17 +201,30 @@ class _InformationTabState extends State<InformationTab> {
     ];
   }
 
+  static final OutlineInputBorder _searchBorder = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(18),
+    borderSide: const BorderSide(color: CureandoTheme.blue, width: 2),
+  );
+
   Widget _filter(InfoTopic? topic, String title, Color color) => ChoiceChip(
     label: Text(title),
     selected: _topic == topic,
-    showCheckmark: false,
+    showCheckmark: true,
+    checkmarkColor: color == CureandoTheme.yellow
+        ? CureandoTheme.pink
+        : Colors.white,
+    backgroundColor: color,
     selectedColor: color,
+    shape: const StadiumBorder(),
+    side: BorderSide(
+      color: _topic == topic ? CureandoTheme.ink : color,
+      width: _topic == topic ? 2 : 1,
+    ),
     labelStyle: TextStyle(
+      fontFamily: 'Poppins',
       fontSize: 11,
       fontWeight: FontWeight.w700,
-      color: _topic == topic && color != CureandoTheme.yellow
-          ? Colors.white
-          : CureandoTheme.ink,
+      color: color == CureandoTheme.yellow ? CureandoTheme.pink : Colors.white,
     ),
     onSelected: (_) => setState(() => _topic = topic),
   );
@@ -238,44 +256,57 @@ class _InformationTabState extends State<InformationTab> {
     child: Container(
       constraints: BoxConstraints(minHeight: featured ? 120 : 90),
       decoration: BoxDecoration(
+        color: CureandoTheme.blue,
         image: DecorationImage(
           image: AssetImage(resource.cardAsset!),
+          // El recorte centrado mantiene las figuras a la izquierda del
+          // texto y evita costuras cuando el contenido aumenta el alto.
           fit: BoxFit.cover,
         ),
       ),
-      padding: EdgeInsets.fromLTRB(featured ? 142 : 110, 12, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          if (featured) const AvailabilityBadge(offline: true, onDark: true),
-          const SizedBox(height: 4),
-          Text(
-            resource.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            constraints.maxWidth * .42,
+            12,
+            featured ? 12 : 36,
+            12,
           ),
-          Text(
-            '${resource.meta}${featured ? '' : ' · Sin internet'}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (featured)
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                'Leer ›',
-                style: TextStyle(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              if (featured)
+                const AvailabilityBadge(offline: true, onDark: true),
+              const SizedBox(height: 4),
+              Text(
+                resource.title,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-        ],
+              Text(
+                '${resource.meta}${featured ? '' : ' · Sin internet'}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (featured)
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'Leer ›',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     ),
   );
@@ -517,30 +548,50 @@ class InformationHeader extends StatelessWidget {
   const InformationHeader({super.key});
 
   @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 132),
-    decoration: const BoxDecoration(
-      image: DecorationImage(
-        image: AssetImage('assets/home/info/e10a_header.png'),
-        fit: BoxFit.cover,
-        alignment: Alignment.centerRight,
-      ),
-    ),
-    padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
-    child: const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        CampaignSymbol(size: 28, showUnicef: false),
-        SizedBox(height: 16),
-        Text(
-          'Información',
-          style: TextStyle(
-            fontSize: 28,
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints constraints) => ConstrainedBox(
+      constraints: BoxConstraints(minHeight: constraints.maxWidth * 308 / 780),
+      child: Stack(
+        children: <Widget>[
+          Positioned.fill(
+            child: Image.asset(
+              'assets/home/info/e10a_header_figures.png',
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.bottomRight,
+              excludeFromSemantics: true,
+            ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 8, 14, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const CampaignSymbol(size: 28),
+                const SizedBox(height: 30),
+                // El título queda en su propia superficie; al ampliar el texto
+                // puede crecer sin competir con las figuras de la derecha.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: CureandoTheme.blue,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Text(
+                      'Información',
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
