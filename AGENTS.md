@@ -3,10 +3,10 @@
 ## Contexto obligatorio
 
 Leer primero README.md y los documentos pertinentes de docs/. El proyecto es una app móvil para Nicaragua, en etapa de definición y prototipado para la **Jornada Académica y Social UAM - UNICEF 2026** (temática oficial: *Apoyo a la Salud Mental de Niñas, Niños y Adolescentes*), centrada en reportes privados de acoso escolar, prevención y acceso a apoyo para estudiantes de 3.º a 11.º grado (primaria desde 3.º y secundaria), con Fase 1 en colegios públicos del casco urbano de Managua. Español es el idioma de documentación y de la interfaz inicial.
-- **Nombre oficial del proyecto:** **SéTú** 
+- **Nombre oficial del proyecto:** **SéTú** (nombre provisional / código de repositorio: *Cureando*).
 - **Nombre del equipo:** **Bugñuelitos** (Universidad Americana - UAM).
 - **Equipo interdisciplinario:**
-  1. *James Santiago Fernández Obregón* (Economía Empresarial, 2.º añoa — Coordinación general, enlace institucional y análisis económico/sistemas.
+  1. *James Santiago Fernández Obregón* (Economía Empresarial, 2.º año) — Coordinación general, enlace institucional y análisis económico/sistemas.
   2. *José Alfredo Baca Moreno* (Ingeniería en Sistemas, 1.er año) — Arquitectura y desarrollo de la plataforma tecnológica y referentes técnicos.
   3. *María Cecilia Aguilera Zamora* (Psicología, 1.er año) — Fundamentación psicológica y enfoque de derechos.
   4. *Aaron Emanuel Navarrete Mendoza* (Diseño Gráfico y Multimedia, 2.º año) — Diseño UI/UX de la plataforma, identidad visual y presentaciones.

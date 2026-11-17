@@ -5,7 +5,6 @@ analyzer:
     - .dart_tool/**
     - .pub-cache/**
     - build/**
-    - android/**
   language:
     strict-casts: true
     strict-inference: true
