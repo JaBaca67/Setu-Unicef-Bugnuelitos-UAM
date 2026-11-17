@@ -20,3 +20,8 @@ Cuando un estudiante envía una alerta sin internet o todavía no recibió respu
 - Sin dependencia nueva (no `url_launcher`).
 - Los números de confianza son datos personales locales; se pierden si se desinstala la app. No deben aparecer en logs ni telemetría.
 - Pruebas: `test/help_contacts_test.dart` (normalización, persistencia, límite y alta desde la hoja). Pendiente: verificación física del marcador y revisión editorial profesional de los contactos.
+
+## Actualización 17-nov-2026
+
+- La línea gris de fuente bajo la tarjeta se quitó por pedido del usuario. Cada línea tiene ahora un desplegable «¿Cuándo llamar?» con un enunciado breve de uso (118: peligro, agresión o alguien te lastima; atiende 24 h. 133: orientación y acompañamiento) y, dentro, la fuente y la fecha de verificación («Fuente: MINED Nicaragua · Verificado: 16-nov-2026»), para seguir cumpliendo la regla de fuente visible.
+- Los números de confianza aceptan una descripción opcional («¿Para qué le llamarías?», hasta 80 caracteres), cifrada junto al contacto y mostrada en un desplegable «¿Para qué?». Los contactos guardados antes siguen funcionando (campo opcional).
