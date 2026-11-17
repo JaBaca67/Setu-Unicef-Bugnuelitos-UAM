@@ -43,15 +43,29 @@
     reveals.forEach(function (el) { io.observe(el); });
   }
 
-  /* ---------- Así funciona: el celular fijo muestra la pantalla del paso visible ---------- */
+  /* ---------- Así funciona ----------
+     Escritorio: el paso visible elige la pantalla del celular fijo (con cortina, flor y avance).
+     Celular: los puntos siguen el deslizamiento del carrusel. */
   var steps = document.querySelectorAll(".step[data-step]");
-  var screens = document.querySelectorAll(".steps__device img");
+  var device = document.querySelector(".steps__device");
+  var screens = document.querySelectorAll(".steps__screens img");
+  var flores = document.querySelectorAll(".steps__flores img");
+  var bars = document.querySelectorAll(".steps__progress span");
+  var dots = document.querySelectorAll(".steps__dots span");
+  var current = 0;
+  var mark = function (list, i) { list.forEach(function (el, k) { el.classList.toggle("is-active", k === i); }); };
   var activate = function (i) {
-    steps.forEach(function (s, k) { s.classList.toggle("is-active", k === i); });
-    screens.forEach(function (img, k) { img.classList.toggle("is-active", k === i); });
+    if (i === current && steps[i] && steps[i].classList.contains("is-active")) return;
+    screens.forEach(function (img, k) {
+      img.classList.toggle("is-prev", k === current && k !== i);
+      img.classList.toggle("is-active", k === i);
+    });
+    current = i;
+    mark(steps, i); mark(flores, i); mark(bars, i);
+    if (device) device.setAttribute("data-active", String(i));
   };
   if (steps.length) {
-    activate(0);
+    mark(steps, 0);
     if (hasIO) {
       var stepIO = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
@@ -60,6 +74,15 @@
       }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
       steps.forEach(function (s) { stepIO.observe(s); });
     }
+    var list = document.querySelector(".steps__list");
+    var syncDots = function () {
+      if (!list || list.scrollWidth <= list.clientWidth) return;
+      var w = steps[0].getBoundingClientRect().width + 16;
+      var i = Math.max(0, Math.min(steps.length - 1, Math.round(list.scrollLeft / w)));
+      mark(dots, i);
+      steps.forEach(function (s, k) { s.classList.toggle("is-current", k === i); });
+    };
+    if (list) { list.addEventListener("scroll", syncDots, { passive: true }); syncDots(); }
   }
 
   /* ---------- Mapa de la red: sin animación si se pidió reducir movimiento ---------- */
