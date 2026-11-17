@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
-import '../../shared/widgets/setu_card.dart';
 import '../piece/student_piece.dart';
 import '../support/alert_screens.dart';
+import 'information_tab.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
 import 'student_activities.dart';
@@ -26,11 +26,13 @@ class StudentHomeScreen extends StatefulWidget {
     required this.progress,
     required this.piece,
     this.sectionRequest,
+    this.publicEntry = false,
   });
 
   final LearningProgress progress;
   final ValueNotifier<StudentPiece> piece;
   final HomeSectionRequest? sectionRequest;
+  final bool publicEntry;
 
   @override
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
@@ -45,6 +47,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _section =
+        widget.sectionRequest?.section ??
+        (widget.publicEntry ? HomeSection.informacion : HomeSection.inicio);
     widget.progress.open();
   }
 
@@ -70,6 +75,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   }
 
   void _open(HomeSection section) {
+    if (widget.publicEntry && section == HomeSection.inicio) {
+      context.go('/');
+      return;
+    }
     if (_scrollController.hasClients) _scrollController.jumpTo(0);
     setState(() => _section = section);
   }
@@ -112,7 +121,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: false,
+    canPop: widget.publicEntry,
     onPopInvokedWithResult: (bool didPop, Object? _) {
       if (!didPop && _section != HomeSection.inicio) {
         _open(HomeSection.inicio);
@@ -130,7 +139,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       bottomNavigationBar: SetuBottomNav(selected: _section, onSelected: _open),
       header: switch (_section) {
         HomeSection.inicio => _HomeHeader(piece: widget.piece),
-        HomeSection.informacion => const _SectionHeader(title: 'Información'),
+        HomeSection.informacion => const InformationHeader(),
         HomeSection.actividades => const _SectionHeader(title: 'Actividades'),
         HomeSection.ayuda => const _SectionHeader(title: 'Ayuda'),
       },
@@ -145,7 +154,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             onOpenStreak: _showStreak,
             onOpenDice: _openDice,
           ),
-          HomeSection.informacion => const _InformacionTab(),
+          HomeSection.informacion => InformationTab(
+            progress: widget.progress,
+            publicEntry: widget.publicEntry,
+          ),
           HomeSection.actividades => ActivitiesTab(
             progress: widget.progress,
             diceKey: _diceKey,
@@ -341,11 +353,11 @@ class _InicioTab extends StatelessWidget {
         const SizedBox(height: 10),
         _AdaptiveRow(
           children: <Widget>[
-            for (final SampleResource resource in sampleResources)
+            for (final InfoResource resource in homeResources)
               StudentPreviewCard(
                 cover: resource.cover,
                 title: resource.title,
-                detail: resource.format,
+                detail: resource.meta,
                 onTap: () => context.push<void>(resource.route),
               ),
           ],
@@ -447,128 +459,6 @@ class _AdaptiveRow extends StatelessWidget {
   }
 }
 
-class _InformacionTab extends StatelessWidget {
-  const _InformacionTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        const SampleBanner(text: 'Catálogo de muestra'),
-        const SizedBox(height: 12),
-        const Text(
-          'Explorá por tema y formato: guías para leer y videos para mirar. '
-          'Leer no envía ninguna alerta ni cambia nada de tu caso.',
-        ),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: <Widget>[
-            for (final String topic in sampleTopics)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: CureandoTheme.blueSoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  topic,
-                  style: const TextStyle(
-                    color: CureandoTheme.blue,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        for (final SampleResource resource in sampleResources) ...<Widget>[
-          SetuCard(
-            onTap: () => context.push<void>(resource.route),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.asset(
-                      resource.cover.assetPath,
-                      width: 86,
-                      height: 86,
-                      fit: BoxFit.cover,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          '${resource.format} · ${resource.topic}',
-                          style: const TextStyle(
-                            color: CureandoTheme.secondaryInk,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          resource.title,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(resource.summary),
-                        if (resource.format == 'Video') ...<Widget>[
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Video pendiente de empaquetar · resumen en '
-                            'texto disponible',
-                            style: TextStyle(
-                              color: CureandoTheme.secondaryInk,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-        const SizedBox(height: 4),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text('Qué falta', style: textTheme.titleMedium),
-                const SizedBox(height: 6),
-                const Text(
-                  'El catálogo completo, la revisión editorial, los derechos '
-                  'y la reproducción de video siguen en preparación. Estos '
-                  'contenidos son muestras propias.',
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _AyudaTab extends StatelessWidget {
   const _AyudaTab();
 
@@ -595,9 +485,7 @@ class _AyudaTab extends StatelessWidget {
       ),
       const SizedBox(height: 14),
       FilledButton.icon(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
-        ),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
         onPressed: () => context.push<void>('/inicio/apoyo'),
         icon: const Icon(Icons.favorite_rounded),
         label: const Text('Pedir apoyo'),

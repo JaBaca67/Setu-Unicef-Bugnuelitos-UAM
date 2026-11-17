@@ -69,3 +69,7 @@ Mantener escalado Android; M1 ofrece Normal/Grande +20 %. Comprobar pantallas pe
 Propuesta de páginas: alcance y fuentes; estudiante; mesa/MINED; dirección; componentes/estados; prototipo. Los IDs de docs/08 son referencias de trabajo, no marcos oficiales ya creados en Figma ni correspondencias garantizadas con el manual. Diseñar ramas sin internet y permisos denegados junto al camino principal.
 
 Ayuda necesita fuente, territorio, fecha y responsable antes de publicar. Videos/testimonios requieren derechos, revisión y protección de personas. Material ficticio en prototipos; sin nombres, casos reales, códigos privados o credenciales.
+
+## Corte de muestra E10/E11 (16 nov 2026)
+
+La implementación aprobada sigue las referencias Figma E10-A–D y E11-A–F con ilustraciones exportadas en `assets/home/info/`, Poppins y los tokens existentes. Biblioteca ofrece búsqueda local y filtros; Rutas presenta tres pasos de Acoso escolar y tres temas en preparación. Las rutas públicas permiten explorar sin colegio. El video simula controles/tiempo/CC y siempre ofrece texto sin conexión. El modal de fuente declara la revisión pendiente sin atribuir validación institucional. El cierre de ruta concede +10 XP una vez por ruta, separado de la pregunta diaria; se mantienen +5 XP por primera lectura (ADR 0014). Se conserva la barra compartida `SetuBottomNav` de la app.

@@ -18,7 +18,7 @@ El corte Android incluye acceso escolar, Pedir apoyo, superficies móviles staff
 
 El 12 de noviembre se incorporaron la [bienvenida E01](diseno/plan-arranque-bienvenida-setu.md) y el [acceso escolar E02 de demostración](diseno/plan-acceso-escolar-e02.md). E02 usa cámara y ubicación para un código de prueba, con un punto público configurado localmente. El acceso institucional y su primer ingreso offline siguen en diseño. Los bloques conectados y de transporte requieren propuesta y aprobación propias.
 
-El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual y XP educativos con persistencia local cifrada. El contenido disponible sigue siendo de muestra y el video todavía se ofrece como resumen en texto. [ADR 0014](decisiones/0014-progreso-educativo-local.md).
+El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual y XP educativos con persistencia local cifrada. El contenido disponible sigue siendo de muestra. E10/E11 incorporan Biblioteca, búsqueda/filtros, Rutas, lectores, video simulado con CC y alternativa en texto; revisión editorial y video real pendientes. [ADR 0014](decisiones/0014-progreso-educativo-local.md).
 
 ## Decisiones que cambian la solución
 
@@ -28,7 +28,7 @@ El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual 
 | Confirmado | Código público del colegio, código privado dirección y sin cuentas visibles | ADR 0005; implementación pendiente. |
 | Confirmado | Tres superficies, mesa humana, tres niveles y seis nombres de prototipo | Producto del equipo; nombres finales, contratos y facultades por validar con MINED. |
 | Confirmado | 3.º–11.º, Fase 1 urbana pública Managua | Adaptación de comprensión para primaria pendiente. |
-| Confirmado | Espacio Información propio, complementario a alertas/escucha | ADR 0009: artículos, videos, testimonios editoriales y guías; acceso autónomo y durante la espera. Existencia confirmada, sin código implementado. |
+| Confirmado | Espacio Información propio, complementario a alertas/escucha | ADR 0009: artículos, videos, testimonios editoriales y guías; acceso autónomo y durante la espera. Demo E10/E11 implementada con aprobación el 16 nov; publicación editorial pendiente. |
 | Antes de código conectado | Continuidad privada por caso y recuperación sin cuenta | Comparar sesión técnica, capacidad por caso y combinación. |
 | Antes de mesh | Destinatario offline: alerta mínima local o custodia central | Entrega mínima local en bandejas Android y custodia opaca implementadas localmente, ADR 0023. Migración 0012 sin aplicar; prueba física integral pendiente. |
 | Antes de mesh | Primer ingreso offline, configuración, firma y claves auténticas | La demo requiere publicar claves staff y preparar caché estudiantil por HTTPS antes de desconectar. Primer uso totalmente offline, firma, caducidad y revocación siguen pendientes. |
@@ -51,7 +51,7 @@ El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual 
 4. **Offline:** cola protegida, custodia, puente, entrega local aprobada, sincronización y retorno de acuses.
 5. **Interfaz y demo:** marca final, primaria/secundaria, fallos y guion. Chat y contenidos según prioridad aprobada.
 
-El espacio Información es un frente de producto confirmado: especificar E10/E11, entrada sin reporte y retorno desde espera; aprobar por separado el bloque técnico de catálogo/lectura/video y su muestra editorial. Puede diseñarse con independencia de la viabilidad radio. El catálogo completo y la distribución offline se dimensionan según el corte, sin omitir este componente de la propuesta.
+El espacio Información es un frente de producto confirmado: E10/E11 ya tienen demo aprobada de Biblioteca/Rutas y lectores, entrada sin reporte y retorno desde espera; siguen pendientes el catálogo publicado, los derechos/revisión y el reproductor real. Puede diseñarse con independencia de la viabilidad radio. El catálogo completo y la distribución offline se dimensionan según el corte, sin omitir este componente de la propuesta.
 
 Cada bloque necesita propuesta concreta, preguntas materiales y aprobación explícita antes de código, dependencias, migraciones o estructura. Cambiar el generador documental no aprueba ninguno de estos bloques.
 

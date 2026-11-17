@@ -230,9 +230,30 @@ class _CureandoAppState extends State<CureandoApp> {
               pageBuilder: (context, state) => studentTransition(
                 context,
                 state,
-                WelcomePreviewScreen(destination: destination),
+                destination == WelcomeDestination.information
+                    ? StudentHomeScreen(
+                        progress: _learning,
+                        piece: _piece,
+                        publicEntry: true,
+                        sectionRequest: state.extra is HomeSectionRequest
+                            ? state.extra! as HomeSectionRequest
+                            : null,
+                      )
+                    : WelcomePreviewScreen(destination: destination),
               ),
             ),
+          GoRoute(
+            path: 'informacion/recurso/:id',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              ResourcePreviewScreen(
+                resourceId: state.pathParameters['id'] ?? '',
+                progress: _learning,
+                publicEntry: true,
+              ),
+            ),
+          ),
           if (widget.showM1Verification)
             GoRoute(
               path: 'verificacion-m1',
@@ -295,6 +316,8 @@ class _CureandoAppState extends State<CureandoApp> {
           ),
           GoRoute(
             path: 'apoyo',
+            redirect: (context, state) =>
+                _session.school == null ? '/colegio' : null,
             pageBuilder: (context, state) => studentTransition(
               context,
               state,

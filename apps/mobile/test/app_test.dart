@@ -150,8 +150,9 @@ void main() {
     await _tapLabel(tester, 'Comprobar cercanía');
     expect(find.text('Fuera de la zona del colegio'), findsOneWidget);
     await _tapLabel(tester, 'Explorar Información');
-    expect(find.widgetWithText(AppBar, 'Información'), findsOneWidget);
-    await tester.tap(find.byTooltip('Volver'));
+    expect(find.text('Biblioteca'), findsOneWidget);
+    final BuildContext catalogContext = tester.element(find.text('Biblioteca'));
+    Navigator.of(catalogContext).pop();
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Reintentar');
     expect(find.text('Comprobar cercanía'), findsOneWidget);
