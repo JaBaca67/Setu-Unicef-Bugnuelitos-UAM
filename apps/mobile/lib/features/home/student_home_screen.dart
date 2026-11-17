@@ -347,18 +347,13 @@ class _InicioTab extends StatelessWidget {
         _AdaptiveRow(
           alwaysSideBySide: true,
           children: <Widget>[
-            // Mismas tarjetas que en Actividades (fondo azul + sticker).
-            ListenableBuilder(
-              listenable: progress,
-              builder: (context, child) => ActivityCard(
-                key: const ValueKey<String>('home-daily-question'),
-                title: 'Pregunta del día',
-                sticker: 'assets/home/activities/sticker_pregunta_hd.png',
-                route: 'diaria',
-                detail: progress.answeredToday
-                    ? 'Completada'
-                    : '+${LearningProgress.questionXp} XP',
-              ),
+            // Igual que en Actividades: abre la Pregunta libre. La pregunta
+            // diaria con XP está en «Mi racha».
+            const ActivityCard(
+              key: ValueKey<String>('home-free-question'),
+              title: 'Pregunta libre',
+              sticker: 'assets/home/activities/sticker_pregunta_hd.png',
+              route: 'pregunta',
             ),
             ActivityCard(
               key: const ValueKey<String>('home-emotion-dice'),
