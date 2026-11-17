@@ -21,6 +21,7 @@ desde `main` por el workflow `.github/workflows/deploy-landing.yml`. Todo lo que
 - Segunda auditoría (17-nov): la mesa de escucha siempre como propuesta; se retiraron los videos `flujo-alerta` (prometía la entrega) e `informacion-app` (mostraba el reproductor retirado en ADR 0026); animaciones corregidas con `rotate`/`translate` y solo dos bucles continuos; mockups con sombra en tres capas, brillo de vidrio recortado con la silueta del teléfono y versiones de 1080 px para pantallas de alta densidad; puntos en todos los carruseles y botón de play propio en los videos.
 - Sin números de ayuda (17-nov): por decisión del equipo para la presentación, la landing ya no muestra la franja «¿Estás en peligro ahora?», el aviso de la portada ni el enlace del menú con el 118 y el 133. Las líneas verificadas siguen en la pestaña Ayuda de la app (ADR 0025). Se pueden restaurar desde el commit anterior a `812f3b0`.
 - Barra de navegación con isotipo + logotipo (pedido del equipo; el manual no fija una versión horizontal, conviene validarla con Diseño). Título de la página y de las vistas previas al compartir: «Solamente SéTú».
+- Recorrido automático (17-nov): botón flotante «Recorrido automático» que desplaza la página despacio y vuelve al inicio al final; se detiene con la rueda, el toque o el teclado. Con `?auto` (o `#auto`) en la URL arranca solo y se reanuda tras 25 s sin interacción, pensado para la pantalla del stand: `https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/?auto`.
 
 ## Probar en local
     cd landing

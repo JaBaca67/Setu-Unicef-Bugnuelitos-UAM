@@ -116,6 +116,80 @@
     });
   });
 
+  /* ---------- Recorrido automático ----------
+     Botón flotante que desplaza la página sola, despacio, y vuelve al inicio al llegar al final.
+     Se detiene si la persona toca, usa la rueda o el teclado. Con ?auto (o #auto) en la URL
+     arranca solo y, tras 25 s sin interacción, se reanuda: pensado para la pantalla del stand. */
+  var autoBtn = document.querySelector(".autoscroll");
+  if (autoBtn) {
+    var params = new URLSearchParams(window.location.search);
+    var kiosk = params.has("auto") || window.location.hash === "#auto";
+    var speed = Math.max(40, Math.min(90, window.innerHeight / 12)); // px por segundo
+    var running = false, rafId = 0, lastT = 0, pos = 0, holdUntil = 0, idleTimer = 0;
+    var autoLabel = autoBtn.querySelector(".autoscroll__label");
+    var setUi = function () {
+      autoBtn.setAttribute("aria-pressed", String(running));
+      var txt = running ? "Pausar recorrido" : "Recorrido automático";
+      autoLabel.textContent = txt;
+      autoBtn.setAttribute("title", txt);
+    };
+    var step = function (t) {
+      if (!running) return;
+      if (!lastT) lastT = t;
+      var dt = Math.min(0.1, (t - lastT) / 1000);
+      lastT = t;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      if (t < holdUntil) { rafId = requestAnimationFrame(step); return; }
+      if (pos >= max - 1) {
+        // Final: pausa breve y vuelta al inicio.
+        if (holdUntil >= 0) { holdUntil = -1; setTimeout(function () {
+          if (!running) return;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          pos = 0; holdUntil = performance.now() + 3500;
+        }, 3500); }
+        rafId = requestAnimationFrame(step); return;
+      }
+      var y = window.scrollY || window.pageYOffset;
+      if (Math.abs(y - pos) > 4) pos = y; // la persona movió la barra: seguir desde ahí
+      pos = Math.min(max, pos + speed * dt);
+      window.scrollTo({ top: pos, behavior: "instant" });
+      rafId = requestAnimationFrame(step);
+    };
+    var start = function () {
+      if (running) return;
+      running = true; lastT = 0; holdUntil = 0;
+      pos = window.scrollY || window.pageYOffset;
+      setUi();
+      rafId = requestAnimationFrame(step);
+    };
+    var stop = function () {
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(rafId);
+      setUi();
+    };
+    var scheduleResume = function () {
+      clearTimeout(idleTimer);
+      if (kiosk) idleTimer = setTimeout(start, 25000);
+    };
+    autoBtn.hidden = false;
+    autoBtn.addEventListener("click", function () {
+      clearTimeout(idleTimer);
+      if (running) stop(); else start();
+    });
+    var userInput = function (e) {
+      if (e.target && e.target.closest && e.target.closest(".autoscroll")) return;
+      if (running) stop();
+      scheduleResume();
+    };
+    ["wheel", "touchstart", "pointerdown", "keydown"].forEach(function (type) {
+      window.addEventListener(type, userInput, { passive: true });
+    });
+    document.addEventListener("visibilitychange", function () { if (document.hidden) stop(); else scheduleResume(); });
+    setUi();
+    if (kiosk) setTimeout(start, 2500);
+  }
+
   /* ---------- Mapa de la red: sin animación si se pidió reducir movimiento ---------- */
   if (reduceMotion) {
     document.querySelectorAll(".mesh-map").forEach(function (svg) {

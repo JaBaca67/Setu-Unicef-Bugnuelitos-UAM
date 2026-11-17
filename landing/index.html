@@ -28,7 +28,7 @@
   <link rel="preload" href="assets/fonts/poppins-regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/landing/hero-movil.webp" as="image" media="(max-width: 1023px)" fetchpriority="high">
   <link rel="preload" href="assets/landing/hero-fondo.webp" as="image" media="(min-width: 1024px)" fetchpriority="high">
-  <link rel="stylesheet" href="css/styles.css?v=20261118a">
+  <link rel="stylesheet" href="css/styles.css?v=20261118b">
   <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
@@ -454,6 +454,13 @@
     </div>
   </footer>
 
-  <script src="js/main.js?v=20261118a" defer></script>
+  <!-- Recorrido automático: botón flotante; con ?auto en la URL arranca solo (modo stand) -->
+  <button class="autoscroll" type="button" aria-pressed="false" hidden>
+    <svg class="autoscroll__play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+    <svg class="autoscroll__pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+    <span class="autoscroll__label">Recorrido automático</span>
+  </button>
+
+  <script src="js/main.js?v=20261118b" defer></script>
 </body>
 </html>
