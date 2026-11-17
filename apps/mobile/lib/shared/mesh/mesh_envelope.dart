@@ -4,9 +4,12 @@ import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 
-/// Carga mínima permitida para transporte por red mesh (ADR 0005 / ADR 0016).
+/// Carga permitida para transporte por red mesh (ADR 0005 / ADR 0016 / ADR 0028).
 ///
-/// Nunca transporta relato clínico, chat, nombres ni credenciales del emisor.
+/// Viaja siempre dentro del sobre cifrado de extremo a extremo. Desde ADR 0028
+/// puede llevar el relato breve del estudiante y su pieza simbólica, solo
+/// cuando el sobre va sellado para personal autorizado. Nunca transporta chat,
+/// nombres reales ni credenciales del emisor.
 @immutable
 class MeshMinimalAlertPayload {
   const MeshMinimalAlertPayload({
@@ -18,7 +21,42 @@ class MeshMinimalAlertPayload {
     required this.declaredAt,
     this.involvesStaff = false,
     this.receiptToken,
+    this.narrativeText,
+    this.studentPiece,
   });
+
+  /// Tope del relato dentro del sobre: el sobre completo no puede superar
+  /// [MeshEnvelope.maxWireBytes] (4 KB) aunque el texto tenga emojis.
+  static const int maxNarrativeBytes = 1500;
+
+  /// Recorta [text] a [maxNarrativeBytes] en UTF-8 sin partir caracteres.
+  static String? fitNarrative(String text) {
+    final String clean = text.trim();
+    if (clean.isEmpty) return null;
+    if (utf8.encode(clean).length <= maxNarrativeBytes) return clean;
+    final StringBuffer out = StringBuffer();
+    int bytes = 0;
+    for (final int rune in clean.runes) {
+      final String char = String.fromCharCode(rune);
+      final int size = utf8.encode(char).length;
+      if (bytes + size > maxNarrativeBytes - 3) break;
+      out.write(char);
+      bytes += size;
+    }
+    return '${out.toString().trimRight()}…';
+  }
+
+  /// Copia sin relato ni pieza, para sobres que no van a personal autorizado.
+  MeshMinimalAlertPayload withoutPrivateFields() => MeshMinimalAlertPayload(
+    clientOperationId: clientOperationId,
+    publicSchoolCode: publicSchoolCode,
+    situationType: situationType,
+    studentRole: studentRole,
+    capabilityVerifierHash: capabilityVerifierHash,
+    declaredAt: declaredAt,
+    involvesStaff: involvesStaff,
+    receiptToken: receiptToken,
+  );
 
   factory MeshMinimalAlertPayload.fromJson(Map<String, Object?> json) =>
       MeshMinimalAlertPayload(
@@ -30,6 +68,9 @@ class MeshMinimalAlertPayload {
         declaredAt: DateTime.parse(json['declared_at']! as String),
         involvesStaff: json['involves_staff'] == true,
         receiptToken: json['receipt_token'] as String?,
+        narrativeText: json['narrative_text'] as String?,
+        studentPiece: (json['student_piece'] as Map<Object?, Object?>?)
+            ?.cast<String, Object?>(),
       );
 
   final String clientOperationId;
@@ -43,6 +84,12 @@ class MeshMinimalAlertPayload {
   /// Desafío aleatorio de entrega, visible únicamente dentro del E2EE.
   final String? receiptToken;
 
+  /// Relato breve del estudiante (opcional), solo legible por el destinatario.
+  final String? narrativeText;
+
+  /// Pieza simbólica (forma, color, accesorios y nombre de juego).
+  final Map<String, Object?>? studentPiece;
+
   Map<String, Object?> toJson() => <String, Object?>{
     'client_operation_id': clientOperationId,
     'public_school_code': publicSchoolCode,
@@ -52,6 +99,8 @@ class MeshMinimalAlertPayload {
     'declared_at': declaredAt.toUtc().toIso8601String(),
     'involves_staff': involvesStaff,
     if (receiptToken != null) 'receipt_token': receiptToken,
+    if (narrativeText != null) 'narrative_text': narrativeText,
+    if (studentPiece != null) 'student_piece': studentPiece,
   };
 }
 
