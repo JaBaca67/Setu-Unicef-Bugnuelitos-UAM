@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import 'puzzle_board.dart';
+
+export 'puzzle_board.dart'
+    show PuzzleBoard, PuzzleBoardState, PuzzleOptionPiece;
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
@@ -743,47 +747,7 @@ const _retry = <String>[
   'Compartir la burla puede hacerla llegar a más personas. Podemos buscar apoyo.',
 ];
 
-enum PuzzleBoardState { disconnected, connected }
-
 /// Composición aislada para la siguiente pasada gráfica; no decide respuestas.
-class PuzzleBoard extends StatelessWidget {
-  const PuzzleBoard({super.key, required this.state});
-  final PuzzleBoardState state;
-  @override
-  Widget build(BuildContext context) => Semantics(
-    label: state == PuzzleBoardState.connected
-        ? 'Piezas conectadas'
-        : 'Piezas por conectar',
-    child: Container(
-      height: 144,
-      decoration: BoxDecoration(
-        color: _sky,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Image.asset(
-            'assets/brand/png/elemento-02-pieza-amarilla.png',
-            width: 88,
-            height: 96,
-            excludeFromSemantics: true,
-          ),
-          SizedBox(width: state == PuzzleBoardState.connected ? 0 : 32),
-          Image.asset(
-            'assets/brand/png/elemento-02-pieza-amarilla.png',
-            color: CureandoTheme.green,
-            colorBlendMode: BlendMode.srcIn,
-            width: 88,
-            height: 96,
-            excludeFromSemantics: true,
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 class KindnessPuzzleScreen extends StatefulWidget {
   const KindnessPuzzleScreen({super.key});
   @override
@@ -855,6 +819,9 @@ class _KindnessPuzzleScreenState extends State<KindnessPuzzleScreen> {
           state: _correct
               ? PuzzleBoardState.connected
               : PuzzleBoardState.disconnected,
+          pieceColor: _scenes[_scene].$4 == 0
+              ? CureandoTheme.yellow
+              : CureandoTheme.green,
         ),
         const SizedBox(height: 14),
         for (int i = 0; i < 2; i++) ...<Widget>[
@@ -872,13 +839,9 @@ class _KindnessPuzzleScreenState extends State<KindnessPuzzleScreen> {
             onPressed: _correct ? null : () => setState(() => _selected = i),
             child: Row(
               children: <Widget>[
-                Image.asset(
-                  'assets/brand/png/elemento-02-pieza-amarilla.png',
+                PuzzleOptionPiece(
                   color: i == 0 ? CureandoTheme.yellow : CureandoTheme.green,
-                  colorBlendMode: BlendMode.srcIn,
-                  width: 44,
-                  height: 44,
-                  excludeFromSemantics: true,
+                  size: 52,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
