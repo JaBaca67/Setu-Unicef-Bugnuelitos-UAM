@@ -162,8 +162,8 @@ class _CampaignHeaderState extends State<_CampaignHeader> {
     ),
   );
 
-  // Igual al titular de Figma (nodo 196:2105): «Todos podemos» y el bloque
-  // rosa inclinado «encajar» en una sola línea.
+  // Titular de campaña entregado por diseño: bloque rosa «Todos podemos»,
+  // «encajar» en Clayful blanco, flor amarilla y espiral.
   Widget _encajar() => Semantics(
     key: const ValueKey<String>('campaign-encajar'),
     header: true,
@@ -171,7 +171,7 @@ class _CampaignHeaderState extends State<_CampaignHeader> {
     excludeSemantics: true,
     child: Image.asset(
       'assets/welcome/campaign-encajar.png',
-      width: 340,
+      width: 300,
       fit: BoxFit.contain,
     ),
   );
