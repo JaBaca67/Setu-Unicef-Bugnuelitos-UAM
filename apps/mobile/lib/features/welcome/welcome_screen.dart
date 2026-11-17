@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -100,8 +101,90 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-class _CampaignHeader extends StatelessWidget {
+class _CampaignHeader extends StatefulWidget {
   const _CampaignHeader();
+
+  @override
+  State<_CampaignHeader> createState() => _CampaignHeaderState();
+}
+
+/// Alterna los dos titulares de campaña del Manual de Marca:
+/// «Simplemente #SoloSéTú» y «Todos podemos encajar».
+class _CampaignHeaderState extends State<_CampaignHeader> {
+  static const Duration _every = Duration(seconds: 4);
+  Timer? _timer;
+  int _slide = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(_every, (_) {
+      if (mounted) setState(() => _slide = 1 - _slide);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Widget _soloSetu() => Semantics(
+    key: const ValueKey<String>('campaign-solosetu'),
+    header: true,
+    label: 'Simplemente #SoloSéTú',
+    excludeSemantics: true,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 270),
+          child: Image.asset(
+            'assets/welcome/campaign-simplemente.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Transform.rotate(
+          angle: 0.95 * math.pi / 180,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Image.asset(
+              'assets/welcome/campaign-solosetu.png',
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _encajar() => Semantics(
+    key: const ValueKey<String>('campaign-encajar'),
+    header: true,
+    label: 'Todos podemos encajar',
+    excludeSemantics: true,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 270),
+          child: Image.asset(
+            'assets/welcome/campaign-todos-podemos.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 210),
+          child: Image.asset(
+            'assets/welcome/campaign-encajar.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => Stack(
@@ -126,31 +209,21 @@ class _CampaignHeader extends StatelessWidget {
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Semantics(
-              header: true,
-              label: 'Simplemente #SoloSéTú',
-              excludeSemantics: true,
-              child: Column(
-                children: <Widget>[
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 270),
-                    child: Image.asset(
-                      'assets/welcome/campaign-simplemente.png',
-                      fit: BoxFit.contain,
-                    ),
+            // Alto fijo: el cambio de titular no mueve el resto de la pantalla.
+            child: SizedBox(
+              height: 146,
+              child: AnimatedSwitcher(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 450),
+                child: FittedBox(
+                  key: ValueKey<int>(_slide),
+                  fit: BoxFit.scaleDown,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: _slide == 0 ? _soloSetu() : _encajar(),
                   ),
-                  const SizedBox(height: 4),
-                  Transform.rotate(
-                    angle: 0.95 * math.pi / 180,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 300),
-                      child: Image.asset(
-                        'assets/welcome/campaign-solosetu.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
