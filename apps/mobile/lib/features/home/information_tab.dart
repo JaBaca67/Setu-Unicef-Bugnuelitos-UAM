@@ -27,10 +27,54 @@ class _InformationTabState extends State<InformationTab> {
   InfoTopic? _topic;
   String _query = '';
   final TextEditingController _search = TextEditingController();
+  final ScrollController _categoriesScroll = ScrollController();
+  final GlobalKey _categoriesViewport = GlobalKey();
+  final List<GlobalKey> _categoryKeys = List<GlobalKey>.generate(
+    5,
+    (_) => GlobalKey(),
+  );
+  int _visibleCategories = 0;
+  bool _visibilityScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _categoriesScroll.addListener(_scheduleCategoryVisibility);
+  }
+
+  void _scheduleCategoryVisibility() {
+    if (_visibilityScheduled) return;
+    _visibilityScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _visibilityScheduled = false;
+      if (!mounted) return;
+      final RenderBox? viewport =
+          _categoriesViewport.currentContext?.findRenderObject() as RenderBox?;
+      if (viewport == null || !viewport.hasSize) return;
+      final Rect bounds = viewport.localToGlobal(Offset.zero) & viewport.size;
+      int visible = 0;
+      for (int i = 0; i < _categoryKeys.length; i++) {
+        final RenderBox? chip =
+            _categoryKeys[i].currentContext?.findRenderObject() as RenderBox?;
+        if (chip == null || !chip.hasSize) continue;
+        final Rect rect = chip.localToGlobal(Offset.zero) & chip.size;
+        // Un chip más ancho que el viewport sigue visible con texto ampliado.
+        if ((rect.left >= bounds.left - .5 &&
+                rect.right <= bounds.right + .5) ||
+            (rect.width > bounds.width && rect.overlaps(bounds))) {
+          visible |= 1 << i;
+        }
+      }
+      if (_visibleCategories != visible) {
+        setState(() => _visibleCategories = visible);
+      }
+    });
+  }
 
   @override
   void dispose() {
     _search.dispose();
+    _categoriesScroll.dispose();
     super.dispose();
   }
 
@@ -72,6 +116,7 @@ class _InformationTabState extends State<InformationTab> {
   );
 
   List<Widget> _library() {
+    _scheduleCategoryVisibility();
     final List<InfoResource> resources = infoCatalog.where((InfoResource r) {
       final String text = _normalize(
         '${r.title} ${r.summary} ${r.topic.label} ${r.format.label}',
@@ -108,18 +153,43 @@ class _InformationTabState extends State<InformationTab> {
         ),
       ),
       const SizedBox(height: 8),
-      SingleChildScrollView(
-        key: const ValueKey<String>('information-categories'),
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          spacing: 6,
-          children: <Widget>[
-            _filter(null, 'Todos', CureandoTheme.blue),
-            _filter(InfoTopic.acoso, 'Acoso escolar', CureandoTheme.yellow),
-            _filter(InfoTopic.ciberacoso, 'Ciberacoso', CureandoTheme.pink),
-            _filter(InfoTopic.emociones, 'Emociones', CureandoTheme.green),
-            _filter(InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
-          ],
+      NotificationListener<ScrollMetricsNotification>(
+        onNotification: (_) {
+          _scheduleCategoryVisibility();
+          return false;
+        },
+        child: SizedBox(
+          key: _categoriesViewport,
+          child: SingleChildScrollView(
+            key: const ValueKey<String>('information-categories'),
+            controller: _categoriesScroll,
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              spacing: 6,
+              children: <Widget>[
+                _filter(0, null, 'Todos', CureandoTheme.blue),
+                _filter(
+                  1,
+                  InfoTopic.acoso,
+                  'Acoso escolar',
+                  CureandoTheme.yellow,
+                ),
+                _filter(
+                  2,
+                  InfoTopic.ciberacoso,
+                  'Ciberacoso',
+                  CureandoTheme.pink,
+                ),
+                _filter(
+                  3,
+                  InfoTopic.emociones,
+                  'Emociones',
+                  CureandoTheme.green,
+                ),
+                _filter(4, InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
+              ],
+            ),
+          ),
         ),
       ),
       const SizedBox(height: 10),
@@ -204,28 +274,40 @@ class _InformationTabState extends State<InformationTab> {
     borderSide: const BorderSide(color: CureandoTheme.blue, width: 2),
   );
 
-  Widget _filter(InfoTopic? topic, String title, Color color) => ChoiceChip(
-    label: Text(title),
-    selected: _topic == topic,
-    showCheckmark: true,
-    checkmarkColor: color == CureandoTheme.yellow
-        ? CureandoTheme.pink
-        : Colors.white,
-    backgroundColor: color,
-    selectedColor: color,
-    shape: const StadiumBorder(),
-    side: BorderSide(
-      color: _topic == topic ? CureandoTheme.ink : color,
-      width: _topic == topic ? 2 : 1,
-    ),
-    labelStyle: TextStyle(
-      fontFamily: 'Poppins',
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      color: color == CureandoTheme.yellow ? CureandoTheme.pink : Colors.white,
-    ),
-    onSelected: (_) => setState(() => _topic = topic),
-  );
+  Widget _filter(int index, InfoTopic? topic, String title, Color color) =>
+      AnimatedOpacity(
+        key: _categoryKeys[index],
+        opacity: _visibleCategories & (1 << index) != 0 ? 1 : 0,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 120),
+        // El lector puede enfocar y desplazar hasta un chip visualmente oculto.
+        alwaysIncludeSemantics: true,
+        child: ChoiceChip(
+          label: Text(title),
+          selected: _topic == topic,
+          showCheckmark: true,
+          checkmarkColor: color == CureandoTheme.yellow
+              ? CureandoTheme.pink
+              : Colors.white,
+          backgroundColor: color,
+          selectedColor: color,
+          shape: const StadiumBorder(),
+          side: BorderSide(
+            color: _topic == topic ? CureandoTheme.ink : color,
+            width: _topic == topic ? 2 : 1,
+          ),
+          labelStyle: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: color == CureandoTheme.yellow
+                ? CureandoTheme.pink
+                : Colors.white,
+          ),
+          onSelected: (_) => setState(() => _topic = topic),
+        ),
+      );
 
   Widget _topicHeading(InfoTopic topic) => Padding(
     padding: const EdgeInsets.only(top: 6),

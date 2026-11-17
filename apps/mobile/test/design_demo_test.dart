@@ -13,7 +13,9 @@ import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:cureando_mobile/shared/theme/app_theme.dart';
 import 'package:cureando_mobile/shared/widgets/campaign_screen.dart';
 import 'package:cureando_mobile/shared/widgets/setu_bottom_nav.dart';
+import 'package:cureando_mobile/shared/widgets/unicef_logo.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -103,8 +105,50 @@ void main() {
           .map((ChoiceChip chip) => tester.getTopLeft(find.byWidget(chip)).dy)
           .toList();
       expect(tops.every((double top) => top == tops.first), isTrue);
+      final Finder clipped = find.widgetWithText(ChoiceChip, 'Emociones');
+      AnimatedOpacity chipOpacity(Finder chip) =>
+          tester.widget<AnimatedOpacity>(
+            find.ancestor(of: chip, matching: find.byType(AnimatedOpacity)),
+          );
+      final Rect viewport = tester.getRect(carousel);
+      expect(tester.getRect(clipped).left, lessThan(viewport.right));
+      expect(tester.getRect(clipped).right, greaterThan(viewport.right));
+      expect(chipOpacity(clipped).opacity, 0);
+      expect(chipOpacity(clipped).alwaysIncludeSemantics, isTrue);
+      expect(
+        tester
+            .renderObject<RenderAnimatedOpacity>(
+              find.ancestor(
+                of: clipped,
+                matching: find.byType(AnimatedOpacity),
+              ),
+            )
+            .opacity
+            .value,
+        0,
+      );
+      final SemanticsHandle semantics = tester.ensureSemantics();
+      try {
+        expect(
+          tester.getSemantics(clipped),
+          matchesSemantics(
+            label: 'Emociones',
+            isButton: true,
+            hasEnabledState: true,
+            isEnabled: true,
+            hasSelectedState: true,
+            hasTapAction: true,
+            hasFocusAction: true,
+            isFocusable: true,
+          ),
+        );
+      } finally {
+        semantics.dispose();
+      }
       await tester.drag(carousel, const Offset(-260, 0));
       await tester.pumpAndSettle();
+      expect(chipOpacity(clipped).opacity, 1);
+      expect(tester.getRect(clipped).right, lessThanOrEqualTo(viewport.right));
       expect(
         tester.widget<SetuBottomNav>(find.byType(SetuBottomNav)).selected,
         HomeSection.informacion,
@@ -201,14 +245,41 @@ void main() {
   );
 
   testWidgets(
-    'Mi racha usa su banner sin subheadline y conserva calendario y CTA',
+    'Mi racha comparte fondo y logos de Inicio sobre figuras transparentes',
     (WidgetTester tester) async {
       _view(tester);
       final LearningProgress progress = _progress();
       addTearDown(progress.dispose);
       await tester.pumpWidget(_app(StreakScreen(progress: progress)));
       await tester.pumpAndSettle();
-      expect(_asset('assets/home/banner-racha.png'), findsOneWidget);
+      expect(_asset('assets/home/banner-racha.png'), findsNothing);
+      final Finder figures = _asset('assets/home/banner-racha-figures.png');
+      expect(figures, findsOneWidget);
+      final Rect artwork = tester.getRect(figures);
+      expect(artwork.width / artwork.height, closeTo(600 / 268, .01));
+      final CampaignSymbol symbol = tester.widget<CampaignSymbol>(
+        find.byType(CampaignSymbol),
+      );
+      expect(symbol.size, 28);
+      expect(symbol.showUnicef, isTrue);
+      expect(
+        tester.getTopLeft(find.byType(CampaignSymbol)),
+        const Offset(18, 8),
+      );
+      expect(find.byType(UnicefLogo), findsOneWidget);
+      final Finder background = find
+          .descendant(
+            of: find.byType(CampaignBackground),
+            matching: find.byType(DecoratedBox),
+          )
+          .first;
+      final BoxDecoration decoration =
+          tester.widget<DecoratedBox>(background).decoration as BoxDecoration;
+      expect(decoration.color, CureandoTheme.blue);
+      expect(
+        (decoration.image!.image as AssetImage).assetName,
+        'assets/welcome/campaign-pattern.png',
+      );
       expect(find.text('Mi racha'), findsOneWidget);
       expect(find.text('Cada día que participás suma.'), findsNothing);
       expect(find.text('Racha actual'), findsOneWidget);

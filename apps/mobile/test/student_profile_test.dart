@@ -166,6 +166,36 @@ void main() {
       await tester.tap(find.text('Ayuda'));
       await tester.pumpAndSettle();
       expect(opened, <HomeSection>[HomeSection.ayuda]);
+      final SetuNavIcon active = tester.widget<SetuNavIcon>(
+        find.byWidgetPredicate(
+          (Widget widget) =>
+              widget is SetuNavIcon && widget.section == HomeSection.ayuda,
+        ),
+      );
+      final SetuNavIcon inactive = tester.widget<SetuNavIcon>(
+        find.byWidgetPredicate(
+          (Widget widget) =>
+              widget is SetuNavIcon && widget.section == HomeSection.inicio,
+        ),
+      );
+      expect(active.color, CureandoTheme.blue);
+      expect(active.color.a, greaterThan(inactive.color.a));
+      final Text activeLabel = tester.widget<Text>(find.text('Ayuda'));
+      final Text inactiveLabel = tester.widget<Text>(find.text('Inicio'));
+      expect(activeLabel.style!.color, active.color);
+      expect(
+        activeLabel.style!.fontWeight!.value,
+        greaterThan(inactiveLabel.style!.fontWeight!.value),
+      );
+      expect(find.byType(BackdropFilter), findsOneWidget);
+      final Finder capsule = find.descendant(
+        of: find.byKey(const ValueKey<String>('nav-indicator')),
+        matching: find.byType(DecoratedBox),
+      );
+      final BoxDecoration decoration =
+          tester.widget<DecoratedBox>(capsule).decoration as BoxDecoration;
+      expect(decoration.gradient!.colors.first.a, lessThan(.5));
+      expect(decoration.gradient!.colors.last.a, lessThan(.04));
       expect(
         tester.getSemantics(find.bySemanticsLabel('Ayuda')),
         isSemantics(

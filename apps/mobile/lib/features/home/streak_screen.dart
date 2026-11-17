@@ -233,7 +233,7 @@ class _StreakScreenState extends State<StreakScreen> {
             children: <Widget>[
               Positioned.fill(
                 child: Image.asset(
-                  'assets/home/banner-racha.png',
+                  'assets/home/banner-racha-figures.png',
                   fit: BoxFit.cover,
                   alignment: Alignment.centerRight,
                   excludeFromSemantics: true,
@@ -241,14 +241,14 @@ class _StreakScreenState extends State<StreakScreen> {
               ),
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: constraints.maxWidth * .32,
+                  minHeight: constraints.maxWidth * 268 / 600,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+                  padding: const EdgeInsets.fromLTRB(18, 8, 14, 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const CampaignSymbol(size: 28, showUnicef: false),
+                      const CampaignSymbol(size: 28, showUnicef: true),
                       const SizedBox(height: 8),
                       Row(
                         children: <Widget>[

@@ -278,17 +278,17 @@ class _GlassCapsule extends StatelessWidget {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: <Color>[
-          Colors.white.withValues(alpha: 0.92),
-          CureandoTheme.blue.withValues(alpha: 0.06),
+          Colors.white.withValues(alpha: 0.46),
+          CureandoTheme.blue.withValues(alpha: 0.03),
         ],
       ),
       border: Border.all(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withValues(alpha: 0.45),
         width: 1.5,
       ),
       boxShadow: <BoxShadow>[
         BoxShadow(
-          color: CureandoTheme.blue.withValues(alpha: 0.10),
+          color: CureandoTheme.blue.withValues(alpha: 0.05),
           blurRadius: 10,
           offset: const Offset(0, 3),
         ),
@@ -325,7 +325,13 @@ class _NavDestination extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              SetuNavIcon(section: section, size: 25),
+              SetuNavIcon(
+                section: section,
+                size: 25,
+                color: selected
+                    ? CureandoTheme.blue
+                    : CureandoTheme.blue.withValues(alpha: 0.78),
+              ),
               const SizedBox(height: 2),
               Flexible(
                 child: FittedBox(
@@ -340,8 +346,10 @@ class _NavDestination extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       height: 1.1,
-                      color: CureandoTheme.blue,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      color: selected
+                          ? CureandoTheme.blue
+                          : CureandoTheme.blue.withValues(alpha: 0.78),
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                     ),
                   ),
                 ),
