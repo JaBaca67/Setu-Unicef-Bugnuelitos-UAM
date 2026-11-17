@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
@@ -13,6 +14,7 @@ export 'puzzle_board.dart'
     show PuzzleBoard, PuzzleBoardState, PuzzleOptionPiece;
 
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_dialog.dart';
 import 'learning_progress.dart';
@@ -609,6 +611,70 @@ class _FreeDrawingScreenState extends State<FreeDrawingScreen> {
   ];
   final List<DrawingStroke> _strokes = <DrawingStroke>[];
   Color _color = colors.first;
+  Size _canvasSize = Size.zero;
+  bool _saving = false;
+
+  static const MethodChannel _gallery = MethodChannel(
+    'dev.cureando.app/gallery',
+  );
+
+  /// Dibuja los trazos sobre fondo blanco en un PNG nítido (3×).
+  Future<Uint8List> _renderPng() async {
+    const double scale = 3;
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder)..scale(scale);
+    canvas.drawRect(Offset.zero & _canvasSize, Paint()..color = Colors.white);
+    DrawingPainter(List<DrawingStroke>.of(_strokes)).paint(canvas, _canvasSize);
+    final ui.Image image = await recorder.endRecording().toImage(
+      (_canvasSize.width * scale).round(),
+      (_canvasSize.height * scale).round(),
+    );
+    final ByteData? data = await image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+    image.dispose();
+    return data!.buffer.asUint8List();
+  }
+
+  /// Guarda el dibujo en la galería del teléfono (carpeta Imágenes/SeTu).
+  /// Solo se guarda si el estudiante toca el botón; no se envía a nadie.
+  Future<void> _save() async {
+    if (_strokes.isEmpty || _canvasSize.isEmpty || _saving) return;
+    setState(() => _saving = true);
+    final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(
+      context,
+    );
+    bool saved = false;
+    try {
+      final Uint8List png = await _renderPng();
+      final DateTime now = DateTime.now();
+      final String stamp =
+          '${now.year}${now.month.toString().padLeft(2, '0')}'
+          '${now.day.toString().padLeft(2, '0')}-'
+          '${now.hour.toString().padLeft(2, '0')}'
+          '${now.minute.toString().padLeft(2, '0')}'
+          '${now.second.toString().padLeft(2, '0')}';
+      await _gallery.invokeMethod<void>('savePng', <String, Object?>{
+        'bytes': png,
+        'name': 'setu-como-me-siento-$stamp',
+      });
+      saved = true;
+    } on Object {
+      saved = false;
+    }
+    if (!mounted) return;
+    setState(() => _saving = false);
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        buildSetuBottomAlertSnackBar(
+          message: saved
+              ? 'Tu dibujo se guardó en la galería (Imágenes › SeTu).'
+              : 'No pudimos guardar tu dibujo. Intentá de nuevo.',
+          kind: saved ? SetuAlertKind.success : SetuAlertKind.error,
+        ),
+      );
+  }
 
   void _add(Offset point) => setState(() {
     final DrawingStroke last = _strokes.removeLast();
@@ -642,9 +708,18 @@ class _FreeDrawingScreenState extends State<FreeDrawingScreen> {
     title: 'Dibujo libre',
     sticker: 'assets/home/activities/sticker_dibujo_hoja.png',
     children: <Widget>[
+      Semantics(
+        header: true,
+        child: const Text(
+          '¿Cómo te sentís hoy?',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        ),
+      ),
+      const SizedBox(height: 4),
       const Text(
-        'Dibujá lo que querás.',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        'Dibujalo con colores, formas o lo que se te ocurra. No hay dibujos '
+        'buenos ni malos. Si querés, guardalo en tu galería.',
+        style: TextStyle(fontSize: 15, color: CureandoTheme.secondaryInk),
       ),
       const SizedBox(height: 16),
       Semantics(
@@ -682,9 +757,14 @@ class _FreeDrawingScreenState extends State<FreeDrawingScreen> {
                     },
                   ),
             },
-            child: CustomPaint(
-              painter: DrawingPainter(List<DrawingStroke>.of(_strokes)),
-              size: Size.infinite,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints box) {
+                _canvasSize = box.biggest;
+                return CustomPaint(
+                  painter: DrawingPainter(List<DrawingStroke>.of(_strokes)),
+                  size: Size.infinite,
+                );
+              },
             ),
           ),
         ),
@@ -758,6 +838,20 @@ class _FreeDrawingScreenState extends State<FreeDrawingScreen> {
             label: const Text('Borrador'),
           ),
         ],
+      ),
+      const SizedBox(height: 10),
+      OutlinedButton.icon(
+        key: const ValueKey<String>('drawing-save-gallery'),
+        style: _secondaryStyle(),
+        onPressed: _strokes.isEmpty || _saving ? null : _save,
+        icon: _saving
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.download_rounded),
+        label: const Text('Guardar en mi galería'),
       ),
       const SizedBox(height: 14),
       _primary('Terminar', () => _finish(context)),
