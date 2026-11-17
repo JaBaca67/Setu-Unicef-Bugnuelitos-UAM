@@ -297,9 +297,10 @@ class _SchoolLinkScreenState extends State<SchoolLinkScreen> {
   );
 }
 
-/// En la compilación de demo la cercanía siempre deja continuar. Se desactiva
+/// En la compilación de demo la cercanía siempre deja continuar (también lo
+/// respeta el router de `app.dart`). Se desactiva
 /// con `--dart-define=SETU_PROXIMITY_ALWAYS_PASS=false`.
-const bool _demoProximityAlwaysPasses = bool.fromEnvironment(
+const bool demoProximityAlwaysPasses = bool.fromEnvironment(
   'SETU_PROXIMITY_ALWAYS_PASS',
   defaultValue: true,
 );
@@ -336,7 +337,7 @@ class _ProximityCheckState extends State<_ProximityCheck> {
         : await widget.check();
     // Demo UAM-UNICEF: la comprobación real nunca bloquea; si no confirma
     // cercanía, continúa rotulada como simulada (nunca como confirmada).
-    if (realCheck && _demoProximityAlwaysPasses && !result.canContinue) {
+    if (realCheck && demoProximityAlwaysPasses && !result.canContinue) {
       result = SchoolProximity.simulated;
     }
     if (!mounted) return;

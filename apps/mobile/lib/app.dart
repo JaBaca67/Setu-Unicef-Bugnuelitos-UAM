@@ -192,7 +192,8 @@ class _CureandoAppState extends State<CureandoApp> {
                           proximity:
                               extra is SchoolProximity &&
                                   (extra != SchoolProximity.simulated ||
-                                      widget.allowSchoolSimulation)
+                                      widget.allowSchoolSimulation ||
+                                      demoProximityAlwaysPasses)
                               ? extra
                               : SchoolProximity.unavailable,
                           checkProximity: widget.checkSchoolProximity,
