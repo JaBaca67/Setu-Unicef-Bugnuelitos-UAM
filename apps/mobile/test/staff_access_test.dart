@@ -112,7 +112,7 @@ void main() {
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
     await _tap(tester, 'Iniciar sesión');
     expect(find.text('Dirección del centro'), findsOneWidget);
-    expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
+    expect(find.text('Colegio SéTú — Demo'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Mi perfil'));
     await tester.pumpAndSettle();
@@ -139,7 +139,7 @@ void main() {
 
     await signIn(tester, 'escucha.demo@example.org');
     expect(find.text('¿Dónde vas a trabajar?'), findsOneWidget);
-    expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
+    expect(find.text('Colegio SéTú — Demo'), findsOneWidget);
     await _capture(tester, 'p04-ambito');
     await _tap(tester, 'Colegio de prueba A');
     expect(find.text('Mesa de Escucha'), findsOneWidget);
@@ -184,7 +184,10 @@ void main() {
       expect(find.text('¿Quién sos?'), findsOneWidget);
 
       await _tap(tester, 'Continuar');
-      expect(find.textContaining('Escribí tu nombre y apellidos'), findsOneWidget);
+      expect(
+        find.textContaining('Escribí tu nombre y apellidos'),
+        findsOneWidget,
+      );
       await _type(tester, 'Nombre', 'Lucía');
       await _type(tester, 'Apellidos', 'Mendoza');
       await _tap(tester, 'Continuar');
@@ -223,7 +226,10 @@ void main() {
       expect(find.text('Ingresá tu código'), findsOneWidget);
 
       await _tap(tester, 'Activar cuenta');
-      expect(find.textContaining('Ingresá el código individual'), findsOneWidget);
+      expect(
+        find.textContaining('Ingresá el código individual'),
+        findsOneWidget,
+      );
       await _typeCode(tester, 'NO-EXISTE');
       await _tap(tester, 'Activar cuenta');
       expect(find.textContaining('No reconocemos ese código'), findsOneWidget);
@@ -237,7 +243,7 @@ void main() {
       await _typeCode(tester, 'cca-dir-2026');
       await _tap(tester, 'Activar cuenta');
       expect(find.text('Dirección del centro'), findsOneWidget);
-      expect(find.text('Colegio Centro América — Demo'), findsOneWidget);
+      expect(find.text('Colegio SéTú — Demo'), findsOneWidget);
 
       // El código es de un solo uso.
       final preview = await backend.previewActivation('CCADIR2026');

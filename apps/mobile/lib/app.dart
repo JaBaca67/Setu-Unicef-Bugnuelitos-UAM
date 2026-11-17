@@ -173,7 +173,7 @@ class _CureandoAppState extends State<CureandoApp> {
                   ),
                 ),
               ),
-              // Cartel de demostración del Colegio Centro América (AULA26).
+              // Cartel de demostración del Colegio SéTú (AULA26).
               GoRoute(
                 path: 'cartel',
                 pageBuilder: (context, state) => studentTransition(

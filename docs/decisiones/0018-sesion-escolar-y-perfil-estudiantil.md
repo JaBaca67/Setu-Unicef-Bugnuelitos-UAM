@@ -22,5 +22,5 @@ El acceso escolar E02 validaba un único código en el teléfono (`AULA24`) y lo
 - **Teléfonos compartidos.** La sesión persiste entre aperturas: quien use después el mismo teléfono entra al mismo colegio y ve la misma pieza. No expone relato ni chat nuevos, pero el aviso de chat de una alerta anterior sigue en el teléfono como antes.
 - **Actualizado por ADR 0019:** la sesión bloquea el regreso a la bienvenida y el cambio de rol, y un QR válido entra sin comprobación de cercanía.
 - **Cercanía.** La comprobación sigue usando el punto de referencia de la compilación (`SETU_DEMO_LATITUDE/LONGITUDE`), no las coordenadas del colegio resuelto.
-- **Escudo.** Solo el Colegio Centro América tiene escudo empaquetado (`assets/schools/`); su uso debe contar con el visto bueno del colegio antes de una versión pública.
+- **Escudo.** Superado por [ADR 0027](0027-colegio-setu-ficticio-banners-y-qr-del-personal.md): `AULA26` es el «Colegio SéTú» ficticio con un escudo de prueba; ya no se empaqueta el escudo de un colegio real.
 - La conexión real con Supabase de este recorrido no se probó desde un teléfono.

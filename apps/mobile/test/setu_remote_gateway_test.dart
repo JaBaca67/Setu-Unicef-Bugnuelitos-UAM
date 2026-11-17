@@ -63,7 +63,7 @@ void main() {
           PublicSchoolResolution.fromJson(const <String, Object?>{
             'id': '11111111-1111-4111-8111-000000000026',
             'public_code': 'AULA26',
-            'name': 'Colegio Centro América — Demo',
+            'name': 'Colegio SéTú — Demo',
             'municipality': 'Managua',
             'department': 'Managua',
             'reference_lat': 12.1045,
@@ -147,8 +147,8 @@ void main() {
             'role': 'school_director',
             'institution_id': '11111111-1111-4111-8111-000000000026',
             'institution_public_code': 'AULA26',
-            'institution_name': 'Colegio Centro América — Demo',
-            'scope_label': 'Colegio Centro América — Demo (Dirección)',
+            'institution_name': 'Colegio SéTú — Demo',
+            'scope_label': 'Colegio SéTú — Demo (Dirección)',
             'expires_at': '2026-11-27T00:00:00Z',
           });
       expect(preview.ok, isTrue);
@@ -330,7 +330,7 @@ void main() {
               'case_id': 'case-10',
               'reference_code': 'SETU-2026-0099',
               'institution_id': '11111111-1111-4111-8111-000000000026',
-              'institution_name': 'Colegio Centro América',
+              'institution_name': 'Colegio SéTú',
               'situation_type': 'cyberbullying',
               'case_status': 'received',
               'assigned_counselor_id': null,
@@ -342,7 +342,7 @@ void main() {
               'responded_at': null,
               'decline_reason': null,
             });
-        expect(historyRecord.institutionName, equals('Colegio Centro América'));
+        expect(historyRecord.institutionName, equals('Colegio SéTú'));
         expect(
           historyRecord.dispatchTier,
           equals(CaseDispatchTier.schoolPlant),

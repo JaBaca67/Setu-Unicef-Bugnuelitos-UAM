@@ -219,7 +219,7 @@ class DemoStaffBackend implements StaffBackend {
         _scope('m-dir-cca', SetuStaffRole.schoolDirector, cca),
       ],
       firstName: 'Dirección',
-      lastName: 'Centro América',
+      lastName: 'Colegio SéTú',
       staffTier: 'school_director',
     );
     _seed(
@@ -247,7 +247,7 @@ class DemoStaffBackend implements StaffBackend {
   static const ({String id, String code, String name}) cca = (
     id: 'demo-cca',
     code: 'AULA26',
-    name: 'Colegio Centro América — Demo',
+    name: 'Colegio SéTú — Demo',
   );
   static const ({String id, String code, String name}) schoolA = (
     id: 'demo-a',
@@ -303,7 +303,7 @@ class DemoStaffBackend implements StaffBackend {
       SetuStaffRole.schoolDirector,
       staffTier: 'school_director',
       institutionId: cca.id,
-      scopeLabel: 'Dirección del centro · Colegio Centro América — Demo',
+      scopeLabel: 'Dirección del centro · Colegio SéTú — Demo',
       approvedBy: 'mined.demo@example.org',
       approvedAt: DateTime(2026, 11, 13, 8, 5),
     ),
@@ -314,7 +314,7 @@ class DemoStaffBackend implements StaffBackend {
       staffTier: 'practicante_5to',
       institutionId: cca.id,
       supervisorUserId: 'escucha.demo@example.org',
-      scopeLabel: 'Mesa de Escucha · Colegio Centro América — Demo',
+      scopeLabel: 'Mesa de Escucha · Colegio SéTú — Demo',
       approvedBy: 'mined.demo@example.org',
       approvedAt: DateTime(2026, 11, 13, 8, 5),
     ),
@@ -324,7 +324,7 @@ class DemoStaffBackend implements StaffBackend {
       SetuStaffRole.counselingDesk,
       state: 'expired',
       institutionId: cca.id,
-      scopeLabel: 'Mesa de Escucha · Colegio Centro América — Demo',
+      scopeLabel: 'Mesa de Escucha · Colegio SéTú — Demo',
     ),
     'CCAREV2026': _Invite(
       'inv-rev-1',
@@ -332,7 +332,7 @@ class DemoStaffBackend implements StaffBackend {
       SetuStaffRole.counselingDesk,
       state: 'revoked',
       institutionId: cca.id,
-      scopeLabel: 'Mesa de Escucha · Colegio Centro América — Demo',
+      scopeLabel: 'Mesa de Escucha · Colegio SéTú — Demo',
       revokedReason: 'Código anulado en demostración',
       revokedAt: DateTime(2026, 11, 13, 8, 10),
     ),
@@ -803,10 +803,10 @@ class DemoStaffBackend implements StaffBackend {
     }
     final ({String id, String code, String name})? school =
         invite.institutionId == cca.id
-            ? cca
-            : invite.institutionId == schoolA.id
-            ? schoolA
-            : null;
+        ? cca
+        : invite.institutionId == schoolA.id
+        ? schoolA
+        : null;
     return StaffActivationPreview(
       ok: true,
       inviteId: invite.id,
@@ -816,7 +816,9 @@ class DemoStaffBackend implements StaffBackend {
       institutionId: school?.id,
       institutionPublicCode: school?.code,
       institutionName: school?.name,
-      scopeLabel: invite.scopeLabel ?? '${invite.role.label} · ${school?.name ?? 'Red externa'}',
+      scopeLabel:
+          invite.scopeLabel ??
+          '${invite.role.label} · ${school?.name ?? 'Red externa'}',
       expiresAt: invite.expiresAt,
     );
   }
@@ -940,10 +942,10 @@ class DemoStaffBackend implements StaffBackend {
       ..supervisorUserId = invite.supervisorUserId;
     final ({String id, String code, String name})? school =
         invite.institutionId == schoolA.id
-            ? schoolA
-            : invite.institutionId == cca.id
-            ? cca
-            : null;
+        ? schoolA
+        : invite.institutionId == cca.id
+        ? cca
+        : null;
     final StaffMembershipScope scope = school != null
         ? _scope('m-${_normalize(code)}', invite.role, school)
         : StaffMembershipScope(
@@ -1064,7 +1066,9 @@ class DemoStaffBackend implements StaffBackend {
     }
     return <StaffActivationInviteView>[
       for (final _Invite item in _invites.values)
-        if ((mined || (item.institutionId != null && directed.contains(item.institutionId))) &&
+        if ((mined ||
+                (item.institutionId != null &&
+                    directed.contains(item.institutionId))) &&
             (institutionId == null || item.institutionId == institutionId))
           StaffActivationInviteView(
             inviteId: item.id,
@@ -1108,7 +1112,8 @@ class DemoStaffBackend implements StaffBackend {
     String? supervisorUserId,
   }) async {
     _online();
-    final bool director = institutionId != null &&
+    final bool director =
+        institutionId != null &&
         _has(SetuStaffRole.schoolDirector, institutionId);
     final bool mined = _has(SetuStaffRole.minedSupervisor);
     if (!director && !mined) {
@@ -1118,27 +1123,29 @@ class DemoStaffBackend implements StaffBackend {
       throw const GatewayException('42501', 'forbidden_invite_tier');
     }
     final String code = 'REQ${++_sequence}2026';
-    _invites[code] = _Invite(
-      'inv-req-$_sequence',
-      _clean(email),
-      role,
-      staffTier: staffTier,
-      institutionId: institutionId,
-      fullName: fullName,
-      requesterProgramLabel: requesterProgramLabel,
-      supervisorUserId: supervisorUserId,
-      requestStatus: StaffInviteRequestStatus.pendingApproval,
-      scopeLabel: '${role.label} · ${institutionId == schoolA.id ? schoolA.name : cca.name}',
-    )
-      ..requestedBy = _user
-      ..events.add(
-        StaffInviteEventView(
-          id: 'evt-${++_sequence}',
-          eventType: 'requested',
-          actorUserId: _user,
-          createdAt: DateTime.now().toUtc(),
-        ),
-      );
+    _invites[code] =
+        _Invite(
+            'inv-req-$_sequence',
+            _clean(email),
+            role,
+            staffTier: staffTier,
+            institutionId: institutionId,
+            fullName: fullName,
+            requesterProgramLabel: requesterProgramLabel,
+            supervisorUserId: supervisorUserId,
+            requestStatus: StaffInviteRequestStatus.pendingApproval,
+            scopeLabel:
+                '${role.label} · ${institutionId == schoolA.id ? schoolA.name : cca.name}',
+          )
+          ..requestedBy = _user
+          ..events.add(
+            StaffInviteEventView(
+              id: 'evt-${++_sequence}',
+              eventType: 'requested',
+              actorUserId: _user,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
   }
 
   @override
@@ -1289,27 +1296,28 @@ class DemoStaffBackend implements StaffBackend {
         : resolvedTier == 'practicante_5to'
         ? 'Practicante 5.º año · Mesa de escucha'
         : 'Red externa nacional';
-    _invites[code] = _Invite(
-      'inv-req-$_sequence',
-      cleanEmail,
-      role,
-      staffTier: resolvedTier,
-      institutionId: institutionId,
-      fullName: cleanFullName,
-      requesterProgramLabel: requesterProgramLabel?.trim().isEmpty == true
-          ? null
-          : requesterProgramLabel?.trim(),
-      requestStatus: StaffInviteRequestStatus.pendingApproval,
-      scopeLabel: schoolLabel,
-    )
-      ..events.add(
-        StaffInviteEventView(
-          id: 'evt-${++_sequence}',
-          eventType: 'requested',
-          details: 'Solicitud enviada para aprobación del MINED',
-          createdAt: DateTime.now().toUtc(),
-        ),
-      );
+    _invites[code] =
+        _Invite(
+            'inv-req-$_sequence',
+            cleanEmail,
+            role,
+            staffTier: resolvedTier,
+            institutionId: institutionId,
+            fullName: cleanFullName,
+            requesterProgramLabel: requesterProgramLabel?.trim().isEmpty == true
+                ? null
+                : requesterProgramLabel?.trim(),
+            requestStatus: StaffInviteRequestStatus.pendingApproval,
+            scopeLabel: schoolLabel,
+          )
+          ..events.add(
+            StaffInviteEventView(
+              id: 'evt-${++_sequence}',
+              eventType: 'requested',
+              details: 'Solicitud enviada para aprobación del MINED',
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
   }
 
   @override
@@ -1355,7 +1363,9 @@ class DemoStaffBackend implements StaffBackend {
           if (ref == cca.id || ref == 'aula26' || ref.contains('centro am')) {
             instId = cca.id;
             scope = cca.name;
-          } else if (ref == schoolA.id || ref == 'aula24' || ref.contains('demo')) {
+          } else if (ref == schoolA.id ||
+              ref == 'aula24' ||
+              ref.contains('demo')) {
             instId = schoolA.id;
             scope = schoolA.name;
           } else {
@@ -1364,7 +1374,10 @@ class DemoStaffBackend implements StaffBackend {
         }
         if ((role == SetuStaffRole.schoolDirector || tier == 'school_plant') &&
             instId == null) {
-          throw const GatewayException('22023', 'institution_required_for_role');
+          throw const GatewayException(
+            '22023',
+            'institution_required_for_role',
+          );
         }
         final StaffInviteIssueResult out = await issueInvite(
           email: cleanEmail,
@@ -1472,7 +1485,8 @@ class DemoStaffBackend implements StaffBackend {
           found.status != SetuCaseStatus.closed) {
         pending.add(_record(item));
       } else if (item.status == CaseDispatchStatus.declined) {
-        final bool covOk = item.tier == CaseDispatchTier.schoolPlant ||
+        final bool covOk =
+            item.tier == CaseDispatchTier.schoolPlant ||
             (_coverages[found.institutionId]?.activeNow ?? false);
         final DeclinedDispatchAvailability avail = found.assignedTo != null
             ? DeclinedDispatchAvailability.alreadyInCare
@@ -1558,7 +1572,10 @@ class DemoStaffBackend implements StaffBackend {
         if (s.role == SetuStaffRole.schoolDirector) s.institutionId,
     };
     if (!mined && directed.isEmpty) {
-      throw const GatewayException('42501', 'forbidden_coverage_viewer_required');
+      throw const GatewayException(
+        '42501',
+        'forbidden_coverage_viewer_required',
+      );
     }
     final List<SchoolCoverageStatusView> schools = <SchoolCoverageStatusView>[
       for (final _SchoolCoverage cov in _coverages.values)
@@ -1574,9 +1591,11 @@ class DemoStaffBackend implements StaffBackend {
             coverageActiveNow: cov.activeNow,
             hasPlantCounselor: true,
             assignedExternalCount: _accounts.values
-                .where((_Account a) =>
-                    a.staffTier == 'external_network' &&
-                    a.assignedInstitutionIds.contains(cov.institutionId))
+                .where(
+                  (_Account a) =>
+                      a.staffTier == 'external_network' &&
+                      a.assignedInstitutionIds.contains(cov.institutionId),
+                )
                 .length,
           ),
     ];
@@ -1655,7 +1674,9 @@ class DemoStaffBackend implements StaffBackend {
   @override
   Future<List<PracticanteSupervisorNoticeView>> supervisorNotices() async {
     _scopes();
-    return List<PracticanteSupervisorNoticeView>.unmodifiable(_supervisorNotices);
+    return List<PracticanteSupervisorNoticeView>.unmodifiable(
+      _supervisorNotices,
+    );
   }
 
   @override

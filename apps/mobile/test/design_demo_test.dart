@@ -1,5 +1,4 @@
 import 'package:cureando_mobile/features/home/information_tab.dart';
-import 'package:cureando_mobile/features/home/info_artwork.dart';
 import 'package:cureando_mobile/features/home/info_catalog.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/streak_screen.dart';
@@ -464,7 +463,10 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.descendant(of: card, matching: _asset(route.topic.sticker)),
+        find.descendant(
+          of: card,
+          matching: _asset('assets/home/activities/rompecabezas_pareja.png'),
+        ),
         findsOneWidget,
       );
       final Semantics semantics = tester.widget<Semantics>(

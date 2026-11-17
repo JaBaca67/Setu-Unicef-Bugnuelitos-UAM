@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../shared/remote/push_notification_service.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../school_access/school_location.dart';
 import 'staff_backend.dart';
 import 'staff_widgets.dart';
 
@@ -216,6 +218,11 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                   const SizedBox(height: 14),
                   _ScopeSchoolsCard(profile: profile, active: active),
                   const SizedBox(height: 14),
+                  if (extractSchoolCode(active?.institutionPublicCode ?? '')
+                      case final String code) ...<Widget>[
+                    _StudentQrCard(code: code, schoolName: active!.place),
+                    const SizedBox(height: 14),
+                  ],
                   _ProfileActionTile(
                     leading: CircleAvatar(
                       radius: 16,
@@ -957,4 +964,97 @@ class _StaffPushDeviceCardState extends State<StaffPushDeviceCard> {
       },
     );
   }
+}
+
+/// Activación del QR estudiantil en el perfil del personal del colegio.
+/// Se recuerda mientras la app está abierta; el QR solo lleva el código
+/// público del centro (`setu://colegio/CODIGO`) y no identifica a nadie.
+final ValueNotifier<bool> staffStudentQrEnabled = ValueNotifier<bool>(false);
+
+class _StudentQrCard extends StatelessWidget {
+  const _StudentQrCard({required this.code, required this.schoolName});
+
+  final String code;
+  final String schoolName;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+    valueListenable: staffStudentQrEnabled,
+    // Material propio para que el interruptor pinte su efecto de toque.
+    builder: (BuildContext context, bool enabled, _) => Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 8, 12, 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFD6E2F5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            SwitchListTile(
+              key: const ValueKey<String>('staff-student-qr-switch'),
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(
+                Icons.qr_code_2_rounded,
+                color: CureandoTheme.blue,
+                size: 28,
+              ),
+              title: const Text(
+                'QR estudiantil',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: const Text(
+                'Mostralo para que el estudiante entre a tu colegio escaneándolo.',
+              ),
+              value: enabled,
+              onChanged: (bool value) => staffStudentQrEnabled.value = value,
+            ),
+            if (enabled) ...<Widget>[
+              const SizedBox(height: 8),
+              Center(
+                child: QrImageView(
+                  data: schoolQrLink(code),
+                  size: 220,
+                  backgroundColor: Colors.white,
+                  errorCorrectionLevel: QrErrorCorrectLevel.M,
+                  semanticsLabel: 'Código QR de $schoolName, código $code',
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                schoolName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              SelectableText(
+                code,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 26,
+                  letterSpacing: 4,
+                  fontWeight: FontWeight.w700,
+                  color: CureandoTheme.blue,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'En SéTú, el estudiante toca «Escanear QR» y queda dentro del '
+                'espacio de este colegio. No se le pide nombre ni carné.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: CureandoTheme.secondaryInk,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
 }

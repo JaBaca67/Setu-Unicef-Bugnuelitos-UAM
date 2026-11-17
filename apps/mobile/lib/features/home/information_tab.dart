@@ -259,9 +259,7 @@ class _InformationTabState extends State<InformationTab> {
           visualDensity: VisualDensity.compact,
           selected: _topic == topic,
           showCheckmark: false,
-          checkmarkColor: color == CureandoTheme.yellow
-              ? CureandoTheme.ink
-              : Colors.white,
+          checkmarkColor: topic?.ink ?? Colors.white,
           backgroundColor: color,
           selectedColor: color,
           shape: const StadiumBorder(),
@@ -274,9 +272,7 @@ class _InformationTabState extends State<InformationTab> {
             fontSize: 12,
             letterSpacing: 0,
             fontWeight: FontWeight.w700,
-            color: color == CureandoTheme.yellow
-                ? CureandoTheme.ink
-                : Colors.white,
+            color: topic?.ink ?? Colors.white,
           ),
           onSelected: (_) => setState(() {
             _topic = topic;
@@ -377,9 +373,10 @@ class _InformationTabState extends State<InformationTab> {
                 ? 'assets/welcome/campaign-pattern.png'
                 : resource.cardAsset!,
           ),
-          // El recorte centrado mantiene las figuras a la izquierda del
-          // texto y evita costuras cuando el contenido aumenta el alto.
+          // Recorte desde arriba: en tarjetas más anchas que 3:1 se conserva
+          // la cabeza del niño y se recorta por la cintura.
           fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
         ),
       ),
       child: Stack(
@@ -497,15 +494,7 @@ class _InformationTabState extends State<InformationTab> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: 68,
-                      height: 68,
-                      child: Image.asset(
-                        route.topic.sticker,
-                        excludeFromSemantics: true,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                    const OfficialCharactersBadge(size: 68),
                   ],
                 ),
                 Wrap(
@@ -968,15 +957,7 @@ class _RouteChoice extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Center(
-                    child: Image.asset(
-                      route.topic.sticker,
-                      width: 72,
-                      height: 72,
-                      fit: BoxFit.contain,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
+                  const Center(child: OfficialCharactersBadge(size: 72)),
                   const SizedBox(height: 8),
                   Text(
                     route.topic.label,
