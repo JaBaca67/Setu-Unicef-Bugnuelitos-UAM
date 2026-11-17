@@ -13,34 +13,97 @@ class HelpContact {
     required this.name,
     required this.number,
     required this.detail,
+    required this.icon,
   });
 
   final String name;
   final String number;
   final String detail;
+  final IconData icon;
 }
 
-/// Contactos verificados el 16-nov-2026. MINSA y UNICEF no se publican hasta
-/// que el equipo confirme una línea oficial de atención.
+/// Líneas oficiales verificadas el 16-nov-2026 en la cartilla «Mujer,
+/// Dignidad y Derechos» del MINED (p. 29). MINSA y UNICEF no se publican
+/// hasta que el equipo confirme una línea oficial de atención.
 const List<HelpContact> verifiedHelpContacts = <HelpContact>[
   HelpContact(
     name: 'Policía Nacional',
     number: '118',
-    detail: 'Emergencias · 24 horas',
+    detail: 'Si hay peligro o una agresión',
+    icon: Icons.local_police_rounded,
   ),
   HelpContact(
-    name: 'Asistencia médica de emergencia',
-    number: '128',
-    detail: 'Emergencias médicas',
+    name: 'Ministerio de la Familia',
+    number: '133',
+    detail: 'Orientación y acompañamiento',
+    icon: Icons.groups_rounded,
   ),
 ];
 
 const String helpContactsSource =
-    'Fuente: Policía Nacional de Nicaragua (línea 118) y guía oficial de '
-    'viaje del Gobierno de Canadá para Nicaragua (118 y 128). Territorio: '
-    'Nicaragua. Verificado: 16 de noviembre de 2026. Responsable editorial: '
-    'equipo SéTú (Bugñuelitos, UAM). Otras líneas, como MINSA, se agregan '
-    'cuando estén verificadas.';
+    'Fuente: MINED Nicaragua, cartilla «Mujer, Dignidad y Derechos» '
+    '(118 para denunciar; 133 para orientación y acompañamiento). '
+    'Territorio: Nicaragua. Verificado: 16 de noviembre de 2026. '
+    'Responsable editorial: equipo SéTú (Bugñuelitos, UAM).';
+
+const Color _cardBorder = Color(0xFFD6E2F5);
+
+BoxDecoration _helpCardDecoration() => BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(22),
+  border: Border.all(color: _cardBorder, width: 1.5),
+  boxShadow: const <BoxShadow>[
+    BoxShadow(color: Color(0x140C62EB), blurRadius: 14, offset: Offset(0, 4)),
+  ],
+);
+
+/// Título de sección de la pestaña Ayuda.
+class HelpSectionTitle extends StatelessWidget {
+  const HelpSectionTitle(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Semantics(
+      header: true,
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: CureandoTheme.ink,
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+        ),
+      ),
+    ),
+  );
+}
+
+class _IconColumn extends StatelessWidget {
+  const _IconColumn(this.icon);
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 56,
+    child: Icon(icon, color: CureandoTheme.blue, size: 36),
+  );
+}
+
+class _Divider extends StatelessWidget {
+  const _Divider();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 1.5,
+    height: 52,
+    margin: const EdgeInsets.only(right: 12),
+    color: _cardBorder,
+  );
+}
 
 const MethodChannel _dialer = MethodChannel('dev.cureando.app/dialer');
 
@@ -57,74 +120,101 @@ Future<void> _dial(BuildContext context, String number) async {
   }
 }
 
-/// Tarjeta «Si estás en peligro ahora» con los contactos verificados.
+/// «Líneas de ayuda»: contactos oficiales verificados con botón Llamar.
 class EmergencyContactsCard extends StatelessWidget {
   const EmergencyContactsCard({super.key});
 
-  @override
-  Widget build(BuildContext context) => Container(
-    key: const Key('emergency-contacts-card'),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: const Color(0xFFFFC2E2), width: 1.5),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _row(BuildContext context, HelpContact contact) {
+    final Widget info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const Text(
-          'Si estás en peligro ahora',
-          style: TextStyle(
+        Text(
+          contact.number,
+          style: const TextStyle(
             color: CureandoTheme.ink,
+            fontSize: 30,
+            fontWeight: FontWeight.w800,
+            height: 1.05,
+          ),
+        ),
+        Text(
+          contact.name,
+          style: const TextStyle(
+            color: CureandoTheme.ink,
+            fontSize: 15,
             fontWeight: FontWeight.w700,
-            fontSize: 17,
           ),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Llamar es gratis. Podés pedirle a una persona adulta de confianza '
-          'que te acompañe.',
+        Text(
+          contact.detail,
+          style: const TextStyle(color: Color(0xFF475569), fontSize: 12.5),
         ),
-        for (final HelpContact contact in verifiedHelpContacts) ...<Widget>[
-          const SizedBox(height: 12),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      '${contact.name} · ${contact.number}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: CureandoTheme.ink,
-                      ),
-                    ),
-                    Text(contact.detail),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF0092),
-                  minimumSize: const Size(48, 48),
-                ),
-                onPressed: () => _dial(context, contact.number),
-                icon: const Icon(Icons.call_rounded, size: 18),
-                label: Text(
-                  'Llamar',
-                  semanticsLabel: 'Llamar a ${contact.name}, ${contact.number}',
-                ),
-              ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 12),
-        Text(helpContactsSource, style: Theme.of(context).textTheme.bodySmall),
       ],
-    ),
+    );
+    final Widget call = FilledButton(
+      style: FilledButton.styleFrom(
+        backgroundColor: CureandoTheme.blue,
+        minimumSize: const Size(84, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        shape: const StadiumBorder(),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+      ),
+      onPressed: () => _dial(context, contact.number),
+      child: Text(
+        'Llamar',
+        semanticsLabel: 'Llamar a ${contact.name}, ${contact.number}',
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          // Con pantalla angosta o texto grande el botón baja bajo el texto.
+          final bool compact =
+              constraints.maxWidth < 320 ||
+              MediaQuery.textScalerOf(context).scale(10) > 13;
+          final Widget head = Row(
+            children: <Widget>[
+              _IconColumn(contact.icon),
+              const _Divider(),
+              Expanded(child: info),
+              if (!compact) ...<Widget>[const SizedBox(width: 8), call],
+            ],
+          );
+          if (!compact) return head;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[head, const SizedBox(height: 10), call],
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('emergency-contacts-card'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      const HelpSectionTitle('Líneas de ayuda'),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        decoration: _helpCardDecoration(),
+        child: Column(
+          children: <Widget>[
+            for (int i = 0; i < verifiedHelpContacts.length; i++) ...<Widget>[
+              if (i > 0) const Divider(height: 1, color: _cardBorder),
+              _row(context, verifiedHelpContacts[i]),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        helpContactsSource,
+        style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+      ),
+    ],
   );
 }
 
@@ -200,62 +290,139 @@ class _TrustedContactsSectionState extends State<TrustedContactsSection> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: _contacts,
-    builder: (BuildContext context, _) => Container(
+    builder: (BuildContext context, _) => Column(
       key: const Key('trusted-contacts-section'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD6E2F5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          const Text(
-            'Mis números de confianza',
-            style: TextStyle(
-              color: CureandoTheme.ink,
-              fontWeight: FontWeight.w700,
-              fontSize: 17,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Anotá números de personas que te ayudan, para tenerlos a mano. '
-            'Quedan guardados solo en este teléfono.',
-          ),
-          if (!_contacts.ready)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Text('Abriendo tus números…'),
-            )
-          else if (_contacts.failed)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Text('No se pudieron abrir tus números en este teléfono.'),
-            )
-          else ...<Widget>[
-            for (int i = 0; i < _contacts.contacts.length; i++) ...<Widget>[
-              const SizedBox(height: 12),
-              _row(i),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const HelpSectionTitle('Mis contactos de confianza'),
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          decoration: _helpCardDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  const _IconColumn(Icons.person_rounded),
+                  const _Divider(),
+                  Expanded(
+                    child: Text(
+                      !_contacts.ready
+                          ? 'Abriendo tus números…'
+                          : _contacts.failed
+                          ? 'No se pudieron abrir tus números en este teléfono.'
+                          : 'Guardá el número de alguien de confianza.',
+                      style: const TextStyle(
+                        color: CureandoTheme.ink,
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_contacts.ready && !_contacts.failed) ...<Widget>[
+                for (int i = 0; i < _contacts.contacts.length; i++) ...<Widget>[
+                  const Divider(height: 22, color: _cardBorder),
+                  _row(i),
+                ],
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    shape: const StadiumBorder(),
+                    side: const BorderSide(color: CureandoTheme.blue, width: 2),
+                    foregroundColor: CureandoTheme.blue,
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15.5,
+                    ),
+                  ),
+                  onPressed: _contacts.isFull ? null : _showAddSheet,
+                  child: Text(
+                    _contacts.isFull
+                        ? 'Máximo ${TrustedContacts.maxContacts} contactos'
+                        : 'Agregar contacto',
+                  ),
+                ),
+              ],
             ],
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
-              onPressed: _contacts.isFull ? null : _showAddSheet,
-              icon: const Icon(Icons.add_rounded),
-              label: Text(
-                _contacts.isFull
-                    ? 'Máximo ${TrustedContacts.maxContacts} números'
-                    : 'Agregar número',
-              ),
-            ),
-          ],
-        ],
-      ),
+          ),
+        ),
+      ],
     ),
+  );
+}
+
+/// «Preguntas frecuentes» de la pestaña Ayuda; se abren en la misma pantalla.
+class HelpFaqSection extends StatelessWidget {
+  const HelpFaqSection({super.key});
+
+  static const List<(String, String)> faqs = <(String, String)>[
+    (
+      '¿Quién puede leer mi alerta?',
+      'El personal autorizado de la Mesa de Escucha puede leer lo que '
+          'compartiste para atender tu caso.',
+    ),
+    (
+      '¿Qué pasa después de enviar una alerta?',
+      'SéTú te muestra si se confirmó la entrega. Si alguien de la Mesa de '
+          'Escucha habilita el chat, vas a recibir un aviso.',
+    ),
+    (
+      '¿Qué puedo hacer sin internet?',
+      'Podés consultar las líneas de ayuda y tus contactos guardados. Para '
+          'llamar necesitás señal telefónica y para usar el chat necesitás '
+          'internet.',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('help-faq-section'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      const HelpSectionTitle('Preguntas frecuentes'),
+      Container(
+        decoration: _helpCardDecoration(),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: Column(
+              children: <Widget>[
+                for (int i = 0; i < faqs.length; i++) ...<Widget>[
+                  if (i > 0)
+                    const Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: _cardBorder,
+                    ),
+                  ExpansionTile(
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 18),
+                    childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+                    iconColor: CureandoTheme.blue,
+                    collapsedIconColor: CureandoTheme.blue,
+                    expandedAlignment: Alignment.centerLeft,
+                    title: Text(
+                      faqs[i].$1,
+                      style: const TextStyle(
+                        color: CureandoTheme.ink,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                      ),
+                    ),
+                    children: <Widget>[Text(faqs[i].$2)],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
   );
 }
 

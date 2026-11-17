@@ -80,13 +80,15 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Policía Nacional · 118'), findsOneWidget);
+    expect(find.text('118'), findsOneWidget);
+    expect(find.text('133'), findsOneWidget);
+    expect(find.text('Ministerio de la Familia'), findsOneWidget);
     expect(
       find.textContaining('Verificado: 16 de noviembre de 2026'),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Agregar número'));
+    await tester.tap(find.text('Agregar contacto'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('trusted-name-field')), 'Mamá');
     await tester.enterText(
@@ -98,5 +100,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Mamá'), findsOneWidget);
     expect(find.text('88881234'), findsOneWidget);
+  });
+
+  testWidgets('las preguntas frecuentes se abren en la misma pantalla', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SingleChildScrollView(child: HelpFaqSection())),
+      ),
+    );
+    expect(find.textContaining('personal autorizado'), findsNothing);
+    await tester.tap(find.text('¿Quién puede leer mi alerta?'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('personal autorizado'), findsOneWidget);
   });
 }

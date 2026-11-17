@@ -625,7 +625,9 @@ String _normalize(String value) {
 }
 
 class InformationHeader extends StatelessWidget {
-  const InformationHeader({super.key});
+  const InformationHeader({super.key, this.title = 'Información'});
+
+  final String title;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -652,8 +654,8 @@ class InformationHeader extends StatelessWidget {
                 const SizedBox(height: 30),
                 Semantics(
                   header: true,
-                  child: const Text(
-                    'Información',
+                  child: Text(
+                    title,
                     style: TextStyle(
                       fontSize: 28,
                       color: Colors.white,

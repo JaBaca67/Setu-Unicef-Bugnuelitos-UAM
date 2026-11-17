@@ -58,9 +58,7 @@ void main() {
               HomeSection.actividades: find.textContaining(
                 'El equipo diseñó otros materiales',
               ),
-              HomeSection.ayuda: find.textContaining(
-                'Tu relato es confidencial',
-              ),
+              HomeSection.ayuda: find.text('¿Qué puedo hacer sin internet?'),
             };
             for (final MapEntry<HomeSection, Finder> entry in endings.entries) {
               await tester.tap(

@@ -83,10 +83,7 @@ void main() {
     expect(find.text('Actividades de muestra'), findsOneWidget);
     expect(find.text('Pregunta del día'), findsOneWidget);
     await _tapNav(tester, 'Ayuda');
-    expect(
-      find.textContaining('recursos de ayuda verificados'),
-      findsOneWidget,
-    );
+    expect(find.text('Líneas de ayuda'), findsOneWidget);
     await _tapNav(tester, 'Inicio');
     expect(find.text('¿Qué querés hacer hoy?'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -275,7 +272,8 @@ void main() {
     await _goHome(tester);
     await _tapLabel(tester, 'Pedir apoyo');
     await _tapLabel(tester, 'Ver recursos de ayuda');
-    expect(find.text('Si estás en peligro ahora'), findsOneWidget);
+    expect(find.text('Líneas de ayuda'), findsOneWidget);
+    await _tapNav(tester, 'Inicio');
     await _tapLabel(tester, 'Pedir apoyo');
     await _tapLabel(tester, 'Enviar una alerta');
     await _tapLabel(tester, 'Ciberacoso');
@@ -447,7 +445,7 @@ void main() {
     expect(_button(tester, 'Ruta completada').onPressed, isNull);
     await _tapLabel(tester, 'Fuente y revisión');
     await _tapLabel(tester, 'Ir a Ayuda');
-    expect(find.text('Si estás en peligro ahora'), findsOneWidget);
+    expect(find.text('Líneas de ayuda'), findsOneWidget);
     await _tapNav(tester, 'Actividades');
     await _tapLabel(
       tester,
@@ -500,7 +498,7 @@ void main() {
       expect(find.text('Pasó en el chat del grupo'), findsOneWidget);
       await _tapLabel(tester, 'Fuente y revisión');
       await _tapLabel(tester, 'Ir a Ayuda');
-      expect(find.text('Si estás en peligro ahora'), findsOneWidget);
+      expect(find.text('Líneas de ayuda'), findsOneWidget);
       await _tapNav(tester, 'Información');
       await _tapLabel(tester, '¿Es una broma o acoso?');
       await _tapLabel(tester, 'Pedir apoyo');
@@ -678,6 +676,8 @@ void main() {
     await _tapNav(tester, 'Actividades');
     expect(find.text('Actividades de muestra'), findsOneWidget);
     await _tapNav(tester, 'Ayuda');
+    expect(find.text('Líneas de ayuda'), findsOneWidget);
+    await _tapNav(tester, 'Inicio');
     await _tapLabel(tester, 'Pedir apoyo');
     await _tapLabel(tester, 'Enviar una alerta');
     await _tapLabel(tester, 'Violencia sexual');
@@ -751,10 +751,7 @@ void main() {
       await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
       await tester.pumpAndSettle();
       expect(currentTab(), HomeSection.ayuda);
-      expect(
-        find.textContaining('recursos de ayuda verificados'),
-        findsOneWidget,
-      );
+      expect(find.text('Líneas de ayuda'), findsOneWidget);
 
       // En el extremo derecho, deslizar a la izquierda mantiene Ayuda.
       await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
