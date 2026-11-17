@@ -13,6 +13,7 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         super.onCreate(savedInstanceState)
+        SetuNotifications.ensureChannel(this)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -40,6 +41,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+        SetuNotifications.register(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         nearbyMeshChannel = NearbyMeshChannel(
             this,
             flutterEngine.dartExecutor.binaryMessenger,

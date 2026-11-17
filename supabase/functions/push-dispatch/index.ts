@@ -215,6 +215,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
           },
           android: {
             priority: "high",
+            // Canal nativo de importancia alta (aviso flotante tipo mensajería).
+            notification: {
+              channel_id: "setu_avisos",
+              icon: "ic_stat_setu",
+              default_sound: true,
+              default_vibrate_timings: true,
+              notification_priority: "PRIORITY_MAX",
+              visibility: "PRIVATE",
+            },
           },
           data: {
             event_type: payload.event_type,

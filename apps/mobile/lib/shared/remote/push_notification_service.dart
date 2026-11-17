@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'setu_remote_gateway.dart';
 
@@ -100,6 +101,7 @@ class PushNotificationService {
         RemoteMessage message,
       ) {
         final RemoteNotification? note = message.notification;
+        unawaited(_showNativeNotification(note?.title, note?.body));
         _onForegroundEvent?.call(note?.title, note?.body);
       });
       await _refreshToken();
@@ -262,6 +264,25 @@ class PushNotificationService {
           'SéTú push: fallo al sincronizar estudiante (${error.runtimeType}).',
         );
       }
+    }
+  }
+
+  static const MethodChannel _nativeNotifications = MethodChannel(
+    'dev.cureando.app/notifications',
+  );
+
+  /// Con la app abierta FCM no muestra el aviso del sistema; se publica en el
+  /// canal nativo de importancia alta para que aparezca como aviso flotante.
+  Future<void> _showNativeNotification(String? title, String? body) async {
+    final String text = body?.trim() ?? '';
+    if (text.isEmpty) return;
+    try {
+      await _nativeNotifications.invokeMethod<void>('show', <String, String>{
+        'title': (title?.trim().isNotEmpty ?? false) ? title!.trim() : 'SéTú',
+        'body': text,
+      });
+    } on Object {
+      // Sin canal nativo (pruebas u otra plataforma): queda el aviso en la app.
     }
   }
 

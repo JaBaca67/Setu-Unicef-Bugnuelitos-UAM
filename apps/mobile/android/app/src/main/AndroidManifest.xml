@@ -27,6 +27,13 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Avisos FCM: canal de importancia alta (aviso flotante) e ícono monocromo. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="setu_avisos" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_setu" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
