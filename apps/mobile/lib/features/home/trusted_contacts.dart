@@ -7,14 +7,18 @@ import '../../shared/local/encrypted_local_store.dart';
 /// Número de confianza que el estudiante anota para llamar rápido (ADR 0025).
 @immutable
 class TrustedContact {
-  const TrustedContact({required this.name, required this.number});
+  const TrustedContact({required this.name, required this.number, this.note});
 
   final String name;
   final String number;
 
+  /// Para qué llamarle (opcional), escrito por el estudiante.
+  final String? note;
+
   Map<String, Object?> toJson() => <String, Object?>{
     'name': name,
     'number': number,
+    if (note != null && note!.isNotEmpty) 'note': note,
   };
 }
 
@@ -26,6 +30,7 @@ class TrustedContacts extends ChangeNotifier {
 
   static const int maxContacts = 5;
   static const int maxNameLength = 30;
+  static const int maxNoteLength = 80;
 
   static Future<LocalStorePersistence> _onDevice() =>
       EncryptedLocalStore.onDevice(
@@ -76,6 +81,7 @@ class TrustedContacts extends ChangeNotifier {
             return TrustedContact(
               name: map['name']! as String,
               number: map['number']! as String,
+              note: map['note'] as String?,
             );
           }),
         );
@@ -90,15 +96,27 @@ class TrustedContacts extends ChangeNotifier {
   }
 
   /// Agrega un contacto. Devuelve un mensaje de error o `null` si se guardó.
-  Future<String?> add({required String name, required String number}) async {
+  Future<String?> add({
+    required String name,
+    required String number,
+    String note = '',
+  }) async {
     final String? cleanName = normalizeName(name);
     final String? cleanNumber = normalizeNumber(number);
     if (cleanName == null) return 'Escribí un nombre corto (hasta 30 letras).';
     if (cleanNumber == null) return 'Escribí un número de teléfono válido.';
     if (isFull) return 'Podés guardar hasta $maxContacts números.';
+    final String cleanNote = note.trim();
+    if (cleanNote.length > maxNoteLength) {
+      return 'La descripción puede tener hasta $maxNoteLength letras.';
+    }
     return _save(<TrustedContact>[
       ..._contacts,
-      TrustedContact(name: cleanName, number: cleanNumber),
+      TrustedContact(
+        name: cleanName,
+        number: cleanNumber,
+        note: cleanNote.isEmpty ? null : cleanNote,
+      ),
     ]);
   }
 

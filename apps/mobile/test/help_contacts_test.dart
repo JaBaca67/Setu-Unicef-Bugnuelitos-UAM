@@ -83,10 +83,11 @@ void main() {
     expect(find.text('118'), findsOneWidget);
     expect(find.text('133'), findsOneWidget);
     expect(find.text('Ministerio de la Familia'), findsOneWidget);
-    expect(
-      find.textContaining('Verificado: 16 de noviembre de 2026'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Atiende las 24 horas'), findsNothing);
+    await tester.tap(find.text('¿Cuándo llamar?').first);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Atiende las 24 horas'), findsOneWidget);
+    expect(find.textContaining('Fuente: MINED Nicaragua'), findsOneWidget);
 
     await tester.tap(find.text('Agregar contacto'));
     await tester.pumpAndSettle();
@@ -95,11 +96,21 @@ void main() {
       find.byKey(const Key('trusted-number-field')),
       '8888 1234',
     );
+    await tester.enterText(
+      find.byKey(const Key('trusted-note-field')),
+      'Cuando me siento triste',
+    );
     await tester.ensureVisible(find.text('Guardar'));
     await tester.tap(find.text('Guardar'), warnIfMissed: true);
     await tester.pumpAndSettle();
     expect(find.text('Mamá'), findsOneWidget);
     expect(find.text('88881234'), findsOneWidget);
+    expect(find.text('Cuando me siento triste'), findsNothing);
+    await tester.ensureVisible(find.text('¿Para qué?'));
+    await tester.tap(find.text('¿Para qué?'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cuando me siento triste'), findsOneWidget);
+    expect(contacts.contacts.single.note, 'Cuando me siento triste');
   });
 
   testWidgets('las preguntas frecuentes se abren en la misma pantalla', (

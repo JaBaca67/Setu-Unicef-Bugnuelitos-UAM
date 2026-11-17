@@ -13,12 +13,16 @@ class HelpContact {
     required this.name,
     required this.number,
     required this.detail,
+    required this.usage,
     required this.icon,
   });
 
   final String name;
   final String number;
   final String detail;
+
+  /// Enunciado breve de cuándo usar la línea (orientación desplegable).
+  final String usage;
   final IconData icon;
 }
 
@@ -30,12 +34,18 @@ const List<HelpContact> verifiedHelpContacts = <HelpContact>[
     name: 'Policía Nacional',
     number: '118',
     detail: 'Si hay peligro o una agresión',
+    usage:
+        'Llamá si estás en peligro ahora, si alguien te está lastimando o si '
+        'viste una agresión. Atiende las 24 horas.',
     icon: Icons.local_police_rounded,
   ),
   HelpContact(
     name: 'Ministerio de la Familia',
     number: '133',
     detail: 'Orientación y acompañamiento',
+    usage:
+        'Llamá para pedir orientación y acompañamiento cuando algo te '
+        'preocupa en tu casa, en la escuela o con otras personas.',
     icon: Icons.groups_rounded,
   ),
 ];
@@ -161,29 +171,20 @@ class EmergencyContactsCard extends StatelessWidget {
         semanticsLabel: 'Llamar a ${contact.name}, ${contact.number}',
       ),
     );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          // Con pantalla angosta o texto grande el botón baja bajo el texto.
-          final bool compact =
-              constraints.maxWidth < 320 ||
-              MediaQuery.textScalerOf(context).scale(10) > 13;
-          final Widget head = Row(
-            children: <Widget>[
-              _IconColumn(contact.icon),
-              const _Divider(),
-              Expanded(child: info),
-              if (!compact) ...<Widget>[const SizedBox(width: 8), call],
-            ],
-          );
-          if (!compact) return head;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[head, const SizedBox(height: 10), call],
-          );
-        },
-      ),
+    return _ExpandableHelpRow(
+      key: Key('linea-${contact.number}'),
+      icon: contact.icon,
+      info: info,
+      call: call,
+      toggleLabel: '¿Cuándo llamar?',
+      details: <Widget>[
+        Text(contact.usage),
+        const SizedBox(height: 6),
+        const Text(
+          'Fuente: MINED Nicaragua · Verificado: 16-nov-2026',
+          style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
+        ),
+      ],
     );
   }
 
@@ -204,11 +205,6 @@ class EmergencyContactsCard extends StatelessWidget {
             ],
           ],
         ),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        helpContactsSource,
-        style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
       ),
     ],
   );
@@ -251,23 +247,23 @@ class _TrustedContactsSectionState extends State<TrustedContactsSection> {
 
   Widget _row(int i) {
     final TrustedContact contact = _contacts.contacts[i];
-    return Row(
+    final String? note = contact.note;
+    final Widget info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                contact.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: CureandoTheme.ink,
-                ),
-              ),
-              Text(contact.number),
-            ],
+        Text(
+          contact.name,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: CureandoTheme.ink,
           ),
         ),
+        Text(contact.number),
+      ],
+    );
+    final Widget actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
         IconButton(
           tooltip: 'Borrar ${contact.name}',
           onPressed: () => _contacts.removeAt(i),
@@ -280,6 +276,22 @@ class _TrustedContactsSectionState extends State<TrustedContactsSection> {
           label: Text('Llamar', semanticsLabel: 'Llamar a ${contact.name}'),
         ),
       ],
+    );
+    if (note == null || note.isEmpty) {
+      return Row(
+        children: <Widget>[
+          Expanded(child: info),
+          actions,
+        ],
+      );
+    }
+    return _ExpandableHelpRow(
+      key: Key('contacto-$i'),
+      info: info,
+      call: actions,
+      toggleLabel: '¿Para qué?',
+      padding: EdgeInsets.zero,
+      details: <Widget>[Text(note)],
     );
   }
 
@@ -437,6 +449,7 @@ class _AddTrustedContactSheet extends StatefulWidget {
 class _AddTrustedContactSheetState extends State<_AddTrustedContactSheet> {
   final TextEditingController _name = TextEditingController();
   final TextEditingController _number = TextEditingController();
+  final TextEditingController _note = TextEditingController();
   String? _error;
   bool _saving = false;
 
@@ -444,6 +457,7 @@ class _AddTrustedContactSheetState extends State<_AddTrustedContactSheet> {
   void dispose() {
     _name.dispose();
     _number.dispose();
+    _note.dispose();
     super.dispose();
   }
 
@@ -452,6 +466,7 @@ class _AddTrustedContactSheetState extends State<_AddTrustedContactSheet> {
     final String? result = await widget.contacts.add(
       name: _name.text,
       number: _number.text,
+      note: _note.text,
     );
     if (!mounted) return;
     if (result == null) {
@@ -504,6 +519,17 @@ class _AddTrustedContactSheetState extends State<_AddTrustedContactSheet> {
           keyboardType: TextInputType.phone,
           decoration: const InputDecoration(labelText: 'Número'),
         ),
+        const SizedBox(height: 8),
+        TextField(
+          key: const Key('trusted-note-field'),
+          controller: _note,
+          maxLength: TrustedContacts.maxNoteLength,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            labelText: '¿Para qué le llamarías? (opcional)',
+            hintText: 'Ej.: Cuando me siento triste',
+          ),
+        ),
         if (_error != null) ...<Widget>[
           const SizedBox(height: 8),
           Text(_error!, style: const TextStyle(color: Color(0xFFB00063))),
@@ -517,4 +543,132 @@ class _AddTrustedContactSheetState extends State<_AddTrustedContactSheet> {
       ],
     ),
   );
+}
+
+/// Fila con un desplegable de orientación: al tocar «¿Cuándo llamar?» se abre
+/// una tarjetita con el enunciado breve de uso.
+class _ExpandableHelpRow extends StatefulWidget {
+  const _ExpandableHelpRow({
+    super.key,
+    required this.info,
+    required this.call,
+    required this.toggleLabel,
+    required this.details,
+    this.icon,
+    this.padding = const EdgeInsets.symmetric(vertical: 14),
+  });
+
+  final IconData? icon;
+  final Widget info;
+  final Widget call;
+  final String toggleLabel;
+  final List<Widget> details;
+  final EdgeInsets padding;
+
+  @override
+  State<_ExpandableHelpRow> createState() => _ExpandableHelpRowState();
+}
+
+class _ExpandableHelpRowState extends State<_ExpandableHelpRow> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget toggle = Semantics(
+      button: true,
+      expanded: _open,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => setState(() => _open = !_open),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Flexible(
+                child: Text(
+                  widget.toggleLabel,
+                  style: const TextStyle(
+                    color: CureandoTheme.blue,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              AnimatedRotation(
+                turns: _open ? 0.5 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: CureandoTheme.blue,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final Widget text = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[widget.info, toggle],
+    );
+    final IconData? icon = widget.icon;
+    return Padding(
+      padding: widget.padding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool compact =
+                  constraints.maxWidth < 320 ||
+                  MediaQuery.textScalerOf(context).scale(10) > 13;
+              final Widget head = Row(
+                children: <Widget>[
+                  if (icon != null) ...<Widget>[
+                    _IconColumn(icon),
+                    const _Divider(),
+                  ],
+                  Expanded(child: text),
+                  if (!compact) ...<Widget>[
+                    const SizedBox(width: 8),
+                    widget.call,
+                  ],
+                ],
+              );
+              if (!compact) return head;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  head,
+                  const SizedBox(height: 10),
+                  widget.call,
+                ],
+              );
+            },
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _open
+                ? Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAF2FE),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: widget.details,
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
 }
