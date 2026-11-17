@@ -22,7 +22,7 @@ Primero se necesita validar física y técnicamente la red. Un envío directo es
 | Experimento de proximidad | Transporte pequeño A→B→puente y recibos reales | Propuesta de dependencias/canal y equipos; prueba física. |
 | Backend mínimo | Recepción idempotente y proyecciones separadas | Esquema/RLS aprobados; integración con dos centros y dos estudiantes. |
 | Tres superficies | Reporte, aviso MINED, alerta/ficha dirección y actuación | Autorización real por recurso; sin selector público de roles privilegiados. |
-| Información E10/E11 | Catálogo/lector y muestra de artículo, video o guía revisados; acceso sin reporte y desde espera | Componente de producto confirmado en ADR 0009. Aprobar implementación, contenido/derechos y reproductor; comprobar retorno sin alterar una alerta. |
+| Información E10/E11 | Catálogo/lector y muestra de artículo, video o guía revisados; acceso sin reporte y desde espera | Demo E10/E11 aprobada e implementada el 16 nov (docs/14): Biblioteca/Rutas, lectores y video simulado. Contenido/derechos, revisión profesional y reproductor real pendientes; comprobar retorno sin alterar una alerta. |
 | Cola y sincronización | Persistencia, custodia, reintentos y acuse central | Reinicio, duplicados, alteraciones y respuesta perdida. |
 | Presentación | Marca final, accesibilidad y guion de 120 s | Revisión visual y evidencia de cada tramo. |
 

@@ -116,3 +116,11 @@ adb -s <dispositivo> shell am start -W -n dev.cureando.mockup/dev.cureando.curea
 ```
 
 ADB local: `& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"`. Comprobar almacenamiento listo, botón de interacción, protección activada por defecto, cancelación y confirmación del interruptor, capturas permitidas al pausarlo y protección restaurada tras reiniciar. Nunca guardar identificadores del teléfono o datos locales en commits.
+
+## Información E10/E11 — 2026-11-16
+
+«Explorar Información» en Bienvenida abre `/informacion` sin código: Biblioteca con búsqueda/filtros y Rutas. Desde Inicio se mantiene la pestaña Información y se destacan «¿Es una broma o acoso?» y «Cómo ser un testigo solidario». El catálogo de siete recursos es ficticio, en revisión editorial; solo Acoso escolar tiene los tres pasos completos. Las guías y la historia ilustrada están empaquetadas. El reproductor de video es una muestra con temporizador/pausa/CC, sin video real ni descargas; la alternativa completa en texto funciona sin internet.
+
+Los lectores públicos (`/informacion/recurso/:id`) no necesitan sesión. Pedir apoyo explica el acceso escolar y permite seguir leyendo. Los lectores del Inicio usan `/inicio/recurso/:id`. «Fuente y revisión» muestra origen propio, público/territorio, revisión pendiente y alcance, y permite ir a Ayuda.
+
+El progreso conserva el archivo cifrado v1 existente: +5 XP la primera vez por recurso y +10 XP una sola vez por ruta al acertar/confirmar el cierre. `routes` es opcional al cargar archivos anteriores; la pregunta diaria conserva su registro separado. No se puntúan solicitudes ni casos. Las capturas opcionales de pruebas se generan en `build/qa` con `flutter test --dart-define=SETU_CAPTURE_QA=true`.

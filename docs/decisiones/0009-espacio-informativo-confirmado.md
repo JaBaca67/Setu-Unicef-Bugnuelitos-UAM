@@ -1,7 +1,7 @@
 # ADR 0009 — Espacio informativo confirmado como parte de SéTú
 
 - **Fecha:** 2026-11-09.
-- **Estado:** Aceptado como decisión de producto; implementación técnica pendiente de aprobación.
+- **Estado:** Aceptado como decisión de producto; demo E10/E11 aprobada por el usuario e implementada el 16 nov 2026 (detalle y límites en docs/14).
 - **Base:** acuerdo de Meet del 9 nov, Resumen General de Drive y confirmación explícita del usuario en esta sesión.
 
 ## Contexto
@@ -28,4 +28,4 @@ Actualizar README, producto, pantallas, diseño, plan, arquitectura/recursos, fl
 
 Catálogo JSON/recursos Flutter, `video_player` candidato y distribución editorial futura son propuestas; no se instalan dependencias, crean carpetas, implementan pantallas o publican recursos en este bloque documental. Textos por edad, derechos, revisión profesional, accesibilidad, vigencia y disponibilidad offline se resuelven antes de publicar. «Híbrido» significa información más atención, sin prometer todo el multimedia sin conexión.
 
-No se modifican los originales de Drive. Se registran aquí los acuerdos y la especificación que debe reflejarse en manuales del producto y entregables del equipo. El código M1 permanece sin cambios.
+No se modifican los originales de Drive. Se registran aquí los acuerdos y la especificación que debe reflejarse en manuales del producto y entregables del equipo. El bloque documental original no cambió M1. La demo E10/E11 posterior incorpora catálogo/lectores propios y video simulado, sin dependencias nuevas; publicación editorial y video real pendientes.

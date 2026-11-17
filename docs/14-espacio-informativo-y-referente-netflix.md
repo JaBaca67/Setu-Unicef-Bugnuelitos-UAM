@@ -1,6 +1,6 @@
 # Espacio Información: origen, alcance e integración
 
-**Revisión:** 2026-11-09. **Decisión de producto confirmada**, reforzada expresamente por el usuario; implementación pendiente. [README](../README.md) · [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md).
+**Revisión:** 2026-11-16. **Decisión de producto confirmada**; demo E10/E11 implementada con aprobación del usuario, pendiente de publicación editorial. [README](../README.md) · [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md).
 
 ## 1. La idea en las sesiones de Meet
 
@@ -55,12 +55,12 @@ No se añaden test de autodiagnóstico, recomendaciones basadas en el chat, clas
 
 Si se elige pedir apoyo, se verifica el contexto escolar cuando sea necesario antes del formulario; consultar información nunca obliga a dar el código. La forma exacta de tarjetas, filtros y búsqueda se prototipa y valida con primaria/secundaria; no se da por aprobado un buscador o recomendador que guarde consultas sensibles.
 
-## 5. Integración técnica propuesta
+## 5. Integración técnica y corte de muestra
 
 | Capa | Propuesta para revisión de implementación |
 | --- | --- |
-| App Flutter/Dart | Widgets nativos para catálogo y lectura; catálogo JSON versionado y recursos empaquetados como opción inicial de demo. No hay módulo implementado por documentarlo. |
-| Video | `video_player`, mantenido por Flutter, como candidato para reproducción en la app de archivos autorizados locales o por red. Versión, permisos, formatos y accesibilidad deben verificarse antes de instalar. No autoplay o reproducción de fondo por defecto. |
+| App Flutter/Dart | Demo Flutter implementada: catálogo tipado local en `info_catalog.dart`, Biblioteca con búsqueda/filtros, Rutas y lectores. Textos e ilustraciones empaquetados; sin backend editorial. |
+| Video | La demo usa un reproductor de muestra con temporizador, pausa y CC en español, identificado como simulación; no incluye archivos de video ni descargas. Alternativa completa en texto disponible sin internet. Un reproductor real sigue pendiente; no se instaló `video_player`. |
 | Actualización editorial | Recursos publicados y metadatos separados del backend de casos; Supabase como opción futura para catálogo/archivos aprobados. Un catálogo empaquetado no requiere crear un CMS o cuarto panel ahora. |
 | Sin internet | Mostrar solo lo realmente empaquetado/descargado y vigente; artículo/transcripción como alternativa prevista. Indicar un video no disponible, sin prometer streaming offline ni transportarlo por mesh. Política de descarga/tamaño/caché por aprobar. |
 | Privacidad | La consulta pública no lleva ID de caso, relato, institución o nivel clínico. Evitar historial sensible de lectura y recomendaciones inferidas. Los proveedores externos necesitan revisión antes de embebido/enlace; no instalar los rastreadores del referente. |
@@ -94,4 +94,13 @@ Es un subsistema lógico complementario, independiente del caso y del transporte
 
 Debe poder abrirse E10 sin reporte o QR; navegar a texto/video accesible; distinguir descargado de no disponible; pedir ayuda voluntariamente; volver desde la espera conservando operación/estado; y comprobar que lectura/consultas no exponen ni modifican casos. Una maqueta verifica navegación; reproducir/cargar archivos y preservar estado requiere implementación aprobada y pruebas.
 
-La **existencia y finalidad** del apartado están confirmadas. Se decide después el primer catálogo, revisión profesional, derechos, diseño por edad, reproductor/versiones, distribución y política offline. El corte de demo debe representar esta parte de la solución con material de ejemplo identificado y declarar cualquier tramo simulado; no se presenta como catálogo clínico operativo o módulo ya programado.
+La **existencia y finalidad** del apartado están confirmadas. Se decide después el primer catálogo, revisión profesional, derechos, diseño por edad, reproductor/versiones, distribución y política offline. El corte E10/E11 usa material ficticio identificado como muestra en revisión editorial. El reproductor es simulado; no se presenta como catálogo clínico operativo.
+
+## 8. Demo E10/E11 aprobada (16 nov 2026)
+
+- `/informacion` abre Biblioteca y Rutas sin código ni sesión; `/informacion/recurso/:id` permite leer recursos. Desde Inicio se usan los lectores `/inicio/recurso/:id`. La navegación conserva el catálogo al volver del lector.
+- Biblioteca incluye siete recursos de muestra en cuatro temas; la pregunta de cierre se abre desde Rutas. Solo Acoso escolar dispone de tres pasos; los otros temas figuran en preparación.
+- Inicio muestra «¿Es una broma o acoso?» y «Cómo ser un testigo solidario». Guía, video simulado, texto sin conexión, historia de tres viñetas y pregunta A/B/C tienen salida a apoyo y el modal Fuente y revisión.
+- +5 XP por recurso una sola vez. El resumen y el video comparten identificador y recompensa. El cierre correcto de ruta concede +10 XP una sola vez por ruta al pulsar completar, separado de la Pregunta del día. El archivo cifrado v1 admite `routes` opcional sin descartar registros anteriores (ADR 0014).
+- Los XP siguen siendo por instalación, sin cuenta escolar. Pedir apoyo desde un lector público explica el acceso con código y ofrece seguir leyendo. La consulta no crea casos ni cambia sus estados.
+- El modal declara origen propio y revisión/responsable editorial pendientes. No atribuye el contenido a un protocolo MINED sin verificarlo. Quedan pendientes revisión profesional, derechos, catálogo definitivo, video real y validación con estudiantes/dispositivos.
