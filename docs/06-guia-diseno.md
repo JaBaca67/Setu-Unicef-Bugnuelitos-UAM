@@ -93,3 +93,14 @@ Los títulos tienen hasta seis palabras, los resúmenes hasta 70 caracteres y ca
 Biblioteca distingue la portada E10-A del catálogo E10-B. La portada muestra un destacado azul con «Leer», bloques por tema con dos tarjetas ilustradas contiguas y un banner para la tercera pieza (o una pieza única). Cada bloque ofrece «Ver catálogo ›», que activa el filtro de ese tema. Las búsquedas y categorías usan tarjetas compactas con miniatura, disponibilidad verde, título, tema/formato/duración y resumen de una línea; «+5 XP» aparece solo mientras la lectura no esté registrada. Se omite la duración cuando no está verificada. «Todos» limpia tema y búsqueda y vuelve a la portada. Con texto ampliado, las tarjetas en pares pasan a una columna y los textos compactos pueden crecer.
 
 Los primeros chips son Todos, Acoso escolar, Emociones y Ciberacoso: caben completos a 360–412 px con Poppins bold de 12 sp, separación de 6 px y padding horizontal adaptado al ancho. La selección se identifica por borde oscuro de 2 px y estado accesible; no reserva espacio para un checkmark. Con texto al 200 % pueden verse menos de cuatro chips completos.
+
+
+## Actividades E06 y personajes de apoyo (17 nov 2026)
+
+El bloque aprobado implementa cinco entradas: Rompecabezas del buen trato, Semáforo de emociones, Dados emocionales, Pregunta libre y Dibujo libre. La portada comparte el fondo, las figuras transparentes y la fila SéTú/UNICEF de Información; Ayuda ya utiliza esa misma composición sobre `CampaignBackground`. Las rutas viven bajo `/inicio/actividades/` y conservan área segura inferior y desplazamiento. Con texto ampliado, las tarjetas de la portada pasan a una columna.
+
+La pregunta educativa diaria sigue disponible desde su banner de Inicio en `/inicio/actividades/diaria`, con las mismas reglas de XP y racha de ADR 0014. Las cinco actividades nuevas no conceden XP ni modifican `LearningProgress`. Las selecciones, emociones al azar, respuestas libres y trazos viven solo en memoria durante la actividad; no se guardan ni se envían. Cambiar la pregunta libre limpia su respuesta anterior. El borrador de dibujo limpia el lienzo completo con confirmación; Deshacer elimina el último trazo.
+
+El rompecabezas ofrece tres escenas, reintentos con explicación amable y opciones con la misma silueta original, diferenciadas por color y texto. `PuzzleBoard` aísla los estados `disconnected`/`connected`; la composición final de piezas conectadas queda para la segunda pasada visual acordada.
+
+El flujo de apoyo utiliza los PNG rasterizados de los SVG originales en `assets/brand/png/` para sus personajes decorativos. Paso 2 presenta `personaje-08` para «Me pasó a mí» y `personaje-14` para «Lo vi o supe de alguien», con etiquetas accesibles y chip «Testigo solidario» en una línea. «Mi pieza» y su personalización mantienen su representación propia.

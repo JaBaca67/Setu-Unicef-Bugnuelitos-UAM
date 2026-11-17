@@ -6,7 +6,7 @@ import 'package:cureando_mobile/features/home/information_tab.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/info_catalog.dart';
 import 'package:cureando_mobile/features/home/student_preview_cards.dart';
-import 'package:cureando_mobile/features/home/student_activities.dart';
+import 'package:cureando_mobile/features/home/activity_screens.dart';
 import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:cureando_mobile/features/school_access/school_location.dart';
@@ -84,8 +84,8 @@ void main() {
     expect(find.text('Acoso escolar'), findsWidgets);
     expect(find.text('Ver catálogo ›'), findsNWidgets(6));
     await _tapNav(tester, 'Actividades');
-    expect(find.text('Actividades de muestra'), findsOneWidget);
-    expect(find.text('Pregunta del día'), findsOneWidget);
+    expect(find.text('Rompecabezas del buen trato'), findsOneWidget);
+    expect(find.text('Semáforo de emociones'), findsOneWidget);
     await _tapNav(tester, 'Ayuda');
     expect(find.text('Líneas de ayuda'), findsOneWidget);
     await _tapNav(tester, 'Inicio');
@@ -120,12 +120,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Noviembre 2026'), findsOneWidget);
     await _tapLabel(tester, 'Ir a Actividades');
-    expect(find.text('Actividades de muestra'), findsOneWidget);
+    expect(find.text('Rompecabezas del buen trato'), findsOneWidget);
+    await _tapNav(tester, 'Inicio');
+    await _tapHomeQuestion(tester);
     await _tapLabel(
       tester,
       'Todas las emociones son válidas; lo importante es cómo las expresamos.',
     );
-    await _tapNav(tester, 'Inicio');
+    await _tapLabel(tester, 'Actividades');
     expect(find.text('Racha de 1 día'), findsOneWidget);
     expect(find.text('10 XP'), findsOneWidget);
 
@@ -616,7 +618,7 @@ void main() {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
-    await _tapNav(tester, 'Actividades');
+    await _tapHomeQuestion(tester);
     await _tapLabel(
       tester,
       'Hay emociones malas que es mejor esconder siempre.',
@@ -627,12 +629,15 @@ void main() {
       'Todas las emociones son válidas; lo importante es cómo las expresamos.',
     );
     expect(find.text('¡Así es! Sumaste 10 XP.'), findsOneWidget);
+    await _tapLabel(tester, 'Actividades');
+    await _tapNav(tester, 'Actividades');
+    await _tapLabel(tester, 'Dados emocionales');
     await _tapLabel(tester, 'Lanzar el dado');
-    expect(find.text('Lanzar de nuevo'), findsOneWidget);
+    expect(find.text('Volver a lanzar'), findsOneWidget);
     final int emotionsShown = diceEmotions
         .where(
           (DiceEmotion emotion) =>
-              find.text(emotion.name).evaluate().isNotEmpty,
+              find.text('Te salió: ${emotion.name}').evaluate().isNotEmpty,
         )
         .length;
     expect(emotionsShown, 1);
@@ -737,7 +742,7 @@ void main() {
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     await _tapNav(tester, 'Actividades');
-    expect(find.text('Actividades de muestra'), findsOneWidget);
+    expect(find.text('Rompecabezas del buen trato'), findsOneWidget);
     await _tapNav(tester, 'Ayuda');
     expect(find.text('Líneas de ayuda'), findsOneWidget);
     await _tapNav(tester, 'Inicio');
@@ -809,7 +814,7 @@ void main() {
       await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
       await tester.pumpAndSettle();
       expect(currentTab(), HomeSection.actividades);
-      expect(find.text('Actividades de muestra'), findsOneWidget);
+      expect(find.text('Rompecabezas del buen trato'), findsOneWidget);
 
       await tester.drag(find.byType(CustomScrollView), const Offset(-220, 0));
       await tester.pumpAndSettle();
@@ -952,4 +957,12 @@ Future<void> _capture(WidgetTester tester, Key key, String name) async {
       '${directory.path}/$name.png',
     ).writeAsBytes(bytes!.buffer.asUint8List());
   });
+}
+
+Future<void> _tapHomeQuestion(WidgetTester tester) async {
+  final Finder question = find.bySemanticsLabel(RegExp('^Pregunta del día'));
+  await tester.ensureVisible(question);
+  await tester.pumpAndSettle();
+  await tester.tap(question);
+  await tester.pumpAndSettle();
 }

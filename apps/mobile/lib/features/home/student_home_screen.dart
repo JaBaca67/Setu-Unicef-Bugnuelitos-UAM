@@ -42,7 +42,6 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   HomeSection _section = HomeSection.inicio;
-  final GlobalKey _diceKey = GlobalKey();
   late final PageController _pageController;
   final List<ScrollController> _scrollControllers =
       List<ScrollController>.generate(
@@ -104,13 +103,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
-  Future<void> _openDice() async {
-    await _open(HomeSection.actividades);
-    if (!mounted) return;
-    final BuildContext? dice = _diceKey.currentContext;
-    if (dice != null && dice.mounted) await Scrollable.ensureVisible(dice);
-  }
-
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: widget.publicEntry,
@@ -154,37 +146,31 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     scrollController: _scrollControllers[section.index],
     // Inicio e Información usan el mismo corte recto del banner: el arte
     // llega completo hasta la hoja sin una esquina blanca sobre las figuras.
-    bodyRadius:
-        section == HomeSection.inicio ||
-            section == HomeSection.informacion ||
-            section == HomeSection.ayuda
-        ? null
-        : const BorderRadius.vertical(top: Radius.circular(28)),
+    bodyRadius: null,
     header: switch (section) {
       HomeSection.inicio => _HomeHeader(piece: widget.piece),
       HomeSection.informacion => const InformationHeader(),
-      HomeSection.actividades => const _SectionHeader(title: 'Actividades'),
+      HomeSection.actividades => const InformationHeader(title: 'Actividades'),
       HomeSection.ayuda => const InformationHeader(title: 'Ayuda'),
     },
     body: Padding(
       padding: section == HomeSection.inicio
           ? const EdgeInsets.fromLTRB(12, 14, 12, 16)
+          : section == HomeSection.actividades
+          ? const EdgeInsets.fromLTRB(10, 24, 10, 16)
           : const EdgeInsets.all(20),
       child: switch (section) {
         HomeSection.inicio => _InicioTab(
           onOpenSection: _open,
           progress: widget.progress,
           onOpenStreak: _showStreak,
-          onOpenDice: _openDice,
+          onOpenDice: () => context.push<void>('/inicio/actividades/dados'),
         ),
         HomeSection.informacion => InformationTab(
           progress: widget.progress,
           publicEntry: widget.publicEntry,
         ),
-        HomeSection.actividades => ActivitiesTab(
-          progress: widget.progress,
-          diceKey: _diceKey,
-        ),
+        HomeSection.actividades => const ActivitiesTab(),
         HomeSection.ayuda => const _AyudaTab(),
       },
     ),
@@ -290,36 +276,6 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        const CampaignSymbol(size: 26),
-        const SizedBox(height: 16),
-        Semantics(
-          header: true,
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 class _InicioTab extends StatelessWidget {
   const _InicioTab({
     required this.onOpenSection,
@@ -404,7 +360,7 @@ class _InicioTab extends StatelessWidget {
                 detail: progress.answeredToday
                     ? 'Completada'
                     : '+${LearningProgress.questionXp} XP',
-                onTap: () => onOpenSection(HomeSection.actividades),
+                onTap: () => context.push<void>('/inicio/actividades/diaria'),
               ),
             ),
             StudentPreviewCard(

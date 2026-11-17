@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/home/learning_progress.dart';
+import 'features/home/activity_screens.dart';
 import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
@@ -288,6 +289,19 @@ class _CureandoAppState extends State<CureandoApp> {
           ),
         ),
         routes: <RouteBase>[
+          for (final activity in <String, Widget Function()>{
+            'semaforo': () => const TrafficLightScreen(),
+            'dados': () => const EmotionDiceScreen(),
+            'pregunta': () => const FreeQuestionScreen(),
+            'dibujo': () => const FreeDrawingScreen(),
+            'rompecabezas': () => const KindnessPuzzleScreen(),
+            'diaria': () => DailyQuestionScreen(progress: _learning),
+          }.entries)
+            GoRoute(
+              path: 'actividades/${activity.key}',
+              pageBuilder: (context, state) =>
+                  studentTransition(context, state, activity.value()),
+            ),
           GoRoute(
             path: 'racha',
             pageBuilder: (context, state) => studentTransition<bool>(

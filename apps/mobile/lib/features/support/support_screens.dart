@@ -6,7 +6,6 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
-import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'alert_screens.dart';
 import 'support_flow.dart';
@@ -84,10 +83,10 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
-                    child: PieceFigure(
-                      piece: widget.piece.value,
+                    child: Image.asset(
+                      'assets/brand/png/personaje-01.png',
                       height: 186,
-                      sparks: true,
+                      excludeFromSemantics: true,
                     ),
                   ),
                   Align(
@@ -281,7 +280,12 @@ class AlertReceivedScreen extends StatelessWidget {
         header: FlowHeader(
           title: 'Pedir apoyo',
           showBrand: true,
-          trailing: const SizedBox(width: 132, child: CampaignCharacters()),
+          trailing: Image.asset(
+            'assets/brand/png/personaje-14.png',
+            width: 132,
+            height: 92,
+            excludeFromSemantics: true,
+          ),
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -691,7 +695,11 @@ class _Icebreakers extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
           if (!largeText) ...<Widget>[
-            PieceFigure(piece: piece, height: 132, sparks: true),
+            Image.asset(
+              'assets/brand/png/personaje-08.png',
+              height: 132,
+              excludeFromSemantics: true,
+            ),
             const SizedBox(width: 6),
           ],
           Expanded(
