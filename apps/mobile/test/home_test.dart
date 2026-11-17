@@ -71,10 +71,11 @@ void main() {
     expect(find.text('Ver todo'), findsNWidgets(2));
     expect(find.text('¿Es una broma o acoso?'), findsOneWidget);
     expect(find.text('Cuidá lo que sentís'), findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp('^Pregunta del día')), findsOneWidget);
+    expect(find.bySemanticsLabel('Pregunta libre'), findsOneWidget);
     expect(find.bySemanticsLabel('Dado de emociones'), findsOneWidget);
-    expect(find.text('Pregunta del día'), findsOneWidget);
+    expect(find.text('Pregunta libre'), findsOneWidget);
     expect(find.text('Dado de emociones'), findsOneWidget);
+    expect(find.text('Pregunta del día'), findsNothing);
     expect(find.text('Mi seguimiento'), findsNothing);
     expect(find.text('Seguimiento'), findsNothing);
     await _capture(tester, captureKey, 'e03-home');
@@ -128,6 +129,8 @@ void main() {
       'Todas las emociones son válidas; lo importante es cómo las expresamos.',
     );
     await _tapLabel(tester, 'Actividades');
+    // La pregunta se abrió desde «Mi racha»; se vuelve al Inicio.
+    await _tapNav(tester, 'Inicio');
     expect(find.text('Racha de 1 día'), findsOneWidget);
     expect(find.text('10 XP'), findsOneWidget);
 
@@ -959,8 +962,16 @@ Future<void> _capture(WidgetTester tester, Key key, String name) async {
   });
 }
 
+/// La pregunta diaria (+XP) se abre desde «Mi racha».
 Future<void> _tapHomeQuestion(WidgetTester tester) async {
-  final Finder question = find.bySemanticsLabel(RegExp('^Pregunta del día'));
+  final Finder streak = find.textContaining(RegExp(r'^Racha de \d+ día'));
+  await tester.ensureVisible(streak);
+  await tester.pumpAndSettle();
+  await tester.tap(streak);
+  await tester.pumpAndSettle();
+  final Finder question = find.byKey(
+    const ValueKey<String>('streak-daily-question'),
+  );
   await tester.ensureVisible(question);
   await tester.pumpAndSettle();
   await tester.tap(question);

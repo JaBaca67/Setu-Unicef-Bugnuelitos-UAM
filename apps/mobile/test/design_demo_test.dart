@@ -48,8 +48,13 @@ void main() {
         _app(StudentHomeScreen(progress: progress, piece: piece)),
       );
       await tester.pumpAndSettle();
-      final Finder question = _asset('assets/home/banner-pregunta-del-dia.png');
-      final Finder dice = _asset('assets/home/banner-dado-emociones.png');
+      // Mismas tarjetas azules que en Actividades.
+      final Finder question = find.byKey(
+        const ValueKey<String>('home-free-question'),
+      );
+      final Finder dice = find.byKey(
+        const ValueKey<String>('home-emotion-dice'),
+      );
       expect(question, findsOneWidget);
       expect(dice, findsOneWidget);
       expect(tester.getRect(question).top, tester.getRect(dice).top);
@@ -57,8 +62,17 @@ void main() {
         tester.getRect(question).right,
         lessThan(tester.getRect(dice).left),
       );
-      expect(find.text('Pregunta del día'), findsNothing);
-      expect(find.text('Dado de emociones'), findsNothing);
+      expect(
+        find.descendant(of: question, matching: find.text('Pregunta libre')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: question,
+          matching: _asset('assets/home/activities/sticker_pregunta_hd.png'),
+        ),
+        findsOneWidget,
+      );
       final Finder label = find.bySemanticsLabel('Dado de emociones');
       await tester.ensureVisible(label);
       await tester.pumpAndSettle();
@@ -563,10 +577,12 @@ void main() {
       await tester.pumpWidget(_app(StreakScreen(progress: progress)));
       await tester.pumpAndSettle();
       expect(_asset('assets/home/banner-racha.png'), findsNothing);
-      final Finder figures = _asset('assets/home/banner-racha-figures.png');
+      final Finder figures = _asset('assets/home/racha-figuras.png');
       expect(figures, findsOneWidget);
+      // Arte en su propia zona a la derecha: no se superpone con el título.
       final Rect artwork = tester.getRect(figures);
-      expect(artwork.width / artwork.height, closeTo(600 / 268, .01));
+      final Rect title = tester.getRect(find.text('Mi racha'));
+      expect(artwork.left, greaterThanOrEqualTo(title.right));
       final CampaignSymbol symbol = tester.widget<CampaignSymbol>(
         find.byType(CampaignSymbol),
       );
