@@ -197,6 +197,53 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Dibujo «¿Cómo te sentís hoy?» se guarda en la galería', (
+    tester,
+  ) async {
+    final List<MethodCall> calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('dev.cureando.app/gallery'),
+      (MethodCall call) async {
+        calls.add(call);
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('dev.cureando.app/gallery'),
+        null,
+      ),
+    );
+    await _screen(tester, const FreeDrawingScreen());
+    expect(find.text('¿Cómo te sentís hoy?'), findsOneWidget);
+    final Finder save = find.byKey(
+      const ValueKey<String>('drawing-save-gallery'),
+    );
+    await tester.ensureVisible(save);
+    expect(tester.widget<OutlinedButton>(save).onPressed, isNull);
+    final canvas = find.byKey(const ValueKey<String>('drawing-canvas'));
+    await tester.ensureVisible(canvas);
+    await tester.dragFrom(
+      tester.getTopLeft(canvas) + const Offset(40, 40),
+      const Offset(90, 50),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(save);
+    await tester.runAsync(() async {
+      await tester.tap(save);
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await tester.pumpAndSettle();
+    expect(calls.single.method, 'savePng');
+    final Map<Object?, Object?> args =
+        calls.single.arguments as Map<Object?, Object?>;
+    final List<int> png = args['bytes']! as List<int>;
+    // Firma PNG: el dibujo se exporta como imagen real.
+    expect(png.take(4).toList(), <int>[0x89, 0x50, 0x4E, 0x47]);
+    expect(args['name'], startsWith('setu-como-me-siento-'));
+    expect(find.textContaining('se guardó en la galería'), findsOneWidget);
+  });
+
   testWidgets('Dibujo empieza vacío, dibuja, deshace y confirma borrador', (
     tester,
   ) async {

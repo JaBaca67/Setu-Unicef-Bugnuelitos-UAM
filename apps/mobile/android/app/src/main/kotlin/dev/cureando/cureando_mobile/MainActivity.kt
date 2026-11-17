@@ -83,6 +83,48 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+        // Guarda en la galería el dibujo que el estudiante decide guardar.
+        // MediaStore (Android 10+) no requiere permisos de almacenamiento.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
+            "dev.cureando.app/gallery").setMethodCallHandler { call, result ->
+            if (call.method != "savePng") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            val bytes = call.argument<ByteArray>("bytes")
+            val name = (call.argument<String>("name") ?: "setu-dibujo")
+                .replace(Regex("[^A-Za-z0-9_-]"), "")
+                .ifEmpty { "setu-dibujo" }
+            if (bytes == null || bytes.isEmpty() || bytes.size > 20_000_000) {
+                result.error("invalid_image", "Imagen no válida", null)
+                return@setMethodCallHandler
+            }
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+                result.error("unsupported", "Requiere Android 10 o superior", null)
+                return@setMethodCallHandler
+            }
+            try {
+                val values = android.content.ContentValues().apply {
+                    put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "$name.png")
+                    put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+                    put(android.provider.MediaStore.Images.Media.RELATIVE_PATH,
+                        android.os.Environment.DIRECTORY_PICTURES + "/SeTu")
+                    put(android.provider.MediaStore.Images.Media.IS_PENDING, 1)
+                }
+                val resolver = contentResolver
+                val uri = resolver.insert(
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                    ?: throw java.io.IOException("insert_failed")
+                resolver.openOutputStream(uri)?.use { it.write(bytes) }
+                    ?: throw java.io.IOException("stream_failed")
+                values.clear()
+                values.put(android.provider.MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+                result.success(null)
+            } catch (error: Exception) {
+                result.error("save_failed", "No se pudo guardar la imagen", null)
+            }
+        }
         nearbyMeshChannel = NearbyMeshChannel(
             this,
             flutterEngine.dartExecutor.binaryMessenger,
