@@ -568,8 +568,9 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                     ),
                   SafeArea(
                     top: false,
+                    maintainBottomViewPadding: true,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       child: Row(
                         children: <Widget>[
                           Expanded(

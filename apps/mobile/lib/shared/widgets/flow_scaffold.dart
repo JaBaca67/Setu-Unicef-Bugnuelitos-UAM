@@ -93,9 +93,16 @@ class FlowScaffold extends StatelessWidget {
                 SafeArea(
                   top: false,
                   maintainBottomViewPadding: true,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
-                    child: bottom,
+                  child: ConstrainedBox(
+                    // Los grupos de CTA también se desplazan en pantallas
+                    // bajas o con texto grande, sin expulsar el cuerpo.
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * .45,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
+                      child: bottom,
+                    ),
                   ),
                 ),
             ],

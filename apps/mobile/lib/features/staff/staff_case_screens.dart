@@ -1238,8 +1238,9 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
           ),
         SafeArea(
           top: false,
+          maintainBottomViewPadding: true,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Row(
               children: <Widget>[
                 Expanded(
@@ -1296,7 +1297,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
         16,
         14,
         16,
-        24 + MediaQuery.viewInsetsOf(context).bottom,
+        24 + MediaQuery.viewPaddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
