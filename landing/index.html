@@ -4,27 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SéTú · Todos podemos encajar</title>
-  <meta name="description" content="SéTú: información, actividades y una propuesta de escucha humana para estudiantes de 3.º a 11.º grado. Prototipo académico de Bugñuelitos · UAM 2026.">
+  <meta name="description" content="SéTú: información, actividades y una propuesta de escucha humana para estudiantes de 3.º a 11.º grado. Prototipo académico · UAM 2026.">
   <meta name="theme-color" content="#0C62EB">
-  <meta property="og:title" content="SéTú: todos podemos encajar">
-  <meta property="og:description" content="Explorá, aprendé y conocé cómo pedir apoyo. Prototipo académico de Bugñuelitos · UAM 2026. APK y manuales disponibles.">
-  <meta property="og:image" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/assets/demo/inicio.webp">
   <link rel="canonical" href="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/">
-  <meta property="og:url" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SéTú">
-  <meta property="og:image:alt" content="Inicio del prototipo de SéTú con racha educativa, Información y Actividades">
+  <meta property="og:locale" content="es_NI">
+  <meta property="og:url" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/">
+  <meta property="og:title" content="SéTú: todos podemos encajar">
+  <meta property="og:description" content="Explorá, aprendé y conocé cómo pedir apoyo. Prototipo académico de Bugñuelitos · UAM 2026.">
+  <meta property="og:image" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/assets/brand/og-setu.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Tres pantallas de la app SéTú: Mi pieza, Actividades y Alerta recibida">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SéTú · Todos podemos encajar">
-  <meta name="twitter:description" content="Explorá el prototipo Android y los manuales de SéTú, proyecto académico de Bugñuelitos · UAM 2026.">
-  <meta name="twitter:image" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/assets/demo/inicio.webp">
-  <meta property="og:locale" content="es_NI">
+  <meta name="twitter:description" content="Explorá el prototipo Android de SéTú, proyecto académico de Bugñuelitos · UAM 2026.">
+  <meta name="twitter:image" content="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/assets/brand/og-setu.jpg">
   <link rel="icon" type="image/svg+xml" href="assets/brand/setu-isotipo-azul.svg">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
   <link rel="preload" href="assets/fonts/poppins-bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/poppins-regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/landing/hero-movil.webp" as="image" media="(max-width: 1023px)" fetchpriority="high">
   <link rel="preload" href="assets/landing/hero-fondo.webp" as="image" media="(min-width: 1024px)" fetchpriority="high">
   <link rel="stylesheet" href="css/styles.css">
+  <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
   <a class="skip" href="#contenido">Saltar al contenido</a>
@@ -41,10 +46,11 @@
       <nav class="nav__menu" id="menu" aria-label="Principal">
         <a href="#como-funciona">Cómo funciona</a>
         <a href="#privacidad">Tu privacidad</a>
+        <a href="#explorar">La app</a>
         <a href="#campana">Campaña</a>
         <a href="#preguntas">Preguntas</a>
         <a class="btn btn--ghost" href="#instituciones">Para instituciones</a>
-        <a class="btn btn--primary" href="#descargar">Probar SéTú</a>
+        <a class="btn btn--magenta" href="#descargar">Probar SéTú</a>
       </nav>
     </div>
   </header>
@@ -71,58 +77,28 @@
       </div>
     </section>
 
-    <!-- EXPLORÁ -->
-    <section class="explore" id="explorar" aria-labelledby="explore-title">
+    <!-- DATOS CLAVE -->
+    <section class="facts" aria-label="SéTú en cuatro ideas">
       <div class="wrap">
-        <p class="eyebrow">No es solo para los días difíciles</p>
-        <h2 class="h2" id="explore-title">Un espacio para conocerte mejor</h2>
-        <p class="lead">Información, actividades y una pieza que podés hacer tuya. Lo mismo que vas a encontrar al abrir SéTú.</p>
-
-        <div class="explore__grid">
-          <div class="explore__app">
-            <article class="kit-card">
-              <img src="assets/landing/kit-guia-emociones.webp" width="560" height="294" alt="Niña hace un corazón con las manos entre piezas de colores" loading="lazy">
-              <p class="kit-card__label">Guía · Tema: Emociones</p>
-              <h3>Entendé tus emociones</h3>
-            </article>
-            <article class="kit-card">
-              <img src="assets/landing/kit-video-convivencia.webp" width="560" height="294" alt="Dos niñas conversan sentadas entre piezas de colores" loading="lazy">
-              <p class="kit-card__label">Video · Tema: Convivencia</p>
-              <h3>Convivencia escolar</h3>
-            </article>
-            <img class="explore__btn" src="assets/landing/boton-pregunta-del-dia.webp" width="594" height="170" alt="Pregunta del día" loading="lazy">
-            <img class="explore__btn" src="assets/landing/boton-dado-emociones.webp" width="594" height="170" alt="Dado de emociones" loading="lazy">
-          </div>
-
-          <article class="pieza">
-            <h3>Mi pieza</h3>
-            <p class="pieza__text">Todas las piezas<br>tienen un lugar.</p>
-            <img class="pieza__art" src="assets/landing/mi-pieza.svg" width="124" height="164" alt="" aria-hidden="true">
-            <p class="pieza__label">Forma · Color · Accesorios</p>
-            <div class="racha" role="img" aria-label="Ejemplo de racha semanal: 3 días seguidos, 15 XP">
-              <div class="racha__top">
-                <img src="assets/landing/racha-fuego.svg" width="18" height="28" alt="" aria-hidden="true">
-                <strong>Racha de 3 días</strong>
-                <span class="racha__xp">15 XP</span>
-                <img src="assets/landing/racha-flecha.svg" width="11" height="17" alt="" aria-hidden="true">
-              </div>
-              <ol class="racha__days" aria-hidden="true">
-                <li class="is-done">L</li><li class="is-done">M</li><li class="is-done">X</li><li class="is-today">J</li><li>V</li><li>S</li><li>D</li>
-              </ol>
-            </div>
-          </article>
-        </div>
+        <ul class="facts__list">
+          <li class="fact"><img src="assets/elements/elemento-11-flor-azul.svg" width="44" height="44" alt="" aria-hidden="true"><div><strong>3.º a 11.º grado</strong><span>Pensada para colegios públicos de Managua</span></div></li>
+          <li class="fact"><img src="assets/elements/elemento-13-flor-rosa.svg" width="44" height="44" alt="" aria-hidden="true"><div><strong>Sin crear cuenta</strong><span>Entrás con el código de tu colegio</span></div></li>
+          <li class="fact"><img src="assets/elements/elemento-10-flor-verde.svg" width="44" height="44" alt="" aria-hidden="true"><div><strong>Escucha humana</strong><span>Del otro lado hay personas, no un robot</span></div></li>
+          <li class="fact"><img src="assets/elements/elemento-12-flor-amarilla.svg" width="44" height="44" alt="" aria-hidden="true"><div><strong>Con poca señal</strong><span>La alerta intenta llegar igual</span></div></li>
+        </ul>
       </div>
     </section>
 
     <!-- PROBLEMA VS SOLUCIÓN -->
     <section class="compare" aria-labelledby="compare-title">
+      <img class="deco deco--compare" src="assets/elements/elemento-15-espiral-amarillo.svg" alt="" aria-hidden="true">
       <div class="wrap">
-        <h2 id="compare-title" class="h2">Pedir ayuda no debería dar miedo</h2>
-        <p class="lead">Hablar puede costar cuando hay miedo, vergüenza o dudas sobre quién va a escuchar. SéTú propone un primer paso privado, con información y acompañamiento humano.</p>
+        <p class="ribbon ribbon--magenta">El problema</p>
+        <h2 id="compare-title" class="h2" data-reveal>Pedir ayuda no debería dar miedo</h2>
+        <p class="lead" data-reveal>Hablar puede costar cuando hay miedo, vergüenza o dudas sobre quién va a escuchar. SéTú propone un primer paso privado, con información y acompañamiento humano.</p>
 
         <div class="compare__grid">
-          <article class="compare__col compare__col--before">
+          <article class="compare__col compare__col--before" data-reveal>
             <h3>Hoy</h3>
             <ul class="checks checks--no">
               <li><strong>Buzones y páginas de confesiones.</strong> Sirven para desahogarse, pero muchas veces nadie da seguimiento.</li>
@@ -131,14 +107,14 @@
               <li><strong>Necesita internet.</strong> Sin señal, no hay forma de avisar.</li>
             </ul>
           </article>
-          <article class="compare__col compare__col--after">
+          <article class="compare__col compare__col--after" data-reveal>
             <img class="compare__pieza" src="assets/elements/elemento-04-pieza-verde.svg" width="74" height="62" alt="" aria-hidden="true">
             <h3>Con SéTú</h3>
             <ul class="checks checks--yes">
               <li><strong>Entrás con el código del colegio.</strong> Sin crear una cuenta y sin pedirte tu nombre.</li>
               <li><strong>Podés ayudar como testigo solidario.</strong> Podés pedir apoyo por alguien más sin poner tu nombre. Lo que escribís puede identificarte.</li>
               <li><strong>Seguimiento institucional propuesto.</strong> MINED y Dirección tienen funciones y accesos separados.</li>
-              <li><strong>Si no tenés señal.</strong> La alerta va cifrada e intenta llegar pasando de celular en celular.</li>
+              <li><strong>Si no tenés señal,</strong> la alerta intenta llegar igual.</li>
             </ul>
           </article>
         </div>
@@ -147,63 +123,82 @@
 
     <!-- CÓMO FUNCIONA -->
     <section class="steps" id="como-funciona" aria-labelledby="steps-title">
-      <div class="wrap steps__inner">
-        <div class="steps__copy">
-          <p class="eyebrow">Pedir apoyo, paso a paso</p>
-          <h2 id="steps-title" class="h2">Así funciona</h2>
-          <ol class="steps__list">
-            <li class="step">
-              <span class="step__num">01</span>
-              <h3>Recibí el código de tu colegio</h3>
-              <p>Escaneá el cartel QR de tu centro o escribí su código. Confirmá el colegio antes de seguir; no te pedimos tu nombre real, correo ni teléfono.</p>
+      <img class="deco deco--steps" src="assets/elements/elemento-16-espiral-azul.svg" alt="" aria-hidden="true">
+      <div class="wrap">
+        <p class="ribbon ribbon--blue">Pedir apoyo, paso a paso</p>
+        <h2 id="steps-title" class="h2" data-reveal>En 4 pasos pedís apoyo</h2>
+        <div class="steps__inner">
+          <ol class="steps__list" tabindex="0" aria-label="Los 4 pasos; en celular deslizá para ver cada uno">
+            <li class="step" data-step="0">
+              <span class="step__num" aria-hidden="true">1</span>
+              <div class="step__text">
+                <h3>Entrá con el código de tu colegio</h3>
+                <p>Escaneá el cartel QR de tu centro o escribí su código. No te pedimos tu nombre real, correo ni teléfono.</p>
+              </div>
+              <img class="step__phone" src="assets/app/tel-inicio-360.webp" srcset="assets/app/tel-inicio-360.webp 360w, assets/app/tel-inicio-720.webp 720w" sizes="220px" width="360" height="775" loading="lazy" alt="Pantalla de inicio de SéTú con el botón «Pedir apoyo», la racha de la semana y actividades.">
             </li>
-            <li class="step">
-              <span class="step__num">02</span>
-              <h3>Si no hay señal, intentamos que llegue igual</h3>
-              <p>Con señal, la alerta se envía por internet. Sin señal, se guarda cifrada e intenta pasar de celular en celular hasta uno que la pueda entregar. La entrega no está garantizada y el chat necesita internet.</p>
+            <li class="step" data-step="1">
+              <span class="step__num" aria-hidden="true">2</span>
+              <div class="step__text">
+                <h3>Contá qué está pasando</h3>
+                <p>Elegí si te pasa a vos o si querés ayudar a alguien, y revisá tu mensaje antes de enviarlo. Vos decidís qué contar.</p>
+              </div>
+              <img class="step__phone" src="assets/app/tel-apoyo-360.webp" srcset="assets/app/tel-apoyo-360.webp 360w, assets/app/tel-apoyo-720.webp 720w" sizes="220px" width="360" height="775" loading="lazy" alt="Pantalla «Pedir apoyo»: ¿En qué te podemos ayudar? con las opciones enviar una alerta o chatear con el equipo de escucha.">
             </li>
-            <li class="step">
-              <span class="step__num">03</span>
-              <h3>Pedí apoyo y decidí qué contar</h3>
-              <p>Elegí si te está pasando a vos o si querés ayudar a alguien. La propuesta es una mesa de escucha humana en horarios acordados, y unas tarjetas te ayudan a empezar cuando faltan las palabras.</p>
+            <li class="step" data-step="2">
+              <span class="step__num" aria-hidden="true">3</span>
+              <div class="step__text">
+                <h3>Enviá tu alerta</h3>
+                <p>Con internet, se envía en ese momento. Sin señal, se guarda cifrada e intenta llegar igual. La app te muestra si sigue pendiente o si ya llegó.</p>
+              </div>
+              <img class="step__phone" src="assets/app/tel-recibida-360.webp" srcset="assets/app/tel-recibida-360.webp 360w, assets/app/tel-recibida-720.webp 720w" sizes="220px" width="360" height="775" loading="lazy" alt="Pantalla «Alerta recibida» con la confirmación de entrega.">
+            </li>
+            <li class="step" data-step="3">
+              <span class="step__num" aria-hidden="true">4</span>
+              <div class="step__text">
+                <h3>Conversá con la mesa de escucha</h3>
+                <p>Del otro lado hay personas. La propuesta es un chat privado en horarios acordados, con tarjetas para empezar cuando faltan las palabras.</p>
+              </div>
+              <img class="step__phone" src="assets/app/tel-chat-360.webp" srcset="assets/app/tel-chat-360.webp 360w, assets/app/tel-chat-720.webp 720w" sizes="220px" width="360" height="775" loading="lazy" alt="Pantalla «Equipo de escucha», chat privado con ideas para empezar como «No sé por dónde empezar».">
             </li>
           </ol>
-        </div>
-        <div class="steps__phones">
-          <figure>
-            <img src="assets/landing/mockup-alerta.webp" width="603" height="1357" loading="lazy" alt="Pantalla «Enviar una alerta», paso 1 de 3: ¿Qué está pasando? con opciones como acoso físico, acoso verbal, ciberacoso y necesito hablar.">
-            <figcaption>Contá qué está pasando</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/landing/mockup-chat.webp" width="603" height="1357" loading="lazy" alt="Pantalla «Equipo de escucha», chat privado con ideas para empezar como «No sé por dónde empezar».">
-            <figcaption>Conversá con el equipo</figcaption>
-          </figure>
+          <p class="carousel-hint" aria-hidden="true">Deslizá para ver los 4 pasos →</p>
+          <div class="steps__device" aria-hidden="true">
+            <img class="is-active" src="assets/app/tel-inicio-360.webp" srcset="assets/app/tel-inicio-360.webp 360w, assets/app/tel-inicio-720.webp 720w" sizes="300px" width="360" height="775" loading="lazy" alt="">
+            <img src="assets/app/tel-apoyo-360.webp" srcset="assets/app/tel-apoyo-360.webp 360w, assets/app/tel-apoyo-720.webp 720w" sizes="300px" width="360" height="775" loading="lazy" alt="">
+            <img src="assets/app/tel-recibida-360.webp" srcset="assets/app/tel-recibida-360.webp 360w, assets/app/tel-recibida-720.webp 720w" sizes="300px" width="360" height="775" loading="lazy" alt="">
+            <img src="assets/app/tel-chat-360.webp" srcset="assets/app/tel-chat-360.webp 360w, assets/app/tel-chat-720.webp 720w" sizes="300px" width="360" height="775" loading="lazy" alt="">
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- PILARES -->
+    <!-- PRIVACIDAD -->
     <section class="pillars" id="privacidad" aria-labelledby="pillars-title">
       <div class="wrap">
-        <h2 id="pillars-title" class="h2 h2--light">Tu privacidad va primero</h2>
+        <p class="ribbon ribbon--yellow">Tus datos</p>
+        <h2 id="pillars-title" class="h2 h2--light" data-reveal>Tu privacidad va primero</h2>
         <div class="pillars__grid">
-          <article class="pillar">
+          <article class="pillar" data-reveal>
             <h3>Sin cuenta y sin tu nombre</h3>
             <p>Usás el código de tu colegio, no tu nombre. La ubicación solo sirve para confirmar que estás en tu centro educativo.</p>
           </article>
-          <article class="pillar pillar--mesh">
+          <article class="pillar pillar--mesh" data-reveal>
             <img class="pillar__clay" src="assets/landing/sin-internet.svg" width="274" height="42" alt="Sin internet">
             <h3>Tu alerta intenta llegar igual</h3>
             <p>La alerta se guarda cifrada e intenta pasar de celular en celular hasta uno que la pueda entregar. Necesita celulares cercanos con SéTú y permisos de conexión. La entrega no está garantizada y el chat necesita internet.</p>
             <svg class="mesh-map" viewBox="0 0 320 70" role="img" aria-label="La alerta pasa de tu celular a otros dos celulares y llega al colegio">
-              <path d="M24 46 L104 22 L190 48 L292 26" fill="none" stroke="#0C62EB" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
+              <path id="mesh-ruta" d="M24 46 L104 22 L190 48 L292 26" fill="none" stroke="#0C62EB" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
               <rect x="10" y="30" width="28" height="34" rx="7" fill="#0C62EB"/>
               <rect x="90" y="6" width="28" height="34" rx="7" fill="#FF0092"/>
               <rect x="176" y="32" width="28" height="34" rx="7" fill="#FFE000"/>
               <rect x="276" y="10" width="32" height="34" rx="7" fill="#00C642"/>
+              <circle class="mesh-map__dot" r="6" fill="#FF0092" stroke="#FFFFFF" stroke-width="2">
+                <animateMotion dur="4s" repeatCount="indefinite"><mpath href="#mesh-ruta"/></animateMotion>
+              </circle>
             </svg>
           </article>
-          <article class="pillar">
+          <article class="pillar" data-reveal>
             <h3>Vos decidís qué compartir</h3>
             <p>Por diseño, el colegio recibe el tipo de situación, tu rol y la hora, pero no tu conversación. El relato y el chat son para vos y la mesa de escucha asignada. Lo que escribís puede identificarte, y si hay riesgo, la mesa puede activar protección.</p>
           </article>
@@ -211,51 +206,141 @@
       </div>
     </section>
 
-    <!-- CAMPAÑA -->
+    <!-- EXPLORÁ -->
+    <section class="explore" id="explorar" aria-labelledby="explore-title">
+      <img class="deco deco--explore" src="assets/elements/elemento-14-espiral-verde.svg" alt="" aria-hidden="true">
+      <div class="wrap">
+        <p class="ribbon ribbon--green">No es solo para los días difíciles</p>
+        <h2 class="h2" id="explore-title" data-reveal>Un espacio para conocerte mejor</h2>
+        <p class="lead" data-reveal>Información, actividades y una pieza que podés hacer tuya. Lo mismo que vas a encontrar al abrir SéTú.</p>
+
+        <div class="bento" role="region" tabindex="0" aria-label="Partes de la app; en celular deslizá para ver más">
+          <article class="tile tile--info" data-reveal>
+            <div class="tile__text">
+              <h3>Información, a tu ritmo</h3>
+              <p>Guías, videos y rutas para entender lo que pasa, sin tener que enviar un reporte.</p>
+              <p class="small">El catálogo adapta fuentes de UNICEF y MINED; la revisión profesional está pendiente.</p>
+            </div>
+            <img class="tile__phone" src="assets/app/inclinado-biblioteca-420.webp" srcset="assets/app/inclinado-biblioteca-420.webp 420w, assets/app/inclinado-biblioteca-840.webp 840w" sizes="(min-width: 900px) 320px, 70vw" width="420" height="788" loading="lazy" alt="Pantalla Información de SéTú con la biblioteca: guías sobre acoso escolar y ciberacoso.">
+          </article>
+          <article class="tile tile--act" data-reveal>
+            <div class="tile__text">
+              <h3>Actividades para cuidarte</h3>
+              <p>Dado de emociones y pregunta del día, para aprender a tu ritmo.</p>
+            </div>
+            <img class="tile__phone" src="assets/app/tel-dado-360.webp" srcset="assets/app/tel-dado-360.webp 360w, assets/app/tel-dado-720.webp 720w" sizes="(min-width: 900px) 220px, 55vw" width="360" height="775" loading="lazy" alt="Pantalla Actividades con el dado de emociones mostrando «Calma».">
+          </article>
+          <article class="tile tile--pieza" data-reveal>
+            <div class="tile__text">
+              <h3>Mi pieza</h3>
+              <p>Elegí forma, color y accesorios. Todas las piezas tienen un lugar.</p>
+            </div>
+            <img class="tile__phone" src="assets/app/tel-mipieza-360.webp" srcset="assets/app/tel-mipieza-360.webp 360w, assets/app/tel-mipieza-720.webp 720w" sizes="(min-width: 900px) 220px, 55vw" width="360" height="775" loading="lazy" alt="Pantalla Mi pieza para elegir forma, color y accesorios del personaje.">
+          </article>
+          <article class="tile tile--rutas" data-reveal>
+            <div class="tile__text">
+              <h3>Rutas y racha</h3>
+              <p>Rutas cortas para aprender paso a paso. La racha y los XP reconocen lo que aprendés, nunca tus reportes ni tus emociones.</p>
+            </div>
+            <img class="tile__phone" src="assets/app/tel-rutas-360.webp" srcset="assets/app/tel-rutas-360.webp 360w, assets/app/tel-rutas-720.webp 720w" sizes="(min-width: 900px) 220px, 55vw" width="360" height="775" loading="lazy" alt="Pantalla Rutas de Información con el progreso de una ruta sobre acoso escolar.">
+          </article>
+        </div>
+        <p class="carousel-hint" aria-hidden="true">Deslizá para ver más →</p>
+      </div>
+    </section>
+
+    <!-- VIDEOS -->
+    <section class="videos" id="videos" aria-labelledby="videos-title">
+      <div class="wrap">
+        <p class="ribbon ribbon--magenta">Miralo en acción</p>
+        <h2 class="h2" id="videos-title" data-reveal>Mirá SéTú por dentro</h2>
+        <p class="lead" data-reveal>Recorridos con datos de prueba. Tocá reproducir para ver cada uno.</p>
+        <figure class="video-feature" data-reveal>
+          <video controls playsinline preload="none" poster="assets/demo/flujo-alerta.webp" width="1280" height="720" aria-label="Recorrido del flujo de alerta">
+            <source src="assets/demo/flujo-alerta.mp4" type="video/mp4">
+            <a href="assets/demo/flujo-alerta.mp4">Ver el recorrido del flujo de alerta</a>
+          </video>
+          <figcaption><strong>Pedir apoyo, paso a paso.</strong> Elegir la situación, revisar y enviar la alerta, y ver la confirmación de entrega.</figcaption>
+        </figure>
+        <ul class="video-row" tabindex="0" aria-label="Más videos; en celular deslizá para ver más">
+          <li><figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/informacion-app.webp" width="1280" height="720" aria-label="Información y biblioteca"><source src="assets/demo/informacion-app.mp4" type="video/mp4"><a href="assets/demo/informacion-app.mp4">Ver Información y biblioteca</a></video><figcaption><strong>Informate a tu ritmo.</strong> La biblioteca, sin necesidad de enviar un reporte.</figcaption></figure></li>
+          <li><figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/giro-360.webp" width="1280" height="720" aria-label="SéTú, tu espacio"><source src="assets/demo/giro-360.mp4" type="video/mp4"><a href="assets/demo/giro-360.mp4">Ver SéTú, tu espacio</a></video><figcaption><strong>Tu espacio.</strong> La app para estudiantes de 3.º a 11.º grado.</figcaption></figure></li>
+          <li><figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/paneo-app.webp" width="1280" height="720" aria-label="Las pantallas de SéTú"><source src="assets/demo/paneo-app.mp4" type="video/mp4"><a href="assets/demo/paneo-app.mp4">Ver las pantallas de SéTú</a></video><figcaption><strong>Una sola app.</strong> Biblioteca, actividades y apoyo juntos.</figcaption></figure></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- CAMPAÑA, VALORES Y KIT -->
     <section class="campaign" id="campana" aria-labelledby="campaign-title">
       <div class="wrap">
-        <h2 id="campaign-title" class="h2 campaign__title">
+        <p class="ribbon ribbon--yellow">Más allá de la app</p>
+        <h2 id="campaign-title" class="h2 campaign__title" data-reveal>
           Todos podemos
           <span class="tape tape--magenta"><img src="assets/landing/encajar.svg" width="193" height="57" alt="encajar"></span>
         </h2>
-        <p class="lead lead--blue">La app es una parte. La otra es una campaña que proponemos para que hablar de salud mental deje de ser tabú: TikTok e Instagram para jóvenes, Facebook para madres y padres, radio local y el kit «Pieza a Pieza» en las aulas.</p>
+        <p class="lead lead--blue" data-reveal>La app es una parte. La otra es una campaña que proponemos para que hablar de salud mental deje de ser tabú: TikTok e Instagram para jóvenes, Facebook para madres y padres, radio local y el kit «Pieza a Pieza» en las aulas.</p>
       </div>
       <ul class="campaign__strip" tabindex="0" aria-label="Artes de la campaña; deslizá para ver más">
         <li><img src="assets/campaign/redes-2.webp" width="720" height="900" loading="lazy" alt="Arte de campaña: una adolescente hace el gesto de silencio bajo el texto «No te quedes callado»."></li>
         <li><img src="assets/campaign/redes-1.webp" width="720" height="900" loading="lazy" alt="Arte de campaña: un joven se cubre el rostro con la mano bajo el texto «Tu salud mental sí importa»."></li>
         <li><img src="assets/campaign/redes-3.webp" width="720" height="900" loading="lazy" alt="Arte de campaña para familias: una niña y un niño arman un rompecabezas bajo el texto «Ellos merecen ser escuchados, todavía estás a tiempo»."></li>
       </ul>
+      <p class="campaign__hint" aria-hidden="true">Deslizá para ver más →</p>
+      <div class="wrap">
+        <div class="values" data-reveal>
+          <h3 class="values__title">Lo que nos mueve</h3>
+          <ul class="values__list">
+            <li class="value value--green">Valentía</li>
+            <li class="value value--magenta">Empatía</li>
+            <li class="value value--blue">Confianza</li>
+            <li class="value value--yellow">Respeto</li>
+            <li class="value value--green">Compromiso</li>
+          </ul>
+        </div>
+        <div class="kit" data-reveal>
+          <div class="kit-banner" role="img" aria-label="Kit Pieza a Pieza">
+            <img class="kit-banner__bg" src="assets/landing/kit-fondo.webp" width="1160" height="286" alt="" loading="lazy">
+            <img class="kit-banner__title" src="assets/landing/kit-titulo.webp" width="1000" height="491" alt="" loading="lazy">
+          </div>
+          <div class="kit__text">
+            <p>Para colegios donde no se usa el celular: semáforo y dado de emociones, hojas de dibujo libre y cinco dinámicas de 5 a 10 minutos que guía la o el docente.</p>
+            <a class="link-arrow" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">Ver los manuales del kit</a>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- INSTITUCIONES -->
     <section class="inst" id="instituciones" aria-labelledby="inst-title">
       <div class="wrap">
-        <h2 id="inst-title" class="h2">Para colegios y el MINED</h2>
-        <p class="lead">Tres partes conectadas en el modelo de SéTú. Los paneles web y la coordinación con las instituciones están pendientes de validación; la demo actual incluye vistas móviles para personal autorizado.</p>
-        <div class="inst__grid">
-          <article class="role">
-            <h3>Panel de Dirección</h3>
-            <p>En el modelo, recibe avisos mínimos y fichas autorizadas del centro, y registra lo que hace sin ver el relato ni el chat.</p>
-          </article>
-          <article class="role">
-            <h3>Panel del MINED</h3>
-            <p>En el modelo, recibe primero el aviso y da seguimiento a las fichas autorizadas, sin ver el relato ni el chat.</p>
-          </article>
-          <article class="role">
+        <p class="ribbon ribbon--blue">Para colegios y el MINED</p>
+        <h2 id="inst-title" class="h2" data-reveal>Tres partes que encajan</h2>
+        <p class="lead" data-reveal>Así se conectan en el modelo de SéTú. Los paneles web y la coordinación con las instituciones están pendientes de validación; la demo actual incluye vistas móviles para personal autorizado.</p>
+        <ol class="flow">
+          <li class="role" data-reveal>
+            <img src="assets/elements/elemento-02-pieza-amarilla.svg" width="56" height="56" alt="" aria-hidden="true">
             <h3>App del Estudiante</h3>
             <p>Información, actividades y solicitudes privadas de apoyo. La propuesta incluye chat con una mesa de escucha humana asignada, en horarios acordados.</p>
-          </article>
-        </div>
-        <a class="kit-banner" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">
-          <img class="kit-banner__bg" src="assets/landing/kit-fondo.webp" width="1160" height="286" alt="" loading="lazy">
-          <img class="kit-banner__title" src="assets/landing/kit-titulo.webp" width="1000" height="491" alt="Kit pieza a pieza: consultar manuales del kit para el aula" loading="lazy">
-        </a>
+          </li>
+          <li class="role" data-reveal>
+            <img src="assets/elements/elemento-03-pieza-rosa.svg" width="56" height="56" alt="" aria-hidden="true">
+            <h3>Panel del MINED</h3>
+            <p>En el modelo, recibe primero el aviso y da seguimiento a las fichas autorizadas, sin ver el relato ni el chat.</p>
+          </li>
+          <li class="role" data-reveal>
+            <img src="assets/elements/elemento-05-pieza-azul.svg" width="56" height="56" alt="" aria-hidden="true">
+            <h3>Panel de Dirección</h3>
+            <p>En el modelo, recibe avisos mínimos y fichas autorizadas del centro, y registra lo que hace sin ver el relato ni el chat.</p>
+          </li>
+        </ol>
       </div>
     </section>
 
     <!-- FAQ -->
     <section class="faq" id="preguntas" aria-labelledby="faq-title">
+      <img class="deco deco--faq" src="assets/elements/elemento-13-flor-rosa.svg" alt="" aria-hidden="true">
       <div class="wrap">
+        <p class="ribbon ribbon--green">Dudas</p>
         <h2 id="faq-title" class="h2">Preguntas frecuentes</h2>
         <div class="faq__list">
           <details>
@@ -276,7 +361,7 @@
           </details>
           <details>
             <summary>¿Qué pasa con mi reporte después de enviarlo?</summary>
-            <p>El diseño separa entrega de la alerta y seguimiento institucional. La app informa sobre la entrega; los estados internos de atención los gestiona el personal autorizado. En esta demo se usan datos ficticios.</p>
+            <p>El diseño separa la entrega de la alerta y el seguimiento institucional. La app informa sobre la entrega; los estados internos de atención los gestiona el personal autorizado. En esta demo se usan datos ficticios.</p>
           </details>
           <details>
             <summary>¿Y si en mi colegio no dejan usar el celular?</summary>
@@ -286,30 +371,30 @@
       </div>
     </section>
 
-    <!-- DESCARGAS -->
-    <section class="downloads" id="descargar" aria-labelledby="downloads-title">
-      <div class="wrap">
-        <p class="eyebrow">Probalo en el stand o llevalo con vos</p>
-        <h2 class="h2" id="downloads-title">Probá SéTú</h2>
-        <p class="lead">Todo en un lugar para estudiantes, docentes y jurado.</p>
-        <div class="resource-grid">
-          <article class="download-card"><span class="resource-label">01 · Prototipo Android</span><h3>Prueba SéTú</h3><p>APK de prueba del 16 de noviembre. Android 7 o superior · 194 MB. Descargalo con wifi y usá solo datos ficticios.</p><p class="small">Drive abre el archivo y puede mostrar un aviso por su tamaño. Esta demo no recibe casos reales.</p><a class="btn btn--primary" href="https://drive.google.com/file/d/1WmzyJUg0ABflmlN6s4Q4G6YVK37buif4/view">Descargar APK de SéTú</a></article>
-          <article class="download-card"><span class="resource-label">02 · Identidad visual</span><h3>Manual de Marca</h3><p>La identidad de SéTú: logotipos, paleta inclusiva, tipografías y usos de la marca.</p><a class="btn btn--ghost" href="https://drive.google.com/file/d/11vE2_hviWBnT79giw6Y8mgofxUckyae6/view">Abrir Manual de Marca</a></article>
-          <article class="download-card"><span class="resource-label">03 · Guías del equipo</span><h3>Manuales operativos</h3><p>Documentación para Colegio, MINED, Mesa de Escucha y actividades del kit «Pieza a Pieza».</p><a class="btn btn--ghost" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">Consultar manuales</a></article>
+    <!-- DESCARGA -->
+    <section class="download" id="descargar" aria-labelledby="download-title">
+      <div class="wrap download__inner">
+        <div class="download__copy" data-reveal>
+          <p class="ribbon ribbon--blue">Probalo en el stand o llevalo con vos</p>
+          <h2 class="h2" id="download-title">Probá SéTú</h2>
+          <p class="download__meta">APK de prueba del 16 de noviembre · Android 7 o superior · 194 MB</p>
+          <p>Descargalo con wifi y usá solo datos ficticios: esta demo no recibe casos reales. Drive puede mostrar un aviso por el tamaño del archivo.</p>
+          <div class="download__actions">
+            <a class="btn btn--magenta btn--lg" href="https://drive.google.com/file/d/1WmzyJUg0ABflmlN6s4Q4G6YVK37buif4/view">
+              <img src="assets/landing/icono-descarga.svg" width="22" height="22" alt="" aria-hidden="true">
+              Descargar APK de SéTú
+            </a>
+          </div>
+          <ul class="download__links">
+            <li><a class="link-arrow" href="https://drive.google.com/file/d/11vE2_hviWBnT79giw6Y8mgofxUckyae6/view">Manual de Marca</a></li>
+            <li><a class="link-arrow" href="https://drive.google.com/drive/folders/1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ">Manuales operativos (Colegio, MINED, Mesa de Escucha y kit)</a></li>
+          </ul>
+          <div class="stand-qr">
+            <img src="assets/demo/qr-setu.png" width="112" height="112" alt="Código QR que abre esta página en la sección de descargas">
+            <p><strong>¿Nos ves desde el stand?</strong><br>Escaneá y llevá SéTú con vos.</p>
+          </div>
         </div>
-        <a class="stand-qr" href="#descargar"><img src="assets/demo/qr-setu.png" width="136" height="136" alt="QR para abrir esta landing y sus descargas"><span><strong>¿Nos ves desde el stand?</strong><br>Escaneá y llevá SéTú con vos.<br><span class="small">APK y manuales en tu celular</span></span></a>
-      </div>
-    </section>
-
-    <section class="videos" id="videos" aria-labelledby="videos-title">
-      <div class="wrap">
-        <h2 class="h2" id="videos-title">Mirá el prototipo en acción</h2>
-        <p class="lead">Recorridos con datos de prueba. Tocá reproducir para ver cada uno.</p>
-        <div class="resource-grid">
-          <figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/alerta.webp" width="1920" height="1080" aria-label="De la alerta a la escucha"><source src="assets/demo/alerta.mp4" type="video/mp4"><a href="assets/demo/alerta.mp4">Ver De la alerta a la escucha</a></video><figcaption><h3>De la alerta a la escucha</h3><p>Elegir situación, revisar y enviar; chat humano cuando hay disponibilidad.</p></figcaption></figure>
-          <figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/informacion.webp" width="1920" height="1080" aria-label="Información y rutas"><source src="assets/demo/informacion.mp4" type="video/mp4"><a href="assets/demo/informacion.mp4">Ver Información y rutas</a></video><figcaption><h3>Información y rutas</h3><p>Explorar temas, guías y rutas sin necesidad de enviar un reporte.</p></figcaption></figure>
-          <figure class="video-card"><video controls playsinline preload="none" poster="assets/demo/recorrido.webp" width="1920" height="1080" aria-label="Una mirada a SéTú"><source src="assets/demo/recorrido.mp4" type="video/mp4"><a href="assets/demo/recorrido.mp4">Ver Una mirada a SéTú</a></video><figcaption><h3>Una mirada a SéTú</h3><p>Inicio, biblioteca y apoyo en una sola experiencia.</p></figcaption></figure>
-        </div>
+        <img class="download__art" src="assets/app/trio-abanico-700.webp" srcset="assets/app/trio-abanico-700.webp 700w, assets/app/trio-abanico-1400.webp 1400w" sizes="(min-width: 900px) 560px, 92vw" width="700" height="524" loading="lazy" alt="Tres pantallas de SéTú en abanico: Inicio, Pedir apoyo e Información." data-reveal>
       </div>
     </section>
 
@@ -329,15 +414,22 @@
   </main>
 
   <footer class="footer">
+    <div class="footer__pieces" aria-hidden="true">
+      <img src="assets/elements/elemento-02-pieza-amarilla.svg" alt="">
+      <img src="assets/elements/elemento-03-pieza-rosa.svg" alt="">
+      <img src="assets/elements/elemento-04-pieza-verde.svg" alt="">
+      <img src="assets/elements/elemento-05-pieza-azul.svg" alt="">
+    </div>
     <div class="wrap footer__inner">
       <div class="footer__brand">
-        <img src="assets/brand/setu-logotipo-blanco.svg" alt="SéTú" width="88" height="34">
+        <img src="assets/brand/setu-imagotipo-blanco.svg" alt="SéTú" width="96" height="98">
         <p>Prototipo académico de Bugñuelitos · UAM, presentado en la Jornada Académica y Social UAM – UNICEF 2026. No es un servicio operativo ni un producto oficial o avalado por UNICEF, MINED o MINSA.</p>
       </div>
       <nav class="footer__links" aria-label="Enlaces rápidos">
         <h2>Enlaces</h2>
         <a href="#como-funciona">Cómo funciona</a>
         <a href="#privacidad">Tu privacidad</a>
+        <a href="#explorar">La app por dentro</a>
         <a href="#instituciones">Para instituciones</a>
         <a href="#preguntas">Preguntas frecuentes</a>
         <a href="#descargar">Descargar SéTú y manuales</a>
