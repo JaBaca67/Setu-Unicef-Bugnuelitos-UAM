@@ -433,14 +433,22 @@ class _DiceEmotionFacePainter extends CustomPainter {
 
     if (emotionName == 'Calma') {
       canvas.drawArc(
-        Rect.fromCenter(center: Offset(leftX, eyeY), width: s * 0.14, height: s * 0.08),
+        Rect.fromCenter(
+          center: Offset(leftX, eyeY),
+          width: s * 0.14,
+          height: s * 0.08,
+        ),
         0,
         math.pi,
         false,
         stroke,
       );
       canvas.drawArc(
-        Rect.fromCenter(center: Offset(rightX, eyeY), width: s * 0.14, height: s * 0.08),
+        Rect.fromCenter(
+          center: Offset(rightX, eyeY),
+          width: s * 0.14,
+          height: s * 0.08,
+        ),
         0,
         math.pi,
         false,
@@ -448,11 +456,19 @@ class _DiceEmotionFacePainter extends CustomPainter {
       );
     } else {
       canvas.drawOval(
-        Rect.fromCenter(center: Offset(leftX, eyeY), width: s * 0.11, height: s * 0.16),
+        Rect.fromCenter(
+          center: Offset(leftX, eyeY),
+          width: s * 0.11,
+          height: s * 0.16,
+        ),
         fill,
       );
       canvas.drawOval(
-        Rect.fromCenter(center: Offset(rightX, eyeY), width: s * 0.11, height: s * 0.16),
+        Rect.fromCenter(
+          center: Offset(rightX, eyeY),
+          width: s * 0.11,
+          height: s * 0.16,
+        ),
         fill,
       );
     }
