@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:cureando_mobile/app.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
+import 'package:cureando_mobile/features/home/info_catalog.dart';
+import 'package:cureando_mobile/features/home/student_preview_cards.dart';
 import 'package:cureando_mobile/features/home/student_activities.dart';
 import 'package:cureando_mobile/features/support/support_flow.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
@@ -66,8 +68,8 @@ void main() {
     expect(find.text('0 XP'), findsOneWidget);
     expect(find.text('Explorá a tu ritmo'), findsOneWidget);
     expect(find.text('Ver todo'), findsNWidgets(2));
-    expect(find.text('¿Es una broma o acoso?'), findsOneWidget);
-    expect(find.text('Cómo ser un testigo solidario'), findsOneWidget);
+    expect(find.text('Qué es el acoso escolar y cómo se ve'), findsOneWidget);
+    expect(find.text('Cómo cuidar tu salud mental'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('^Pregunta del día')), findsOneWidget);
     expect(find.bySemanticsLabel('Dado de emociones'), findsOneWidget);
     expect(find.text('Pregunta del día'), findsNothing);
@@ -125,7 +127,7 @@ void main() {
     expect(find.text('Racha de 1 día'), findsOneWidget);
     expect(find.text('10 XP'), findsOneWidget);
 
-    await _tapLabel(tester, '¿Es una broma o acoso?');
+    await _tapLabel(tester, 'Qué es el acoso escolar y cómo se ve');
     expect(find.text('Marcar como leída (+5 XP)'), findsOneWidget);
     await _tapLabel(tester, 'Marcar como leída (+5 XP)');
     expect(find.text('Lectura registrada'), findsOneWidget);
@@ -140,7 +142,7 @@ void main() {
     await _goHome(tester);
     expect(find.text('Racha de 1 día'), findsOneWidget);
     expect(find.text('15 XP'), findsOneWidget);
-    await _tapLabel(tester, '¿Es una broma o acoso?');
+    await _tapLabel(tester, 'Qué es el acoso escolar y cómo se ve');
     await _tapLabel(tester, 'Marcar día de aprendizaje');
     expect(find.text('Marcaste un día de aprendizaje.'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver'));
@@ -289,225 +291,275 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('las tarjetas de Información abren el recurso de muestra', (
+  testWidgets('Inicio abre recursos reales conservando las dos ilustraciones', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
-    await _tapLabel(tester, '¿Es una broma o acoso?');
-    expect(find.text('Acoso escolar · 3 min'), findsOneWidget);
-    expect(find.text('Muestra en revisión editorial'), findsOneWidget);
-    await tester.tap(find.byTooltip('Volver'));
-    await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Cómo ser un testigo solidario');
-    expect(find.textContaining('reproducción simulada'), findsOneWidget);
+    for (final InfoResource resource in homeResources) {
+      final StudentPreviewCard card = tester.widget<StudentPreviewCard>(
+        find.widgetWithText(StudentPreviewCard, resource.title),
+      );
+      expect(
+        card.cover,
+        resource == homeResources.first
+            ? StudentCover.guide
+            : StudentCover.video,
+      );
+      await _tapLabel(tester, resource.title);
+      expect(find.text(resource.summary), findsOneWidget);
+      expect(find.text(resource.organization), findsOneWidget);
+      expect(find.text('Ver fuente original'), findsOneWidget);
+      for (final InfoPoint point in resource.points) {
+        expect(find.text(point.body), findsOneWidget);
+      }
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
+    }
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Biblioteca busca y filtra sin crear casos', (
+  testWidgets(
+    'video muestra resumen y puntos y abre su fuente fuera de la app',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      const MethodChannel links = MethodChannel('dev.cureando.app/links');
+      MethodCall? opened;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(links, (MethodCall call) async {
+            opened = call;
+            return null;
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(links, null),
+      );
+      await tester.pumpWidget(_app());
+      await tester.pumpAndSettle();
+      await _tapLabel(tester, 'Ingreso estudiantil');
+      await _tapLabel(tester, 'Explorar Información');
+      final InfoResource video = infoCatalog.firstWhere(
+        (InfoResource r) => r.isVideo,
+      );
+      await tester.enterText(find.byType(TextField), 'video');
+      await tester.pumpAndSettle();
+      await _tapLabel(tester, video.title);
+      expect(find.text(video.summary), findsOneWidget);
+      for (final InfoPoint point in video.points) {
+        expect(find.text(point.body), findsOneWidget);
+      }
+      expect(find.byTooltip('Reproducir'), findsNothing);
+      await _tapLabel(tester, 'Ver video');
+      expect(opened?.method, 'open');
+      expect(opened?.arguments, <String, String>{'url': video.url});
+      await _tapLabel(tester, 'Marcar resumen leído (+5 XP)');
+      expect(find.text('Sumaste 5 XP.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('Biblioteca filtra los seis temas y busca sin tildes', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
-    final SemanticsHandle semantics = tester.ensureSemantics();
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
-    await _goHome(tester);
-    await _tapNav(tester, 'Información');
-    expect(find.text('Biblioteca'), findsOneWidget);
-    expect(find.text('Buscá un tema'), findsOneWidget);
-    expect(find.text('7 recursos'), findsNothing);
-    expect(find.text('¿Es una broma o acoso?'), findsOneWidget);
-    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Ciberacoso'));
+    await _tapLabel(tester, 'Ingreso estudiantil');
+    await _tapLabel(tester, 'Explorar Información');
+    for (final InfoTopic topic in InfoTopic.values) {
+      final Finder chip = find.widgetWithText(ChoiceChip, topic.chip);
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      final List<InfoResource> matches = infoCatalog
+          .where((InfoResource r) => r.topic == topic)
+          .toList();
+      expect(find.text('${matches.length} disponibles'), findsOneWidget);
+      for (final InfoResource resource in infoCatalog) {
+        expect(
+          find.text(resource.title),
+          resource.topic == topic ? findsOneWidget : findsNothing,
+        );
+      }
+    }
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Todos'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Ciberacoso'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Todos'));
+    await tester.enterText(find.byType(TextField), 'DEPRESION');
     await tester.pumpAndSettle();
     expect(find.text('2 disponibles'), findsOneWidget);
-    expect(find.text('Pasó en el chat del grupo'), findsOneWidget);
-    expect(find.text('Qué hacer si te molestan en línea'), findsOneWidget);
-    expect(find.text('¿Es una broma o acoso?'), findsNothing);
-    await tester.enterText(find.byType(TextField), 'LINEA');
-    await tester.pumpAndSettle();
-    expect(find.text('1 disponibles'), findsOneWidget);
-    expect(find.text('Pasó en el chat del grupo'), findsNothing);
     await tester.enterText(find.byType(TextField), 'inexistente');
     await tester.pumpAndSettle();
     expect(
       find.text('No encontramos recursos. Probá con otro tema.'),
       findsOneWidget,
     );
-    await tester.enterText(find.byType(TextField), '');
-    await _tapLabel(tester, 'Todos');
-    expect(find.text('¿Es una broma o acoso?'), findsOneWidget);
-    final Finder seeSupport = find.bySemanticsLabel(
-      'Ver todo de Cómo pedir apoyo',
-    );
-    await tester.ensureVisible(seeSupport);
-    await tester.pumpAndSettle();
-    await tester.tap(seeSupport);
-    await tester.pumpAndSettle();
-    expect(find.text('2 disponibles'), findsOneWidget);
-    expect(find.text('Qué pasa al enviar una alerta en SéTú'), findsOneWidget);
-    semantics.dispose();
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('Rutas conserva pasos y acredita el cierre una sola vez', (
-    WidgetTester tester,
-  ) async {
-    _useTallView(tester);
-    final MemoryProgressStore store = MemoryProgressStore();
-    const ValueKey<String> key = ValueKey<String>('information-capture');
-    await tester.pumpWidget(
-      RepaintBoundary(
-        key: key,
-        child: _app(store: store),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await _goHome(tester);
-    await _tapNav(tester, 'Información');
-    await _capture(tester, key, 'e10a-library');
-    await _tapLabel(tester, 'Rutas');
-    expect(find.text('0 de 3 pasos'), findsOneWidget);
-    await _tapLabel(tester, 'Cambiar tema');
-    expect(find.text('Elegí una ruta para aprender'), findsOneWidget);
-    expect(find.text('En preparación'), findsNWidgets(3));
-    await _capture(tester, key, 'e10d-topics');
-    await _tapLabel(tester, 'Cerrar');
-    await _tapLabel(tester, 'Continuar ruta');
-    expect(find.text('Guía'), findsOneWidget);
-    await _capture(tester, key, 'e11a-guide');
-    await _tapLabel(tester, 'Fuente y revisión');
-    expect(find.text('Fuente base'), findsOneWidget);
-    expect(find.text('Territorio y público'), findsOneWidget);
-    expect(find.textContaining('pendiente de confirmar'), findsOneWidget);
-    await _capture(tester, key, 'e11f-source');
-    await _tapLabel(tester, 'Entendido');
-    await _tapLabel(tester, 'Marcar como leída (+5 XP)');
-    await tester.tap(find.byTooltip('Volver'));
-    await tester.pumpAndSettle();
-    expect(find.text('1 de 3 pasos'), findsOneWidget);
-    await _capture(tester, key, 'e10c-routes');
-    await _tapLabel(tester, 'Continuar ruta');
-    expect(find.text('Video · Paso 2 de 3'), findsOneWidget);
-    expect(find.textContaining('reproducción simulada'), findsOneWidget);
-    await _capture(tester, key, 'e11b-video');
-    await tester.tap(find.byTooltip('Reproducir'));
-    await tester.pump(const Duration(seconds: 3));
-    expect(find.text('0:03 / 2:00'), findsOneWidget);
-    await tester.tap(find.byTooltip('Pausar'));
-    await tester.pump(const Duration(seconds: 2));
-    expect(find.text('0:03 / 2:00'), findsOneWidget);
-    await _tapLabel(tester, 'CC');
-    expect(
-      find.text('«No tenés que enfrentar al grupo a solas: acercate.»'),
-      findsNothing,
-    );
-    await _tapLabel(tester, 'CC');
-    expect(
-      find.text('«No tenés que enfrentar al grupo a solas: acercate.»'),
-      findsOneWidget,
-    );
-    await _tapLabel(tester, 'Con internet · Ver sin conexión');
-    expect(find.text('Lectura sin conexión'), findsOneWidget);
-    expect(
-      find.textContaining('Este video no está disponible sin internet.'),
-      findsOneWidget,
-    );
-    expect(find.byTooltip('Reproducir'), findsNothing);
-    await _capture(tester, key, 'e11c-offline');
-    await _tapLabel(tester, 'Marcar resumen leído (+5 XP)');
-    await tester.tap(find.byTooltip('Volver'));
-    await tester.pumpAndSettle();
-    expect(find.text('2 de 3 pasos'), findsOneWidget);
-    await _tapLabel(tester, 'Continuar ruta');
-    expect(find.text('Pregunta · Paso 3 de 3'), findsOneWidget);
-    expect(_button(tester, 'Completar ruta (3 de 3)').onPressed, isNull);
-    await _tapLabel(tester, 'Reírse un poco para no quedar fuera del grupo.');
-    expect(find.textContaining('probá de nuevo'), findsOneWidget);
-    await _tapLabel(
-      tester,
-      'Acercarse a Luis, ayudarlo a buscar apoyo adulto y no celebrar la burla.',
-    );
-    expect(find.text('Correcta'), findsOneWidget);
-    await _capture(tester, key, 'e11e-quiz');
-    await _tapLabel(tester, 'Completar ruta (3 de 3)');
-    expect(find.text('Sumaste 10 XP.'), findsOneWidget);
-    expect((await store.load())?['questionDays'], isEmpty);
-    expect((await store.load())?['routes'], <String>['acoso']);
-    await tester.tap(find.byTooltip('Volver'));
-    await tester.pumpAndSettle();
-    expect(find.text('3 de 3 pasos'), findsOneWidget);
-    expect(find.text('+20 XP ganados'), findsOneWidget);
-    await _tapLabel(tester, 'Repasar ruta');
-    expect(_button(tester, 'Ruta completada').onPressed, isNull);
-    await _tapLabel(tester, 'Fuente y revisión');
-    await _tapLabel(tester, 'Ir a Ayuda');
-    expect(find.text('Líneas de ayuda'), findsOneWidget);
-    await _tapNav(tester, 'Actividades');
-    await _tapLabel(
-      tester,
-      'Todas las emociones son válidas; lo importante es cómo las expresamos.',
-    );
-    await _tapNav(tester, 'Inicio');
-    expect(find.text('30 XP'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    'catálogo público abre historia, fuente y apoyo sin sesión escolar',
+    'las cuatro rutas abren sus pasos, retroalimentan y acreditan una vez',
     (WidgetTester tester) async {
       _useTallView(tester);
       final MemoryProgressStore store = MemoryProgressStore();
-      const ValueKey<String> key = ValueKey<String>(
-        'public-information-capture',
+      await tester.pumpWidget(_app(store: store));
+      await tester.pumpAndSettle();
+      await _goHome(tester);
+      await _tapNav(tester, 'Información');
+      await _tapLabel(tester, 'Rutas');
+      for (final InfoRoute route in infoRoutes) {
+        await _tapLabel(tester, 'Cambiar tema');
+        expect(find.text('En preparación'), findsNothing);
+        for (final InfoRoute choice in infoRoutes) {
+          expect(find.text(choice.description), findsOneWidget);
+        }
+        await _tapLabel(tester, route.description);
+        expect(find.text('0 de 3 pasos'), findsOneWidget);
+        for (final String id in route.steps.take(2)) {
+          final InfoResource resource = infoResourceById(id)!;
+          await _tapLabel(tester, 'Continuar ruta');
+          expect(find.text(resource.title), findsOneWidget);
+          expect(find.text(resource.summary), findsOneWidget);
+          await _tapLabel(
+            tester,
+            resource.isVideo
+                ? 'Marcar resumen leído (+5 XP)'
+                : 'Marcar como leída (+5 XP)',
+          );
+          await tester.tap(find.byTooltip('Volver'));
+          await tester.pumpAndSettle();
+        }
+        await _tapLabel(tester, 'Continuar ruta');
+        final InfoResource question = infoResourceById(route.steps.last)!;
+        expect(find.text(question.caption!), findsOneWidget);
+        expect(_button(tester, 'Completar ruta (3 de 3)').onPressed, isNull);
+        for (int i = 0; i < question.options.length; i++) {
+          await _tapLabel(tester, question.options[i]);
+          expect(find.text(question.optionFeedback[i]), findsOneWidget);
+          expect(
+            _button(tester, 'Completar ruta (3 de 3)').onPressed,
+            i == question.correct ? isNotNull : isNull,
+          );
+        }
+        await _tapLabel(tester, question.options[question.correct]);
+        await _tapLabel(tester, 'Completar ruta (3 de 3)');
+        expect(find.text('Sumaste 10 XP.'), findsOneWidget);
+        await tester.tap(find.byTooltip('Volver'));
+        await tester.pumpAndSettle();
+        expect(find.text('3 de 3 pasos'), findsOneWidget);
+        await _tapLabel(tester, 'Repasar ruta');
+        expect(_button(tester, 'Ruta completada').onPressed, isNull);
+        await tester.tap(find.byTooltip('Volver'));
+        await tester.pumpAndSettle();
+      }
+      expect(
+        (await store.load())?['routes'],
+        infoRoutes.map((InfoRoute r) => r.id).toList(),
       );
-      await tester.pumpWidget(
-        RepaintBoundary(
-          key: key,
-          child: _app(store: store),
-        ),
-      );
+      expect((await store.load())?['questionDays'], isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'fuente y revisión, lectura pública y acceso escolar para pedir apoyo',
+    (WidgetTester tester) async {
+      _useTallView(tester);
+      final MemoryProgressStore store = MemoryProgressStore();
+      await tester.pumpWidget(_app(store: store));
       await tester.pumpAndSettle();
       await _tapLabel(tester, 'Ingreso estudiantil');
       await _tapLabel(tester, 'Explorar Información');
-      expect(find.text('Biblioteca'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Ciberacoso'));
-      await tester.pumpAndSettle();
-      await _capture(tester, key, 'e10b-search');
-      await _tapLabel(tester, 'Pasó en el chat del grupo');
-      expect(find.text('Viñeta 1 · La captura en el grupo'), findsOneWidget);
-      expect(find.text('Viñeta 2 · Valeria decide frenar'), findsOneWidget);
-      expect(find.text('Viñeta 3 · Pedir apoyo a tiempo'), findsOneWidget);
-      await _capture(tester, key, 'e11d-story');
+      final InfoResource resource = infoCatalog.first;
+      await _tapLabel(tester, resource.title);
+      expect(
+        find.text(
+          'Resumen adaptado por el equipo SéTú a partir de la fuente; no reemplaza la fuente original',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('${resource.organization}\n${resource.url}'),
+        findsOneWidget,
+      );
+      await _tapLabel(tester, 'Fuente y revisión');
+      expect(
+        find.text('${resource.organization}\n${resource.url}'),
+        findsNWidgets(2),
+      );
+      expect(
+        find.text(
+          'Contenido de UNICEF/MINED; adaptado para estudiantes de Nicaragua',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Verificado el 16 de noviembre de 2026 · Pendiente revisión profesional (Psicología)',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Equipo SéTú (Bugñuelitos, UAM)'), findsOneWidget);
+      await _tapLabel(tester, 'Entendido');
       await _tapLabel(tester, 'Marcar como leída (+5 XP)');
       expect(find.text('Sumaste 5 XP.'), findsOneWidget);
-      await tester.tap(find.byTooltip('Volver'));
-      await tester.pumpAndSettle();
-      expect(find.text('2 disponibles'), findsOneWidget);
-      await _tapLabel(tester, 'Pasó en el chat del grupo');
-      expect(_button(tester, 'Lectura registrada').onPressed, isNull);
       await _tapLabel(tester, 'Pedir apoyo');
       expect(
         find.text('Para pedir apoyo, ingresá con el código de tu colegio.'),
         findsOneWidget,
       );
       await _tapLabel(tester, 'Seguir leyendo');
-      expect(find.text('Pasó en el chat del grupo'), findsOneWidget);
       await _tapLabel(tester, 'Fuente y revisión');
       await _tapLabel(tester, 'Ir a Ayuda');
       expect(find.text('Líneas de ayuda'), findsOneWidget);
       await _tapNav(tester, 'Información');
-      await _tapLabel(tester, '¿Es una broma o acoso?');
+      await _tapLabel(tester, resource.title);
+      expect(_button(tester, 'Lectura registrada').onPressed, isNull);
       await _tapLabel(tester, 'Pedir apoyo');
       await _tapLabel(tester, 'Ingresar al colegio');
       expect(find.text('Escribir código'), findsOneWidget);
-      expect((await store.load())?['resources'], <String>['chat-grupo']);
+      expect((await store.load())?['resources'], <String>[resource.id]);
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final InfoTopic topic in <InfoTopic>[
+    InfoTopic.ansiedad,
+    InfoTopic.depresion,
+  ]) {
+    testWidgets('${topic.label} muestra aviso de seguridad y abre Ayuda', (
+      WidgetTester tester,
+    ) async {
+      _useTallView(tester);
+      await tester.pumpWidget(_app());
+      await tester.pumpAndSettle();
+      await _tapLabel(tester, 'Ingreso estudiantil');
+      await _tapLabel(tester, 'Explorar Información');
+      final Finder chip = find.widgetWithText(ChoiceChip, topic.chip);
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      final InfoResource resource = infoCatalog.firstWhere(
+        (InfoResource r) => r.topic == topic,
+      );
+      await _tapLabel(tester, resource.title);
+      final Finder safety = find.text(
+        'Si te sentís en peligro o pensás en hacerte daño, hablá ya con una persona adulta de confianza o entrá a Ayuda',
+      );
+      expect(safety, findsOneWidget);
+      expect(
+        tester.getTopLeft(safety).dy,
+        lessThan(tester.getTopLeft(find.text(resource.points.first.body)).dy),
+      );
+      await _tapLabel(tester, 'Ir a Ayuda');
+      expect(find.text('Líneas de ayuda'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('Información conserva acciones en 320 px y texto al 200 %', (
     WidgetTester tester,
@@ -524,21 +576,24 @@ void main() {
     await _tapLabel(tester, 'Explorar Información');
     await _tapLabel(tester, 'Rutas');
     await _tapLabel(tester, 'Cambiar tema');
-    expect(find.text('En preparación'), findsNWidgets(3));
-    await _tapLabel(tester, 'Cerrar');
+    await _tapLabel(tester, infoRoutes.first.description);
+    for (int i = 0; i < 2; i++) {
+      await _tapLabel(tester, 'Continuar ruta');
+      await _tapLabel(tester, 'Fuente y revisión');
+      await _tapLabel(tester, 'Entendido');
+      expect(find.text('Entendido'), findsNothing);
+      await _tapLabel(tester, 'Marcar como leída (+5 XP)');
+      await tester.ensureVisible(find.byTooltip('Volver'));
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
+      expect(find.text('${i + 1} de 3 pasos'), findsOneWidget);
+    }
     await _tapLabel(tester, 'Continuar ruta');
-    await _tapLabel(tester, 'Fuente y revisión');
-    await _tapLabel(tester, 'Entendido');
-    await _tapLabel(tester, 'Marcar como leída (+5 XP)');
-    await tester.tap(find.byTooltip('Volver'));
-    await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Continuar ruta');
-    await _tapLabel(tester, 'Con internet · Ver sin conexión');
-    await _tapLabel(tester, 'Marcar resumen leído (+5 XP)');
-    await tester.tap(find.byTooltip('Volver'));
-    await tester.pumpAndSettle();
-    await _tapLabel(tester, 'Continuar ruta');
-    await _tapLabel(tester, 'B');
+    final InfoResource question = infoResourceById(
+      infoRoutes.first.steps.last,
+    )!;
+    // El texto de la opción supera el viewport al 200 %; tocar su letra visible.
+    await _tapLabel(tester, String.fromCharCode(65 + question.correct));
     await _tapLabel(tester, 'Completar ruta (3 de 3)');
     expect(find.text('Sumaste 10 XP.'), findsOneWidget);
     await _tapLabel(tester, 'Pedir apoyo');

@@ -377,7 +377,9 @@ class _InicioTab extends StatelessWidget {
           children: <Widget>[
             for (final InfoResource resource in homeResources)
               StudentPreviewCard(
-                cover: resource.cover,
+                cover: resource.topic == InfoTopic.emociones
+                    ? StudentCover.video
+                    : resource.cover,
                 title: resource.title,
                 detail: resource.meta,
                 onTap: () => context.push<void>(resource.route),

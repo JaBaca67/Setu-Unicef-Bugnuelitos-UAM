@@ -57,6 +57,32 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
+            "dev.cureando.app/links").setMethodCallHandler { call, result ->
+            if (call.method != "open") {
+                result.notImplemented()
+            } else {
+                val url = call.argument<String>("url") ?: ""
+                val uri = android.net.Uri.parse(url)
+                val host = uri.host?.lowercase(java.util.Locale.ROOT) ?: ""
+                val allowed = host == "unicef.org" || host.endsWith(".unicef.org") ||
+                    host in setOf("mined.gob.ni", "www.mined.gob.ni", "youtube.com", "www.youtube.com", "m.youtube.com",
+                        "youtu.be", "facebook.com", "www.facebook.com")
+                if (uri.scheme != "https" || !allowed || uri.userInfo != null ||
+                    (uri.port != -1 && uri.port != 443) || url.any { it.isWhitespace() || it == '\\' }) {
+                    result.error("invalid_url", "Enlace no permitido", null)
+                } else {
+                    try {
+                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri))
+                        result.success(null)
+                    } catch (error: android.content.ActivityNotFoundException) {
+                        result.error("no_browser", "No hay aplicación para abrir el enlace", null)
+                    } catch (error: SecurityException) {
+                        result.error("link_denied", "No se pudo abrir el enlace", null)
+                    }
+                }
+            }
+        }
         nearbyMeshChannel = NearbyMeshChannel(
             this,
             flutterEngine.dartExecutor.binaryMessenger,
