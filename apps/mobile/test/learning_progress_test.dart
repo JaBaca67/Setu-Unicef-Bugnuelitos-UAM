@@ -82,8 +82,9 @@ void main() {
   test(
     'almacén v1 antiguo conserva XP y el cierre es único incluso al reabrir',
     () async {
-      final Directory qaRoot = await Directory('build').create(recursive: true);
-      final Directory directory = await qaRoot.createTemp('setu-route-');
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'setu-route-',
+      );
       addTearDown(() => directory.delete(recursive: true));
       final File file = File('${directory.path}/progress.enc');
       final _MemoryVault vault = _MemoryVault();

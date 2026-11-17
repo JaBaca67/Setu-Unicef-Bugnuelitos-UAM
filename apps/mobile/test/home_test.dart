@@ -68,8 +68,10 @@ void main() {
     expect(find.text('Ver todo'), findsNWidgets(2));
     expect(find.text('¿Es una broma o acoso?'), findsOneWidget);
     expect(find.text('Cómo ser un testigo solidario'), findsOneWidget);
-    expect(find.text('Pregunta del día'), findsOneWidget);
-    expect(find.text('Dado de emociones'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('^Pregunta del día')), findsOneWidget);
+    expect(find.bySemanticsLabel('Dado de emociones'), findsOneWidget);
+    expect(find.text('Pregunta del día'), findsNothing);
+    expect(find.text('Dado de emociones'), findsNothing);
     expect(find.text('Mi seguimiento'), findsNothing);
     expect(find.text('Seguimiento'), findsNothing);
     await _capture(tester, captureKey, 'e03-home');
@@ -317,8 +319,10 @@ void main() {
     await _tapNav(tester, 'Información');
     expect(find.text('Biblioteca'), findsOneWidget);
     expect(find.text('Buscá un tema'), findsOneWidget);
-    expect(find.text('7 recursos'), findsOneWidget);
+    expect(find.text('7 recursos'), findsNothing);
     expect(find.text('¿Es una broma o acoso?'), findsOneWidget);
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Ciberacoso'));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Ciberacoso'));
     await tester.pumpAndSettle();
     expect(find.text('2 disponibles'), findsOneWidget);
@@ -644,18 +648,31 @@ void main() {
     await _goHome(tester);
     await _tapLabel(tester, 'Racha de 0 días');
     expect(find.text('Mi racha'), findsOneWidget);
+    await tester.ensureVisible(find.byTooltip('Mes anterior'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Mes anterior'));
     await tester.pumpAndSettle();
     expect(find.text('Octubre 2026'), findsOneWidget);
+    tester
+        .state<ScrollableState>(find.byType(Scrollable).first)
+        .position
+        .jumpTo(0);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Pedir apoyo');
     expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
+    await tester.ensureVisible(find.byTooltip('Abrir mi perfil'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Abrir mi perfil'));
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Personalizar mi pieza');
     await _tapLabel(tester, 'Accesorios');
     await _tapLabel(tester, 'Guardar mi pieza');
+    await tester.ensureVisible(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     await _tapNav(tester, 'Actividades');
@@ -677,6 +694,8 @@ void main() {
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Abrir chat');
     await _tapLabel(tester, 'No sé por dónde empezar');
+    await tester.ensureVisible(find.byTooltip('Enviar mensaje'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Enviar mensaje'));
     await tester.pumpAndSettle();
     expect(find.text('No sé por dónde empezar'), findsOneWidget);
@@ -827,7 +846,13 @@ Future<void> _tapLabel(WidgetTester tester, String label) async {
     await tester.scrollUntilVisible(
       finder,
       180,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .byWidgetPredicate(
+            (Widget widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down,
+          )
+          .first,
     );
   }
   await tester.ensureVisible(finder);
