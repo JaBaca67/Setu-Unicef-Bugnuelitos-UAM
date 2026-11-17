@@ -157,8 +157,8 @@ void main() {
         find.widgetWithText(ChoiceChip, 'Acoso escolar'),
       );
       expect(selected.selected, isTrue);
-      expect(selected.selectedColor, CureandoTheme.yellow);
-      expect(selected.labelStyle!.color, CureandoTheme.ink);
+      expect(selected.selectedColor, CureandoTheme.blue);
+      expect(selected.labelStyle!.color, Colors.white);
       expect(selected.side!.width, 2);
       tester.view.physicalSize = Size(width, 640);
       await tester.pumpAndSettle();

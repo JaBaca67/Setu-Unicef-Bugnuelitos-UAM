@@ -140,9 +140,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Protocolo (2016) dirigido a docentes y directivos; se abrió y extrajo el texto. Puntos adaptados para estudiantes. Incluye directorio de contactos de Panamá que no se usa aquí.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_card_testigo.png',
-    thumbAsset: '$_info/e10a_card_testigo.png',
-    bannerAsset: '$_info/e10a_card_testigo.png',
+    cardAsset: '$_info/banners/no_callado.jpg',
+    thumbAsset: '$_info/banners/no_callado.jpg',
+    bannerAsset: '$_info/banners/no_callado.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -172,9 +172,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Protocolo dirigido a la comunidad educativa (docentes, dirección, consejerías); se abrió y extrajo el texto. La sección de señales de alerta tiene texto con codificación dañada y no se pudo leer completa. Puntos adaptados para estudiantes.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_rompecabezas.png',
-    thumbAsset: '$_info/stickers/sticker_rompecabezas.png',
-    bannerAsset: '$_info/stickers/sticker_rompecabezas.png',
+    cardAsset: '$_info/banners/escucha_escuela.jpg',
+    thumbAsset: '$_info/banners/escucha_escuela.jpg',
+    bannerAsset: '$_info/banners/escucha_escuela.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -204,9 +204,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Guía de 116 páginas para facilitadores que trabajan con adolescentes de 15 a 19 años; se usó el Módulo 19 (acoso escolar). Traducción al español con errores tipográficos. Puntos adaptados a lo que el estudiante puede hacer; para 3.º a 6.º grado conviene simplificar.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_pieza_azul.png',
-    thumbAsset: '$_info/stickers/sticker_pieza_azul.png',
-    bannerAsset: '$_info/stickers/sticker_pieza_azul.png',
+    cardAsset: '$_info/banners/ver_acoso.jpg',
+    thumbAsset: '$_info/banners/ver_acoso.jpg',
+    bannerAsset: '$_info/banners/ver_acoso.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -236,9 +236,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo para madres, padres y personas cuidadoras; puntos adaptados para que el estudiante los aplique. No se incluye ningún diagnóstico.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_semaforo.png',
-    thumbAsset: '$_info/stickers/sticker_semaforo.png',
-    bannerAsset: '$_info/stickers/sticker_semaforo.png',
+    cardAsset: '$_info/banners/pausa_respira.jpg',
+    thumbAsset: '$_info/banners/pausa_respira.jpg',
+    bannerAsset: '$_info/banners/pausa_respira.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -267,9 +267,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (2023) dirigido a madres, padres y cuidadores; puntos adaptados para estudiantes. Contenido muy similar al de UNICEF LAC.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_cara_amarilla.png',
-    thumbAsset: '$_info/stickers/sticker_cara_amarilla.png',
-    bannerAsset: '$_info/stickers/sticker_cara_amarilla.png',
+    cardAsset: '$_info/banners/cuerpo_senales.jpg',
+    thumbAsset: '$_info/banners/cuerpo_senales.jpg',
+    bannerAsset: '$_info/banners/cuerpo_senales.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -299,9 +299,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo breve dirigido a madres, padres y personas adultas; puntos adaptados al estudiante. No indica cuándo buscar ayuda profesional.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_pieza_amarilla.png',
-    thumbAsset: '$_info/stickers/sticker_pieza_amarilla.png',
-    bannerAsset: '$_info/stickers/sticker_pieza_amarilla.png',
+    cardAsset: '$_info/banners/desborde_calma.jpg',
+    thumbAsset: '$_info/banners/desborde_calma.jpg',
+    bannerAsset: '$_info/banners/desborde_calma.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -331,9 +331,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Video de Facebook que no se pudo ver; puntos basados solo en la descripción visible de la publicación. Contexto COVID-19 (fecha antigua) y dirigido a madres, padres y cuidadores. Revisar el video antes de publicarlo.",
     offline: false, // Video externo; su resumen sigue disponible sin internet.
-    cardAsset: '$_info/stickers/sticker_dado.png',
-    thumbAsset: '$_info/stickers/sticker_dado.png',
-    bannerAsset: '$_info/stickers/sticker_dado.png',
+    cardAsset: '$_info/banners/cambios_nervios.jpg',
+    thumbAsset: '$_info/banners/cambios_nervios.jpg',
+    bannerAsset: '$_info/banners/cambios_nervios.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -363,9 +363,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (2024) dirigido a madres, padres, cuidadores y docentes; puntos adaptados al estudiante. La página incluye una línea telefónica de Uruguay que se omite a propósito.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_cara_roja.png',
-    thumbAsset: '$_info/stickers/sticker_cara_roja.png',
-    bannerAsset: '$_info/stickers/sticker_cara_roja.png',
+    cardAsset: '$_info/banners/tristeza_acompanada.jpg',
+    thumbAsset: '$_info/banners/tristeza_acompanada.jpg',
+    bannerAsset: '$_info/banners/tristeza_acompanada.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -394,9 +394,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (2023) dirigido a madres, padres y cuidadores; puntos adaptados. Menciona ideas de suicidio y autolesiones: si se muestra a estudiantes, acompañarlo de la ruta de ayuda de la app.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_dibujo.png',
-    thumbAsset: '$_info/stickers/sticker_dibujo.png',
-    bannerAsset: '$_info/stickers/sticker_dibujo.png',
+    cardAsset: '$_info/banners/sin_ganas.jpg',
+    thumbAsset: '$_info/banners/sin_ganas.jpg',
+    bannerAsset: '$_info/banners/sin_ganas.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -426,9 +426,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo de preguntas y respuestas dirigido a adolescentes y jóvenes. Menciona líneas de ayuda nacionales de forma genérica; no se incluyen números.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_chat.png',
-    thumbAsset: '$_info/e10b_thumb_chat.png',
-    bannerAsset: '$_info/e10b_thumb_chat.png',
+    cardAsset: '$_info/banners/molestan_linea.jpg',
+    thumbAsset: '$_info/banners/molestan_linea.jpg',
+    bannerAsset: '$_info/banners/molestan_linea.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -459,9 +459,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Guía (octubre 2025) escrita para adolescentes y ya en voseo rioplatense. Menciona leyes argentinas (grooming como delito) que no aplican tal cual a Nicaragua; no se usaron en los puntos.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_pregunta.png',
-    thumbAsset: '$_info/stickers/sticker_pregunta.png',
-    bannerAsset: '$_info/stickers/sticker_pregunta.png',
+    cardAsset: '$_info/banners/palabras_cuentan.jpg',
+    thumbAsset: '$_info/banners/palabras_cuentan.jpg',
+    bannerAsset: '$_info/banners/palabras_cuentan.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -491,9 +491,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Video de Facebook que no se pudo ver; puntos basados solo en la descripción visible de la publicación. Revisar el video antes de publicarlo.",
     offline: false, // Video externo; su resumen sigue disponible sin internet.
-    cardAsset: '$_info/e10b_thumb_linea.png',
-    thumbAsset: '$_info/e10b_thumb_linea.png',
-    bannerAsset: '$_info/e10b_thumb_linea.png',
+    cardAsset: '$_info/e10a_banner_chat.png',
+    thumbAsset: '$_info/e10a_banner_chat.png',
+    bannerAsset: '$_info/e10a_banner_chat.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -523,9 +523,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Video de Facebook que no se pudo ver; puntos basados solo en la descripción visible (campaña #EnMiMente, Día del Internet Seguro). Revisar el video antes de publicarlo.",
     offline: false, // Video externo; su resumen sigue disponible sin internet.
-    cardAsset: '$_info/stickers/sticker_pieza_verde_misma.png',
-    thumbAsset: '$_info/stickers/sticker_pieza_verde_misma.png',
-    bannerAsset: '$_info/stickers/sticker_pieza_verde_misma.png',
+    cardAsset: '$_info/banners/huella_digital.jpg',
+    thumbAsset: '$_info/banners/huella_digital.jpg',
+    bannerAsset: '$_info/banners/huella_digital.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -553,9 +553,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     verified: true,
     notes: "Artículo dirigido directamente a adolescentes.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/banners/salud_mental.jpg',
+    thumbAsset: '$_info/banners/salud_mental.jpg',
+    bannerAsset: '$_info/banners/salud_mental.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -582,9 +582,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo dirigido a madres, padres y cuidadores de adolescentes; puntos adaptados a lo que el estudiante puede hacer.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_cara_verde.png',
-    thumbAsset: '$_info/stickers/sticker_cara_verde.png',
-    bannerAsset: '$_info/stickers/sticker_cara_verde.png',
+    cardAsset: '$_info/banners/emociones_nombre.jpg',
+    thumbAsset: '$_info/banners/emociones_nombre.jpg',
+    bannerAsset: '$_info/banners/emociones_nombre.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -614,9 +614,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (octubre 2025) dirigido a madres, padres, cuidadores y amistades de adolescentes; puntos adaptados al estudiante.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_dibujo.png',
-    thumbAsset: '$_info/stickers/sticker_dibujo.png',
-    bannerAsset: '$_info/stickers/sticker_dibujo.png',
+    cardAsset: '$_info/banners/cuidarte.jpg',
+    thumbAsset: '$_info/banners/cuidarte.jpg',
+    bannerAsset: '$_info/banners/cuidarte.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -645,9 +645,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Guía conceptual (2025) del programa 'Yo apoyo a mis amigos' (UNICEF, Save the Children, OMS), dirigida a personas adultas que forman a adolescentes; puntos adaptados para estudiantes. URL limpia sin parámetros de rastreo.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_card_apoyo.png',
-    thumbAsset: '$_info/e10a_card_apoyo.png',
-    bannerAsset: '$_info/e10a_card_apoyo.png',
+    cardAsset: '$_info/banners/escuchados.jpg',
+    thumbAsset: '$_info/banners/escuchados.jpg',
+    bannerAsset: '$_info/banners/escuchados.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -673,9 +673,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Campaña dirigida principalmente a personas adultas; puntos adaptados para estudiantes.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_rompecabezas.png',
-    thumbAsset: '$_info/stickers/sticker_rompecabezas.png',
-    bannerAsset: '$_info/stickers/sticker_rompecabezas.png',
+    cardAsset: '$_info/banners/equipo_apoyo.jpg',
+    thumbAsset: '$_info/banners/equipo_apoyo.jpg',
+    bannerAsset: '$_info/banners/equipo_apoyo.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -705,9 +705,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo dirigido a periodistas, familias y jóvenes; incluye una estadística de una encuesta que no se usa aquí. Puntos centrados en lo que el estudiante puede hacer.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_pregunta.png',
-    thumbAsset: '$_info/stickers/sticker_pregunta.png',
-    bannerAsset: '$_info/stickers/sticker_pregunta.png',
+    cardAsset: '$_info/banners/confianza.jpg',
+    thumbAsset: '$_info/banners/confianza.jpg',
+    bannerAsset: '$_info/banners/confianza.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
@@ -734,9 +734,9 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Guía (diciembre 2020) dirigida a docentes, dirección y enlaces de consejería, no a estudiantes; puntos adaptados. Aclara que el acompañamiento no es atención psicológica ni terapia. Prohíbe reproducir el documento sin autorización del MINED: enlazar, no copiar.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/stickers/sticker_pieza_azul.png',
-    thumbAsset: '$_info/stickers/sticker_pieza_azul.png',
-    bannerAsset: '$_info/stickers/sticker_pieza_azul.png',
+    cardAsset: '$_info/banners/consejeria.jpg',
+    thumbAsset: '$_info/banners/consejeria.jpg',
+    bannerAsset: '$_info/banners/consejeria.jpg',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
