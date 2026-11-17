@@ -17,7 +17,8 @@ desde `main` por el workflow `.github/workflows/deploy-landing.yml`. Todo lo que
 - Mockups del equipo en `landing/assets/app/` (WebP 360/720 px con `srcset`): celular fijo que cambia de pantalla en «Así funciona» (escritorio) o tarjetas deslizables (celular), mosaico de Explorá y trío en abanico en la descarga. Videos nuevos a 720p en `landing/assets/demo/`.
 - Textos en voseo y sin promesas absolutas (anonimato, entrega, respuesta); la campaña y el kit se presentan como propuesta. Los números 118 y 133 llevan fuente y fecha (ADR 0025).
 - Contraste: el texto pequeño sobre magenta, verde o amarillo va en negro (AA); el blanco sobre magenta solo en texto grande y en negrita.
-- Movimiento: aparición al hacer scroll, celular fijo y alerta animada en el mapa de la red; todo se desactiva con «reducir movimiento».
+- Movimiento: entrada escalonada de la portada, aparición al hacer scroll (también escalonada en listas), celular fijo, alerta animada en el mapa de la red, flores que giran, piezas y mockups que flotan y efectos al pasar el cursor; todo se desactiva con «reducir movimiento».
+- Barra de navegación con isotipo + logotipo (pedido del equipo; el manual no fija una versión horizontal, conviene validarla con Diseño). Título de la página y de las vistas previas al compartir: «Solamente SéTú».
 
 ## Probar en local
     cd landing

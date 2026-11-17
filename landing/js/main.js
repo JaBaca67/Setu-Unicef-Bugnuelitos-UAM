@@ -31,7 +31,7 @@
   var hasIO = "IntersectionObserver" in window;
 
   /* ---------- Aparición al hacer scroll ---------- */
-  var reveals = document.querySelectorAll("[data-reveal]");
+  var reveals = document.querySelectorAll("[data-reveal], [data-stagger]");
   if (!hasIO || reduceMotion) {
     reveals.forEach(function (el) { el.classList.add("is-visible"); });
   } else {
