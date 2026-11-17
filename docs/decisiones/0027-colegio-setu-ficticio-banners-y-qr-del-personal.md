@@ -22,3 +22,12 @@
 
 - Las imágenes generadas deben revisarse con el equipo de diseño antes de una versión pública. Si se prefieren fotos con derechos verificados, basta con reemplazar los archivos con el mismo nombre.
 - `AULA24` todavía se llama «Colegio Público Demo Centro América — CCE». Conviene renombrarlo si se quiere quitar toda referencia.
+
+## Segunda ronda (17 nov, antes del evento)
+
+- **Pieza en «Pedir apoyo».** La pantalla de entrada, los pasos 2 y 3, la tarjeta «Me pasa a mí» y la revisión muestran la pieza que el estudiante armó en «Mi perfil» (`PieceFigure`), en lugar de un personaje fijo.
+- **Avisos en el inicio.** El botón «Pedir apoyo» tiene una campana con contador. Suma 1 cuando la Mesa de Escucha activa el chat y 1 por cada mensaje nuevo del equipo. Al entrar a «Pedir apoyo» o al chat, el contador vuelve a 0. Lo revisado se guarda cifrado junto al caso (`chatSeen`, `staffSeen`). El contador no incluye el contenido de los mensajes.
+- **Tabletas.** `TabletCanvas` dibuja la interfaz del teléfono con 430 dp de ancho y la escala a toda la pantalla cuando el lado corto mide 600 dp o más. Ya no queda una columna con bordes. La app sigue siendo solo vertical.
+- **Mensajes emergentes.** Los avisos, diálogos y hojas inferiores usan el estilo SéTú: `buildSetuBottomAlertSnackBar` y el nuevo `shared/widgets/setu_dialog.dart`. Los migró Codex y se conservaron textos y comportamiento.
+- **Bienvenida.** El titular alterna cada 4 s, con un fundido, entre «Simplemente #SoloSéTú» y «Todos podemos encajar». Este último se exportó del Figma de la landing (nodo `196:2105`) y su texto se pasó a blanco para el fondo azul. Con movimiento reducido, el cambio es inmediato.
+- **Ayuda.** El título tiene 46 dp de sangría para no chocar con las líneas punteadas y la pieza verde del arte.
