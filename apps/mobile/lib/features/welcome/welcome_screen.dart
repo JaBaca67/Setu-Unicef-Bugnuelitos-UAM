@@ -129,60 +129,50 @@ class _CampaignHeaderState extends State<_CampaignHeader> {
     super.dispose();
   }
 
+  // Como en Figma: «Simplemente» baja hasta montarse sobre el borde superior
+  // de la pieza rosa del #SoloSéTú (se dibuja encima).
   Widget _soloSetu() => Semantics(
     key: const ValueKey<String>('campaign-solosetu'),
     header: true,
     label: 'Simplemente #SoloSéTú',
     excludeSemantics: true,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 270),
-          child: Image.asset(
-            'assets/welcome/campaign-simplemente.png',
-            fit: BoxFit.contain,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Transform.rotate(
-          angle: 0.95 * math.pi / 180,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 300),
-            child: Image.asset(
-              'assets/welcome/campaign-solosetu.png',
-              fit: BoxFit.contain,
+    child: SizedBox(
+      width: 300,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(top: 28),
+            child: Transform.rotate(
+              angle: 0.95 * math.pi / 180,
+              child: Image.asset(
+                'assets/welcome/campaign-solosetu.png',
+                width: 300,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
-        ),
-      ],
+          Image.asset(
+            'assets/welcome/campaign-simplemente.png',
+            width: 270,
+            fit: BoxFit.contain,
+          ),
+        ],
+      ),
     ),
   );
 
+  // Igual al titular de Figma (nodo 196:2105): «Todos podemos» y el bloque
+  // rosa inclinado «encajar» en una sola línea.
   Widget _encajar() => Semantics(
     key: const ValueKey<String>('campaign-encajar'),
     header: true,
     label: 'Todos podemos encajar',
     excludeSemantics: true,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 270),
-          child: Image.asset(
-            'assets/welcome/campaign-todos-podemos.png',
-            fit: BoxFit.contain,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 210),
-          child: Image.asset(
-            'assets/welcome/campaign-encajar.png',
-            fit: BoxFit.contain,
-          ),
-        ),
-      ],
+    child: Image.asset(
+      'assets/welcome/campaign-encajar.png',
+      width: 340,
+      fit: BoxFit.contain,
     ),
   );
 
@@ -219,10 +209,7 @@ class _CampaignHeaderState extends State<_CampaignHeader> {
                 child: FittedBox(
                   key: ValueKey<int>(_slide),
                   fit: BoxFit.scaleDown,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 300),
-                    child: _slide == 0 ? _soloSetu() : _encajar(),
-                  ),
+                  child: _slide == 0 ? _soloSetu() : _encajar(),
                 ),
               ),
             ),
