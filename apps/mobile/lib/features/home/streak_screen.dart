@@ -6,6 +6,7 @@ import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
 import 'learning_progress.dart';
+import 'student_activities.dart';
 
 const List<String> _weekdays = <String>[
   'lunes',
@@ -231,11 +232,18 @@ class _StreakScreenState extends State<StreakScreen> {
         header: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) => Stack(
             children: <Widget>[
-              Positioned.fill(
+              // Llama y personajes oficiales en alta resolución (3×), en su
+              // propia zona a la derecha para no tapar el título.
+              Positioned(
+                right: 12,
+                top: 10,
+                bottom: 8,
+                width: constraints.maxWidth * .4,
                 child: Image.asset(
-                  'assets/home/banner-racha-figures.png',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
+                  'assets/home/racha-figuras.png',
+                  fit: BoxFit.contain,
+                  alignment: Alignment.bottomRight,
+                  filterQuality: FilterQuality.high,
                   excludeFromSemantics: true,
                 ),
               ),
@@ -270,7 +278,7 @@ class _StreakScreenState extends State<StreakScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: constraints.maxWidth * .32),
+                          SizedBox(width: constraints.maxWidth * .4),
                         ],
                       ),
                     ],
@@ -297,6 +305,17 @@ class _StreakScreenState extends State<StreakScreen> {
                   onNext: month.isBefore(currentMonth)
                       ? () => _goToMonth(month, 1)
                       : null,
+                ),
+                const SizedBox(height: 12),
+                // La pregunta diaria (+XP) vive aquí: suma a la racha.
+                ActivityCard(
+                  key: const ValueKey<String>('streak-daily-question'),
+                  title: 'Pregunta del día',
+                  sticker: 'assets/home/activities/sticker_pregunta_hd.png',
+                  route: 'diaria',
+                  detail: progress.answeredToday
+                      ? 'Completada'
+                      : '+${LearningProgress.questionXp} XP',
                 ),
                 const SizedBox(height: 12),
                 SetuCard(
