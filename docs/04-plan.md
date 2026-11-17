@@ -18,7 +18,7 @@ El corte Android incluye acceso escolar, Pedir apoyo, superficies móviles staff
 
 El 12 de noviembre se incorporaron la [bienvenida E01](diseno/plan-arranque-bienvenida-setu.md) y el [acceso escolar E02 de demostración](diseno/plan-acceso-escolar-e02.md). E02 usa cámara y ubicación para un código de prueba, con un punto público configurado localmente. El acceso institucional y su primer ingreso offline siguen en diseño. Los bloques conectados y de transporte requieren propuesta y aprobación propias.
 
-El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual y XP educativos con persistencia local cifrada. El contenido disponible sigue siendo de muestra. E10/E11 incorporan Biblioteca, búsqueda/filtros, Rutas, lectores, video simulado con CC y alternativa en texto; revisión editorial y video real pendientes. [ADR 0014](decisiones/0014-progreso-educativo-local.md).
+El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual y XP educativos con persistencia local cifrada. E10/E11 incorporan 21 adaptaciones con fuentes UNICEF/MINED verificadas, seis temas, cuatro rutas, lectores con fuentes y videos externos; revisión profesional, derechos y publicación operativa pendientes (ADR 0026). [ADR 0014](decisiones/0014-progreso-educativo-local.md).
 
 ## Decisiones que cambian la solución
 
@@ -40,7 +40,7 @@ El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual 
 | Antes de protocolo | Cierre MINED, derivación separada de Escalado, contacto familiar, conflicto y revelación excepcional | Manuales operativos en versión de trabajo y propuestas en docs/02; aprobación institucional pendiente. |
 | Antes de piloto | MINED, centros, atención MINSA/practicantes, horarios y suplencia | Alianzas por validar, no confirmadas. |
 | Antes de piloto | Revisión local de datos, región, retención y derechos | Pendiente. |
-| Antes de publicar | Primer catálogo de Información y Ayuda, revisión, derechos y accesibilidad | Fuente, territorio, fecha, vigencia, responsable, etapa escolar, subtítulos/transcripción y archivos realmente disponibles. Diseñar catálogo/lector, reproductor y distribución; no decidir de nuevo si el apartado forma parte del producto. |
+| Antes de publicar | Primer catálogo de Información y Ayuda, revisión, derechos y accesibilidad | Fuente, territorio, fecha, vigencia, responsable, etapa escolar, subtítulos/transcripción y archivos realmente disponibles. Validar el catálogo/lector inicial, enlaces externos y distribución futura; no decidir de nuevo si el apartado forma parte del producto. |
 | Antes de presupuesto operativo | Conciliar Canvas/costos e incluir personal | Estimaciones incompatibles; sin financiación confirmada. |
 
 ## Bloques propuestos de desarrollo
@@ -51,7 +51,7 @@ El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual 
 4. **Offline:** cola protegida, custodia, puente, entrega local aprobada, sincronización y retorno de acuses.
 5. **Interfaz y demo:** marca final, primaria/secundaria, fallos y guion. Chat y contenidos según prioridad aprobada.
 
-El espacio Información es un frente de producto confirmado: E10/E11 ya tienen demo aprobada de Biblioteca/Rutas y lectores, entrada sin reporte y retorno desde espera; siguen pendientes el catálogo publicado, los derechos/revisión y el reproductor real. Puede diseñarse con independencia de la viabilidad radio. El catálogo completo y la distribución offline se dimensionan según el corte, sin omitir este componente de la propuesta.
+El espacio Información es un frente de producto confirmado: E10/E11 ya tienen demo aprobada de Biblioteca/Rutas y lectores, entrada sin reporte y retorno desde espera; el catálogo inicial de 21 adaptaciones y los videos externos están integrados; siguen pendientes publicación operativa, derechos/revisión y validación en dispositivo (ADR 0026). Puede diseñarse con independencia de la viabilidad radio. El catálogo completo y la distribución offline se dimensionan según el corte, sin omitir este componente de la propuesta.
 
 Cada bloque necesita propuesta concreta, preguntas materiales y aprobación explícita antes de código, dependencias, migraciones o estructura. Cambiar el generador documental no aprueba ninguno de estos bloques.
 

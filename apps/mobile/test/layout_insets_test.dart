@@ -52,15 +52,11 @@ void main() {
             await tester.pumpAndSettle();
             final Map<HomeSection, Finder> endings = <HomeSection, Finder>{
               HomeSection.inicio: find.bySemanticsLabel('Dado de emociones'),
-              HomeSection.informacion: find.text(
-                'Qué pasa al enviar una alerta en SéTú',
-              ),
+              HomeSection.informacion: find.text(infoCatalog.last.title),
               HomeSection.actividades: find.textContaining(
                 'El equipo diseñó otros materiales',
               ),
-              HomeSection.ayuda: find.textContaining(
-                'Tu relato es confidencial',
-              ),
+              HomeSection.ayuda: find.text('¿Qué puedo hacer sin internet?'),
             };
             for (final MapEntry<HomeSection, Finder> entry in endings.entries) {
               await tester.tap(
@@ -133,7 +129,9 @@ void main() {
         expect(chip.labelStyle!.fontWeight, FontWeight.w700);
       }
       await _capture(tester, capture, 'e10-$width');
-      await tester.ensureVisible(find.text('Pasó en el chat del grupo'));
+      await tester.ensureVisible(
+        find.text(infoResourceById('ciberacoso-que-es')!.title),
+      );
       await tester.pumpAndSettle();
       await _capture(tester, capture, 'e10-ciberacoso-$width');
       final ScrollableState libraryScroll = tester.state<ScrollableState>(
@@ -148,7 +146,7 @@ void main() {
       );
       expect(selected.selected, isTrue);
       expect(selected.selectedColor, CureandoTheme.yellow);
-      expect(selected.labelStyle!.color, CureandoTheme.pink);
+      expect(selected.labelStyle!.color, CureandoTheme.ink);
       expect(selected.showCheckmark, isTrue);
       for (final InfoResource r in infoCatalog) {
         await tester.pumpWidget(

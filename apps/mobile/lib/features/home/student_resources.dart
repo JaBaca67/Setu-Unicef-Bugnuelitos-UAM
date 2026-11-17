@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
+import 'external_links.dart';
 import 'info_catalog.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
@@ -52,8 +51,7 @@ Future<void> _requestSchool(BuildContext context) => showModalBottomSheet<void>(
   ),
 );
 
-/// Recurso E11 (guía, video, historia ilustrada o pregunta de cierre).
-/// Contenido propio de muestra, en revisión editorial.
+/// Recurso E11: adaptación con fuente visible o pregunta de cierre de ruta.
 class ResourcePreviewScreen extends StatefulWidget {
   const ResourcePreviewScreen({
     super.key,
@@ -72,7 +70,6 @@ class ResourcePreviewScreen extends StatefulWidget {
 
 class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
   bool _saving = false;
-  bool _offlineView = false;
   int? _selected;
   String? _message;
 
@@ -137,14 +134,7 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
       builder: (BuildContext context, _) => FlowScaffold(
         header: FlowHeader(
           title: title,
-          trailing: _offlineView
-              ? const _Pill(
-                  text: 'Sin conexión',
-                  icon: Icons.wifi_off_rounded,
-                  ink: Color(0xFF92400E),
-                  background: CureandoTheme.yellowSoft,
-                )
-              : _Pill(text: '+$xp XP', icon: Icons.add_rounded),
+          trailing: _Pill(text: '+$xp XP', icon: Icons.add_rounded),
         ),
         bottom: _actions(context, r),
         body: Column(
@@ -167,9 +157,7 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
         : p.completedResource(r.id)
         ? 'Marcar día de aprendizaje'
         : r.isVideo
-        ? (_offlineView
-              ? 'Marcar resumen leído (+5 XP)'
-              : 'Marcar como visto (+5 XP)')
+        ? 'Marcar resumen leído (+5 XP)'
         : 'Marcar como leída (+5 XP)';
     final bool enabled =
         p.ready && !_saving && !done && (!r.isQuiz || _selected == r.correct);
@@ -189,8 +177,11 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
             ),
           ),
         TextButton.icon(
-          onPressed: () =>
-              showSourceSheet(context, publicEntry: widget.publicEntry),
+          onPressed: () => showSourceSheet(
+            context,
+            resource: r,
+            publicEntry: widget.publicEntry,
+          ),
           icon: const Icon(Icons.info_outline_rounded, size: 18),
           label: const Text(
             'Fuente y revisión',
@@ -217,13 +208,13 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
     );
   }
 
+  void _goToHelp() => context.go(
+    widget.publicEntry ? '/informacion' : '/inicio',
+    extra: HomeSectionRequest(HomeSection.ayuda),
+  );
+
   List<Widget> _content(InfoResource r) => <Widget>[
-    const SampleBanner(text: 'Muestra en revisión editorial'),
-    const SizedBox(height: 12),
-    if (r.isVideo && !_offlineView) ...<Widget>[
-      _VideoPlayer(resource: r),
-      const SizedBox(height: 12),
-    ] else if (r.bannerAsset != null) ...<Widget>[
+    if (r.bannerAsset != null) ...<Widget>[
       ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: AspectRatio(
@@ -245,84 +236,66 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
       ),
     ),
     const SizedBox(height: 4),
-    Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: <Widget>[
-        Text(
-          '${r.topic.label} · ${r.minutes} min',
-          style: const TextStyle(
-            color: CureandoTheme.blue,
-            fontWeight: FontWeight.w700,
-            fontSize: 13.5,
-          ),
-        ),
-        if (r.isVideo)
-          ActionChip(
-            avatar: Icon(
-              _offlineView ? Icons.wifi_rounded : Icons.wifi_off_rounded,
-              size: 16,
-            ),
-            label: Text(
-              _offlineView
-                  ? 'Volver al video'
-                  : 'Con internet · Ver sin conexión',
-            ),
-            onPressed: () => setState(() => _offlineView = !_offlineView),
-          )
-        else
-          AvailabilityBadge(offline: r.offline),
-      ],
+    Text(r.organization, style: const TextStyle(fontWeight: FontWeight.w700)),
+    Text(
+      '${r.topic.label} · ${r.meta}',
+      style: const TextStyle(color: CureandoTheme.blue),
     ),
-    const SizedBox(height: 14),
-    if (r.format == InfoFormat.story)
-      Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1EDFD),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Text(
-          'Escena ficticia de muestra · Recurso editorial (+5 XP al '
-          'completarla; tus casos reales nunca otorgan puntaje).',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
+    const SizedBox(height: 12),
+    Text(r.summary),
+    const SizedBox(height: 12),
+    const Text(
+      'Resumen adaptado por el equipo SéTú a partir de la fuente; no reemplaza la fuente original',
+      style: TextStyle(fontSize: 12, color: CureandoTheme.secondaryInk),
+    ),
+    const SizedBox(height: 12),
+    if (r.isVideo) ...<Widget>[
+      FilledButton.icon(
+        onPressed: () => openExternalLink(context, r.url),
+        icon: const Icon(Icons.open_in_new_rounded),
+        label: const Text('Ver video'),
       ),
-    if (r.isVideo && _offlineView)
+      const Text(
+        'Se abre fuera de SéTú y requiere internet. El resumen está disponible sin conexión.',
+      ),
+      const SizedBox(height: 12),
+    ],
+    if (r.topic == InfoTopic.ansiedad ||
+        r.topic == InfoTopic.depresion) ...<Widget>[
       Container(
-        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: CureandoTheme.blue,
+          color: CureandoTheme.yellowSoft,
+          border: Border.all(color: CureandoTheme.blue),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Text(
-          'Este video no está disponible sin internet. Este prototipo no '
-          'incluye un archivo de video ni descargas: el reproductor es una '
-          'simulación. Podés leer la alternativa completa en texto aquí abajo.',
-          style: TextStyle(color: Colors.white),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            const Text(
+              'Si te sentís en peligro o pensás en hacerte daño, hablá ya con una persona adulta de confianza o entrá a Ayuda',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            TextButton(onPressed: _goToHelp, child: const Text('Ir a Ayuda')),
+          ],
         ),
       ),
-    if (r.isVideo)
-      Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(
-          _offlineView
-              ? 'Lectura sin conexión'
-              : 'Alternativa en texto (si preferís leer)',
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
+      const SizedBox(height: 12),
+    ],
     for (int i = 0; i < r.points.length; i++) ...<Widget>[
-      _PointCard(
-        point: r.points[i],
-        story: r.format == InfoFormat.story,
-        panel: i,
-      ),
+      _PointCard(point: r.points[i], story: false, panel: i),
       const SizedBox(height: 10),
     ],
+    _PointCard(
+      point: InfoPoint('Fuente', '${r.organization}\n${r.url}'),
+      story: false,
+    ),
+    if (!r.isVideo)
+      OutlinedButton.icon(
+        onPressed: () => openExternalLink(context, r.url),
+        icon: const Icon(Icons.open_in_new_rounded),
+        label: const Text('Ver fuente original'),
+      ),
   ];
 
   List<Widget> _quiz(InfoResource r) {
@@ -379,24 +352,31 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
               ? null
               : () => setState(() {
                   _selected = i;
-                  _message = i == r.correct
-                      ? null
-                      : 'Revisá la ruta y probá de nuevo.';
+                  _message = null;
                 }),
         ),
         const SizedBox(height: 10),
       ],
-      if (selection == r.correct)
+      if (selection != null)
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: CureandoTheme.greenSoft,
+            color: selection == r.correct
+                ? CureandoTheme.greenSoft
+                : CureandoTheme.yellowSoft,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: CureandoTheme.green),
+            border: Border.all(
+              color: selection == r.correct
+                  ? CureandoTheme.green
+                  : CureandoTheme.blue,
+            ),
           ),
           child: Text(
-            '¡Así es! ${r.feedback}',
-            style: const TextStyle(color: _okInk, fontWeight: FontWeight.w600),
+            r.optionFeedback[selection],
+            style: TextStyle(
+              color: selection == r.correct ? _okInk : CureandoTheme.ink,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
     ];
@@ -424,168 +404,6 @@ final ButtonStyle _secondary = OutlinedButton.styleFrom(
   ),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
 );
-
-/// Reproductor de muestra: no hay archivo de video empaquetado todavía, así
-/// que simula la línea de tiempo con subtítulos y queda identificado.
-class _VideoPlayer extends StatefulWidget {
-  const _VideoPlayer({required this.resource});
-  final InfoResource resource;
-
-  @override
-  State<_VideoPlayer> createState() => _VideoPlayerState();
-}
-
-class _VideoPlayerState extends State<_VideoPlayer> {
-  Timer? _timer;
-  int _seconds = 0;
-  bool _cc = true;
-
-  int get _total => widget.resource.minutes * 60;
-
-  void _toggle() => setState(() {
-    if (_timer != null) {
-      _timer!.cancel();
-      _timer = null;
-      return;
-    }
-    if (_seconds >= _total) _seconds = 0;
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {
-        _seconds++;
-        if (_seconds >= _total) {
-          _timer?.cancel();
-          _timer = null;
-        }
-      });
-    });
-  });
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  String _fmt(int s) => '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: const Color(0xFF0F172A),
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Column(
-      children: <Widget>[
-        AspectRatio(
-          aspectRatio: MediaQuery.textScalerOf(context).scale(16) > 22
-              ? 1
-              : 330 / 134,
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: <Widget>[
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    Icon(
-                      Icons.sentiment_satisfied_alt_rounded,
-                      color: CureandoTheme.yellow,
-                      size: 44,
-                    ),
-                    SizedBox(width: 48),
-                    Icon(
-                      Icons.sentiment_satisfied_alt_rounded,
-                      color: CureandoTheme.green,
-                      size: 44,
-                    ),
-                  ],
-                ),
-                IconButton.filled(
-                  iconSize: 32,
-                  style: IconButton.styleFrom(
-                    backgroundColor: CureandoTheme.blue,
-                  ),
-                  tooltip: _timer == null ? 'Reproducir' : 'Pausar',
-                  onPressed: _toggle,
-                  icon: Icon(
-                    _timer == null
-                        ? Icons.play_arrow_rounded
-                        : Icons.pause_rounded,
-                    color: Colors.white,
-                  ),
-                ),
-                if (_cc)
-                  Positioned(
-                    left: 8,
-                    right: 8,
-                    bottom: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      color: Colors.black54,
-                      child: Text(
-                        _seconds < _total ~/ 2
-                            ? widget.resource.caption ?? ''
-                            : '«Acompañá y buscá apoyo de una persona adulta de confianza.»',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: <Widget>[
-            Text(
-              '${_fmt(_seconds)} / ${_fmt(_total)}',
-              style: const TextStyle(color: Colors.white, fontSize: 11),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: LinearProgressIndicator(
-                value: _seconds / _total,
-                color: CureandoTheme.yellow,
-                backgroundColor: Colors.white24,
-                minHeight: 6,
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-            const SizedBox(width: 6),
-            TextButton(
-              onPressed: () => setState(() => _cc = !_cc),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: _cc ? CureandoTheme.blue : Colors.white24,
-                minimumSize: const Size(48, 32),
-              ),
-              child: Semantics(
-                label: _cc ? 'Ocultar subtítulos' : 'Mostrar subtítulos',
-                excludeSemantics: true,
-                child: const Text('CC'),
-              ),
-            ),
-          ],
-        ),
-        const Text(
-          'Reproductor de muestra · reproducción simulada · subtítulos en español',
-          style: TextStyle(color: Colors.white70, fontSize: 11),
-        ),
-      ],
-    ),
-  );
-}
 
 class _PointCard extends StatelessWidget {
   const _PointCard({required this.point, required this.story, this.panel = 0});
@@ -703,10 +521,10 @@ class _QuizOption extends StatelessWidget {
   }
 }
 
-/// E11-F · Fuente y revisión. Declara el estado de muestra, sin afirmar una
-/// validación profesional que todavía no existe.
+/// E11-F · Fuente consultada y revisión profesional pendiente.
 Future<void> showSourceSheet(
   BuildContext context, {
+  required InfoResource resource,
   bool publicEntry = false,
 }) => showModalBottomSheet<void>(
   context: context,
@@ -727,36 +545,44 @@ Future<void> showSourceSheet(
           const Align(
             alignment: Alignment.centerLeft,
             child: _Pill(
-              text: 'Muestra en revisión editorial',
+              text: 'Pendiente revisión profesional',
               ink: Colors.white,
               background: CureandoTheme.blue,
             ),
           ),
           const SizedBox(height: 12),
-          for (final InfoPoint p in const <InfoPoint>[
+          for (final InfoPoint p in <InfoPoint>[
             InfoPoint(
-              'Fuente base',
-              'Contenido propio del equipo SéTú para el prototipo. La fuente '
-                  'institucional de referencia está pendiente de confirmar.',
+              'Fuente',
+              resource.isQuiz
+                  ? routeOf(resource.id)!.steps
+                        .take(2)
+                        .map((String id) {
+                          final InfoResource source = infoResourceById(id)!;
+                          return '${source.organization}\n${source.url}';
+                        })
+                        .join('\n\n')
+                  : '${resource.organization}\n${resource.url}',
               Icons.menu_book_outlined,
             ),
-            InfoPoint(
+            const InfoPoint(
               'Territorio y público',
-              'Nicaragua · Estudiantes de 3.º a 11.º grado (primaria desde 3.º '
-                  'y secundaria).',
+              'Contenido de UNICEF/MINED; adaptado para estudiantes de Nicaragua',
               Icons.public_rounded,
             ),
-            InfoPoint(
+            const InfoPoint(
               'Revisión editorial y fecha',
-              '15 nov 2026 · Muestra del equipo Bugñuelitos para la Jornada '
-                  'UAM–UNICEF 2026. Responsable editorial y revisión '
-                  'profesional pendientes; sin aval institucional.',
+              'Verificado el 16 de noviembre de 2026 · Pendiente revisión profesional (Psicología)',
               Icons.check_rounded,
             ),
-            InfoPoint(
+            const InfoPoint(
+              'Responsable',
+              'Equipo SéTú (Bugñuelitos, UAM)',
+              Icons.groups_outlined,
+            ),
+            const InfoPoint(
               'Privacidad y alcance',
-              'Lecturas y XP se guardan solo en este teléfono. No sustituye '
-                  'atención profesional humana.',
+              'Lecturas y XP se guardan solo en este teléfono. No sustituye atención profesional humana.',
               Icons.shield_outlined,
             ),
           ]) ...<Widget>[

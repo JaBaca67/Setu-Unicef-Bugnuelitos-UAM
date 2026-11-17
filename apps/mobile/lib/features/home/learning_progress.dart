@@ -158,7 +158,8 @@ class LearningProgress extends ChangeNotifier {
   Future<int> completeQuestion(DateTime questionDay) =>
       questionDay == today ? _record(questionDay) : Future<int>.value(0);
 
-  /// Cierre de ruta: +10 XP una sola vez por ruta, separado de la pregunta diaria.
+  /// +10 XP por cada ruta (acoso, ansiedad, depresion, ciberacoso), una sola vez.
+  /// Conserva «acoso» y los registros v1, separado de la pregunta diaria.
   Future<int> completeRoute(String id) => _record(today, route: id);
 
   Future<int> _record(DateTime day, {String? resource, String? route}) {

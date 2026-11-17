@@ -24,13 +24,14 @@ class InformationTab extends StatefulWidget {
 
 class _InformationTabState extends State<InformationTab> {
   bool _routes = false;
+  InfoRoute _selectedRoute = infoRoutes.first;
   InfoTopic? _topic;
   String _query = '';
   final TextEditingController _search = TextEditingController();
   final ScrollController _categoriesScroll = ScrollController();
   final GlobalKey _categoriesViewport = GlobalKey();
   final List<GlobalKey> _categoryKeys = List<GlobalKey>.generate(
-    5,
+    InfoTopic.values.length + 1,
     (_) => GlobalKey(),
   );
   int _visibleCategories = 0;
@@ -174,19 +175,26 @@ class _InformationTabState extends State<InformationTab> {
                   'Acoso escolar',
                   CureandoTheme.yellow,
                 ),
+                _filter(2, InfoTopic.ansiedad, 'Ansiedad', CureandoTheme.blue),
                 _filter(
-                  2,
+                  3,
+                  InfoTopic.depresion,
+                  'Depresión',
+                  CureandoTheme.yellow,
+                ),
+                _filter(
+                  4,
                   InfoTopic.ciberacoso,
                   'Ciberacoso',
                   CureandoTheme.pink,
                 ),
                 _filter(
-                  3,
+                  5,
                   InfoTopic.emociones,
                   'Emociones',
                   CureandoTheme.green,
                 ),
-                _filter(4, InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
+                _filter(6, InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
               ],
             ),
           ),
@@ -219,52 +227,20 @@ class _InformationTabState extends State<InformationTab> {
           const SizedBox(height: 10),
         ],
       ] else ...<Widget>[
-        _wideCard(infoResourceById('broma')!, featured: true),
-        _topicHeading(InfoTopic.acoso),
-        LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            final List<Widget> cards = <Widget>[
-              for (final String id in <String>['testigo', 'pedir-apoyo'])
-                InfoResourceCard(
-                  resource: infoResourceById(id)!,
-                  cover: true,
-                  onTap: () => _open(infoResourceById(id)!),
-                ),
-            ];
-            if (constraints.maxWidth < 300 ||
-                MediaQuery.textScalerOf(context).scale(16) > 22) {
-              return Column(
-                children: <Widget>[
-                  cards.first,
-                  const SizedBox(height: 10),
-                  cards.last,
-                ],
-              );
-            }
-            return IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Expanded(child: cards.first),
-                  const SizedBox(width: 10),
-                  Expanded(child: cards.last),
-                ],
+        _wideCard(infoCatalog.first, featured: true),
+        for (final InfoTopic topic in InfoTopic.values) ...<Widget>[
+          _topicHeading(topic),
+          for (final InfoResource resource in infoCatalog.where(
+            (InfoResource r) => r.topic == topic,
+          )) ...<Widget>[
+            if (resource != infoCatalog.first)
+              InfoResourceCard(
+                resource: resource,
+                onTap: () => _open(resource),
               ),
-            );
-          },
-        ),
-        _topicHeading(InfoTopic.ciberacoso),
-        _wideCard(infoResourceById('chat-grupo')!),
-        _topicHeading(InfoTopic.emociones),
-        InfoResourceCard(
-          resource: infoResourceById('emociones')!,
-          onTap: () => _open(infoResourceById('emociones')!),
-        ),
-        _topicHeading(InfoTopic.apoyo),
-        InfoResourceCard(
-          resource: infoResourceById('alerta')!,
-          onTap: () => _open(infoResourceById('alerta')!),
-        ),
+            const SizedBox(height: 10),
+          ],
+        ],
       ],
     ];
   }
@@ -288,7 +264,7 @@ class _InformationTabState extends State<InformationTab> {
           selected: _topic == topic,
           showCheckmark: true,
           checkmarkColor: color == CureandoTheme.yellow
-              ? CureandoTheme.pink
+              ? CureandoTheme.ink
               : Colors.white,
           backgroundColor: color,
           selectedColor: color,
@@ -302,7 +278,7 @@ class _InformationTabState extends State<InformationTab> {
             fontSize: 11,
             fontWeight: FontWeight.w700,
             color: color == CureandoTheme.yellow
-                ? CureandoTheme.pink
+                ? CureandoTheme.ink
                 : Colors.white,
           ),
           onSelected: (_) => setState(() => _topic = topic),
@@ -394,7 +370,7 @@ class _InformationTabState extends State<InformationTab> {
   Widget _routeView() => ListenableBuilder(
     listenable: widget.progress,
     builder: (BuildContext context, _) {
-      final InfoRoute route = infoRoutes.first;
+      final InfoRoute route = _selectedRoute;
       final LearningProgress p = widget.progress;
       final List<bool> done = <bool>[
         p.completedResource(route.steps[0]),
@@ -417,12 +393,12 @@ class _InformationTabState extends State<InformationTab> {
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: <Widget>[
-                const Text(
-                  'Acoso escolar',
+                Text(
+                  route.topic.label,
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 TextButton.icon(
-                  onPressed: () => _changeTopic(count),
+                  onPressed: _changeTopic,
                   iconAlignment: IconAlignment.end,
                   icon: const Icon(Icons.expand_more_rounded, size: 18),
                   label: const Text('Cambiar tema'),
@@ -529,7 +505,12 @@ class _InformationTabState extends State<InformationTab> {
     },
   );
 
-  Future<void> _changeTopic(int count) => showModalBottomSheet<void>(
+  int _routeCompletedSteps(InfoRoute route) =>
+      (widget.progress.completedResource(route.steps[0]) ? 1 : 0) +
+      (widget.progress.completedResource(route.steps[1]) ? 1 : 0) +
+      (widget.progress.completedRoute(route.id) ? 1 : 0);
+
+  Future<void> _changeTopic() => showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -552,7 +533,10 @@ class _InformationTabState extends State<InformationTab> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: OutlinedButton(
-                  onPressed: route.ready ? () => Navigator.pop(sheet) : null,
+                  onPressed: () {
+                    setState(() => _selectedRoute = route);
+                    Navigator.pop(sheet);
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.all(12),
                     alignment: Alignment.centerLeft,
@@ -576,9 +560,7 @@ class _InformationTabState extends State<InformationTab> {
                         ),
                       ),
                       Text(
-                        route.ready
-                            ? 'Ruta completa · $count de 3'
-                            : 'En preparación',
+                        '${_routeCompletedSteps(route)} de 3 pasos',
                         style: TextStyle(
                           fontSize: 11,
                           color: route.ready
@@ -599,7 +581,7 @@ class _InformationTabState extends State<InformationTab> {
                 ),
               ),
             const Text(
-              'Muestra: la ruta de Acoso escolar tiene 3 pasos; los otros temas están en revisión editorial.',
+              'Cada ruta tiene dos recursos y una pregunta de cierre. La revisión profesional del contenido está pendiente.',
               style: TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 16),
@@ -625,7 +607,9 @@ String _normalize(String value) {
 }
 
 class InformationHeader extends StatelessWidget {
-  const InformationHeader({super.key});
+  const InformationHeader({super.key, this.title = 'Información'});
+
+  final String title;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -652,8 +636,8 @@ class InformationHeader extends StatelessWidget {
                 const SizedBox(height: 30),
                 Semantics(
                   header: true,
-                  child: const Text(
-                    'Información',
+                  child: Text(
+                    title,
                     style: TextStyle(
                       fontSize: 28,
                       color: Colors.white,
@@ -820,7 +804,9 @@ class _RouteNode extends StatelessWidget {
                   ? Icons.check_rounded
                   : <IconData>[
                       Icons.menu_book_outlined,
-                      Icons.play_arrow_rounded,
+                      resource.isVideo
+                          ? Icons.play_arrow_rounded
+                          : Icons.menu_book_outlined,
                       Icons.question_mark_rounded,
                     ][index],
               color: Colors.white,
@@ -833,7 +819,7 @@ class _RouteNode extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  index == 0 ? 'Reconocé el acoso' : resource.title,
+                  resource.title,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -845,7 +831,7 @@ class _RouteNode extends StatelessWidget {
                       ? 'Completada'
                       : index == 2
                       ? '+10 XP'
-                      : '${resource.minutes} min'}${index == 2 ? '' : ' · ${resource.availability}'}',
+                      : '+5 XP'}${index == 2 ? '' : ' · ${resource.availability}'}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,

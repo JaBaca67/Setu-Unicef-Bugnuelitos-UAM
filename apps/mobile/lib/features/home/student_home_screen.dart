@@ -155,14 +155,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     // Inicio e Información usan el mismo corte recto del banner: el arte
     // llega completo hasta la hoja sin una esquina blanca sobre las figuras.
     bodyRadius:
-        section == HomeSection.inicio || section == HomeSection.informacion
+        section == HomeSection.inicio ||
+            section == HomeSection.informacion ||
+            section == HomeSection.ayuda
         ? null
         : const BorderRadius.vertical(top: Radius.circular(28)),
     header: switch (section) {
       HomeSection.inicio => _HomeHeader(piece: widget.piece),
       HomeSection.informacion => const InformationHeader(),
       HomeSection.actividades => const _SectionHeader(title: 'Actividades'),
-      HomeSection.ayuda => const _SectionHeader(title: 'Ayuda'),
+      HomeSection.ayuda => const InformationHeader(title: 'Ayuda'),
     },
     body: Padding(
       padding: section == HomeSection.inicio
@@ -375,7 +377,9 @@ class _InicioTab extends StatelessWidget {
           children: <Widget>[
             for (final InfoResource resource in homeResources)
               StudentPreviewCard(
-                cover: resource.cover,
+                cover: resource.topic == InfoTopic.emociones
+                    ? StudentCover.video
+                    : resource.cover,
                 title: resource.title,
                 detail: resource.meta,
                 onTap: () => context.push<void>(resource.route),
@@ -486,53 +490,14 @@ class _AyudaTab extends StatelessWidget {
   const _AyudaTab();
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) => const Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: <Widget>[
-      const SampleBanner(),
-      const SizedBox(height: 12),
-      const Text(
-        'En este espacio vas a encontrar recursos de ayuda verificados para '
-        'Nicaragua: personas e instituciones que pueden acompañarte.',
-      ),
-      const SizedBox(height: 14),
-      const EmergencyContactsCard(),
-      const SizedBox(height: 14),
-      const TrustedContactsSection(),
-      const SizedBox(height: 14),
-      FilledButton.icon(
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
-        onPressed: () => context.push<void>('/inicio/apoyo'),
-        icon: const Icon(Icons.favorite_rounded),
-        label: const Text('Pedir apoyo'),
-      ),
-      const SizedBox(height: 14),
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEFF6FF),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFBFDBFE)),
-        ),
-        child: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Garantías de protección',
-              style: TextStyle(
-                color: CureandoTheme.blue,
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
-            ),
-            SizedBox(height: 6),
-            Text(
-              'Tu relato es confidencial para la mesa de escucha. El colegio '
-              'solo recibe avisos de seguimiento general.',
-            ),
-          ],
-        ),
-      ),
+      EmergencyContactsCard(),
+      SizedBox(height: 24),
+      TrustedContactsSection(),
+      SizedBox(height: 24),
+      HelpFaqSection(),
     ],
   );
 }

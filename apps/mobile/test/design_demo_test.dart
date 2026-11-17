@@ -105,7 +105,7 @@ void main() {
           .map((ChoiceChip chip) => tester.getTopLeft(find.byWidget(chip)).dy)
           .toList();
       expect(tops.every((double top) => top == tops.first), isTrue);
-      final Finder clipped = find.widgetWithText(ChoiceChip, 'Emociones');
+      final Finder clipped = find.widgetWithText(ChoiceChip, 'Depresión');
       AnimatedOpacity chipOpacity(Finder chip) =>
           tester.widget<AnimatedOpacity>(
             find.ancestor(of: chip, matching: find.byType(AnimatedOpacity)),
@@ -132,7 +132,7 @@ void main() {
         expect(
           tester.getSemantics(clipped),
           matchesSemantics(
-            label: 'Emociones',
+            label: 'Depresión',
             isButton: true,
             hasEnabledState: true,
             isEnabled: true,
@@ -154,10 +154,12 @@ void main() {
         HomeSection.informacion,
       );
       final Finder support = find.widgetWithText(ChoiceChip, 'Apoyo');
+      await tester.ensureVisible(support);
+      await tester.pumpAndSettle();
       expect(support.hitTestable(), findsOneWidget);
       await tester.tap(support);
       await tester.pumpAndSettle();
-      expect(find.text('2 disponibles'), findsOneWidget);
+      expect(find.text('4 disponibles'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
