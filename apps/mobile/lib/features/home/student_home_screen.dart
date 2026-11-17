@@ -347,22 +347,24 @@ class _InicioTab extends StatelessWidget {
         _AdaptiveRow(
           alwaysSideBySide: true,
           children: <Widget>[
+            // Mismas tarjetas que en Actividades (fondo azul + sticker).
             ListenableBuilder(
               listenable: progress,
-              builder: (context, child) => StudentPreviewCard(
-                cover: StudentCover.question,
-                compact: true,
+              builder: (context, child) => ActivityCard(
+                key: const ValueKey<String>('home-daily-question'),
                 title: 'Pregunta del día',
+                sticker: 'assets/home/activities/sticker_pregunta_hd.png',
+                route: 'diaria',
                 detail: progress.answeredToday
                     ? 'Completada'
                     : '+${LearningProgress.questionXp} XP',
-                onTap: () => context.push<void>('/inicio/actividades/diaria'),
               ),
             ),
-            StudentPreviewCard(
-              cover: StudentCover.dice,
-              compact: true,
+            ActivityCard(
+              key: const ValueKey<String>('home-emotion-dice'),
               title: 'Dado de emociones',
+              sticker: 'dado',
+              route: 'dados',
               onTap: onOpenDice,
             ),
           ],
