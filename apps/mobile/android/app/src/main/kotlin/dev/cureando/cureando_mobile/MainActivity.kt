@@ -38,6 +38,25 @@ class MainActivity : FlutterActivity() {
             }
         }
         SetuNotifications.register(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        // Abre el marcador con el número escrito (sin permiso de llamada): la
+        // persona confirma la llamada. Solo dígitos, para contactos verificados.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
+            "dev.cureando.app/dialer").setMethodCallHandler { call, result ->
+            val number = call.argument<String>("number") ?: ""
+            if (call.method != "dial") {
+                result.notImplemented()
+            } else if (!Regex("^\\+?[0-9]{3,15}$").matches(number)) {
+                result.error("invalid_number", "Número no válido", null)
+            } else {
+                try {
+                    startActivity(android.content.Intent(android.content.Intent.ACTION_DIAL,
+                        android.net.Uri.parse("tel:$number")))
+                    result.success(null)
+                } catch (error: android.content.ActivityNotFoundException) {
+                    result.error("no_dialer", "No hay marcador disponible", null)
+                }
+            }
+        }
         nearbyMeshChannel = NearbyMeshChannel(
             this,
             flutterEngine.dartExecutor.binaryMessenger,

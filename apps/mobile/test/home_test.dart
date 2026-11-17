@@ -275,7 +275,7 @@ void main() {
     await _goHome(tester);
     await _tapLabel(tester, 'Pedir apoyo');
     await _tapLabel(tester, 'Ver recursos de ayuda');
-    expect(find.textContaining('Los contactos y horarios'), findsOneWidget);
+    expect(find.text('Si estás en peligro ahora'), findsOneWidget);
     await _tapLabel(tester, 'Pedir apoyo');
     await _tapLabel(tester, 'Enviar una alerta');
     await _tapLabel(tester, 'Ciberacoso');
@@ -447,7 +447,7 @@ void main() {
     expect(_button(tester, 'Ruta completada').onPressed, isNull);
     await _tapLabel(tester, 'Fuente y revisión');
     await _tapLabel(tester, 'Ir a Ayuda');
-    expect(find.textContaining('Los contactos y horarios'), findsOneWidget);
+    expect(find.text('Si estás en peligro ahora'), findsOneWidget);
     await _tapNav(tester, 'Actividades');
     await _tapLabel(
       tester,
@@ -500,7 +500,7 @@ void main() {
       expect(find.text('Pasó en el chat del grupo'), findsOneWidget);
       await _tapLabel(tester, 'Fuente y revisión');
       await _tapLabel(tester, 'Ir a Ayuda');
-      expect(find.textContaining('Los contactos y horarios'), findsOneWidget);
+      expect(find.text('Si estás en peligro ahora'), findsOneWidget);
       await _tapNav(tester, 'Información');
       await _tapLabel(tester, '¿Es una broma o acoso?');
       await _tapLabel(tester, 'Pedir apoyo');

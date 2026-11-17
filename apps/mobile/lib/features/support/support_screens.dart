@@ -208,6 +208,42 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
               ],
             ),
           ),
+          if (!chatAvailable && !widget.flow.caseClosed) ...<Widget>[
+            const SizedBox(height: 16),
+            Container(
+              key: const Key('alert-waiting-help-card'),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF0F8),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFFFC2E2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const Text(
+                    '¿Sin internet o todavía sin respuesta?',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Si necesitás hablar con alguien ahora, en Ayuda tenés '
+                    'líneas de emergencia verificadas a las que podés llamar.',
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    style: flowPrimaryStyle(),
+                    onPressed: () => context.go(
+                      '/inicio',
+                      extra: HomeSectionRequest(HomeSection.ayuda),
+                    ),
+                    icon: const Icon(Icons.call_rounded),
+                    label: const Text('Ir a contactos de ayuda'),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           OutlinedButton(
             style: flowSecondaryStyle(),

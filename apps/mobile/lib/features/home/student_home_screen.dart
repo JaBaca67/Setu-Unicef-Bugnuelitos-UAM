@@ -7,6 +7,7 @@ import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../piece/student_piece.dart';
 import '../support/alert_screens.dart';
+import 'help_contacts.dart';
 import 'information_tab.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
@@ -495,16 +496,9 @@ class _AyudaTab extends StatelessWidget {
         'Nicaragua: personas e instituciones que pueden acompañarte.',
       ),
       const SizedBox(height: 14),
-      const Card(
-        child: Padding(
-          padding: EdgeInsets.all(14),
-          child: Text(
-            'Los contactos y horarios se publican cuando estén verificados, '
-            'con fuente, territorio, fecha y responsable editorial. No '
-            'mostramos contactos de borrador como si ya funcionaran.',
-          ),
-        ),
-      ),
+      const EmergencyContactsCard(),
+      const SizedBox(height: 14),
+      const TrustedContactsSection(),
       const SizedBox(height: 14),
       FilledButton.icon(
         style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
