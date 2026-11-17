@@ -6,6 +6,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import '../piece/student_piece.dart';
 import 'alert_screens.dart';
 import 'support_flow.dart';
@@ -426,6 +427,46 @@ class SupportChatScreen extends StatefulWidget {
     'Quiero contar algo',
   ];
 
+  /// Tarjetas rompehielo que abre la pieza del estudiante dentro del chat.
+  /// Frases cortas en primera persona; el estudiante puede editarlas antes de
+  /// enviar. No sugieren detalles del caso ni prometen resultados.
+  static const Map<String, List<String>> icebreakerGroups =
+      <String, List<String>>{
+        'Para empezar': <String>[
+          'No sé por dónde empezar',
+          'Quiero contar algo',
+          'Hola, necesito hablar con alguien',
+          'Me cuesta escribir esto',
+          '¿Puedo contarte algo sin que me juzgues?',
+        ],
+        'Lo que pasó': <String>[
+          'Me están molestando en el colegio',
+          'Pasó algo en el recreo',
+          'Me molestan por internet o en el chat del grupo',
+          'Vi que molestaban a otra persona',
+          'Ya pasó varias veces',
+        ],
+        'Cómo me siento': <String>[
+          'Me siento triste',
+          'Tengo miedo de ir al colegio',
+          'Estoy nervioso o nerviosa',
+          'Me siento solo o sola',
+          'Estoy enojado y no sé qué hacer',
+        ],
+        'Lo que necesito': <String>[
+          'Necesito que alguien me escuche',
+          'Quiero saber qué puedo hacer',
+          'Prefiero ir despacio',
+          'Hoy solo quiero desahogarme',
+        ],
+        'Preguntas': <String>[
+          '¿Quién va a leer lo que escribo?',
+          '¿Qué pasa después de que te cuento?',
+          '¿Se van a enterar en mi casa?',
+          '¿Cuándo me vas a responder?',
+        ],
+      };
+
   @override
   State<SupportChatScreen> createState() => _SupportChatScreenState();
 }
@@ -484,6 +525,17 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  /// La pieza del estudiante abre las tarjetas rompehielo agrupadas.
+  Future<void> _openIdeas() async {
+    final String? idea = await showSetuBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (BuildContext sheet) => _IdeasSheet(piece: widget.piece.value),
+    );
+    if (idea != null && mounted) _useIdea(idea);
   }
 
   void _useIdea(String idea) {
@@ -559,7 +611,10 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                                   ),
                                 ),
                               for (final ChatMessage message in flow.messages)
-                                _Bubble(message: message),
+                                _Bubble(
+                                  message: message,
+                                  piece: widget.piece.value,
+                                ),
                             ],
                           ),
                         ),
@@ -571,6 +626,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                               child: _Icebreakers(
                                 piece: widget.piece.value,
                                 onPick: _useIdea,
+                                onMore: _openIdeas,
                               ),
                             ),
                           ),
@@ -605,6 +661,11 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       child: Row(
                         children: <Widget>[
+                          _PieceIdeasButton(
+                            piece: widget.piece.value,
+                            onPressed: open ? _openIdeas : null,
+                          ),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
                               controller: _draft,
@@ -655,51 +716,70 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+  const _Bubble({required this.message, required this.piece});
 
   final ChatMessage message;
+  final StudentPiece piece;
 
   @override
   Widget build(BuildContext context) {
     final bool mine = message.fromStudent;
     const Radius round = Radius.circular(20);
-    return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Semantics(
-        label: mine ? 'Vos' : 'Equipo de escucha',
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.sizeOf(context).width * .78,
-          ),
-          decoration: BoxDecoration(
-            color: mine ? CureandoTheme.blue : _blueTint,
-            borderRadius: BorderRadius.only(
-              topLeft: round,
-              topRight: round,
-              bottomLeft: mine ? round : const Radius.circular(4),
-              bottomRight: mine ? const Radius.circular(4) : round,
-            ),
-          ),
-          child: Text(
-            message.text,
-            style: TextStyle(
-              fontSize: 17,
-              color: mine ? Colors.white : CureandoTheme.ink,
-            ),
+    final Widget bubble = Semantics(
+      label: mine ? 'Vos' : 'Equipo de escucha',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * .72,
+        ),
+        decoration: BoxDecoration(
+          color: mine ? CureandoTheme.blue : _blueTint,
+          borderRadius: BorderRadius.only(
+            topLeft: round,
+            topRight: round,
+            bottomLeft: mine ? round : const Radius.circular(4),
+            bottomRight: mine ? const Radius.circular(4) : round,
           ),
         ),
+        child: Text(
+          message.text,
+          style: TextStyle(
+            fontSize: 17,
+            color: mine ? Colors.white : CureandoTheme.ink,
+          ),
+        ),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        mainAxisAlignment: mine
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Flexible(child: bubble),
+          // Los mensajes propios llevan la pieza del estudiante como ícono.
+          if (mine) ...<Widget>[
+            const SizedBox(width: 6),
+            PieceBadge(piece: piece, size: 32),
+          ],
+        ],
       ),
     );
   }
 }
 
 class _Icebreakers extends StatelessWidget {
-  const _Icebreakers({required this.piece, required this.onPick});
+  const _Icebreakers({
+    required this.piece,
+    required this.onPick,
+    required this.onMore,
+  });
 
   final StudentPiece piece;
   final ValueChanged<String> onPick;
+  final VoidCallback onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -715,10 +795,14 @@ class _Icebreakers extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
           if (!largeText) ...<Widget>[
-            Image.asset(
-              'assets/brand/png/personaje-08.png',
-              height: 132,
-              excludeFromSemantics: true,
+            Semantics(
+              button: true,
+              label: 'Tu pieza: ver más ideas para escribir',
+              excludeSemantics: true,
+              child: GestureDetector(
+                onTap: onMore,
+                child: PieceFigure(piece: piece, height: 120, sparks: true),
+              ),
             ),
             const SizedBox(width: 6),
           ],
@@ -773,4 +857,134 @@ class _Icebreakers extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Botón con la pieza del estudiante junto al cuadro de texto: abre las
+/// tarjetas rompehielo.
+class _PieceIdeasButton extends StatelessWidget {
+  const _PieceIdeasButton({required this.piece, required this.onPressed});
+
+  final StudentPiece piece;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: 'Ideas para escribir',
+    child: Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: 'Ideas para escribir',
+      excludeSemantics: true,
+      child: InkResponse(
+        key: const ValueKey<String>('chat-piece-ideas'),
+        onTap: onPressed,
+        radius: 30,
+        child: Opacity(
+          opacity: onPressed == null ? .5 : 1,
+          child: SizedBox(
+            width: 54,
+            height: 54,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: <Widget>[
+                PieceBadge(piece: piece, size: 54),
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: CureandoTheme.yellow,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.lightbulb_rounded,
+                      size: 13,
+                      color: CureandoTheme.ink,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Hoja con todas las tarjetas rompehielo, agrupadas por tema.
+class _IdeasSheet extends StatelessWidget {
+  const _IdeasSheet({required this.piece});
+
+  final StudentPiece piece;
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            PieceFigure(piece: piece, height: 64, sparks: true),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  piece.displayName == null
+                      ? 'Ideas para escribir'
+                      : '${piece.displayName} te da ideas',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Tocá una tarjeta para usarla. Podés cambiarla antes de enviar.',
+          style: TextStyle(fontSize: 14, color: CureandoTheme.secondaryInk),
+        ),
+        for (final MapEntry<String, List<String>> group
+            in SupportChatScreen.icebreakerGroups.entries) ...<Widget>[
+          const SizedBox(height: 16),
+          Text(
+            group.key,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: CureandoTheme.blue,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              for (final String idea in group.value)
+                ActionChip(
+                  label: Text(idea),
+                  labelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: CureandoTheme.ink,
+                  ),
+                  backgroundColor: const Color(0xFFE3EEFD),
+                  side: BorderSide.none,
+                  shape: const StadiumBorder(),
+                  onPressed: () => Navigator.of(context).pop(idea),
+                ),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
 }
