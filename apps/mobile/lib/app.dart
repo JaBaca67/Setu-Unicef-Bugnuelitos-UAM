@@ -35,6 +35,7 @@ import 'shared/mesh/mesh_recipient_directory.dart';
 import 'shared/mesh/mesh_relay_service.dart';
 import 'shared/mesh/mesh_transport.dart';
 import 'shared/platform/screen_security_controller.dart';
+import 'shared/platform/secure_screen_guard.dart';
 import 'shared/remote/push_notification_service.dart';
 import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/remote/setu_remote_models.dart';
@@ -339,8 +340,9 @@ class _CureandoAppState extends State<CureandoApp> {
                     'revisar': () =>
                         AlertReviewScreen(flow: _support, piece: _piece),
                     'recibida': () => AlertReceivedScreen(flow: _support),
-                    'chat': () =>
-                        SupportChatScreen(flow: _support, piece: _piece),
+                    'chat': () => SecureScreenGuard(
+                      child: SupportChatScreen(flow: _support, piece: _piece),
+                    ),
                   }.entries)
                 GoRoute(
                   path: step.key,
@@ -415,11 +417,13 @@ class _CureandoAppState extends State<CureandoApp> {
               GoRoute(
                 path: 'chat',
                 builder: (BuildContext context, GoRouterState state) =>
-                    DeskChatScreen(
-                      session: _staff,
-                      caseId: state.pathParameters['id'] ?? '',
-                      initialTab: DeskCaseTab.fromQuery(
-                        state.uri.queryParameters['apartado'],
+                    SecureScreenGuard(
+                      child: DeskChatScreen(
+                        session: _staff,
+                        caseId: state.pathParameters['id'] ?? '',
+                        initialTab: DeskCaseTab.fromQuery(
+                          state.uri.queryParameters['apartado'],
+                        ),
                       ),
                     ),
               ),
