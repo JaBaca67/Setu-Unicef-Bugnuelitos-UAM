@@ -6,7 +6,6 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
-import '../../shared/widgets/setu_card.dart';
 import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'alert_screens.dart';
@@ -178,14 +177,20 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                                 'mensajes anteriores.',
                               )
                             else
-                              Text(switch (widget.flow.delivery) {
-                                AlertDelivery.pending =>
-                                  'Tu alerta está guardada en este teléfono. '
-                                      'Falta confirmar la entrega.',
-                                _ =>
-                                  'Te avisamos aquí cuando alguien pueda '
-                                      'conversar con vos.',
-                              }),
+                              Text(
+                                widget.flow.minimalAlertDelivered &&
+                                        widget.flow.delivery !=
+                                            AlertDelivery.received
+                                    ? 'Alerta entregada al dispositivo autorizado. Falta sincronizar con la plataforma.'
+                                    : switch (widget.flow.delivery) {
+                                        AlertDelivery.pending =>
+                                          'Tu alerta está guardada en este teléfono. '
+                                              'Falta confirmar la entrega.',
+                                        _ =>
+                                          'Te avisamos aquí cuando alguien pueda '
+                                              'conversar con vos.',
+                                      },
+                              ),
                           ],
                         ),
                       ),
@@ -212,12 +217,6 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
             ),
             child: const Text('Ver recursos de ayuda'),
           ),
-          const SizedBox(height: 10),
-          TextButton.icon(
-            onPressed: () => context.push<void>('/prueba-mesh'),
-            icon: const Icon(Icons.bluetooth_searching_rounded),
-            label: const Text('Prueba de red Mesh (2+ celulares)'),
-          ),
         ],
       ),
     );
@@ -235,7 +234,8 @@ class AlertReceivedScreen extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: flow,
     builder: (BuildContext context, _) {
-      final bool received = flow.delivery == AlertDelivery.received;
+      final bool centrallyReceived = flow.delivery == AlertDelivery.received;
+      final bool received = centrallyReceived || flow.minimalAlertDelivered;
       return FlowScaffold(
         bottomNavigationBar: SetuBottomNav(
           selected: HomeSection.ayuda,
@@ -283,7 +283,7 @@ class AlertReceivedScreen extends StatelessWidget {
                     header: true,
                     child: Text(
                       received
-                          ? 'Alerta recibida'
+                          ? 'Alerta entregada'
                           : 'Guardada en este teléfono',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
@@ -302,7 +302,22 @@ class AlertReceivedScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 18),
                   ),
-                  if (flow.deliveryFailed) ...<Widget>[
+                  if (flow.minimalAlertDelivered &&
+                      !centrallyReceived) ...<Widget>[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Un dispositivo autorizado recibió la alerta mínima. El relato sigue en este teléfono. Falta sincronizar con la plataforma; esto no confirma lectura ni atención.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else if (flow.meshPending) ...<Widget>[
+                    const SizedBox(height: 12),
+                    Text(
+                      flow.needsBluetoothForMesh
+                          ? 'Sin internet. Permití dispositivos cercanos y Bluetooth en Android para intentar el envío. Tu alerta sigue guardada.'
+                          : 'Sin internet: tu alerta se enviará por un dispositivo cercano cuando esté disponible. Falta confirmar la entrega.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else if (flow.deliveryFailed) ...<Widget>[
                     const SizedBox(height: 12),
                     const Text(
                       'No pudimos confirmar la entrega. Revisá tu conexión a '
@@ -319,49 +334,6 @@ class AlertReceivedScreen extends StatelessWidget {
                 ],
               ),
             ),
-            if (!received && flow.needsBluetoothForMesh) ...<Widget>[
-              const SizedBox(height: 20),
-              SetuCard(
-                color: const Color(0xFFEAF2FF),
-                borderColor: CureandoTheme.blue,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    const Row(
-                      children: <Widget>[
-                        Icon(
-                          Icons.bluetooth_rounded,
-                          color: CureandoTheme.blue,
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Sin internet: activá Bluetooth',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: CureandoTheme.blue,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Para intentar enviar tu alerta por dispositivos cercanos sin internet, necesitamos que activés Bluetooth.',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      style: flowPrimaryStyle(),
-                      onPressed: flow.ensureBluetoothForMesh,
-                      icon: const Icon(Icons.bluetooth_searching_rounded),
-                      label: const Text('Activar Bluetooth'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: 32),
             FilledButton(
               style: flowPrimaryStyle(),

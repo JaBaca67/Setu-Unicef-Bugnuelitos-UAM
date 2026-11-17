@@ -81,7 +81,7 @@ Future<void> main() async {
       defaultValue: 'AULA24',
     ),
     mesh: meshRelay,
-    resolveMeshRecipients: meshKeys?.recipients,
+    resolveMeshRecipients: meshKeys?.cachedRecipients,
   );
   final StaffSession resolvedStaffSession = StaffSession(
     staff ?? DemoStaffBackend(),

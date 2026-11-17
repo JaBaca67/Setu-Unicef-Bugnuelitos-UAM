@@ -1013,7 +1013,6 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
   @override
   void dispose() {
     widget.meshRelay?.removeListener(_onMeshChanged);
-    widget.meshRelay?.clearSchoolContext();
     _searchController.dispose();
     _live?.cancel();
     super.dispose();
@@ -1034,7 +1033,7 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     final String? schoolCode = session.active?.institutionPublicCode?.trim();
     final bool hasSchool = schoolCode != null && schoolCode.isNotEmpty;
     try {
-      final String endpoint = hasSchool ? 'setu-node' : 'mesa-red';
+      const String endpoint = 'setu-node';
       if (relay.recipientDirectory != null) {
         await relay.prepareSchoolReceiver(hasSchool ? schoolCode : null);
       }

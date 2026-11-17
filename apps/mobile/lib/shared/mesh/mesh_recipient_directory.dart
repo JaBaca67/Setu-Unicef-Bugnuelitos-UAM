@@ -24,6 +24,37 @@ class MeshRecipientDirectory {
   Future<SimpleKeyPair?>? _loadingKey;
   String? _keyUser;
   String? _receiverSchool;
+  String? _registeredOwner;
+  final Map<String, Future<void>> _warming = <String, Future<void>>{};
+
+  /// Ruta de emergencia: usar solo claves obtenidas antes por HTTPS, sin
+  /// demorar el inicio Nearby en otra consulta que requiere internet.
+  Future<List<List<int>>> cachedRecipients(
+    String schoolCode,
+    bool involvesStaff,
+  ) async {
+    final String school = schoolCode.trim().toUpperCase();
+    final LocalStorePersistence cache = await (_cache ??= _openCache());
+    final Map<String, Object?> data = await cache.load() ?? <String, Object?>{};
+    return _decodeKeys(
+      data['$school:${involvesStaff ? 'external' : 'school'}'],
+    );
+  }
+
+  static List<List<int>> _decodeKeys(Object? value) {
+    final List<List<int>> keys = <List<int>>[];
+    for (final Object? encoded
+        in value is List<Object?> ? value : const <Object?>[]) {
+      if (encoded is! String) continue;
+      try {
+        final List<int> key = base64Decode(encoded);
+        if (key.length == 32) keys.add(key);
+      } on FormatException {
+        // Una entrada inválida no impide usar las otras claves verificadas.
+      }
+    }
+    return keys;
+  }
 
   static Future<LocalStorePersistence> _onDevice() =>
       EncryptedLocalStore.onDevice(
@@ -60,6 +91,9 @@ class MeshRecipientDirectory {
     _receiverSchool = schoolCode?.trim().toUpperCase();
     final SimpleKeyPair? pair = await localKeyPair();
     if (pair == null) return null;
+    final String owner =
+        '${gateway.currentStaffUserId}:${_receiverSchool ?? 'global'}';
+    if (_registeredOwner == owner) return pair;
     final SimplePublicKey publicKey = await pair.extractPublicKey();
     try {
       await gateway
@@ -68,6 +102,7 @@ class MeshRecipientDirectory {
             publicKeyBase64: base64Encode(publicKey.bytes),
           )
           .timeout(const Duration(seconds: 4));
+      _registeredOwner = owner;
     } on Object {
       // Un receptor ya preparado sigue descifrando su cola sin internet.
       // La primera publicación requiere conexión y migración instalada.
@@ -91,21 +126,27 @@ class MeshRecipientDirectory {
             involvesStaff: involvesStaff,
           )
           .timeout(const Duration(seconds: 4));
-      data[cacheKey] = encoded;
-      await cache.save(data);
+      final Map<String, Object?> latest =
+          await cache.load() ?? <String, Object?>{};
+      latest[cacheKey] = encoded;
+      await cache.save(latest);
     } on Object {
       encoded = (data[cacheKey] as List<Object?>? ?? const <Object?>[])
           .whereType<String>()
           .toList();
     }
-    return <List<int>>[
-      for (final String key in encoded)
-        if (base64Decode(key).length == 32) base64Decode(key),
-    ];
+    return _decodeKeys(encoded);
   }
 
   /// Preparar ambos destinos antes de desconectar el teléfono estudiantil.
-  Future<void> warmSchool(String schoolCode) async {
+  Future<void> warmSchool(String schoolCode) => _warming.putIfAbsent(
+    schoolCode.trim().toUpperCase(),
+    () => _warmSchool(schoolCode).whenComplete(() {
+      _warming.remove(schoolCode.trim().toUpperCase());
+    }),
+  );
+
+  Future<void> _warmSchool(String schoolCode) async {
     await recipients(schoolCode, false);
     await recipients(schoolCode, true);
   }

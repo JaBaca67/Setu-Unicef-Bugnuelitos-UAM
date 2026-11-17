@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
@@ -93,7 +94,9 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
   StreamSubscription<void>? _staffAuthSubscription;
+  Timer? _meshKeyRefresh;
   String? _meshStaffScope;
+  int _lastMeshAlertCount = 0;
   late final MeshRecipientDirectory? _meshKeys =
       widget.meshRelay?.recipientDirectory ??
       (widget.remoteGateway == null
@@ -111,7 +114,7 @@ class _CureandoAppState extends State<CureandoApp> {
       SupportFlow(
         mesh: _meshRelay,
         meshRecipientPublicKey: widget.meshRecipientPublicKey,
-        resolveMeshRecipients: _meshKeys?.recipients,
+        resolveMeshRecipients: _meshKeys?.cachedRecipients,
       );
   late final StaffSession _staff =
       widget.staffSession ??
@@ -216,14 +219,15 @@ class _CureandoAppState extends State<CureandoApp> {
               ),
             ],
           ),
-          GoRoute(
-            path: 'prueba-mesh',
-            pageBuilder: (context, state) => studentTransition(
-              context,
-              state,
-              MeshTestScreen(remoteGateway: widget.remoteGateway),
+          if (kDebugMode)
+            GoRoute(
+              path: 'prueba-mesh',
+              pageBuilder: (context, state) => studentTransition(
+                context,
+                state,
+                MeshTestScreen(remoteGateway: widget.remoteGateway),
+              ),
             ),
-          ),
           for (final WelcomeDestination destination
               in WelcomeDestination.values)
             GoRoute(
@@ -532,13 +536,20 @@ class _CureandoAppState extends State<CureandoApp> {
       onResume: () {
         _learning.refreshDay();
         _support.refreshChat();
+        _support.retryDelivery();
+        _syncSchool();
         _syncPush();
         unawaited(_bootstrapMesh());
       },
     );
     _session.addListener(_syncSchool);
     _syncSchool();
+    _meshKeyRefresh = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _syncSchool(),
+    );
     _staff.addListener(_syncPush);
+    _meshRelay.addListener(_notifyStaffMeshReceipt);
     _support.addListener(_syncPush);
     _staff.onBeforeSignOut = PushNotificationService.instance.unregisterStaff;
     _staffAuthSubscription = _staff.backend.authStateChanges().listen((_) {
@@ -574,11 +585,7 @@ class _CureandoAppState extends State<CureandoApp> {
       if (widget.remoteGateway != null) {
         unawaited(_meshRelay.syncPendingAsBridge());
       }
-      final bool perms = await _meshRelay.transport.hasRequiredPermissions();
-      final bool btOn = await _meshRelay.transport.isBluetoothEnabled();
-      if (perms && btOn && !_meshRelay.isRunning) {
-        await _meshRelay.start();
-      }
+      await _meshRelay.retryPending();
     } on Object {
       // En pruebas sin canal nativo o sin radio disponible, conserva la cola.
     }
@@ -619,6 +626,7 @@ class _CureandoAppState extends State<CureandoApp> {
         : '${_staff.backend.currentUserId}:${scope.role}:${scope.institutionId}';
     if (_meshStaffScope != meshScope) {
       _meshStaffScope = meshScope;
+      _lastMeshAlertCount = 0;
       _meshRelay.clearSchoolContext();
       if (scope != null && _meshRelay.recipientDirectory != null) {
         unawaited(
@@ -637,6 +645,19 @@ class _CureandoAppState extends State<CureandoApp> {
       capabilityToken: _support.activeCapabilityToken,
       active: _support.activeCaseId != null,
     );
+  }
+
+  void _notifyStaffMeshReceipt() {
+    final int count = _meshRelay.schoolAlerts.length;
+    if (_staff.active != null && count > _lastMeshAlertCount) {
+      _scaffoldMessengerKey.currentState?.showSnackBar(
+        buildSetuBottomAlertSnackBar(
+          message: 'Nueva alerta recibida. Revisá tu bandeja.',
+          kind: SetuAlertKind.info,
+        ),
+      );
+    }
+    _lastMeshAlertCount = count;
   }
 
   void _refresh() {
@@ -666,12 +687,14 @@ class _CureandoAppState extends State<CureandoApp> {
 
   @override
   void dispose() {
+    _meshKeyRefresh?.cancel();
     _staffAuthSubscription?.cancel();
     _learningLifecycle.dispose();
     if (widget.learningProgress == null) _learning.dispose();
     if (widget.supportFlow == null) _support.dispose();
     _session.removeListener(_syncSchool);
     _staff.removeListener(_syncPush);
+    _meshRelay.removeListener(_notifyStaffMeshReceipt);
     _support.removeListener(_syncPush);
     _staff.onBeforeSignOut = null;
     PushNotificationService.instance.setListeners();

@@ -1,6 +1,6 @@
 # Flujo de datos y red mesh de SéTú
 
-**Estado:** actualizado 2026-11-16. Nearby/Kotlin, sobres E2EE y cola cifrada implementados; entrega directa a Mesa/Dirección y custodia opaca desarrolladas localmente en [ADR 0023](decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md). Migración 0012 sin aplicar al remoto y prueba física integral pendiente. Solo datos ficticios.
+**Estado:** actualizado 2026-11-16. Nearby/Kotlin, sobres E2EE, cola cifrada y activación automática al fallar el envío por red implementados; entrega directa a Mesa/Dirección y custodia opaca en [ADR 0023](decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md). El usuario confirma que la migración 0012 ya está aplicada; este bloque no consultó ni modificó Supabase remoto. Prueba física integral pendiente. Solo datos ficticios.
 
 Los [DFD de Kendall y Kendall](12-modelado-dfd-kendall.md) separan contexto/diagrama 0 del transporte. La integración actual usa Nearby Connections/Cluster mediante Kotlin y canal Flutter; la entrega mínima local usa las bandejas Android. Los paneles web y la entrega LAN a computadoras siguen pendientes.
 
@@ -24,6 +24,12 @@ La ficha posterior va del circuito profesional al MINED y al colegio autorizado.
 
 ## 3. Ruta sin internet implementada para la demo
 
+La red mesh es interna: el alumno solo toca **Enviar alerta**. Primero se intenta HTTPS (límite de espera: 8 segundos); ante error de transporte o timeout se conserva la operación original, se cifra la alerta mínima usando la caché y se inicia Nearby automáticamente. Un rechazo del servidor por permisos o validación no dispara mesh. Solo entonces se solicitan los permisos del sistema y activar Bluetooth si faltan, una vez por envío; los reintentos no repiten esos diálogos. No hay entradas de prueba ni controles de diagnóstico en la navegación estudiantil. La ruta `/prueba-mesh` solo se registra en compilaciones de depuración.
+
+La interfaz indica «Sin internet: tu alerta se enviará por un dispositivo cercano cuando esté disponible» y mantiene pendiente la confirmación. Con una prueba válida del destinatario o un recibo HTTPS muestra «Alerta entregada», diferenciando la recepción mínima local de la central. No afirma lectura ni atención inmediata.
+
+Las bandejas conservan sus avisos locales y la app muestra al personal un aviso visual sin relato cuando llega una nueva alerta mínima. El manifiesto principal declara `INTERNET` también para release; los permisos Nearby se solicitan por versión: Bluetooth scan/advertise/connect desde API 31, Wi-Fi cercano desde API 33 y ubicación coarse/fine hasta API 32. Los permisos de ubicación posteriores permanecen declarados por el acceso escolar, sin obtener coordenadas en mesh. Referencia: [permisos oficiales de Nearby](https://developers.google.com/nearby/connections/android/get-started).
+
 Estudiante → celulares que retransmiten ciphertext → receptor institucional preparado. Mesa/Dirección descifran únicamente la alerta mínima de su ámbito. Si el puente con internet es otro teléfono, sube el sobre opaco a Supabase y el destinatario staff lo recupera, descifra y registra. El puente no recibe la clave privada del destinatario.
 
 Se usan sobres independientes por clave pública registrada. Si `involvesStaff=true`, el directorio excluye planta y dirección del colegio: solo devuelve MINED o red externa autorizada. El relato, la pieza y el chat no viajan en estos sobres. La asignación profesional permanece en servidor. No se implementa una ficha profesional offline.
@@ -31,6 +37,10 @@ Se usan sobres independientes por clave pública registrada. Si `involvesStaff=t
 ## 4. Preparación previa
 
 Para emitir offline, el teléfono prepara por HTTPS las listas de claves públicas de su colegio y ruta de conflicto y las guarda en caché. El receptor staff publica su clave pública antes de preparar al estudiante. Su clave privada se genera y conserva en almacenamiento seguro del dispositivo. Un QR con código público no suministra claves ni autorización de lectura; sin preparación previa no se inventa una clave compartida.
+
+La caché se prepara al confirmar/restaurar colegio, al volver a primer plano y cada minuto con la app abierta. El envío de emergencia lee la caché sin esperar consultas de red. Al iniciar/restaurar una sesión staff se prepara el receptor y se inicia la escucha automáticamente; cerrar una pantalla de bandeja no borra el contexto de esa sesión. El cambio de ámbito o cierre de sesión limpia las proyecciones descifradas; se reconstruyen desde los sobres con la clave correspondiente. Una publicación de clave fallida se reintenta con la sincronización.
+
+Las instalaciones con permisos ya concedidos y Bluetooth encendido arrancan como puentes opacos al abrir/reanudar, sin activar un modo manual. Android no permite conceder permisos silenciosamente: una instalación estudiantil nueva los solicita cuando necesita enviar sin internet; el personal al preparar la recepción. No se implementa un servicio permanente con la app cerrada.
 
 Resolver primer uso desconectado, caducidad, rotación y revocación. Una configuración validada antes de perder internet puede estar desactualizada. No descargar una clave ofrecida por cualquier vecino y tratarla como oficial. Nunca incluir claves privadas de recepción central/dirección en el APK estudiantil.
 
@@ -90,7 +100,9 @@ Son textos propuestos para validar por edad. No se dice “te están atendiendo�
 | Recepción central | Servidor autorizado | Operación persistida de forma única; no acredita lectura humana. |
 | Actuación/lectura | Circuito autorizado de aplicación | Acontecimiento institucional distinto del transporte. |
 
-La demo acepta ACK Nearby solo como custodia y confirma recepción central únicamente con respuesta HTTPS de la RPC. La custodia opaca remota tampoco equivale a un caso registrado. El retorno mesh firmado del recibo central sigue pendiente; el emisor confirma al reconectarse y reintentar con su operación original.
+La demo acepta ACK Nearby solo como custodia y confirma recepción central únicamente con respuesta HTTPS de la RPC. Cada sobre nuevo incorpora un desafío aleatorio de 256 bits dentro del cifrado. El emisor guarda en su cola cifrada el valor esperado `SHA-256("setu-mesh-delivery:v1:" + packetId + ":" + desafío)`. Solo quien descifra el sobre puede devolver esa prueba de recepción local, después de persistirlo. Los vecinos conservan y retransmiten `recipient_receipt` sin conocer el desafío; el emisor comprueba el valor exacto y lo conserva al reiniciar. La prueba no acredita sincronización central ni lectura humana y no elimina la cola ni detiene los reintentos HTTPS. Sobres anteriores sin desafío siguen funcionando con custodia y confirmación HTTPS.
+
+La custodia opaca remota tampoco equivale a un caso registrado. El retorno mesh firmado de un recibo **central** sigue pendiente; el emisor confirma recepción central al reconectarse y reintentar con su operación original. Se mantienen pendientes cuotas y límites de inventario/recibos para operación real.
 
 ## 9. Reintentos, duplicados y concurrencia
 
@@ -99,6 +111,7 @@ La demo acepta ACK Nearby solo como custodia y confirma recepción central únic
 - Misma operación con contenido distinto: rechazar conflicto; no sobrescribir el caso previo.
 - Persistir caso y recibo en una transacción. Si se pierde la respuesta, devolver el mismo recibo al reintentar.
 - Reintentos con espera creciente, variación aleatoria y límites; cifras de intervalos, TTL, copias y tamaño por definir con medición física.
+- En esta demo el ciclo de la app es de 15 segundos: revalida permisos/radio sin diálogos, vuelve a enviar a vecinos conectados y sincroniza custodia/recepción por HTTPS. Kotlin mantiene advertising y discovery simultáneos, usa un identificador aleatorio sin datos personales para evitar solicitudes cruzadas y reintenta conexiones fallidas con espera de 1 a 30 segundos. No se promete alcance ni latencia.
 - Dirección puede registrar una actuación offline solo bajo un contrato aprobado. La sincronización agrega eventos y verifica versión; no permite al puente imponer estado, nivel o propietario.
 - Al vencer un sobre, no cerrar el caso ni borrar otras copias por inferencia. La política de limpieza y avisos debe aprobarse y probarse.
 

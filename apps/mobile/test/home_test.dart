@@ -210,11 +210,11 @@ void main() {
     await _tapLabel(tester, 'Enviar alerta');
     expect(find.text('Guardada en este teléfono'), findsOneWidget);
     expect(find.text('Falta confirmar la entrega.'), findsOneWidget);
-    expect(find.text('Alerta recibida'), findsNothing);
+    expect(find.text('Alerta entregada'), findsNothing);
     expect((await alerts.load())?['received'], isFalse);
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
-    expect(find.text('Alerta recibida'), findsOneWidget);
+    expect(find.text('Alerta entregada'), findsOneWidget);
     expect((await alerts.load())?['received'], isTrue);
     await _tapLabel(tester, 'Volver a Pedir apoyo');
     expect(find.text('¿En qué te podemos ayudar?'), findsOneWidget);
@@ -671,7 +671,7 @@ void main() {
     await _tapLabel(tester, 'Enviar alerta');
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
-    expect(find.text('Alerta recibida'), findsOneWidget);
+    expect(find.text('Alerta entregada'), findsOneWidget);
     await _tapLabel(tester, 'Volver a Pedir apoyo');
     await tester.pump(const Duration(seconds: 8));
     await tester.pumpAndSettle();
