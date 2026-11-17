@@ -244,7 +244,7 @@ class ActivitiesTab extends StatelessWidget {
       children: <Widget>[
         const _ActivityCard(
           title: 'Rompecabezas del buen trato',
-          sticker: 'rompecabezas',
+          sticker: 'assets/home/activities/rompecabezas_pareja.png',
           route: 'rompecabezas',
           featured: true,
         ),
@@ -313,7 +313,9 @@ class _ActivityCard extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Image.asset(
-                    'assets/home/info/stickers/sticker_$sticker.png',
+                    sticker.contains('/')
+                        ? sticker
+                        : 'assets/home/info/stickers/sticker_$sticker.png',
                     width: featured ? 112 : 48,
                     height: featured ? 108 : 80,
                     fit: BoxFit.contain,

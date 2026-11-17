@@ -10,12 +10,15 @@ import 'puzzle_board.dart';
 
 export 'puzzle_board.dart'
     show PuzzleBoard, PuzzleBoardState, PuzzleOptionPiece;
+
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
 import 'student_activities.dart';
+
+const String _puzzlePair = 'assets/home/activities/rompecabezas_pareja.png';
 
 const _stickers = 'assets/home/info/stickers/';
 const _sky = Color(0xFFE5EFFF);
@@ -136,7 +139,7 @@ class ActivityHeader extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Image.asset(
-          '${_stickers}sticker_$sticker.png',
+          sticker.contains('/') ? sticker : '${_stickers}sticker_$sticker.png',
           width: 112,
           height: 128,
           fit: BoxFit.contain,
@@ -834,7 +837,7 @@ class _KindnessPuzzleScreenState extends State<KindnessPuzzleScreen> {
   @override
   Widget build(BuildContext context) => _ActivityPage(
     title: 'Rompecabezas del buen trato',
-    sticker: 'rompecabezas',
+    sticker: _puzzlePair,
     children: <Widget>[
       if (_done) ...<Widget>[
         const Text(
@@ -843,11 +846,7 @@ class _KindnessPuzzleScreenState extends State<KindnessPuzzleScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
-        Image.asset(
-          '${_stickers}sticker_rompecabezas.png',
-          height: 180,
-          excludeFromSemantics: true,
-        ),
+        Image.asset(_puzzlePair, height: 180, excludeFromSemantics: true),
         const SizedBox(height: 20),
         const Text('Cada gesto de buen trato puede ayudar a alguien.'),
         const SizedBox(height: 20),
@@ -912,7 +911,7 @@ class _KindnessPuzzleScreenState extends State<KindnessPuzzleScreen> {
               children: <Widget>[
                 PuzzleOptionPiece(
                   color: i == 0 ? CureandoTheme.yellow : CureandoTheme.green,
-                  size: 52,
+                  size: 46,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
