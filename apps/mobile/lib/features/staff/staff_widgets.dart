@@ -352,8 +352,9 @@ String? staffSchoolLogoAsset({String? schoolName, String? publicCode}) {
       .replaceAll('ó', 'o')
       .replaceAll('ú', 'u');
   if (normalizedCode == 'AULA26' ||
+      normalizedName.startsWith('colegio setu') ||
       normalizedName.startsWith('colegio centro america')) {
-    return 'assets/schools/colegio_centro_america.png';
+    return 'assets/schools/colegio_setu_prueba.png';
   }
   return null;
 }

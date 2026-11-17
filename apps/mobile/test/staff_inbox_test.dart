@@ -67,7 +67,7 @@ void main() {
     expect(find.text('Alertas recibidas'), findsOneWidget);
     expect(find.text('DEMO-021'), findsOneWidget);
     expect(find.text('DEMO-014'), findsOneWidget);
-    expect(find.text('Colegio Centro América — Demo'), findsNWidgets(2));
+    expect(find.text('Colegio SéTú — Demo'), findsNWidgets(2));
     expect(find.text('Sin asignar'), findsOneWidget);
     // El relato y la conversación nunca llegan a la supervisión.
     expect(find.textContaining('Relato ficticio'), findsNothing);
@@ -85,10 +85,7 @@ void main() {
     expect(find.text('Asignada'), findsNWidgets(4));
 
     backend.offline = true;
-    await tester.drag(
-      find.byType(Scrollable).first,
-      const Offset(0, 1000),
-    );
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 1000));
     await tester.pumpAndSettle();
     await tester.fling(
       find.byType(Scrollable).first,
@@ -145,7 +142,7 @@ void main() {
     await _type(tester, 'Correo institucional', _desk);
     await _type(tester, 'Contraseña', DemoStaffBackend.demoPassword);
     await _tap(tester, 'Iniciar sesión');
-    await _tap(tester, 'Colegio Centro América — Demo');
+    await _tap(tester, 'Colegio SéTú — Demo');
     expect(find.text('DEMO-021'), findsOneWidget);
     expect(find.text('Sin valorar'), findsOneWidget);
     expect(find.byType(Image), findsWidgets);

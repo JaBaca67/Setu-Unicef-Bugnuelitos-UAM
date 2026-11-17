@@ -135,7 +135,7 @@ void main() {
       // El enlace del cartel entra sin código manual ni paso de cercanía.
       await _go(tester, '/colegio/enlace/AULA26');
       expect(find.text(_home), findsOneWidget);
-      expect(find.text('Entraste a Colegio Centro América.'), findsOneWidget);
+      expect(find.text('Entraste a Colegio SéTú.'), findsOneWidget);
       expect(find.text('Comprobar cercanía'), findsNothing);
 
       for (final String blocked in <String>[
@@ -230,7 +230,7 @@ void main() {
         contains('AULA26'),
       );
       expect(find.text('AULA26'), findsOneWidget);
-      expect(find.text('Colegio Centro América'), findsOneWidget);
+      expect(find.text('Colegio SéTú'), findsOneWidget);
       await tester.tap(find.byTooltip('Volver'));
       await tester.pumpAndSettle();
 
@@ -281,7 +281,7 @@ void main() {
     await _tap(tester, 'Ingreso estudiantil');
     await _tap(tester, 'Ver cartel QR de demostración');
     expect(find.byType(QrImageView), findsOneWidget);
-    expect(find.text('Colegio Centro América'), findsOneWidget);
+    expect(find.text('Colegio SéTú'), findsOneWidget);
     expect(find.text('Managua, Nicaragua'), findsOneWidget);
     expect(find.text('AULA26'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -294,7 +294,7 @@ void main() {
       await tester.pumpWidget(_app(staff: backend));
       await tester.pumpAndSettle();
       await _signIn(tester, _desk);
-      await _tap(tester, 'Colegio Centro América — Demo');
+      await _tap(tester, 'Colegio SéTú — Demo');
       return backend;
     }
 

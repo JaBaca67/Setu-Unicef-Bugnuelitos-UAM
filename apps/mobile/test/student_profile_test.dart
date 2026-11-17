@@ -369,7 +369,7 @@ void main() {
               ? const ConfirmedSchool(
                   id: 'remoto',
                   publicCode: 'NUEVO1',
-                  name: 'Colegio Centro América — Demo',
+                  name: 'Colegio SéTú — Demo',
                   municipality: 'Managua',
                   department: 'Managua',
                 )
@@ -379,7 +379,7 @@ void main() {
       addTearDown(session.dispose);
       final ConfirmedSchool? remote = await session.resolve(' nuev-o1 '.trim());
       expect(asked, <String>['NUEVO1']);
-      expect(remote?.displayName, 'Colegio Centro América');
+      expect(remote?.displayName, 'Colegio SéTú');
       expect(remote?.crestAsset, isNotNull);
       // La plataforma respondió que no existe: no se usa el catálogo local.
       expect(await session.resolve('AULA24'), isNull);
@@ -435,7 +435,11 @@ void main() {
       expect(find.text('0 XP'), findsOneWidget);
       expect(find.text('Nivel 1 · Curioso'), findsOneWidget);
       expect(
-        tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator)).value,
+        tester
+            .widget<LinearProgressIndicator>(
+              find.byType(LinearProgressIndicator),
+            )
+            .value,
         0,
       );
       await _capture(tester, captureKey, 'mi-perfil-inicial');
@@ -453,7 +457,8 @@ void main() {
       await _tapLabel(tester, 'Guardar mi pieza');
       expect(find.text('Pieza guardada en este teléfono.'), findsOneWidget);
       final String chosenName =
-          ((sessionStore.data?['piece']! as Map<Object?, Object?>)['displayName'])!
+          ((sessionStore.data?['piece']!
+                  as Map<Object?, Object?>)['displayName'])!
               as String;
       expect(find.text(chosenName), findsOneWidget);
 
@@ -498,11 +503,8 @@ void main() {
 
       // «Mi colegio y ajustes» despliega el colegio, confirmación y conserva todo al salir.
       await _tapLabel(tester, 'Mi colegio y ajustes');
-      expect(find.text('Colegio Centro América · Managua'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel('Escudo del Colegio Centro América'),
-        findsOneWidget,
-      );
+      expect(find.text('Colegio SéTú · Managua'), findsOneWidget);
+      expect(find.bySemanticsLabel('Escudo del Colegio SéTú'), findsOneWidget);
       await _tapLabel(tester, 'Salir del colegio');
       expect(find.text('¿Salir de este colegio?'), findsOneWidget);
       await tester.tap(find.text('Cancelar'));
@@ -546,10 +548,21 @@ void main() {
         'version': 1,
         'activeDays': <String>['2026-11-11', '2026-11-12', '2026-11-13'],
         'questionDays': <String>['2026-11-11', '2026-11-12', '2026-11-13'],
-        'resources': <String>['res-1', 'res-2', 'res-3', 'res-4', 'res-5', 'res-6', 'res-7', 'res-8'],
+        'resources': <String>[
+          'res-1',
+          'res-2',
+          'res-3',
+          'res-4',
+          'res-5',
+          'res-6',
+          'res-7',
+          'res-8',
+        ],
       };
       final _MemoryStore alertStore = _MemoryStore();
-      final SupportFlow support = SupportFlow(openStore: () async => alertStore);
+      final SupportFlow support = SupportFlow(
+        openStore: () async => alertStore,
+      );
 
       await tester.pumpWidget(
         RepaintBoundary(
@@ -573,7 +586,11 @@ void main() {
       expect(find.text('70 XP'), findsOneWidget);
       expect(find.text('Nivel 2 · Explorador'), findsOneWidget);
       expect(
-        tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator)).value,
+        tester
+            .widget<LinearProgressIndicator>(
+              find.byType(LinearProgressIndicator),
+            )
+            .value,
         closeTo(0.4, 0.001),
       );
       await _capture(tester, captureKey, 'mi-perfil-sin-nombre-ni-accesorios');

@@ -30,23 +30,28 @@ class ConfirmedSchool {
   final double? referenceLng;
   final int radiusMeters;
 
-  static const String centroAmericaCode = 'AULA26';
+  static const String setuDemoCode = 'AULA26';
 
-  bool get isCentroAmerica =>
-      publicCode == centroAmericaCode ||
-      name
-          .toLowerCase()
-          .replaceAll('é', 'e')
-          .startsWith('colegio centro america');
+  /// Colegio ficticio de la demo. También reconoce el nombre anterior por si
+  /// un backend aún no aplicó el cambio de `supabase/seed.sql`.
+  bool get isSetuDemoSchool {
+    final String n = name
+        .toLowerCase()
+        .replaceAll('é', 'e')
+        .replaceAll('ú', 'u');
+    return publicCode == setuDemoCode ||
+        n.startsWith('colegio setu') ||
+        n.startsWith('colegio centro america');
+  }
 
   /// Nombre que se muestra al estudiante.
-  String get displayName => isCentroAmerica ? 'Colegio Centro América' : name;
+  String get displayName => isSetuDemoSchool ? 'Colegio SéTú' : name;
 
   String get place => '$municipality, Nicaragua';
 
-  /// Escudo oficial empaquetado; null si el centro no tiene uno en la app.
+  /// Escudo de prueba empaquetado; null si el centro no tiene uno en la app.
   String? get crestAsset =>
-      isCentroAmerica ? 'assets/schools/colegio_centro_america.png' : null;
+      isSetuDemoSchool ? 'assets/schools/colegio_setu_prueba.png' : null;
 
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,
@@ -95,7 +100,7 @@ const List<ConfirmedSchool> localSchoolCatalog = <ConfirmedSchool>[
   ConfirmedSchool(
     id: '11111111-1111-4111-8111-000000000026',
     publicCode: 'AULA26',
-    name: 'Colegio Centro América',
+    name: 'Colegio SéTú',
     municipality: 'Managua',
     department: 'Managua',
     referenceLat: 12.098062,

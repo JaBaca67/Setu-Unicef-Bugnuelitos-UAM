@@ -45,7 +45,7 @@ VALUES
   (
     '11111111-1111-4111-8111-000000000026',
     'AULA26',
-    'Colegio Centro América',
+    'Colegio SéTú',
     'Managua',
     'Managua',
     12.098062,

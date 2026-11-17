@@ -103,12 +103,9 @@ void main() {
         'aula26',
       );
       await _tapLabel(tester, 'Entrar');
-      expect(find.text('Colegio Centro América'), findsOneWidget);
+      expect(find.text('Colegio SéTú'), findsOneWidget);
       expect(find.text('Managua, Nicaragua'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel('Escudo del Colegio Centro América'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('Escudo del Colegio SéTú'), findsOneWidget);
       expect(find.textContaining('Colegio de prueba'), findsNothing);
       expect(find.text('Simular cercanía para la demo'), findsNothing);
       await _tapLabel(tester, 'Comprobar cercanía');
