@@ -347,8 +347,7 @@ class _InicioTab extends StatelessWidget {
         _AdaptiveRow(
           alwaysSideBySide: true,
           children: <Widget>[
-            // Igual que en Actividades: abre la Pregunta libre. La pregunta
-            // diaria con XP está en «Mi racha».
+            // Igual que en Actividades: abre la Pregunta libre.
             const ActivityCard(
               key: ValueKey<String>('home-free-question'),
               title: 'Pregunta libre',

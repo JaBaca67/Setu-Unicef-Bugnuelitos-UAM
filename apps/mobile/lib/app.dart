@@ -297,7 +297,6 @@ class _CureandoAppState extends State<CureandoApp> {
             'pregunta': () => const FreeQuestionScreen(),
             'dibujo': () => const FreeDrawingScreen(),
             'rompecabezas': () => const KindnessPuzzleScreen(),
-            'diaria': () => DailyQuestionScreen(progress: _learning),
           }.entries)
             GoRoute(
               path: 'actividades/${activity.key}',

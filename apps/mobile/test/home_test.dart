@@ -94,7 +94,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('calendario y racha reflejan pregunta y lecturas al reabrir', (
+  testWidgets('calendario y racha reflejan lecturas al reabrir', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
@@ -123,24 +123,16 @@ void main() {
     await _tapLabel(tester, 'Ir a Actividades');
     expect(find.text('Rompecabezas del buen trato'), findsOneWidget);
     await _tapNav(tester, 'Inicio');
-    await _tapHomeQuestion(tester);
-    await _tapLabel(
-      tester,
-      'Todas las emociones son válidas; lo importante es cómo las expresamos.',
-    );
-    await _tapLabel(tester, 'Actividades');
-    // La pregunta se abrió desde «Mi racha»; se vuelve al Inicio.
-    await _tapNav(tester, 'Inicio');
-    expect(find.text('Racha de 1 día'), findsOneWidget);
-    expect(find.text('10 XP'), findsOneWidget);
 
+    // Sin pregunta diaria: la lectura marca el día y suma XP.
     await _tapLabel(tester, '¿Es una broma o acoso?');
     expect(find.text('Marcar como leída (+5 XP)'), findsOneWidget);
     await _tapLabel(tester, 'Marcar como leída (+5 XP)');
     expect(find.text('Lectura registrada'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
-    expect(find.text('15 XP'), findsOneWidget);
+    expect(find.text('Racha de 1 día'), findsOneWidget);
+    expect(find.text('5 XP'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     now = DateTime(2026, 11, 13, 9);
@@ -148,14 +140,14 @@ void main() {
     await tester.pumpAndSettle();
     await _goHome(tester);
     expect(find.text('Racha de 1 día'), findsOneWidget);
-    expect(find.text('15 XP'), findsOneWidget);
+    expect(find.text('5 XP'), findsOneWidget);
     await _tapLabel(tester, '¿Es una broma o acoso?');
     await _tapLabel(tester, 'Marcar día de aprendizaje');
     expect(find.text('Marcaste un día de aprendizaje.'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     expect(find.text('Racha de 2 días'), findsOneWidget);
-    expect(find.text('15 XP'), findsOneWidget);
+    expect(find.text('5 XP'), findsOneWidget);
     final SemanticsHandle semantics = tester.ensureSemantics();
     try {
       await _tapLabel(tester, 'Racha de 2 días');
@@ -614,24 +606,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('la pregunta del día retroalimenta y el dado muestra emociones', (
+  testWidgets('Pregunta libre del inicio y el dado muestra emociones', (
     WidgetTester tester,
   ) async {
     _useTallView(tester);
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
     await _goHome(tester);
-    await _tapHomeQuestion(tester);
-    await _tapLabel(
-      tester,
-      'Hay emociones malas que es mejor esconder siempre.',
+    // La tarjeta del Inicio abre la misma Pregunta libre de Actividades.
+    final Finder free = find.byKey(
+      const ValueKey<String>('home-free-question'),
     );
-    expect(find.textContaining('probá de nuevo'), findsOneWidget);
-    await _tapLabel(
-      tester,
-      'Todas las emociones son válidas; lo importante es cómo las expresamos.',
-    );
-    expect(find.text('¡Así es! Sumaste 10 XP.'), findsOneWidget);
+    await tester.ensureVisible(free);
+    await tester.pumpAndSettle();
+    await tester.tap(free);
+    await tester.pumpAndSettle();
+    expect(find.text('Pregunta libre'), findsWidgets);
+    expect(find.text('Pregunta del día'), findsNothing);
     await _tapLabel(tester, 'Actividades');
     await _tapNav(tester, 'Actividades');
     await _tapLabel(tester, 'Dados emocionales');
@@ -960,20 +951,4 @@ Future<void> _capture(WidgetTester tester, Key key, String name) async {
       '${directory.path}/$name.png',
     ).writeAsBytes(bytes!.buffer.asUint8List());
   });
-}
-
-/// La pregunta diaria (+XP) se abre desde «Mi racha».
-Future<void> _tapHomeQuestion(WidgetTester tester) async {
-  final Finder streak = find.textContaining(RegExp(r'^Racha de \d+ día'));
-  await tester.ensureVisible(streak);
-  await tester.pumpAndSettle();
-  await tester.tap(streak);
-  await tester.pumpAndSettle();
-  final Finder question = find.byKey(
-    const ValueKey<String>('streak-daily-question'),
-  );
-  await tester.ensureVisible(question);
-  await tester.pumpAndSettle();
-  await tester.tap(question);
-  await tester.pumpAndSettle();
 }

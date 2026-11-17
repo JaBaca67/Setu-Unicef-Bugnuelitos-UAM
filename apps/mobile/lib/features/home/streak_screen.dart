@@ -6,7 +6,6 @@ import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
 import 'learning_progress.dart';
-import 'student_activities.dart';
 
 const List<String> _weekdays = <String>[
   'lunes',
@@ -305,17 +304,6 @@ class _StreakScreenState extends State<StreakScreen> {
                   onNext: month.isBefore(currentMonth)
                       ? () => _goToMonth(month, 1)
                       : null,
-                ),
-                const SizedBox(height: 12),
-                // La pregunta diaria (+XP) vive aquí: suma a la racha.
-                ActivityCard(
-                  key: const ValueKey<String>('streak-daily-question'),
-                  title: 'Pregunta del día',
-                  sticker: 'assets/home/activities/sticker_pregunta_hd.png',
-                  route: 'diaria',
-                  detail: progress.answeredToday
-                      ? 'Completada'
-                      : '+${LearningProgress.questionXp} XP',
                 ),
                 const SizedBox(height: 12),
                 SetuCard(
