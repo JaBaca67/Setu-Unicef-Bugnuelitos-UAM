@@ -763,6 +763,31 @@ html.js [data-stagger].is-visible > .value:nth-child(even) { transform: rotate(1
   .step__text p { max-width: none; }
 }
 
+/* ---------- RECORRIDO AUTOMÁTICO ---------- */
+.autoscroll {
+  position: fixed; right: 1rem; bottom: 1rem; z-index: 60;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  min-height: 48px; padding: 0.6rem 1.1rem 0.6rem 0.85rem;
+  font: 600 0.9375rem/1 var(--font-body, "Poppins", sans-serif);
+  color: var(--setu-white); background: var(--setu-blue);
+  border: 2px solid var(--setu-white); border-radius: 999px; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(12, 98, 235, 0.35), 0 2px 6px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.autoscroll[hidden] { display: none; }
+.autoscroll:hover { transform: translateY(-2px); }
+.autoscroll:focus-visible { outline: 3px solid var(--setu-black); outline-offset: 3px; }
+.autoscroll svg { width: 20px; height: 20px; fill: currentColor; flex: none; }
+.autoscroll__pause { display: none; }
+.autoscroll[aria-pressed="true"] { background: var(--setu-black); }
+.autoscroll[aria-pressed="true"] .autoscroll__play { display: none; }
+.autoscroll[aria-pressed="true"] .autoscroll__pause { display: block; }
+@media (max-width: 599px) {
+  .autoscroll { padding: 0; width: 52px; justify-content: center; }
+  .autoscroll__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@media print { .autoscroll { display: none !important; } }
+
 /* ---------- APARICIÓN AL HACER SCROLL ---------- */
 html.js [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
 html.js [data-reveal].is-visible { opacity: 1; transform: none; }
