@@ -9,12 +9,15 @@ desde `main` por el workflow `.github/workflows/deploy-landing.yml`. Todo lo que
 - Poppins (licencia OFL) se sirve desde `landing/assets/fonts/`.
 - Clayful tiene licencia de uso personal, así que **no se sube el archivo de la fuente**: los titulares en Clayful están incrustados en `landing/index.html` como trazos SVG.
 
-## Diseño vigente · 17 de noviembre de 2026
+## Diseño vigente · 17 de noviembre de 2026 (ronda de auditoría)
 
-- La landing sigue el frame de Figma «SéTú · Landing conectada con la app» (archivo `8TbZNgIetXg3O5f7Cba2vh`, nodo `196:1797`): portada «Todos podemos encajar», Explorá con Mi pieza y racha, problema vs. solución, Así funciona con pantallas de la app, pilares de privacidad, campaña, instituciones con el banner del kit, FAQ, SOS y pie. Se conservan la sección de descargas, los videos y el QR del stand.
-- Los recursos exportados de Figma viven en `landing/assets/landing/` (WebP y SVG, ~0,5 MB). Las pantallas de «Así funciona» son exportaciones 2x de los mockups con datos ficticios.
-- Los textos no se copian literalmente de Figma: donde el diseño prometía supervisión del MINED en cada caso, entrega garantizada sin internet, respuesta asegurada o mostraba logos institucionales, se conservan los textos alineados con los ADR vigentes. El botón del encabezado sigue siendo «Probar SéTú» (no hay ingreso web con código).
-- Contraste: el texto pequeño sobre magenta va en negro (AA); el blanco solo se usa en texto grande y en negrita.
+- Base visual: frame de Figma «SéTú · Landing conectada con la app» (archivo `8TbZNgIetXg3O5f7Cba2vh`, nodo `196:1797`), mejorada tras una auditoría de marca, diseño, accesibilidad/rendimiento y móvil/textos. Respaldo visual previo en `docs/diseno/landing-respaldo-2026-11-17/`.
+- Orden: portada → datos clave → problema → «Así funciona» (4 pasos) → privacidad → Explorá → videos → campaña, valores y kit → instituciones → preguntas → descarga → ayuda urgente → pie.
+- Marca (Manual de Marca): cinta-pieza con muesca y flor como rótulo de cada sección (pp. 4–22), flores numeradas, flores/espirales/piezas a sangre en las esquinas, valores (p. 6) y los cuatro colores en equilibrio. El fondo de ondas solo se usa en la portada y en privacidad (viene del arte de campaña del equipo).
+- Mockups del equipo en `landing/assets/app/` (WebP 360/720 px con `srcset`): celular fijo que cambia de pantalla en «Así funciona» (escritorio) o tarjetas deslizables (celular), mosaico de Explorá y trío en abanico en la descarga. Videos nuevos a 720p en `landing/assets/demo/`.
+- Textos en voseo y sin promesas absolutas (anonimato, entrega, respuesta); la campaña y el kit se presentan como propuesta. Los números 118 y 133 llevan fuente y fecha (ADR 0025).
+- Contraste: el texto pequeño sobre magenta, verde o amarillo va en negro (AA); el blanco sobre magenta solo en texto grande y en negrita.
+- Movimiento: aparición al hacer scroll, celular fijo y alerta animada en el mapa de la red; todo se desactiva con «reducir movimiento».
 
 ## Probar en local
     cd landing
