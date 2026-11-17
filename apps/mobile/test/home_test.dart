@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:cureando_mobile/app.dart';
+import 'package:cureando_mobile/features/home/information_tab.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/info_catalog.dart';
 import 'package:cureando_mobile/features/home/student_preview_cards.dart';
@@ -81,6 +82,7 @@ void main() {
     await _tapNav(tester, 'Información');
     expect(find.text('Biblioteca'), findsOneWidget);
     expect(find.text('Acoso escolar'), findsWidgets);
+    expect(find.text('Ver catálogo ›'), findsNWidgets(6));
     await _tapNav(tester, 'Actividades');
     expect(find.text('Actividades de muestra'), findsOneWidget);
     expect(find.text('Pregunta del día'), findsOneWidget);
@@ -378,6 +380,8 @@ void main() {
           .where((InfoResource r) => r.topic == topic)
           .toList();
       expect(find.text('${matches.length} disponibles'), findsOneWidget);
+      expect(find.byType(InfoResourceCard), findsNWidgets(matches.length));
+      expect(find.text('+5 XP'), findsNWidgets(matches.length));
       for (final InfoResource resource in infoCatalog) {
         expect(
           find.text(resource.title),
@@ -391,6 +395,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'DEPRESION');
     await tester.pumpAndSettle();
     expect(find.text('2 disponibles'), findsOneWidget);
+    expect(find.byType(InfoResourceCard), findsNWidgets(2));
     await tester.enterText(find.byType(TextField), 'inexistente');
     await tester.pumpAndSettle();
     expect(

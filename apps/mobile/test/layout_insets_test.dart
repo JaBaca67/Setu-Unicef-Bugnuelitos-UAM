@@ -52,7 +52,9 @@ void main() {
             await tester.pumpAndSettle();
             final Map<HomeSection, Finder> endings = <HomeSection, Finder>{
               HomeSection.inicio: find.bySemanticsLabel('Dado de emociones'),
-              HomeSection.informacion: find.text(infoCatalog.last.title),
+              HomeSection.informacion: find.byKey(
+                const ValueKey<String>('banner-apoyo-hablar-con-confianza'),
+              ),
               HomeSection.actividades: find.textContaining(
                 'El equipo diseñó otros materiales',
               ),
@@ -128,7 +130,14 @@ void main() {
         expect(chip.backgroundColor, chip.selectedColor);
         expect(chip.labelStyle!.fontWeight, FontWeight.w700);
       }
-      await _capture(tester, capture, 'e10-$width');
+      tester.view.physicalSize = Size(width, 850);
+      await tester.pumpAndSettle();
+      await _capture(tester, capture, 'e10-portada-$width');
+      await tester.ensureVisible(
+        find.byKey(const ValueKey<String>('information-categories')),
+      );
+      await tester.pumpAndSettle();
+      await _capture(tester, capture, 'e10-chips-$width');
       await tester.ensureVisible(
         find.text(infoResourceById('ciberacoso-que-es')!.title),
       );
@@ -139,15 +148,22 @@ void main() {
       );
       libraryScroll.position.jumpTo(0);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Acoso escolar'));
+      final Finder catalogLink = find.text('Ver catálogo ›').first;
+      await tester.ensureVisible(catalogLink);
+      await tester.tap(catalogLink);
       await tester.pumpAndSettle();
+      expect(find.text('4 disponibles'), findsOneWidget);
+      expect(find.text('+5 XP'), findsNWidgets(4));
+      await _capture(tester, capture, 'e10-catalogo-$width');
       final ChoiceChip selected = tester.widget<ChoiceChip>(
         find.widgetWithText(ChoiceChip, 'Acoso escolar'),
       );
       expect(selected.selected, isTrue);
       expect(selected.selectedColor, CureandoTheme.yellow);
       expect(selected.labelStyle!.color, CureandoTheme.ink);
-      expect(selected.showCheckmark, isTrue);
+      expect(selected.side!.width, 2);
+      tester.view.physicalSize = Size(width, 640);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Rutas'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Cambiar tema'));
