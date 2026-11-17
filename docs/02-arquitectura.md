@@ -1,6 +1,10 @@
 # Arquitectura de SéTú
 
-**Revisión:** 2026-11-09. Producto según ADR 0005 y Drive; contratos siguientes **propuestos**, pendientes de aprobación antes de implementar. README describe el estado real de M1. No hay backend ni RLS implementados.
+**Revisión:** 2026-11-16. Producto según ADR 0005 y Drive. El esquema, RLS y RPC de demo están implementados en `supabase/migrations/`; el corte mesh aprobado se describe abajo y en ADR 0023. Los modelos conceptuales y requisitos operativos que siguen no acreditan un servicio para casos reales.
+
+## Corte mesh local del 16 de noviembre de 2026
+
+[ADR 0023](decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md) registra el bloque aprobado: claves privadas X25519 generadas por dispositivo/usuario/ámbito en almacenamiento seguro, directorio público por RPC y caché para emitir offline. El puente genérico sube ciphertext a custodia sin descifrar; el receptor staff registra por `submit_student_alert`, que conserva despacho por colegio. La migración 0012 reúne custodia, permisos y reconciliación idempotente online/mesh; no está aplicada al remoto. Las bandejas Android pueden recibir el aviso mínimo offline; no se implementa una entrega LAN a computadoras. Las propuestas de endurecimiento siguientes no sustituyen este corte local.
 
 ## Componentes y confianza
 
@@ -42,7 +46,7 @@ La sesión se guarda protegida. Bloqueo local opcional no es crear una cuenta po
 
 Drive decide código privado para dirección y enlace, pero no define formato, entrega o recuperación. Propuesta: canjearlo mediante un alta confiable por una sesión restringida y revocable; nunca usar el código público ni guardar el privado en claro. Para casos reales se necesitan actores atribuibles, autenticación apropiada y auditoría individual. El acceso MINED/mesa y la supervisión de practicantes requieren diseño propio.
 
-La función técnica de puente usa una credencial de dispositivo limitada a transportar. No obtiene credenciales de dirección ni poderes clínicos. Si comparte teléfono con una vista institucional, los contextos y secretos se separan.
+El puente genérico solo transporta y sube sobres opacos mediante una RPC pública limitada al formato cifrado. No recibe credenciales institucionales ni poderes clínicos. Un teléfono que también sea destinatario staff conserva su propia clave y aplica el ámbito autorizado, separado del transporte.
 
 ## Modelo de datos conceptual propuesto
 

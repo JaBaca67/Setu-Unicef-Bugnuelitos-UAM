@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../shared/local/encrypted_local_store.dart';
+import '../../shared/models/cureando_models.dart';
 import '../../shared/mesh/mesh_bridge_keys.dart';
 import '../../shared/mesh/mesh_envelope.dart';
 import '../../shared/mesh/mesh_relay_service.dart';
@@ -99,6 +100,7 @@ class SupportFlow extends ChangeNotifier {
     this.mesh,
     this.meshRecipientPublicKey,
     this.resolveMeshRecipientPublicKey,
+    this.resolveMeshRecipients,
   }) : _openStore = openStore ?? _onDevice,
        _ownsBackend = backend == null,
        backend =
@@ -106,6 +108,7 @@ class SupportFlow extends ChangeNotifier {
            SimulatedSupportBackend(ackDelay: ackDelay, teamDelay: teamDelay),
        _crypto = crypto ?? CaseCapabilityCrypto() {
     this.backend.changes?.addListener(_refreshChat);
+    mesh?.addListener(_meshChanged);
   }
 
   static const String teamGreeting = SimulatedSupportBackend.teamGreeting;
@@ -124,8 +127,20 @@ class SupportFlow extends ChangeNotifier {
   final MeshRelayService? mesh;
   final List<int>? meshRecipientPublicKey;
   final Future<List<int>?> Function()? resolveMeshRecipientPublicKey;
+  final Future<List<List<int>>> Function(String schoolCode, bool involvesStaff)?
+  resolveMeshRecipients;
   bool _needsBluetoothForMesh = false;
   bool get needsBluetoothForMesh => _needsBluetoothForMesh;
+  bool _meshPending = false;
+  bool get meshPending => _meshPending && _delivery == AlertDelivery.pending;
+  bool get minimalAlertDelivered {
+    final String? operation = _case?['operationId'] as String?;
+    return operation != null &&
+        (mesh?.isOperationDelivered(operation) ?? false);
+  }
+
+  void _meshChanged() => _notify();
+  bool _meshPermissionAttempted = false;
 
   /// Código público del colegio confirmado en el acceso escolar. La app lo
   /// actualiza cuando el estudiante confirma o cambia de colegio; cada
@@ -277,6 +292,8 @@ class SupportFlow extends ChangeNotifier {
     _case = delivery;
     _delivery = AlertDelivery.pending;
     _deliveryFailed = false;
+    _meshPending = false;
+    _meshPermissionAttempted = false;
     _chatAvailable = false;
     _caseClosed = false;
     _messages = const <ChatMessage>[];
@@ -347,7 +364,9 @@ class SupportFlow extends ChangeNotifier {
             ? piece.cast<String, Object?>()
             : null,
       );
-      final String caseId = await backend.submitAlert(outbox);
+      final String caseId = await backend
+          .submitAlert(outbox)
+          .timeout(const Duration(seconds: 8));
       // Si mientras tanto se envió otra alerta, este acuse ya no aplica.
       if (identical(_case, delivery)) {
         delivery['caseId'] = caseId;
@@ -356,9 +375,17 @@ class SupportFlow extends ChangeNotifier {
         _needsBluetoothForMesh = false;
         _persist();
       }
-    } on Object {
+    } on Object catch (error) {
       if (identical(_case, delivery)) _deliveryFailed = true;
-      if (outbox != null) await _enqueueMeshFallback(outbox);
+      // Un rechazo de autorización/validación no habilita otra vía de alta.
+      if (!_disposed &&
+          identical(_case, delivery) &&
+          outbox != null &&
+          (error is TimeoutException ||
+              error is GatewayException &&
+                  error.code == 'network_unavailable')) {
+        await _enqueueMeshFallback(outbox);
+      }
     } finally {
       _delivering = false;
     }
@@ -375,21 +402,33 @@ class SupportFlow extends ChangeNotifier {
   Future<bool> ensureBluetoothForMesh() async {
     final MeshRelayService? relay = mesh;
     if (relay == null) return false;
-    final bool enabled = await relay.transport.requestEnableBluetooth();
-    _needsBluetoothForMesh = !enabled;
-    if (enabled && !relay.isRunning) {
-      await relay.start();
+    try {
+      final bool started = await relay.ensureReadyAndStart();
+      _needsBluetoothForMesh = !started;
+      _notify();
+      return started;
+    } on Object {
+      _needsBluetoothForMesh = true;
+      _notify();
+      return false;
     }
-    _notify();
-    return enabled;
   }
 
   Future<void> _enqueueMeshFallback(AlertOutbox outbox) async {
     final MeshRelayService? relay = mesh;
-    final List<int>? recipientKey =
-        meshRecipientPublicKey ?? await resolveMeshRecipientPublicKey?.call();
-    if (relay == null || recipientKey == null) return;
+    if (relay == null) return;
     try {
+      final List<List<int>> keys;
+      final resolver = resolveMeshRecipients;
+      if (resolver != null) {
+        keys = await resolver(outbox.schoolCode, outbox.involvesStaff);
+      } else {
+        final List<int>? recipientKey =
+            meshRecipientPublicKey ??
+            await resolveMeshRecipientPublicKey?.call();
+        keys = <List<int>>[?recipientKey];
+      }
+      if (keys.isEmpty) return;
       final MeshMinimalAlertPayload payload = MeshMinimalAlertPayload(
         clientOperationId: outbox.operationId,
         publicSchoolCode: outbox.schoolCode,
@@ -399,11 +438,13 @@ class SupportFlow extends ChangeNotifier {
         capabilityVerifierHash: outbox.verifierHash,
         declaredAt: outbox.declaredAt,
       );
-      await relay.enqueueMinimalAlert(
-        payload,
-        recipientPublicKeyBytes: recipientKey,
-      );
-      if (!outbox.involvesStaff && outbox.schoolCode.trim().isNotEmpty) {
+      for (final List<int> key in keys) {
+        await relay.enqueueMinimalAlert(payload, recipientPublicKeyBytes: key);
+      }
+      // Proyección local solo para simulaciones en memoria, sin directorio remoto.
+      if (resolver == null &&
+          !outbox.involvesStaff &&
+          outbox.schoolCode.trim().isNotEmpty) {
         final List<int> schoolKey =
             await MeshSchoolKeys.resolveSchoolPublicKeyBytes(outbox.schoolCode);
         await relay.enqueueMinimalAlert(
@@ -411,11 +452,15 @@ class SupportFlow extends ChangeNotifier {
           recipientPublicKeyBytes: schoolKey,
         );
       }
-      final bool btOn = await relay.transport.isBluetoothEnabled();
-      _needsBluetoothForMesh = !btOn;
-      if (btOn && !relay.isRunning) {
-        await relay.start();
-      }
+      _meshPending = true;
+      _notify();
+      // Una única solicitud del sistema por envío. Reintentar no insiste si
+      // se denegó; al reanudar se vuelve a comprobar sin abrir diálogos.
+      final bool requestAccess = !_meshPermissionAttempted;
+      _meshPermissionAttempted = true;
+      _needsBluetoothForMesh = !await relay.ensureReadyAndStart(
+        requestAccess: requestAccess,
+      );
     } on Object {
       // Permanece en la cola local cifrada.
     }
@@ -503,6 +548,7 @@ class SupportFlow extends ChangeNotifier {
     _retry?.cancel();
     _poll?.cancel();
     backend.changes?.removeListener(_refreshChat);
+    mesh?.removeListener(_meshChanged);
     if (_ownsBackend) backend.dispose();
     super.dispose();
   }

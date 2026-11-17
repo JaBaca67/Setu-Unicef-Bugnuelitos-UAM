@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/home/learning_progress.dart';
+import 'features/home/activity_screens.dart';
 import 'features/home/streak_screen.dart';
 import 'features/home/student_home_screen.dart';
 import 'features/home/student_resources.dart';
@@ -30,14 +32,16 @@ import 'features/support/support_screens.dart';
 import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
-import 'shared/mesh/mesh_bridge_keys.dart';
+import 'shared/mesh/mesh_recipient_directory.dart';
 import 'shared/mesh/mesh_relay_service.dart';
 import 'shared/mesh/mesh_transport.dart';
 import 'shared/platform/screen_security_controller.dart';
+import 'shared/platform/secure_screen_guard.dart';
 import 'shared/remote/push_notification_service.dart';
 import 'shared/remote/setu_remote_gateway.dart';
 import 'shared/remote/setu_remote_models.dart';
 import 'shared/theme/app_theme.dart';
+import 'shared/widgets/setu_bottom_alert.dart';
 import 'shared/widgets/setu_brand_mark.dart';
 import 'shared/widgets/student_transition.dart';
 
@@ -92,18 +96,27 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
   StreamSubscription<void>? _staffAuthSubscription;
+  Timer? _meshKeyRefresh;
+  String? _meshStaffScope;
+  int _lastMeshAlertCount = 0;
+  late final MeshRecipientDirectory? _meshKeys =
+      widget.meshRelay?.recipientDirectory ??
+      (widget.remoteGateway == null
+          ? null
+          : MeshRecipientDirectory(widget.remoteGateway!));
   late final MeshRelayService _meshRelay =
       widget.meshRelay ??
       MeshRelayService(
         transport: NearbyMeshTransport(),
         remoteGateway: widget.remoteGateway,
+        recipientDirectory: _meshKeys,
       );
   late final SupportFlow _support =
       widget.supportFlow ??
       SupportFlow(
         mesh: _meshRelay,
         meshRecipientPublicKey: widget.meshRecipientPublicKey,
-        resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+        resolveMeshRecipients: _meshKeys?.cachedRecipients,
       );
   late final StaffSession _staff =
       widget.staffSession ??
@@ -184,7 +197,8 @@ class _CureandoAppState extends State<CureandoApp> {
                           proximity:
                               extra is SchoolProximity &&
                                   (extra != SchoolProximity.simulated ||
-                                      widget.allowSchoolSimulation)
+                                      widget.allowSchoolSimulation ||
+                                      demoProximityAlwaysPasses)
                               ? extra
                               : SchoolProximity.unavailable,
                           checkProximity: widget.checkSchoolProximity,
@@ -207,14 +221,15 @@ class _CureandoAppState extends State<CureandoApp> {
               ),
             ],
           ),
-          GoRoute(
-            path: 'prueba-mesh',
-            pageBuilder: (context, state) => studentTransition(
-              context,
-              state,
-              MeshTestScreen(remoteGateway: widget.remoteGateway),
+          if (kDebugMode)
+            GoRoute(
+              path: 'prueba-mesh',
+              pageBuilder: (context, state) => studentTransition(
+                context,
+                state,
+                MeshTestScreen(remoteGateway: widget.remoteGateway),
+              ),
             ),
-          ),
           for (final WelcomeDestination destination
               in WelcomeDestination.values)
             GoRoute(
@@ -222,9 +237,30 @@ class _CureandoAppState extends State<CureandoApp> {
               pageBuilder: (context, state) => studentTransition(
                 context,
                 state,
-                WelcomePreviewScreen(destination: destination),
+                destination == WelcomeDestination.information
+                    ? StudentHomeScreen(
+                        progress: _learning,
+                        piece: _piece,
+                        publicEntry: true,
+                        sectionRequest: state.extra is HomeSectionRequest
+                            ? state.extra! as HomeSectionRequest
+                            : null,
+                      )
+                    : WelcomePreviewScreen(destination: destination),
               ),
             ),
+          GoRoute(
+            path: 'informacion/recurso/:id',
+            pageBuilder: (context, state) => studentTransition(
+              context,
+              state,
+              ResourcePreviewScreen(
+                resourceId: state.pathParameters['id'] ?? '',
+                progress: _learning,
+                publicEntry: true,
+              ),
+            ),
+          ),
           if (widget.showM1Verification)
             GoRoute(
               path: 'verificacion-m1',
@@ -253,6 +289,19 @@ class _CureandoAppState extends State<CureandoApp> {
           ),
         ),
         routes: <RouteBase>[
+          for (final activity in <String, Widget Function()>{
+            'semaforo': () => const TrafficLightScreen(),
+            'dados': () => const EmotionDiceScreen(),
+            'pregunta': () => const FreeQuestionScreen(),
+            'dibujo': () => const FreeDrawingScreen(),
+            'rompecabezas': () => const KindnessPuzzleScreen(),
+            'diaria': () => DailyQuestionScreen(progress: _learning),
+          }.entries)
+            GoRoute(
+              path: 'actividades/${activity.key}',
+              pageBuilder: (context, state) =>
+                  studentTransition(context, state, activity.value()),
+            ),
           GoRoute(
             path: 'racha',
             pageBuilder: (context, state) => studentTransition<bool>(
@@ -287,6 +336,8 @@ class _CureandoAppState extends State<CureandoApp> {
           ),
           GoRoute(
             path: 'apoyo',
+            redirect: (context, state) =>
+                _session.school == null ? '/colegio' : null,
             pageBuilder: (context, state) => studentTransition(
               context,
               state,
@@ -303,8 +354,9 @@ class _CureandoAppState extends State<CureandoApp> {
                     'revisar': () =>
                         AlertReviewScreen(flow: _support, piece: _piece),
                     'recibida': () => AlertReceivedScreen(flow: _support),
-                    'chat': () =>
-                        SupportChatScreen(flow: _support, piece: _piece),
+                    'chat': () => SecureScreenGuard(
+                      child: SupportChatScreen(flow: _support, piece: _piece),
+                    ),
                   }.entries)
                 GoRoute(
                   path: step.key,
@@ -361,7 +413,7 @@ class _CureandoAppState extends State<CureandoApp> {
       GoRoute(
         path: '/personal/mesa',
         builder: (BuildContext context, GoRouterState state) =>
-            DeskInboxScreen(session: _staff),
+            DeskInboxScreen(session: _staff, meshRelay: _meshRelay),
         routes: <RouteBase>[
           GoRoute(
             path: 'declinadas',
@@ -379,9 +431,14 @@ class _CureandoAppState extends State<CureandoApp> {
               GoRoute(
                 path: 'chat',
                 builder: (BuildContext context, GoRouterState state) =>
-                    DeskChatScreen(
-                      session: _staff,
-                      caseId: state.pathParameters['id'] ?? '',
+                    SecureScreenGuard(
+                      child: DeskChatScreen(
+                        session: _staff,
+                        caseId: state.pathParameters['id'] ?? '',
+                        initialTab: DeskCaseTab.fromQuery(
+                          state.uri.queryParameters['apartado'],
+                        ),
+                      ),
                     ),
               ),
             ],
@@ -487,6 +544,8 @@ class _CureandoAppState extends State<CureandoApp> {
   bool _verified = false;
   bool _storageReady = false;
   String? _storageError;
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -495,24 +554,29 @@ class _CureandoAppState extends State<CureandoApp> {
       onResume: () {
         _learning.refreshDay();
         _support.refreshChat();
+        _support.retryDelivery();
+        _syncSchool();
+        _syncPush();
+        unawaited(_bootstrapMesh());
       },
     );
     _session.addListener(_syncSchool);
     _syncSchool();
+    _meshKeyRefresh = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _syncSchool(),
+    );
     _staff.addListener(_syncPush);
+    _meshRelay.addListener(_notifyStaffMeshReceipt);
     _support.addListener(_syncPush);
+    _staff.onBeforeSignOut = PushNotificationService.instance.unregisterStaff;
     _staffAuthSubscription = _staff.backend.authStateChanges().listen((_) {
       if (mounted && _staff.isAuthenticated) {
         _staff.refresh();
       }
     });
     PushNotificationService.instance.setListeners(
-      onForegroundEvent: () {
-        _support.refreshChat();
-        if (_staff.memberships.isNotEmpty) {
-          _staff.refresh();
-        }
-      },
+      onForegroundEvent: _handleForegroundPush,
       onTokenChanged: _syncPush,
     );
     _syncPush();
@@ -529,24 +593,17 @@ class _CureandoAppState extends State<CureandoApp> {
       if (widget.allowDesignCapture) {
         _security.setSecureScreen(false);
       }
-      if (widget.supportFlow == null) {
-        unawaited(_bootstrapMesh());
-      }
+      unawaited(_bootstrapMesh());
     }
   }
 
   Future<void> _bootstrapMesh() async {
     try {
       await _meshRelay.open();
-      final bool hasPending = _meshRelay.items.any(
-        (MeshQueueItem item) => item.state != MeshPacketState.centrallySynced,
-      );
-      if (!hasPending) return;
-      final bool perms = await _meshRelay.transport.hasRequiredPermissions();
-      final bool btOn = await _meshRelay.transport.isBluetoothEnabled();
-      if (perms && btOn && !_meshRelay.isRunning) {
-        await _meshRelay.start();
+      if (widget.remoteGateway != null) {
+        unawaited(_meshRelay.syncPendingAsBridge());
       }
+      await _meshRelay.retryPending();
     } on Object {
       // En pruebas sin canal nativo o sin radio disponible, conserva la cola.
     }
@@ -555,10 +612,49 @@ class _CureandoAppState extends State<CureandoApp> {
   /// Las alertas se registran en el colegio activo del estudiante.
   void _syncSchool() {
     final String? code = _session.school?.publicCode;
-    if (code != null) _support.schoolCode = code;
+    if (code != null) {
+      _support.schoolCode = code;
+      unawaited(_meshKeys?.warmSchool(code).catchError((Object _) {}));
+    }
+  }
+
+  void _handleForegroundPush(String? title, String? body) {
+    _support.refreshChat();
+    if (_staff.memberships.isNotEmpty) {
+      _staff.refresh();
+    }
+    final String rawBody = body?.trim() ?? '';
+    final String rawTitle = title?.trim() ?? '';
+    final String message = rawBody.isNotEmpty ? rawBody : rawTitle;
+    if (message.isEmpty) return;
+    _scaffoldMessengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        buildSetuBottomAlertSnackBar(
+          message: message,
+          kind: SetuAlertKind.info,
+        ),
+      );
   }
 
   void _syncPush() {
+    final StaffMembershipScope? scope = _staff.active;
+    final String? meshScope = scope == null
+        ? null
+        : '${_staff.backend.currentUserId}:${scope.role}:${scope.institutionId}';
+    if (_meshStaffScope != meshScope) {
+      _meshStaffScope = meshScope;
+      _lastMeshAlertCount = 0;
+      _meshRelay.clearSchoolContext();
+      if (scope != null && _meshRelay.recipientDirectory != null) {
+        unawaited(
+          _meshRelay
+              .prepareSchoolReceiver(scope.institutionPublicCode)
+              .then((_) => _bootstrapMesh())
+              .catchError((Object _) {}),
+        );
+      }
+    }
     PushNotificationService.instance.syncStaff(
       hasActiveSession: _staff.memberships.isNotEmpty,
     );
@@ -567,6 +663,19 @@ class _CureandoAppState extends State<CureandoApp> {
       capabilityToken: _support.activeCapabilityToken,
       active: _support.activeCaseId != null,
     );
+  }
+
+  void _notifyStaffMeshReceipt() {
+    final int count = _meshRelay.schoolAlerts.length;
+    if (_staff.active != null && count > _lastMeshAlertCount) {
+      _scaffoldMessengerKey.currentState?.showSnackBar(
+        buildSetuBottomAlertSnackBar(
+          message: 'Nueva alerta recibida. Revisá tu bandeja.',
+          kind: SetuAlertKind.info,
+        ),
+      );
+    }
+    _lastMeshAlertCount = count;
   }
 
   void _refresh() {
@@ -587,7 +696,8 @@ class _CureandoAppState extends State<CureandoApp> {
     } on Object {
       if (mounted) {
         _update(
-          () => _storageError = 'No se pudo abrir el almacenamiento protegido. No se borraron los datos.',
+          () => _storageError =
+              'No se pudo abrir el almacenamiento protegido. No se borraron los datos.',
         );
       }
     }
@@ -595,13 +705,16 @@ class _CureandoAppState extends State<CureandoApp> {
 
   @override
   void dispose() {
+    _meshKeyRefresh?.cancel();
     _staffAuthSubscription?.cancel();
     _learningLifecycle.dispose();
     if (widget.learningProgress == null) _learning.dispose();
     if (widget.supportFlow == null) _support.dispose();
     _session.removeListener(_syncSchool);
     _staff.removeListener(_syncPush);
+    _meshRelay.removeListener(_notifyStaffMeshReceipt);
     _support.removeListener(_syncPush);
+    _staff.onBeforeSignOut = null;
     PushNotificationService.instance.setListeners();
     if (widget.meshRelay == null) _meshRelay.dispose();
     if (widget.studentSession == null) _session.dispose();
@@ -723,30 +836,28 @@ class _CureandoAppState extends State<CureandoApp> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _section(
-                    context,
-                    'Guardado protegido en este teléfono',
-                    <Widget>[
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          _storageError ??
-                              (_storageReady
-                                  ? 'Almacenamiento local cifrado listo.'
-                                  : 'Abriendo almacenamiento protegido…'),
-                        ),
+                  _section(context, 'Guardado protegido en este teléfono', <
+                    Widget
+                  >[
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        _storageError ??
+                            (_storageReady
+                                ? 'Almacenamiento local cifrado listo.'
+                                : 'Abriendo almacenamiento protegido…'),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Los datos guardados permanecerán al cerrar la app. Todavía no se envían a un centro ni se sincronizan con otros dispositivos.',
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Los datos guardados permanecerán al cerrar la app. Todavía no se envían a un centro ni se sincronizan con otros dispositivos.',
+                    ),
+                    if (_storageError != null)
+                      TextButton(
+                        onPressed: _open,
+                        child: const Text('Reintentar apertura'),
                       ),
-                      if (_storageError != null)
-                        TextButton(
-                          onPressed: _open,
-                          child: const Text('Reintentar apertura'),
-                        ),
-                    ],
-                  ),
+                  ]),
                   _section(context, 'Privacidad de pantalla', <Widget>[
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
@@ -828,6 +939,7 @@ class _CureandoAppState extends State<CureandoApp> {
   Widget build(BuildContext context) => MaterialApp.router(
     title: 'SéTú',
     debugShowCheckedModeBanner: false,
+    scaffoldMessengerKey: _scaffoldMessengerKey,
     theme: CureandoTheme.light,
     routerConfig: _router,
     builder: (BuildContext context, Widget? child) =>

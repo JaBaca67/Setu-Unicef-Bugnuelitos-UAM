@@ -5,7 +5,6 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../../shared/widgets/setu_card.dart';
-import '../piece/campaign_characters.dart';
 import 'learning_progress.dart';
 
 const List<String> _weekdays = <String>[
@@ -229,87 +228,57 @@ class _StreakScreenState extends State<StreakScreen> {
           onSelected: (HomeSection section) =>
               context.go('/inicio', extra: HomeSectionRequest(section)),
         ),
-        header: Builder(
-          builder: (BuildContext context) {
-            final bool largeText =
-                MediaQuery.textScalerOf(context).scale(16) > 22;
-            if (largeText) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(8, 4, 12, 8),
-                child: Row(
-                  children: <Widget>[
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      tooltip: 'Volver',
-                      icon: const BackButtonIcon(),
-                      color: Colors.white,
-                    ),
-                    Expanded(
-                      child: Semantics(
-                        header: true,
-                        child: Text(
-                          'Mi racha',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 72, child: CampaignCharacters()),
-                  ],
+        header: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) => Stack(
+            children: <Widget>[
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/home/banner-racha-figures.png',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.centerRight,
+                  excludeFromSemantics: true,
                 ),
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const CampaignSymbol(size: 28),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+              ),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxWidth * 268 / 600,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 8, 14, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      IconButton(
-                        onPressed: () => context.pop(),
-                        tooltip: 'Volver',
-                        icon: const BackButtonIcon(),
-                        color: Colors.white,
-                      ),
-                      Expanded(
-                        child: Semantics(
-                          header: true,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
+                      const CampaignSymbol(size: 28, showUnicef: true),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: <Widget>[
+                          IconButton(
+                            onPressed: () => context.pop(),
+                            tooltip: 'Volver',
+                            icon: const BackButtonIcon(),
+                            color: Colors.white,
+                          ),
+                          Expanded(
+                            child: Semantics(
+                              header: true,
+                              child: Text(
                                 'Mi racha',
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineMedium
                                     ?.copyWith(color: Colors.white),
                               ),
-                              const SizedBox(height: 2),
-                              const Text(
-                                'Cada día que participás suma.',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                          SizedBox(width: constraints.maxWidth * .32),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      const SizedBox(width: 112, child: CampaignCharacters()),
                     ],
                   ),
-                ],
+                ),
               ),
-            );
-          },
+            ],
+          ),
         ),
         body: Padding(
           padding: const EdgeInsets.all(12),
@@ -338,9 +307,7 @@ class _StreakScreenState extends State<StreakScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
                         Text(
-                          progress.streak == 0
-                              ? 'Empezá tu racha'
-                              : 'Seguí aprendiendo',
+                          'Seguí aprendiendo',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 6),

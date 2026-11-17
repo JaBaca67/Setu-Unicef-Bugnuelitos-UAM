@@ -305,11 +305,13 @@ class StaffPrimaryButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.busy = false,
+    this.icon,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool busy;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) => FilledButton(
@@ -324,7 +326,17 @@ class StaffPrimaryButton extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 3),
             ),
           )
-        : Text(label, textAlign: TextAlign.center),
+        : icon == null
+        ? Text(label, textAlign: TextAlign.center)
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(icon, size: 22),
+              const SizedBox(width: 10),
+              Flexible(child: Text(label, textAlign: TextAlign.center)),
+            ],
+          ),
   );
 }
 

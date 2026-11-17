@@ -19,6 +19,7 @@ class LearningProgress extends ChangeNotifier {
 
   static const int questionXp = 10;
   static const int resourceXp = 5;
+  static const int routeQuizXp = 10;
 
   static Future<LocalStorePersistence> _onDevice() =>
       EncryptedLocalStore.onDevice(
@@ -35,6 +36,7 @@ class LearningProgress extends ChangeNotifier {
   Set<DateTime> _activeDays = <DateTime>{};
   Set<DateTime> _questionDays = <DateTime>{};
   Set<String> _resources = <String>{};
+  Set<String> _routes = <String>{};
   bool _loadFailed = false;
   bool _disposed = false;
   Timer? _midnight;
@@ -43,7 +45,9 @@ class LearningProgress extends ChangeNotifier {
   bool get loadFailed => _loadFailed;
   DateTime get today => calendarDay(_now());
   int get xp =>
-      _questionDays.length * questionXp + _resources.length * resourceXp;
+      _questionDays.length * questionXp +
+      _resources.length * resourceXp +
+      _routes.length * routeQuizXp;
 
   /// Cada nivel pide la misma cantidad de XP: una escala fácil de leer.
   static const int xpPerLevel = 50;
@@ -65,7 +69,8 @@ class LearningProgress extends ChangeNotifier {
           : level - 1];
 
   /// Preguntas respondidas y lecturas completadas.
-  int get completedCount => _questionDays.length + _resources.length;
+  int get completedCount =>
+      _questionDays.length + _resources.length + _routes.length;
 
   /// Racha más larga registrada en este teléfono.
   int get bestStreak {
@@ -86,6 +91,7 @@ class LearningProgress extends ChangeNotifier {
   bool get answeredToday => _questionDays.contains(today);
   bool isActive(DateTime day) => _activeDays.contains(calendarDay(day));
   bool completedResource(String id) => _resources.contains(id);
+  bool completedRoute(String id) => _routes.contains(id);
   bool canCompleteResource(String id) =>
       ready && (!completedResource(id) || !isActive(today));
 
@@ -124,6 +130,9 @@ class LearningProgress extends ChangeNotifier {
         _activeDays = active;
         _questionDays = questions;
         _resources = resources;
+        _routes = Set<String>.from(
+          (data['routes'] as List<Object?>?) ?? const <Object?>[],
+        );
       }
       _store = store;
     } on Object {
@@ -149,15 +158,22 @@ class LearningProgress extends ChangeNotifier {
   Future<int> completeQuestion(DateTime questionDay) =>
       questionDay == today ? _record(questionDay) : Future<int>.value(0);
 
-  Future<int> _record(DateTime day, {String? resource}) {
+  /// +10 XP por cada ruta (acoso, ansiedad, depresion, ciberacoso), una sola vez.
+  /// Conserva «acoso» y los registros v1, separado de la pregunta diaria.
+  Future<int> completeRoute(String id) => _record(today, route: id);
+
+  Future<int> _record(DateTime day, {String? resource, String? route}) {
     final Future<int> result = _writes.then((_) async {
       final LocalStorePersistence? store = _store;
       if (store == null) throw StateError('Progreso no disponible');
       final Set<DateTime> active = <DateTime>{..._activeDays};
       final Set<DateTime> questions = <DateTime>{..._questionDays};
       final Set<String> resources = <String>{..._resources};
+      final Set<String> routes = <String>{..._routes};
       final bool firstActivity = active.add(day);
-      final bool firstCompletion = resource == null
+      final bool firstCompletion = route != null
+          ? routes.add(route)
+          : resource == null
           ? questions.add(day)
           : resources.add(resource);
       if (!firstActivity && !firstCompletion) return 0;
@@ -166,12 +182,15 @@ class LearningProgress extends ChangeNotifier {
         'activeDays': active.map(_dateKey).toList(),
         'questionDays': questions.map(_dateKey).toList(),
         'resources': resources.toList(),
+        'routes': routes.toList(),
       });
       _activeDays = active;
       _questionDays = questions;
       _resources = resources;
+      _routes = routes;
       refreshDay();
       if (!firstCompletion) return 0;
+      if (route != null) return routeQuizXp;
       return resource == null ? questionXp : resourceXp;
     });
     _writes = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});

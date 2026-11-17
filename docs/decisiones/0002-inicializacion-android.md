@@ -14,7 +14,7 @@ Crear la base Flutter, verificar análisis y pruebas, compilar un APK debug e in
 - Navegación declarativa con `go_router`, única dependencia externa directa de ejecución. La versión compatible resuelta es 18.1.3 y se registra en `pubspec.lock`.
 - `ChangeNotifier` nativo para controladores posteriores. El botón de M0 usa estado efímero de widget; no crear un controlador sin necesidad.
 - Material 3, tema claro provisional de verde sobrio, tipografía del sistema y contenido adaptable a texto ampliado. No se afirma aplicar todavía el manual de identidad que el usuario añadió.
-- `FLAG_SECURE` en toda la actividad Android desde M0; se sacrifica la captura normal de pantallas en el dispositivo. No habilitar excepciones sin una decisión posterior.
+- ~~`FLAG_SECURE` en toda la actividad Android desde M0.~~ **Superado por [ADR 0024](0024-capturas-permitidas-salvo-chat.md):** solo los chats activan `FLAG_SECURE`.
 - APK debug con firma local de desarrollo. No publicar en tiendas ni crear una firma de producción en esta fase.
 - Sin persistencia de relatos ni datos personales; la pantalla no ofrece recepción de casos reales.
 

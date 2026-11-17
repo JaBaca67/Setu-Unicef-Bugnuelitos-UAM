@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -28,35 +30,8 @@ class CampaignScreen extends StatelessWidget {
   final GestureDragEndCallback? onHorizontalDragEnd;
   final VoidCallback? onHorizontalDragCancel;
 
-  bool get _handlesHorizontalDrag =>
-      onHorizontalDragStart != null ||
-      onHorizontalDragUpdate != null ||
-      onHorizontalDragEnd != null ||
-      onHorizontalDragCancel != null;
-
   @override
   Widget build(BuildContext context) {
-    final Widget scrollView = CustomScrollView(
-      controller: scrollController,
-      slivers: <Widget>[
-        SliverToBoxAdapter(
-          child: SafeArea(bottom: false, child: header),
-        ),
-        SliverToBoxAdapter(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: bodyRadius,
-            ),
-            child: SafeArea(top: false, child: body),
-          ),
-        ),
-        const SliverFillRemaining(
-          hasScrollBody: false,
-          child: ColoredBox(color: Colors.white),
-        ),
-      ],
-    );
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: CureandoTheme.statusBarOverlayLight.copyWith(
         systemNavigationBarColor: bottomNavigationBar == null
@@ -67,29 +42,83 @@ class CampaignScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         // La barra flota: el cuerpo se extiende por detrás y recibe el alto de
-        // la barra como margen inferior de `MediaQuery`, que el `SafeArea` del
-        // cuerpo convierte en espacio libre al final del desplazamiento.
+        // la barra como margen inferior de `MediaQuery`, que el cuerpo
+        // convierte en espacio libre al final del desplazamiento.
         extendBody: bottomNavigationBar != null,
         bottomNavigationBar: bottomNavigationBar,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: SizedBox.expand(
-              child: CampaignBackground(
-                child: _handlesHorizontalDrag
-                    ? GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onHorizontalDragStart: onHorizontalDragStart,
-                        onHorizontalDragUpdate: onHorizontalDragUpdate,
-                        onHorizontalDragEnd: onHorizontalDragEnd,
-                        onHorizontalDragCancel: onHorizontalDragCancel,
-                        child: scrollView,
-                      )
-                    : scrollView,
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragStart: onHorizontalDragStart,
+          onHorizontalDragUpdate: onHorizontalDragUpdate,
+          onHorizontalDragEnd: onHorizontalDragEnd,
+          onHorizontalDragCancel: onHorizontalDragCancel,
+          child: CampaignPage(
+            header: header,
+            body: body,
+            bodyRadius: bodyRadius,
+            scrollController: scrollController,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Una página desplazable de campaña; puede vivir dentro del PageView de Inicio
+/// y recibir el margen de la barra flotante desde el Scaffold compartido.
+class CampaignPage extends StatelessWidget {
+  const CampaignPage({
+    super.key,
+    required this.header,
+    required this.body,
+    this.bodyRadius,
+    this.scrollController,
+  });
+
+  final Widget header;
+  final Widget body;
+  final BorderRadius? bodyRadius;
+  final ScrollController? scrollController;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget scrollView = CustomScrollView(
+      controller: scrollController,
+      slivers: <Widget>[
+        SliverToBoxAdapter(child: SafeArea(bottom: false, child: header)),
+        SliverToBoxAdapter(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: bodyRadius,
+            ),
+            child: Builder(
+              builder: (BuildContext inner) => Padding(
+                // Leer dentro del Scaffold: extendBody incluye aquí el alto
+                // real de la barra flotante, además del margen del sistema.
+                padding: EdgeInsets.only(
+                  bottom:
+                      16 +
+                      math.max(
+                        MediaQuery.paddingOf(inner).bottom,
+                        MediaQuery.viewPaddingOf(inner).bottom,
+                      ),
+                ),
+                child: SafeArea(top: false, bottom: false, child: body),
               ),
             ),
           ),
         ),
+        const SliverFillRemaining(
+          hasScrollBody: false,
+          child: ColoredBox(color: Colors.white),
+        ),
+      ],
+    );
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: SizedBox.expand(child: CampaignBackground(child: scrollView)),
       ),
     );
   }

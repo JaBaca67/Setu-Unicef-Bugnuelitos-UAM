@@ -76,10 +76,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Explorar Información'), findsNothing);
     expect(find.text('Ayuda'), findsOneWidget);
-    expect(find.text('Cómo cuidamos tu información'), findsOneWidget);
+    expect(find.text('Cómo cuidamos tu información'), findsNothing);
     await _capture(tester, 'p01-bienvenida');
     await _tap(tester, 'Personal autorizado');
 
+    expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
+    expect(find.text('Volver a la bienvenida'), findsNothing);
+    expect(find.text('Solicitar acceso'), findsNothing);
+    expect(find.text('Ayuda'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Simplemente #SoloSéTú'), findsOneWidget);
+    await _tap(tester, 'Personal autorizado');
     expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
     await _capture(tester, 'p02-ingreso');
     await _tap(tester, 'Iniciar sesión');
@@ -112,7 +120,8 @@ void main() {
     await _tap(tester, 'Cerrar sesión');
     expect(find.text('Ingresá con tu cuenta institucional.'), findsOneWidget);
 
-    await _tap(tester, 'Volver a la bienvenida');
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('Simplemente #SoloSéTú'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -163,7 +172,7 @@ void main() {
       await _tap(tester, 'Registrar cuenta');
       expect(find.text('¿Quién sos?'), findsOneWidget);
 
-      await _tap(tester, 'Necesito ayuda con mi acceso');
+      await _tap(tester, 'Ayuda');
       expect(
         find.text(
           'Elegí qué pasó con tu acceso para resolverlo sin compartir códigos ni datos por canales grupales:',
@@ -310,7 +319,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await _tap(tester, 'Registrar cuenta');
     expect(find.text('¿Quién sos?'), findsOneWidget);
-    await _tap(tester, 'Necesito ayuda con mi acceso');
+    await _tap(tester, 'Ayuda');
     expect(find.text('Reenviar enlace de confirmación'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -319,7 +328,10 @@ void main() {
     'solicitud extendida pre-login excluye MINED y se aprueba en el panel MINED',
     (WidgetTester tester) async {
       await open(tester);
-      await _tap(tester, 'Solicitar acceso');
+      GoRouter.of(
+        tester.element(find.byType(StaffLoginScreen)),
+      ).push('/personal/solicitar');
+      await tester.pumpAndSettle();
       expect(find.text('Solicitar acceso de personal'), findsOneWidget);
       expect(find.textContaining('Supervisor MINED'), findsNothing);
 

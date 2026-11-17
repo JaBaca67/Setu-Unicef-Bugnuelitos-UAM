@@ -29,10 +29,14 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand/
+    - assets/brand/png/
     - assets/brand/characters/
     - assets/brand/elements/
     - assets/brand/nav/
     - assets/home/
+    - assets/home/info/
+    - assets/home/info/stickers/
+    - assets/home/activities/
     - assets/schools/
     - assets/welcome/
   fonts:

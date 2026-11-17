@@ -1,6 +1,6 @@
 # Espacio Información: origen, alcance e integración
 
-**Revisión:** 2026-11-09. **Decisión de producto confirmada**, reforzada expresamente por el usuario; implementación pendiente. [README](../README.md) · [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md).
+**Revisión:** 2026-11-16. **Decisión de producto confirmada**; demo E10/E11 implementada con aprobación del usuario, pendiente de publicación editorial. [README](../README.md) · [ADR 0009](decisiones/0009-espacio-informativo-confirmado.md).
 
 ## 1. La idea en las sesiones de Meet
 
@@ -55,12 +55,12 @@ No se añaden test de autodiagnóstico, recomendaciones basadas en el chat, clas
 
 Si se elige pedir apoyo, se verifica el contexto escolar cuando sea necesario antes del formulario; consultar información nunca obliga a dar el código. La forma exacta de tarjetas, filtros y búsqueda se prototipa y valida con primaria/secundaria; no se da por aprobado un buscador o recomendador que guarde consultas sensibles.
 
-## 5. Integración técnica propuesta
+## 5. Integración técnica y catálogo inicial
 
 | Capa | Propuesta para revisión de implementación |
 | --- | --- |
-| App Flutter/Dart | Widgets nativos para catálogo y lectura; catálogo JSON versionado y recursos empaquetados como opción inicial de demo. No hay módulo implementado por documentarlo. |
-| Video | `video_player`, mantenido por Flutter, como candidato para reproducción en la app de archivos autorizados locales o por red. Versión, permisos, formatos y accesibilidad deben verificarse antes de instalar. No autoplay o reproducción de fondo por defecto. |
+| App Flutter/Dart | Demo Flutter implementada: catálogo tipado local en `info_catalog.dart`, Biblioteca con búsqueda/filtros, Rutas y lectores. Textos e ilustraciones empaquetados; sin backend editorial. |
+| Video | Los videos del catálogo se abren fuera de SéTú mediante el canal nativo Android `dev.cureando.app/links`, con HTTPS y hosts permitidos. Resumen adaptado y puntos clave disponibles sin internet; no se promete transcripción completa. No se empaquetan videos, se simula reproducción ni se instala `video_player`. |
 | Actualización editorial | Recursos publicados y metadatos separados del backend de casos; Supabase como opción futura para catálogo/archivos aprobados. Un catálogo empaquetado no requiere crear un CMS o cuarto panel ahora. |
 | Sin internet | Mostrar solo lo realmente empaquetado/descargado y vigente; artículo/transcripción como alternativa prevista. Indicar un video no disponible, sin prometer streaming offline ni transportarlo por mesh. Política de descarga/tamaño/caché por aprobar. |
 | Privacidad | La consulta pública no lleva ID de caso, relato, institución o nivel clínico. Evitar historial sensible de lectura y recomendaciones inferidas. Los proveedores externos necesitan revisión antes de embebido/enlace; no instalar los rastreadores del referente. |
@@ -94,4 +94,19 @@ Es un subsistema lógico complementario, independiente del caso y del transporte
 
 Debe poder abrirse E10 sin reporte o QR; navegar a texto/video accesible; distinguir descargado de no disponible; pedir ayuda voluntariamente; volver desde la espera conservando operación/estado; y comprobar que lectura/consultas no exponen ni modifican casos. Una maqueta verifica navegación; reproducir/cargar archivos y preservar estado requiere implementación aprobada y pruebas.
 
-La **existencia y finalidad** del apartado están confirmadas. Se decide después el primer catálogo, revisión profesional, derechos, diseño por edad, reproductor/versiones, distribución y política offline. El corte de demo debe representar esta parte de la solución con material de ejemplo identificado y declarar cualquier tramo simulado; no se presenta como catálogo clínico operativo o módulo ya programado.
+La **existencia y finalidad** del apartado y la integración del catálogo inicial están confirmadas. Se integran 21 recursos verificados de UNICEF/MINED en seis temas y cuatro rutas. La revisión profesional, derechos, accesibilidad, adecuación por edad y distribución editorial futura siguen pendientes; no se presenta como catálogo clínico operativo. Detalle y lista completa de fuentes en [ADR 0026](decisiones/0026-catalogo-inicial-con-fuentes-unicef-mined.md).
+
+## 8. Catálogo inicial E10/E11 aprobado (16 nov 2026)
+
+- `/informacion` abre Biblioteca y Rutas sin código ni sesión; `/informacion/recurso/:id` permite leer recursos. Desde Inicio se usan `/inicio/recurso/:id`. La navegación conserva la selección del catálogo al volver del lector.
+- Fuente editorial de desarrollo: `.content/catalogo_informacion.json`, verificada el 16 de noviembre de 2026. Se copian a constantes Dart **solo 21 recursos con `verified == true`**, excluyendo los cuatro restantes. El JSON no se lee en ejecución ni se empaqueta.
+- Temas: Acoso escolar, Ansiedad, Depresión, Ciberacoso, Emociones y Apoyo. Cuatro rutas activas (los cuatro primeros temas), cada una con dos recursos y una pregunta de cierre A/B/C con feedback por opción. Todas las referencias actuales son verificadas.
+- Inicio abre «Qué es el acoso escolar y cómo se ve» y «Cómo cuidar tu salud mental», conservando sus ilustraciones. Lector con título, organización, resumen, tarjetas de puntos clave, fuente (organización y URL) y botón «Ver fuente original» o «Ver video».
+- **Resúmenes adaptados por el equipo SéTú a partir de la fuente; no reemplazan la fuente original.** Modal: «Contenido de UNICEF/MINED; adaptado para estudiantes de Nicaragua»; «Verificado el 16 de noviembre de 2026 · Pendiente revisión profesional (Psicología)»; «Equipo SéTú (Bugñuelitos, UAM)». La verificación editorial no certifica revisión profesional ni aval de UNICEF/MINED.
+- En ansiedad/depresión se muestra antes de los puntos clave: «Si te sentís en peligro o pensás en hacerte daño, hablá ya con una persona adulta de confianza o entrá a Ayuda», con botón a esa pestaña. Se conservan los contactos existentes.
+- Los videos se abren **fuera de la app** y requieren internet; el resumen adaptado se puede leer sin conexión. No hay reproductor simulado, descarga de video ni dependencia nueva. Las notas del JSON advierten que los tres videos de Facebook no pudieron reproducirse: sus puntos se basan en descripciones visibles; revisar los audiovisuales completos antes de publicación operativa.
+- La guía socioemocional del MINED **solo se enlaza**; no se reproduce ni distribuye el PDF. Se muestra el resumen adaptado aprobado, con fuente, sin copiar páginas del documento.
+- +5 XP por primera lectura confirmada y +10 XP una sola vez por cierre correcto de cada ruta, independiente de la Pregunta del día. Persistencia cifrada v1 compatible con registros anteriores; `acoso` conserva su identificador y los XP previos no se pierden. Repetir lecturas en otro día solo registra actividad. Abrir enlaces, pedir apoyo o enviar casos no concede XP.
+- Revisión profesional (Psicología), derechos, accesibilidad, adecuación por edad y pruebas en dispositivo pendientes. No se cambia la operación de casos ni se habilitan casos reales.
+
+La [lista completa de las 21 fuentes y el criterio editorial](decisiones/0026-catalogo-inicial-con-fuentes-unicef-mined.md) se registra en ADR 0026: UNICEF (guías de distintos países y videos UNICEF Nicaragua/Costa Rica) y documentos MINED Nicaragua, incluida la guía socioemocional con World Vision Nicaragua.

@@ -36,7 +36,7 @@ class _FakePlatform extends ChangeNotifier implements SupportBackend {
   }
 
   void _online() {
-    if (offline) throw const GatewayException('remote_error', 'offline');
+    if (offline) throw const GatewayException('network_unavailable', 'offline');
   }
 
   @override

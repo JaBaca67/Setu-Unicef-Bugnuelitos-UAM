@@ -220,6 +220,20 @@ abstract interface class StaffBackend {
     required CaseAssessment assessment,
   });
 
+  /// Borrador privado de comentarios para la ficha; solo la persona asignada.
+  Future<CaseSheetDraftView?> sheetDraft(String caseId);
+
+  Future<CaseSheetDraftView> saveSheetDraft({
+    required String caseId,
+    required String guidanceDraft,
+  });
+
+  /// Finaliza la conversación sin cerrar el expediente institucional.
+  Future<void> endConversation({
+    required String operationId,
+    required String caseId,
+  });
+
   // Dirección del centro: avisos mínimos, fichas autorizadas y actuaciones.
   /// Fichas que el servidor autoriza para la sesión; nunca traen relato.
   Future<List<CaseActionSheetView>> sheets({String? caseId});
@@ -484,6 +498,9 @@ class StaffSession extends ChangeNotifier {
 
   final StaffBackend backend;
   final Future<LocalStorePersistence> Function() _openStore;
+
+  /// Callback opcional ejecutado antes de cerrar la sesión en el servidor.
+  Future<void> Function()? onBeforeSignOut;
 
   LocalStorePersistence? _store;
   Future<void>? _restoring;
@@ -752,6 +769,11 @@ class StaffSession extends ChangeNotifier {
     _active = null;
     _profile = null;
     _savedActiveMembershipId = null;
+    try {
+      await onBeforeSignOut?.call();
+    } on Object {
+      // Nunca bloquear el cierre de sesión si falla la limpieza de push.
+    }
     try {
       await backend.signOut();
     } on Object {

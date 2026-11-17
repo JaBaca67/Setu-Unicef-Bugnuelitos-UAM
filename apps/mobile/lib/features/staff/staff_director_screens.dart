@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import '../../shared/mesh/mesh_relay_service.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
 import 'staff_backend.dart';
 import 'staff_inbox_screens.dart';
 import 'staff_widgets.dart';
@@ -71,6 +74,7 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
       const <StaffActivationInviteView>[];
   bool _bluetoothRequired = false;
   bool _meshActive = false;
+  int _lastSyncedCount = 0;
 
   @override
   StaffSession get session => widget.session;
@@ -78,8 +82,9 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
   @override
   void initState() {
     super.initState();
+    _lastSyncedCount = widget.meshRelay?.syncedCount ?? 0;
     widget.meshRelay?.addListener(_onMeshChanged);
-    _ensureDirectorMesh();
+    unawaited(_ensureDirectorMesh());
   }
 
   @override
@@ -89,6 +94,11 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
   }
 
   void _onMeshChanged() {
+    final MeshRelayService? relay = widget.meshRelay;
+    if (relay != null && relay.syncedCount > _lastSyncedCount) {
+      _lastSyncedCount = relay.syncedCount;
+      unawaited(load());
+    }
     if (mounted) setState(() {});
   }
 
@@ -99,25 +109,26 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
       return;
     }
     try {
-      bool btOn = await relay.transport.isBluetoothEnabled();
-      if (!btOn) {
-        btOn = await relay.transport.requestEnableBluetooth();
+      if (relay.recipientDirectory != null) {
+        await relay.prepareSchoolReceiver(schoolCode);
       }
+      final bool started = await relay.ensureReadyAndStart(
+        endpointName: 'setu-node',
+      );
       if (!mounted) return;
-      if (!btOn) {
+      if (!started) {
         setState(() {
           _bluetoothRequired = true;
           _meshActive = false;
         });
         return;
       }
-      final schoolKey = await MeshSchoolKeys.demoSchoolKeyPair(schoolCode);
-      await relay.setDirectorSchoolContext(
-        schoolCode: schoolCode,
-        schoolKeyPair: schoolKey,
-      );
-      if (!relay.isRunning) {
-        await relay.start(endpointName: 'dir-$schoolCode');
+      if (relay.recipientDirectory == null) {
+        final schoolKey = await MeshSchoolKeys.demoSchoolKeyPair(schoolCode);
+        await relay.setSchoolContext(
+          schoolCode: schoolCode,
+          schoolKeyPair: schoolKey,
+        );
       }
       if (!mounted) return;
       setState(() {
@@ -128,8 +139,16 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
       // Entorno sin canal nativo Android (ej. pruebas de widgets en escritorio).
     } on Object {
       if (!mounted) return;
-      setState(() => _bluetoothRequired = true);
+      setState(() {
+        _bluetoothRequired = true;
+        _meshActive = false;
+      });
     }
+  }
+
+  @override
+  Future<void> beforeLoad() async {
+    await widget.meshRelay?.syncPendingAsBridge();
   }
 
   @override
@@ -152,22 +171,39 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
 
   Future<void> _open(StaffCaseSummary item) async {
     if (item.id.startsWith('mesh:')) {
-      await showDialog<void>(
-        context: context,
-        builder: (BuildContext dialogContext) => AlertDialog(
-          title: Text('${item.referenceCode} · Recibido por mesh'),
-          content: Text(
-            '${staffCaseKind(item.situationType, item.studentRole, origin: item.origin)}\n\n'
-            'Esta alerta mínima llegó por Bluetooth/mesh sin internet. '
-            'Cuando un teléfono puente tenga conexión, se sincronizará con la plataforma central.',
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Entendido'),
-            ),
-          ],
+      await showLocalMeshAlertDialog(
+        context,
+        referenceCode: item.referenceCode,
+        kindLabel: staffCaseKind(
+          item.situationType,
+          item.studentRole,
+          origin: item.origin,
         ),
+        detailMessage:
+            'Esta alerta mínima llegó por Bluetooth/mesh sin internet. '
+            'Cuando un teléfono puente tenga conexión, se sincronizará con la '
+            'plataforma central.',
+        onSyncNow: widget.meshRelay?.remoteGateway == null
+            ? null
+            : () async {
+                final int synced =
+                    await widget.meshRelay?.syncPendingAsBridge() ?? 0;
+                if (!mounted) return;
+                if (synced > 0) {
+                  showSetuBottomAlert(
+                    context,
+                    'Alerta sincronizada con la plataforma.',
+                    kind: SetuAlertKind.success,
+                  );
+                  await load();
+                } else {
+                  showSetuBottomAlert(
+                    context,
+                    'Todavía no pudimos sincronizar. Revisá tu conexión e intentá de nuevo.',
+                    kind: SetuAlertKind.warning,
+                  );
+                }
+              },
       );
       return;
     }
@@ -177,42 +213,20 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
 
   List<StaffCaseSummary> _visibleCases() {
     final List<StaffCaseSummary> remote = cases ?? const <StaffCaseSummary>[];
-    final MeshRelayService? relay = widget.meshRelay;
-    final String? schoolCode = session.active?.institutionPublicCode
-        ?.trim()
-        .toUpperCase();
-    if (relay == null || schoolCode == null || schoolCode.isEmpty) {
-      return remote;
-    }
-    final List<MeshMinimalAlertPayload> localAlerts = relay.directorAlerts
-        .where(
-          (MeshMinimalAlertPayload alert) =>
-              !alert.involvesStaff &&
-              alert.publicSchoolCode.trim().toUpperCase() == schoolCode,
-        )
-        .toList(growable: false);
+    final List<MeshMinimalAlertPayload> localAlerts =
+        filterUnsyncedSchoolMeshAlerts(
+          relay: widget.meshRelay,
+          schoolCode: session.active?.institutionPublicCode,
+          remoteCases: remote,
+        );
     if (localAlerts.isEmpty) return remote;
     final List<StaffCaseSummary> merged = <StaffCaseSummary>[...remote];
     for (final MeshMinimalAlertPayload alert in localAlerts) {
-      final bool alreadySynced = remote.any(
-        (StaffCaseSummary existing) =>
-            existing.origin == SetuAlertOrigin.mesh &&
-            existing.situationType.wireValue == alert.situationType &&
-            existing.studentRole?.wireValue == alert.studentRole &&
-            existing.declaredAt.difference(alert.declaredAt).abs() <
-                const Duration(seconds: 2),
-      );
-      if (alreadySynced) continue;
-      final String suffix = alert.clientOperationId.length >= 6
-          ? alert.clientOperationId
-                .substring(alert.clientOperationId.length - 6)
-                .toUpperCase()
-          : alert.clientOperationId.toUpperCase();
       merged.insert(
         0,
         StaffCaseSummary(
           id: 'mesh:${alert.clientOperationId}',
-          referenceCode: 'MESH-$suffix',
+          referenceCode: meshReferenceCode(alert.clientOperationId),
           institutionId: session.active?.institutionId ?? '',
           situationType: SetuSituationType.fromWire(alert.situationType),
           studentRole: SetuStudentCaseRole.fromWire(alert.studentRole),
@@ -435,52 +449,15 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
           ],
         ),
         Text(session.active?.place ?? '', style: _text),
-        const SizedBox(height: 6),
-        const Text(
-          'Ves el aviso mínimo y las fichas autorizadas para tu centro. El '
-          'relato y la conversación del estudiante no llegan a la dirección.',
-          style: TextStyle(fontSize: 15, height: 1.4),
-        ),
         const SizedBox(height: 12),
-        if (_bluetoothRequired) ...<Widget>[
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF4E5),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFF5B800), width: 1.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const Text(
-                  'Bluetooth requerido',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Activá el Bluetooth de este teléfono para recibir alertas mínimas del centro sin internet.',
-                  style: TextStyle(fontSize: 14, height: 1.35),
-                ),
-                const SizedBox(height: 10),
-                FilledButton.icon(
-                  onPressed: _ensureDirectorMesh,
-                  icon: const Icon(Icons.bluetooth_rounded),
-                  label: const Text('Activar Bluetooth'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-        ] else if (_meshActive) ...<Widget>[
-          const Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: StaffTag(
-              'Red mesh activa · escuchando alertas sin internet',
-              highlight: true,
-            ),
-          ),
-        ],
+        StaffMeshStatusBanner(
+          bluetoothRequired: _bluetoothRequired,
+          meshActive: _meshActive,
+          onEnableBluetooth: _ensureDirectorMesh,
+          description:
+              'Activá el Bluetooth de este teléfono para recibir alertas '
+              'mínimas del centro sin internet.',
+        ),
         if (_coverage != null) ...<Widget>[
           _coverageBanner(_coverage!),
           const SizedBox(height: 10),

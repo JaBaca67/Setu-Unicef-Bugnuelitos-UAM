@@ -106,7 +106,7 @@ class SimulatedSupportBackend extends ChangeNotifier implements SupportBackend {
   bool offline = false;
 
   void _online() {
-    if (offline) throw const GatewayException('remote_error', 'offline');
+    if (offline) throw const GatewayException('network_unavailable', 'offline');
   }
 
   _SimulatedCase _case(String caseId) => _cases.putIfAbsent(caseId, () {

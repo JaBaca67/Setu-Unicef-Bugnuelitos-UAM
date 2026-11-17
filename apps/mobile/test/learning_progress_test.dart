@@ -1,10 +1,67 @@
 import 'dart:io';
 
+import 'package:cureando_mobile/features/home/info_catalog.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/shared/local/encrypted_local_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'cada una de las cuatro rutas concede +10 XP una vez y persiste',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'setu-routes-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final File file = File('${directory.path}/progress.enc');
+      final _MemoryVault vault = _MemoryVault();
+      final EncryptedLocalStore store = EncryptedLocalStore(
+        file: file,
+        vault: vault,
+      );
+      // Registro v1 existente: ruta «acoso» y recursos retirados siguen contando.
+      await store.save(<String, Object?>{
+        'version': 1,
+        'activeDays': <String>['2026-11-12'],
+        'questionDays': <String>[],
+        'resources': <String>['broma', 'testigo'],
+        'routes': <String>['acoso'],
+      });
+      LearningProgress progress = LearningProgress(
+        openStore: () async => store,
+        now: () => DateTime(2026, 11, 16),
+      );
+      await progress.open();
+      expect(progress.xp, 20);
+      for (final InfoRoute route in infoRoutes) {
+        expect(
+          await Future.wait(<Future<int>>[
+            progress.completeRoute(route.id),
+            progress.completeRoute(route.id),
+          ]),
+          route.id == 'acoso' ? <int>[0, 0] : <int>[10, 0],
+        );
+      }
+      expect(progress.xp, 50);
+      progress.dispose();
+      progress = LearningProgress(
+        openStore: () async => EncryptedLocalStore(file: file, vault: vault),
+        now: () => DateTime(2026, 11, 17),
+      );
+      addTearDown(progress.dispose);
+      await progress.open();
+      expect(progress.xp, 50);
+      expect(progress.completedResource('broma'), isTrue);
+      for (final InfoRoute route in infoRoutes) {
+        expect(progress.completedRoute(route.id), isTrue);
+        expect(await progress.completeRoute(route.id), 0);
+      }
+      expect(progress.xp, 50);
+      expect(progress.answeredToday, isFalse);
+      expect(await file.readAsString(), isNot(contains('ansiedad')));
+    },
+  );
+
   test('fecha civil, escrituras repetidas y reapertura cifrada', () async {
     final Directory directory = await Directory.systemTemp.createTemp(
       'setu-learning-',
@@ -78,6 +135,80 @@ void main() {
     expect(await progress.completeQuestion(progress.today), 10);
     expect(progress.streak, 1);
   });
+
+  test(
+    'almacén v1 antiguo conserva XP y el cierre es único incluso al reabrir',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'setu-route-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final File file = File('${directory.path}/progress.enc');
+      final _MemoryVault vault = _MemoryVault();
+      final EncryptedLocalStore storage = EncryptedLocalStore(
+        file: file,
+        vault: vault,
+      );
+      await storage.save(<String, Object?>{
+        'version': 1,
+        'activeDays': <String>['2026-11-12'],
+        'questionDays': <String>['2026-11-12'],
+        'resources': <String>['emociones', 'convivencia'],
+      });
+      DateTime now = DateTime(2026, 11, 12);
+      LearningProgress progress = LearningProgress(
+        openStore: () async => storage,
+        now: () => now,
+      );
+      await progress.open();
+      expect(progress.ready, isTrue);
+      expect(progress.xp, 20);
+      expect(progress.completedResource('emociones'), isTrue);
+      expect(
+        await Future.wait(<Future<int>>[
+          progress.completeRoute('acoso'),
+          progress.completeRoute('acoso'),
+        ]),
+        <int>[10, 0],
+      );
+      expect(progress.xp, 30);
+      expect(progress.answeredToday, isTrue);
+      expect(await file.readAsString(), isNot(contains('acoso')));
+      progress.dispose();
+      now = DateTime(2026, 11, 13);
+      progress = LearningProgress(
+        openStore: () async => EncryptedLocalStore(file: file, vault: vault),
+        now: () => now,
+      );
+      addTearDown(progress.dispose);
+      await progress.open();
+      expect(progress.completedRoute('acoso'), isTrue);
+      expect(progress.answeredToday, isFalse);
+      expect(await progress.completeRoute('acoso'), 0);
+      expect(await progress.completeQuestion(progress.today), 10);
+      expect(await progress.completeResource('emociones'), 0);
+      expect(progress.xp, 40);
+    },
+  );
+
+  test(
+    'cierre de ruta con error de escritura permite reintentar sin duplicar XP',
+    () async {
+      final _RetryStore storage = _RetryStore();
+      final LearningProgress progress = LearningProgress(
+        openStore: () async => storage,
+        now: () => DateTime(2026, 11, 12),
+      );
+      addTearDown(progress.dispose);
+      await progress.open();
+      await expectLater(progress.completeRoute('acoso'), throwsStateError);
+      expect(progress.completedRoute('acoso'), isFalse);
+      expect(progress.xp, 0);
+      expect(await progress.completeRoute('acoso'), 10);
+      expect(await progress.completeRoute('acoso'), 0);
+      expect(progress.answeredToday, isFalse);
+    },
+  );
 }
 
 class _MemoryVault implements KeyVault {

@@ -66,34 +66,30 @@ void main() {
         (StaffCaseSummary item) => item.id == id,
       );
 
-  testWidgets('Mesa conversa antes de valorar y la nota interna queda aparte', (
+  testWidgets('Alerta muestra pieza con relato y el chat alterna con Ficha', (
     WidgetTester tester,
   ) async {
     final DemoStaffBackend backend = await openDesk(tester);
     await _tap(tester, 'DEMO-014');
     expect(find.text('Alerta DEMO-014'), findsOneWidget);
-    expect(find.text('Relato compartido'), findsOneWidget);
-    expect(find.text('“Se burlan de mí durante el recreo.”'), findsOneWidget);
-    expect(find.text('Acoso verbal · Me pasó a mí'), findsOneWidget);
     expect(find.text('Sin valorar'), findsOneWidget);
+    expect(find.text('Comentario de la alerta'), findsOneWidget);
+    expect(find.text('Chispa Cósmica'), findsOneWidget);
+    expect(find.text('Se burlan de mí durante el recreo.'), findsOneWidget);
+    expect(find.text('Datos de la alerta'), findsOneWidget);
+    expect(find.text('Acoso verbal'), findsOneWidget);
+    expect(find.text('Me pasó a mí'), findsOneWidget);
     expect(
       find.bySemanticsLabel(RegExp('Pieza del estudiante')),
       findsOneWidget,
     );
-    expect(
-      tester
-          .widget<OutlinedButton>(
-            find.widgetWithText(OutlinedButton, 'Guardar valoración'),
-          )
-          .onPressed,
-      isNull,
-    );
     await _capture(tester, 'p07-caso');
 
-    // El chat se habilita sin haber valorado.
-    await _tap(tester, 'Habilitar chat');
-    expect(find.text('Conversación'), findsOneWidget);
-    expect(find.textContaining('Todavía no hay mensajes'), findsOneWidget);
+    // El botón principal habilita el chat sin exigir valoración previa.
+    await _tap(tester, 'Atender por chat');
+    expect(find.text('Chispa Cósmica'), findsOneWidget);
+    expect(find.text('DEMO-014 · Sin valorar'), findsOneWidget);
+    expect(find.text('Ficha'), findsOneWidget);
     expect((await summary(backend, 'demo-case-014')).humanLevel, isNull);
 
     backend.offline = true;
@@ -111,24 +107,33 @@ void main() {
     backend.offline = false;
     await tester.tap(find.byTooltip('Enviar mensaje'));
     await tester.pumpAndSettle();
+    expect(find.text('Hoy'), findsOneWidget);
     expect(find.text('Hola, te leo.'), findsOneWidget);
     expect(
       tester.widget<TextField>(find.byType(TextField)).controller?.text,
       isEmpty,
     );
 
-    await _tap(tester, 'Nota interna');
-    expect(find.text('Notas internas'), findsOneWidget);
+    // Conmuta a «Ficha» dentro del chat sin perder el borrador de chat.
+    await tester.enterText(find.byType(TextField), 'Borrador chat vivo');
+    await _tap(tester, 'Ficha');
+    expect(find.text('Chat'), findsOneWidget);
+    expect(find.text('Notas privadas de escucha'), findsOneWidget);
     expect(find.text('Todavía no hay notas en este caso.'), findsOneWidget);
+
     await _tap(tester, 'Guardar nota');
     expect(find.text('Escribí la nota antes de guardarla.'), findsOneWidget);
-    await _type(tester, 'Nota nueva', 'Nota ficticia privada');
+    await _type(tester, 'Nueva nota privada', 'Nota ficticia privada');
     await _tap(tester, 'Guardar nota');
     expect(find.text('Nota ficticia privada'), findsOneWidget);
     await _capture(tester, 'p09-nota');
-    await _tap(tester, 'Cerrar');
 
-    // La nota no aparece en la conversación ni viaja como mensaje.
+    // Regresar a «Chat» conserva el texto escrito en el compositor.
+    await _tap(tester, 'Chat');
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      'Borrador chat vivo',
+    );
     expect(find.text('Nota ficticia privada'), findsNothing);
     final List<CaseChatMessageView> messages = await backend.messages(
       'demo-case-014',
@@ -143,28 +148,51 @@ void main() {
 
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
-    expect(find.text('Abrir conversación'), findsOneWidget);
+    expect(find.text('Atender por chat'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('la valoración exige revisar la ficha mínima antes de enviarla', (
+  testWidgets('Ficha guarda borrador, exige revisión, envía reporte y cierra chat', (
     WidgetTester tester,
   ) async {
     final DemoStaffBackend backend = await openDesk(tester);
     await _tap(tester, 'DEMO-014');
+    // Acceso secundario a Ficha sin habilitar chat todavía.
+    await _tap(tester, 'Abrir ficha sin chat');
+    expect(find.text('Chat'), findsOneWidget);
     await _tap(tester, '3 · Riesgo grave');
     await _tap(tester, 'Registrar derivación urgente');
-    await _tap(tester, 'Enviar ficha mínima');
-    await _tap(tester, 'Guardar valoración');
-    expect(find.text('Escribí la orientación para el centro.'), findsOneWidget);
     await _type(
       tester,
-      'Orientación para el centro',
+      'Comentarios para la ficha',
+      'Borrador inicial del centro.',
+    );
+    await _tap(tester, 'Guardar borrador');
+    expect(find.text('Borrador guardado.'), findsOneWidget);
+    expect(
+      (await backend.sheetDraft('demo-case-014'))?.guidanceDraft,
+      'Borrador inicial del centro.',
+    );
+
+    // Al salir y volver a entrar a la ficha, el borrador guardado se restaura.
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    await _tap(tester, 'Abrir ficha sin chat');
+    expect(
+      find.text('Borrador inicial del centro.'),
+      findsOneWidget,
+    );
+
+    await _tap(tester, '3 · Riesgo grave');
+    await _tap(tester, 'Registrar derivación urgente');
+    await _type(
+      tester,
+      'Comentarios para la ficha',
       'Orientación ficticia para el centro.',
     );
-    await _tap(tester, 'Guardar valoración');
+    await _tap(tester, 'Enviar reporte y cerrar chat');
 
-    expect(find.text('Revisá antes de guardar'), findsOneWidget);
+    expect(find.text('Revisar ficha antes de enviar'), findsOneWidget);
     expect(find.text('Nivel 3 · Riesgo grave'), findsOneWidget);
     expect(find.text('Se registra ahora.'), findsOneWidget);
     expect(
@@ -173,7 +201,7 @@ void main() {
     );
     expect(
       find.textContaining('no incluye el relato, los mensajes ni las notas'),
-      findsWidgets,
+      findsOneWidget,
     );
     // El relato nunca forma parte de la ficha que se revisa.
     expect(
@@ -187,64 +215,89 @@ void main() {
     await _tap(tester, 'Volver a editar');
     expect((await summary(backend, 'demo-case-014')).humanLevel, isNull);
 
-    await _tap(tester, 'Guardar valoración');
-    await _tap(tester, 'Confirmar y guardar');
-    expect(find.text('Valoración guardada.'), findsOneWidget);
-    expect(find.text('Derivación urgente registrada.'), findsOneWidget);
+    await _tap(tester, 'Enviar reporte y cerrar chat');
+    final Finder confirmReport = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.widgetWithText(
+        FilledButton,
+        'Enviar reporte y cerrar chat',
+      ),
+    );
+    await tester.ensureVisible(confirmReport);
+    await tester.pumpAndSettle();
+    await tester.tap(confirmReport);
+    await tester.pumpAndSettle();
+    expect(find.text('Reporte enviado y chat cerrado.'), findsOneWidget);
     final StaffCaseSummary saved = await summary(backend, 'demo-case-014');
     expect(saved.humanLevel, 3);
     expect(saved.urgentReferralTriggered, isTrue);
     expect(saved.status, SetuCaseStatus.sheetSent);
+    expect(saved.isConversationEnded, isTrue);
+
+    // Al volver al chat queda en solo lectura.
+    await _tap(tester, 'Chat');
+    expect(find.text('Chat finalizado. Solo lectura.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el nivel 1 permite cerrar con motivo y retoma chats activos', (
+  testWidgets('el nivel 1 cierra caso y chat, y retoma chats activos', (
     WidgetTester tester,
   ) async {
     final DemoStaffBackend backend = await openDesk(tester);
     await _tap(tester, 'DEMO-014');
+    await _tap(tester, 'Abrir ficha sin chat');
     await _tap(tester, '1 · Acompañamiento');
-    expect(find.text('Enviar ficha mínima'), findsNothing);
-    await _tap(tester, 'Cerrar el caso en Mesa de Escucha');
-    await _tap(tester, 'Guardar valoración');
+    expect(find.text('Enviar reporte y cerrar chat'), findsNothing);
+    await _tap(tester, 'Cerrar caso y chat');
     expect(find.text('Escribí el motivo del cierre.'), findsOneWidget);
     await _type(tester, 'Motivo del cierre', 'Acompañamiento concluido.');
-    await _tap(tester, 'Guardar valoración');
-    await _tap(tester, 'Confirmar y guardar');
+    await _tap(tester, 'Cerrar caso y chat');
+    expect(find.text('Confirmar cierre'), findsWidgets);
+    final Finder confirmClose = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.widgetWithText(FilledButton, 'Confirmar cierre'),
+    );
+    await tester.ensureVisible(confirmClose);
+    await tester.pumpAndSettle();
+    await tester.tap(confirmClose);
+    await tester.pumpAndSettle();
+    expect(find.text('Caso cerrado y chat finalizado.'), findsOneWidget);
+    final StaffCaseSummary closedCase = await summary(backend, 'demo-case-014');
+    expect(closedCase.status, SetuCaseStatus.closed);
+    expect(closedCase.isConversationEnded, isTrue);
+
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
     expect(
       find.text('Este caso está cerrado. Motivo: Acompañamiento concluido.'),
       findsOneWidget,
     );
-    expect(find.text('Habilitar chat'), findsNothing);
-    expect(
-      (await summary(backend, 'demo-case-014')).status,
-      SetuCaseStatus.closed,
-    );
-
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
-    expect(find.text('DEMO-014'), findsNothing);
+
     await _tap(tester, 'En conversación');
     await _tap(tester, 'DEMO-009');
     expect(find.textContaining('no escribió detalles'), findsOneWidget);
-    await _tap(tester, 'Abrir conversación');
+    await _tap(tester, 'Atender por chat');
+    expect(find.text('12 nov'), findsOneWidget);
     expect(find.text('Me cuesta hablar de esto.'), findsOneWidget);
     expect(find.text('Podés contarme a tu ritmo.'), findsOneWidget);
     await _capture(tester, 'p08-conversacion');
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('caso y conversación caben en pantalla chica con texto grande', (
+  testWidgets('caso, chat y ficha caben en pantalla chica con texto grande', (
     WidgetTester tester,
   ) async {
     await openDesk(tester, size: const Size(320, 568), textScale: 2);
     await _tap(tester, 'DEMO-014');
-    await _tap(tester, '2 · Convivencia');
-    await _tap(tester, 'Enviar ficha mínima');
-    expect(find.text('Orientación para el centro'), findsOneWidget);
+    expect(find.text('Alerta DEMO-014'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    await _tap(tester, 'Habilitar chat');
-    expect(find.text('Conversación'), findsOneWidget);
+    await _tap(tester, 'Atender por chat');
+    expect(find.text('Chispa Cósmica'), findsOneWidget);
+    await _tap(tester, 'Ficha');
+    await _tap(tester, '2 · Convivencia');
+    expect(find.text('Comentarios para la ficha'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -266,6 +319,15 @@ void main() {
         operationId: 'op-12345678',
         caseId: 'demo-case-014',
         body: 'x',
+      ),
+      () => backend.sheetDraft('demo-case-014'),
+      () => backend.saveSheetDraft(
+        caseId: 'demo-case-014',
+        guidanceDraft: 'x',
+      ),
+      () => backend.endConversation(
+        operationId: 'op-12345678',
+        caseId: 'demo-case-014',
       ),
       () => backend.assess(
         operationId: 'op-12345678',

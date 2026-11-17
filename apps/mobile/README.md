@@ -47,7 +47,7 @@ El APK de presentación que se genera con `flutter build apk --debug` desactiva 
 - Poppins Regular/Medium/SemiBold/Bold empaquetada con licencia OFL (fuente: repositorio oficial google/fonts, ofl/poppins). No hay descargas de fuentes en ejecución. Fallback del sistema y síntesis tipográfica si falta un peso solicitado.
 - `CureandoTheme`, isotipo de tres piezas con las proporciones de docs/06, rompecabezas, flor de 12 pétalos y espiral; nombre e icono Android SéTú.
 - Lectura Normal/Grande (+20 %) combinada con el escalado de Android sin limitarlo.
-- Canal `dev.cureando.app/screen_security`, `setSecureScreen(bool)` e `isSecureScreenEnabled()`. Protección activa en cada arranque de la actividad, confirmación para desactivarla y estado visible. La preferencia desactivada no se persiste.
+- Canal `dev.cureando.app/screen_security`, `setSecureScreen(bool)` e `isSecureScreenEnabled()`. Desde ADR 0024 la protección ya no se activa al arrancar: `SecureScreenGuard` la activa solo en los chats (estudiante y Mesa de Escucha) y la retira al salir.
 - `CureandoGateway`, modelos estudiantiles inmutables sin notas internas ni credenciales, y contrato separado `StaffCureandoGateway`.
 - `LocalCureandoGateway`: alias de 3–24 letras/números/guion bajo, PIN numérico de 4–6 dígitos, respaldo `SETU-XXXX-XXXX`, centros ficticios Norte/Sur, interlocutor CCE/Psicología, chips, ruta alternativa, mensajes, solicitudes y estados.
 - Código de caso opaco + PIN de 4 dígitos: acceso limitado a ese caso con mensajes y solicitudes, sin acceso al listado de la cuenta. La cuenta propietaria puede emitir/rotar ese PIN mediante `createCaseAccess`; se devuelve una sola vez en memoria y solo se guarda su derivación. No recupera datos desde otro teléfono.
@@ -116,3 +116,11 @@ adb -s <dispositivo> shell am start -W -n dev.cureando.mockup/dev.cureando.curea
 ```
 
 ADB local: `& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"`. Comprobar almacenamiento listo, botón de interacción, protección activada por defecto, cancelación y confirmación del interruptor, capturas permitidas al pausarlo y protección restaurada tras reiniciar. Nunca guardar identificadores del teléfono o datos locales en commits.
+
+## Información E10/E11 — 2026-11-16
+
+«Explorar Información» en Bienvenida abre `/informacion` sin código: Biblioteca con búsqueda/filtros y Rutas. Desde Inicio se mantiene la pestaña Información y se destacan «¿Es una broma o acoso?» y «Cómo ser un testigo solidario». El catálogo de siete recursos es ficticio, en revisión editorial; solo Acoso escolar tiene los tres pasos completos. Las guías y la historia ilustrada están empaquetadas. El reproductor de video es una muestra con temporizador/pausa/CC, sin video real ni descargas; la alternativa completa en texto funciona sin internet.
+
+Los lectores públicos (`/informacion/recurso/:id`) no necesitan sesión. Pedir apoyo explica el acceso escolar y permite seguir leyendo. Los lectores del Inicio usan `/inicio/recurso/:id`. «Fuente y revisión» muestra origen propio, público/territorio, revisión pendiente y alcance, y permite ir a Ayuda.
+
+El progreso conserva el archivo cifrado v1 existente: +5 XP la primera vez por recurso y +10 XP una sola vez por ruta al acertar/confirmar el cierre. `routes` es opcional al cargar archivos anteriores; la pregunta diaria conserva su registro separado. No se puntúan solicitudes ni casos. Las capturas opcionales de pruebas se generan en `build/qa` con `flutter test --dart-define=SETU_CAPTURE_QA=true`.

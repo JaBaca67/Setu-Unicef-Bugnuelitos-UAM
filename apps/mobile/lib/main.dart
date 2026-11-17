@@ -9,7 +9,7 @@ import 'features/staff/staff_backend.dart';
 import 'features/school_access/student_session.dart';
 import 'features/support/remote_support_backend.dart';
 import 'features/support/support_flow.dart';
-import 'shared/mesh/mesh_bridge_keys.dart';
+import 'shared/mesh/mesh_recipient_directory.dart';
 import 'shared/mesh/mesh_relay_service.dart';
 import 'shared/mesh/mesh_transport.dart';
 import 'shared/remote/push_notification_service.dart';
@@ -65,9 +65,13 @@ Future<void> main() async {
     staff = null;
     session = null;
   }
+  final MeshRecipientDirectory? meshKeys = remoteGateway == null
+      ? null
+      : MeshRecipientDirectory(remoteGateway);
   final MeshRelayService meshRelay = MeshRelayService(
     transport: NearbyMeshTransport(),
     remoteGateway: remoteGateway,
+    recipientDirectory: meshKeys,
   );
   final StudentSession resolvedSession = session ?? StudentSession();
   final SupportFlow resolvedSupport = SupportFlow(
@@ -77,7 +81,7 @@ Future<void> main() async {
       defaultValue: 'AULA24',
     ),
     mesh: meshRelay,
-    resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+    resolveMeshRecipients: meshKeys?.cachedRecipients,
   );
   final StaffSession resolvedStaffSession = StaffSession(
     staff ?? DemoStaffBackend(),

@@ -13,22 +13,14 @@ import 'school_qr_scanner.dart';
 import 'student_session.dart';
 
 enum SchoolAccessStep {
-  method(
-    '',
-    'Confirmá tu colegio',
-    'Usá el código público que te dio tu colegio.',
-  ),
-  scan('qr', 'Escaneá el QR', 'Colocá el código dentro del recuadro.'),
+  method('', 'Confirmá tu colegio'),
+  scan('qr', 'Escaneá el QR'),
   manual(
     'codigo',
     'Ingresá el código de tu colegio',
-    'Te lo dio tu colegio. No te pedimos nombre ni carné.',
+    'No te pedimos nombre ni carné.',
   ),
-  proximity(
-    'cercania',
-    'Comprobá si estás cerca',
-    'Primero revisá que este sea tu colegio.',
-  ),
+  proximity('cercania', 'Comprobá si estás cerca'),
   result('resultado', 'Colegio confirmado');
 
   const SchoolAccessStep(this.path, this.title, [this.subtitle]);
@@ -79,7 +71,7 @@ class SchoolAccessScreen extends StatelessWidget {
         subtitle: step.subtitle,
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+        padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.start,
@@ -305,6 +297,14 @@ class _SchoolLinkScreenState extends State<SchoolLinkScreen> {
   );
 }
 
+/// En la compilación de demo la cercanía siempre deja continuar (también lo
+/// respeta el router de `app.dart`). Se desactiva
+/// con `--dart-define=SETU_PROXIMITY_ALWAYS_PASS=false`.
+const bool demoProximityAlwaysPasses = bool.fromEnvironment(
+  'SETU_PROXIMITY_ALWAYS_PASS',
+  defaultValue: true,
+);
+
 class _ProximityCheck extends StatefulWidget {
   const _ProximityCheck({
     required this.school,
@@ -327,14 +327,19 @@ class _ProximityCheckState extends State<_ProximityCheck> {
     if (_checking) return;
     setState(() => _checking = true);
     final ConfirmedSchool? school = widget.school;
-    final SchoolProximity result =
-        identical(widget.check, checkSchoolLocation) && school != null
+    final bool realCheck = identical(widget.check, checkSchoolLocation);
+    SchoolProximity result = realCheck && school != null
         ? await checkSchoolLocation(
             targetLat: school.referenceLat,
             targetLng: school.referenceLng,
             radiusMeters: school.radiusMeters.toDouble(),
           )
         : await widget.check();
+    // Demo UAM-UNICEF: la comprobación real nunca bloquea; si no confirma
+    // cercanía, continúa rotulada como simulada (nunca como confirmada).
+    if (realCheck && demoProximityAlwaysPasses && !result.canContinue) {
+      result = SchoolProximity.simulated;
+    }
     if (!mounted) return;
     setState(() => _checking = false);
     if (ModalRoute.isCurrentOf(context) == true) _openResult(result);

@@ -12,7 +12,7 @@ Con la Fase `M0` verificada físicamente por USB/ADB (instalación del APK, tran
 ## 2. Decisiones Técnicas Aprobadas para M1
 
 ### 2.1. Control de `FLAG_SECURE` mediante `MethodChannel`
-- **Comportamiento por defecto:** `FLAG_SECURE` permanece **activo por defecto** al iniciar `MainActivity.kt` para proteger la pantalla del estudiante ante capturas y miniaturas en recientes.
+- **Comportamiento por defecto (superado por [ADR 0024](0024-capturas-permitidas-salvo-chat.md): ahora solo el chat activa la protección):** `FLAG_SECURE` permanecía **activo por defecto** al iniciar `MainActivity.kt` para proteger la pantalla del estudiante ante capturas y miniaturas en recientes.
 - **Interruptor para capturas y demostración ante el jurado:** `MainActivity.kt` expondrá el canal `dev.cureando.app/screen_security` con los métodos:
   - `setSecureScreen(bool enabled)`: añade o quita `WindowManager.LayoutParams.FLAG_SECURE` en el hilo principal (`runOnUiThread`).
   - `isSecureScreenEnabled()`: devuelve el estado actual (`Boolean`).

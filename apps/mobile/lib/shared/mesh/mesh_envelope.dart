@@ -17,6 +17,7 @@ class MeshMinimalAlertPayload {
     required this.capabilityVerifierHash,
     required this.declaredAt,
     this.involvesStaff = false,
+    this.receiptToken,
   });
 
   factory MeshMinimalAlertPayload.fromJson(Map<String, Object?> json) =>
@@ -28,6 +29,7 @@ class MeshMinimalAlertPayload {
         capabilityVerifierHash: json['capability_verifier_hash']! as String,
         declaredAt: DateTime.parse(json['declared_at']! as String),
         involvesStaff: json['involves_staff'] == true,
+        receiptToken: json['receipt_token'] as String?,
       );
 
   final String clientOperationId;
@@ -38,15 +40,19 @@ class MeshMinimalAlertPayload {
   final DateTime declaredAt;
   final bool involvesStaff;
 
+  /// Desafío aleatorio de entrega, visible únicamente dentro del E2EE.
+  final String? receiptToken;
+
   Map<String, Object?> toJson() => <String, Object?>{
-        'client_operation_id': clientOperationId,
-        'public_school_code': publicSchoolCode,
-        'situation_type': situationType,
-        'student_role': studentRole,
-        'capability_verifier_hash': capabilityVerifierHash,
-        'declared_at': declaredAt.toUtc().toIso8601String(),
-        'involves_staff': involvesStaff,
-      };
+    'client_operation_id': clientOperationId,
+    'public_school_code': publicSchoolCode,
+    'situation_type': situationType,
+    'student_role': studentRole,
+    'capability_verifier_hash': capabilityVerifierHash,
+    'declared_at': declaredAt.toUtc().toIso8601String(),
+    'involves_staff': involvesStaff,
+    if (receiptToken != null) 'receipt_token': receiptToken,
+  };
 }
 
 /// Sobre cifrado de extremo a extremo (X25519 + HKDF-SHA256 + AES-GCM-256).
@@ -63,6 +69,7 @@ class MeshEnvelope {
     required this.nonceB64,
     required this.macB64,
     required this.ciphertextB64,
+    this.recipientKeyId,
   });
 
   factory MeshEnvelope.fromJson(Map<String, Object?> json) {
@@ -70,6 +77,15 @@ class MeshEnvelope {
     final int ttl = (json['ttl']! as num).toInt();
     if (version != currentVersion) {
       throw const FormatException('Versión de sobre mesh no soportada');
+    }
+    if (ttl < 0 ||
+        ttl > defaultTtl ||
+        !RegExp(r'^[0-9a-f]{32}$').hasMatch(json['id']! as String) ||
+        base64Decode(json['epk']! as String).length != 32 ||
+        base64Decode(json['n']! as String).length != 12 ||
+        base64Decode(json['m']! as String).length != 16 ||
+        base64Decode(json['c']! as String).isEmpty) {
+      throw const FormatException('Sobre mesh inválido');
     }
     return MeshEnvelope(
       version: version,
@@ -79,6 +95,7 @@ class MeshEnvelope {
       nonceB64: json['n']! as String,
       macB64: json['m']! as String,
       ciphertextB64: json['c']! as String,
+      recipientKeyId: json['recipient_key'] as String?,
     );
   }
 
@@ -99,11 +116,13 @@ class MeshEnvelope {
   final String nonceB64;
   final String macB64;
   final String ciphertextB64;
+  final String? recipientKeyId;
 
   static Future<MeshEnvelope> seal(
     MeshMinimalAlertPayload payload, {
     required List<int> recipientPublicKeyBytes,
     int ttl = defaultTtl,
+    String? receiptToken,
   }) async {
     if (recipientPublicKeyBytes.length != 32) {
       throw ArgumentError('La clave pública X25519 debe tener 32 bytes.');
@@ -126,7 +145,12 @@ class MeshEnvelope {
       info: _aad,
     );
 
-    final List<int> clearBytes = utf8.encode(jsonEncode(payload.toJson()));
+    final List<int> clearBytes = utf8.encode(
+      jsonEncode(<String, Object?>{
+        ...payload.toJson(),
+        'receipt_token': ?receiptToken,
+      }),
+    );
     final SecretBox box = await _aesGcm.encrypt(
       clearBytes,
       secretKey: aesKey,
@@ -141,6 +165,9 @@ class MeshEnvelope {
       nonceB64: base64Encode(box.nonce),
       macB64: base64Encode(box.mac.bytes),
       ciphertextB64: base64Encode(box.cipherText),
+      recipientKeyId: (await Sha256().hash(
+        recipientPublicKeyBytes,
+      )).bytes.map((int byte) => byte.toRadixString(16).padLeft(2, '0')).join(),
     );
   }
 
@@ -178,28 +205,32 @@ class MeshEnvelope {
 
   /// Devuelve una copia con `ttl - 1` sin modificar el texto cifrado.
   MeshEnvelope nextHop() => MeshEnvelope(
-        version: version,
-        packetId: packetId,
-        ttl: ttl > 0 ? ttl - 1 : 0,
-        ephemeralPublicKeyB64: ephemeralPublicKeyB64,
-        nonceB64: nonceB64,
-        macB64: macB64,
-        ciphertextB64: ciphertextB64,
-      );
+    version: version,
+    packetId: packetId,
+    ttl: ttl > 0 ? ttl - 1 : 0,
+    ephemeralPublicKeyB64: ephemeralPublicKeyB64,
+    nonceB64: nonceB64,
+    macB64: macB64,
+    ciphertextB64: ciphertextB64,
+    recipientKeyId: recipientKeyId,
+  );
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'kind': 'envelope',
-        'v': version,
-        'id': packetId,
-        'ttl': ttl,
-        'epk': ephemeralPublicKeyB64,
-        'n': nonceB64,
-        'm': macB64,
-        'c': ciphertextB64,
-      };
+    'kind': 'envelope',
+    'v': version,
+    'id': packetId,
+    'ttl': ttl,
+    'epk': ephemeralPublicKeyB64,
+    'n': nonceB64,
+    'm': macB64,
+    'c': ciphertextB64,
+    if (recipientKeyId != null) 'recipient_key': recipientKeyId,
+  };
 
   Uint8List toWireBytes() {
-    final Uint8List bytes = Uint8List.fromList(utf8.encode(jsonEncode(toJson())));
+    final Uint8List bytes = Uint8List.fromList(
+      utf8.encode(jsonEncode(toJson())),
+    );
     if (bytes.length > maxWireBytes) {
       throw const FormatException('Sobre mesh excede el límite permitido.');
     }
@@ -213,31 +244,39 @@ class MeshEnvelope {
     }
     return buffer.toString();
   }
+
+  static String newReceiptToken() => _randomHex(32);
+
+  /// Solo quien abrió el sobre conoce el desafío. No acredita recepción
+  /// central ni lectura humana; está ligado a un único paquete.
+  static Future<String> deliveryProof(String packetId, String token) async =>
+      base64Encode(
+        (await Sha256().hash(
+          utf8.encode('setu-mesh-delivery:v1:$packetId:$token'),
+        )).bytes,
+      );
 }
 
 /// Acuse de custodia o sincronización devuelto al vecino emisor.
 @immutable
 class MeshAckPacket {
-  const MeshAckPacket({
-    required this.packetId,
-    required this.centrallySynced,
-  });
+  const MeshAckPacket({required this.packetId, required this.centrallySynced});
 
   factory MeshAckPacket.fromJson(Map<String, Object?> json) => MeshAckPacket(
-        packetId: json['id']! as String,
-        centrallySynced: json['synced'] == true,
-      );
+    packetId: json['id']! as String,
+    centrallySynced: json['synced'] == true,
+  );
 
   final String packetId;
   final bool centrallySynced;
 
   Uint8List toWireBytes() => Uint8List.fromList(
-        utf8.encode(
-          jsonEncode(<String, Object?>{
-            'kind': 'ack',
-            'id': packetId,
-            'synced': centrallySynced,
-          }),
-        ),
-      );
+    utf8.encode(
+      jsonEncode(<String, Object?>{
+        'kind': 'ack',
+        'id': packetId,
+        'synced': centrallySynced,
+      }),
+    ),
+  );
 }

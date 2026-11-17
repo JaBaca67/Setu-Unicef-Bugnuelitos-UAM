@@ -4,11 +4,8 @@ import 'package:cryptography/cryptography.dart';
 
 import '../../features/school_access/school_location.dart';
 
-/// Claves públicas X25519 del nodo puente para cifrado E2EE de sobres mesh.
-///
-/// En producción se inyecta mediante `--dart-define=SETU_MESH_BRIDGE_PUBKEY=...`
-/// (Base64 de 32 bytes). Si no se define, usa el par determinístico de demo
-/// compartido con `MeshTestScreen`.
+/// Claves efímeras para pruebas locales. No se comparten entre instalaciones.
+/// El flujo conectado usa [MeshRecipientDirectory].
 class MeshBridgeKeys {
   MeshBridgeKeys._();
 
@@ -16,10 +13,24 @@ class MeshBridgeKeys {
   static const String _envPubKeyB64 = String.fromEnvironment(
     'SETU_MESH_BRIDGE_PUBKEY',
   );
-  static const String _demoSeed = 'setu-demo-mesh-bridge-key-v1-32b';
+  static Future<SimpleKeyPair>? _demoPair;
 
   static Future<SimpleKeyPair> demoBridgeKeyPair() =>
-      _x25519.newKeyPairFromSeed(utf8.encode(_demoSeed).sublist(0, 32));
+      _demoPair ??= _x25519.newKeyPair();
+
+  static Future<SimpleKeyPair?> resolveBridgeKeyPair() async {
+    final String raw = _envPubKeyB64.trim();
+    if (raw.isNotEmpty) {
+      try {
+        if (base64Decode(raw).length == 32) {
+          return null;
+        }
+      } on Object {
+        // Si el formato es inválido, recurre a la clave demo en entorno de prueba.
+      }
+    }
+    return demoBridgeKeyPair();
+  }
 
   static Future<List<int>> resolvePublicKeyBytes() async {
     final String raw = _envPubKeyB64.trim();
@@ -41,23 +52,19 @@ class MeshBridgeKeys {
 
 /// Claves X25519 por colegio para entrega mínima local a Dirección sin internet.
 ///
-/// En el prototipo deriva una clave determinística por código público de
-/// colegio; en producción la clave privada solo se aprovisiona al dispositivo
-/// de Dirección tras activar su rol (nunca en el APK estudiantil).
+/// Solo para simulaciones dentro de un proceso; nunca se derivan del código.
 class MeshSchoolKeys {
   MeshSchoolKeys._();
 
   static final X25519 _x25519 = X25519();
-  static final Sha256 _sha256 = Sha256();
+  static final Map<String, Future<SimpleKeyPair>> _pairs =
+      <String, Future<SimpleKeyPair>>{};
 
   static Future<SimpleKeyPair> demoSchoolKeyPair(
     String publicSchoolCode,
   ) async {
     final String normalized = normalizeSchoolCode(publicSchoolCode);
-    final Hash digest = await _sha256.hash(
-      utf8.encode('setu-demo-school-mesh-v1:$normalized'),
-    );
-    return _x25519.newKeyPairFromSeed(digest.bytes.sublist(0, 32));
+    return _pairs.putIfAbsent(normalized, _x25519.newKeyPair);
   }
 
   static Future<List<int>> resolveSchoolPublicKeyBytes(

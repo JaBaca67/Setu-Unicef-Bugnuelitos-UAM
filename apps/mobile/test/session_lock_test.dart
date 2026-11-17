@@ -51,9 +51,7 @@ CureandoApp _app({
       ),
   studentSession:
       studentSession ??
-      StudentSession(
-        openStore: () async => sessionStore ?? _MemoryStore(),
-      ),
+      StudentSession(openStore: () async => sessionStore ?? _MemoryStore()),
   supportFlow: SupportFlow(openStore: () async => _MemoryStore()),
   learningProgress: LearningProgress(
     openStore: () async => _MemoryStore(),
@@ -344,87 +342,88 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('declinar deriva a la red externa y permite deshacer o recuperar', (
-      WidgetTester tester,
-    ) async {
-      final DemoStaffBackend backend = await openDesk(tester);
-      await _tap(tester, 'Declinar');
-      expect(find.text('¿Declinar esta alerta?'), findsOneWidget);
-      await tester.enterText(
-        find.byType(TextField).last,
-        'Atiendo otra conversación',
-      );
-      await _tap(tester, 'Confirmar declinación');
-      expect(tester.takeException(), isNull, reason: 'after first decline');
-      expect(find.text('Alerta declinada'), findsOneWidget);
-      expect(find.text('Deshacer'), findsOneWidget);
-      expect(find.text('0 alertas por tomar'), findsOneWidget);
+    testWidgets(
+      'declinar deriva a la red externa y permite deshacer o recuperar',
+      (WidgetTester tester) async {
+        final DemoStaffBackend backend = await openDesk(tester);
+        await _tap(tester, 'Declinar');
+        expect(find.text('¿Declinar esta alerta?'), findsOneWidget);
+        await tester.enterText(
+          find.byType(TextField).last,
+          'Atiendo otra conversación',
+        );
+        await _tap(tester, 'Confirmar declinación');
+        expect(tester.takeException(), isNull, reason: 'after first decline');
+        expect(find.text('Alerta declinada'), findsOneWidget);
+        expect(find.text('Deshacer'), findsOneWidget);
+        expect(find.text('0 alertas por tomar'), findsOneWidget);
 
-      await _tap(tester, 'Declinadas recientes');
-      expect(tester.takeException(), isNull, reason: 'after open declined');
-      expect(find.text('Declinadas recientes'), findsOneWidget);
-      expect(find.text('Disponible'), findsOneWidget);
-      await _tap(tester, 'Volver a la bandeja');
-      expect(tester.takeException(), isNull, reason: 'after recover');
-      expect(find.text('1 alerta por tomar'), findsOneWidget);
+        await _tap(tester, 'Declinadas recientes');
+        expect(tester.takeException(), isNull, reason: 'after open declined');
+        expect(find.text('Declinadas recientes'), findsOneWidget);
+        expect(find.text('Disponible'), findsOneWidget);
+        await _tap(tester, 'Volver a la bandeja');
+        expect(tester.takeException(), isNull, reason: 'after recover');
+        expect(find.text('1 alerta por tomar'), findsOneWidget);
 
-      await _tap(tester, 'Declinar');
-      await tester.enterText(
-        find.byType(TextField).last,
-        'Atiendo otra conversación',
-      );
-      await _tap(tester, 'Confirmar declinación');
-      expect(tester.takeException(), isNull, reason: 'after second decline');
+        await _tap(tester, 'Declinar');
+        await tester.enterText(
+          find.byType(TextField).last,
+          'Atiendo otra conversación',
+        );
+        await _tap(tester, 'Confirmar declinación');
+        expect(tester.takeException(), isNull, reason: 'after second decline');
 
-      final List<CaseDispatchRecord> mine = await backend.dispatchHistory(
-        caseId: 'demo-case-021',
-      );
-      // Mesa de Escucha solo ve sus propios despachos.
-      expect(mine.map((CaseDispatchRecord r) => r.counselorUserId), <String>[
-        _desk,
-      ]);
+        final List<CaseDispatchRecord> mine = await backend.dispatchHistory(
+          caseId: 'demo-case-021',
+        );
+        // Mesa de Escucha solo ve sus propios despachos.
+        expect(mine.map((CaseDispatchRecord r) => r.counselorUserId), <String>[
+          _desk,
+        ]);
 
-      await _signOut(tester);
-      await tester.enterText(
-        find.byType(TextField).at(0),
-        'mined.demo@example.org',
-      );
-      await tester.enterText(
-        find.byType(TextField).at(1),
-        DemoStaffBackend.demoPassword,
-      );
-      await _tap(tester, 'Iniciar sesión');
-      expect(find.text('Alertas recibidas'), findsOneWidget);
-      final Finder tile = find.ancestor(
-        of: find.text('DEMO-021'),
-        matching: find.byWidgetPredicate(
-          (Widget widget) =>
-              widget is Container && widget.decoration is BoxDecoration,
-        ),
-      );
-      final Finder history = find.descendant(
-        of: tile.first,
-        matching: find.text('Historial de despacho'),
-      );
-      await tester.ensureVisible(history);
-      await tester.pumpAndSettle();
-      await tester.tap(history);
-      await tester.pumpAndSettle();
-      expect(find.text('Despacho de DEMO-021'), findsOneWidget);
-      expect(find.text('Todavía nadie tomó esta alerta.'), findsOneWidget);
-      expect(find.text('Equipo de planta'), findsOneWidget);
-      expect(find.text('Red externa'), findsOneWidget);
-      expect(find.text('Declinada'), findsOneWidget);
-      expect(find.text('Pendiente'), findsOneWidget);
-      expect(
-        find.text('Motivo de declinación: Atiendo otra conversación'),
-        findsOneWidget,
-      );
-      expect(find.text(DemoStaffBackend.externalCounselor), findsOneWidget);
-      // El historial no trae relato.
-      expect(find.textContaining('Relato ficticio'), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
+        await _signOut(tester);
+        await tester.enterText(
+          find.byType(TextField).at(0),
+          'mined.demo@example.org',
+        );
+        await tester.enterText(
+          find.byType(TextField).at(1),
+          DemoStaffBackend.demoPassword,
+        );
+        await _tap(tester, 'Iniciar sesión');
+        expect(find.text('Alertas recibidas'), findsOneWidget);
+        final Finder tile = find.ancestor(
+          of: find.text('DEMO-021'),
+          matching: find.byWidgetPredicate(
+            (Widget widget) =>
+                widget is Container && widget.decoration is BoxDecoration,
+          ),
+        );
+        final Finder history = find.descendant(
+          of: tile.first,
+          matching: find.text('Historial de despacho'),
+        );
+        await tester.ensureVisible(history);
+        await tester.pumpAndSettle();
+        await tester.tap(history);
+        await tester.pumpAndSettle();
+        expect(find.text('Despacho de DEMO-021'), findsOneWidget);
+        expect(find.text('Todavía nadie tomó esta alerta.'), findsOneWidget);
+        expect(find.text('Equipo de planta'), findsOneWidget);
+        expect(find.text('Red externa'), findsOneWidget);
+        expect(find.text('Declinada'), findsOneWidget);
+        expect(find.text('Pendiente'), findsOneWidget);
+        expect(
+          find.text('Motivo de declinación: Atiendo otra conversación'),
+          findsOneWidget,
+        );
+        expect(find.text(DemoStaffBackend.externalCounselor), findsOneWidget);
+        // El historial no trae relato.
+        expect(find.textContaining('Relato ficticio'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 
   testWidgets(
@@ -444,10 +443,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(
-        find.text('Personas y recursos que pueden acompañarte.'),
-        findsOneWidget,
-      );
+      expect(find.text('Líneas de ayuda'), findsOneWidget);
 
       // En otras pestañas del inicio, Atrás regresa a Inicio sin salir.
       await tester.binding.handlePopRoute();

@@ -96,6 +96,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   @override
   Widget build(BuildContext context) => FlowScaffold(
     header: const FlowHeader(title: 'Mi perfil', trailing: _HeaderBrand()),
+    bottomNavigationBar: SetuBottomNav(
+      selected: null,
+      onSelected: (HomeSection section) =>
+          context.go('/inicio', extra: HomeSectionRequest(section)),
+    ),
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -170,8 +175,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           builder: (BuildContext context, _) => _SchoolSettingsCard(
             school: widget.session.school,
             expanded: _schoolExpanded,
-            onToggle: () =>
-                setState(() => _schoolExpanded = !_schoolExpanded),
+            onToggle: () => setState(() => _schoolExpanded = !_schoolExpanded),
             onLeave: _leaveSchool,
           ),
         ),
@@ -397,7 +401,8 @@ class _LearningCard extends StatelessWidget {
     final int current = progress.levelXp;
     final String streakLabel = 'Racha de ${_days(progress.streak)}';
     final String xpLabel = '${progress.xp} XP';
-    final String levelLabel = 'Nivel ${progress.level} · ${progress.levelTitle}';
+    final String levelLabel =
+        'Nivel ${progress.level} · ${progress.levelTitle}';
     final String semanticSummary =
         'Mi aprendizaje. $streakLabel. $xpLabel. $levelLabel. '
         '$current de $goal XP. '

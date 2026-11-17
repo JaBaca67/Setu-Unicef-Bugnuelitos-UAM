@@ -6,8 +6,6 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
-import '../../shared/widgets/setu_card.dart';
-import '../piece/campaign_characters.dart';
 import '../piece/student_piece.dart';
 import 'alert_screens.dart';
 import 'support_flow.dart';
@@ -85,10 +83,10 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
-                    child: PieceFigure(
-                      piece: widget.piece.value,
+                    child: Image.asset(
+                      'assets/brand/png/personaje-01.png',
                       height: 186,
-                      sparks: true,
+                      excludeFromSemantics: true,
                     ),
                   ),
                   Align(
@@ -178,14 +176,20 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                                 'mensajes anteriores.',
                               )
                             else
-                              Text(switch (widget.flow.delivery) {
-                                AlertDelivery.pending =>
-                                  'Tu alerta está guardada en este teléfono. '
-                                      'Falta confirmar la entrega.',
-                                _ =>
-                                  'Te avisamos aquí cuando alguien pueda '
-                                      'conversar con vos.',
-                              }),
+                              Text(
+                                widget.flow.minimalAlertDelivered &&
+                                        widget.flow.delivery !=
+                                            AlertDelivery.received
+                                    ? 'Alerta entregada al dispositivo autorizado. Falta sincronizar con la plataforma.'
+                                    : switch (widget.flow.delivery) {
+                                        AlertDelivery.pending =>
+                                          'Tu alerta está guardada en este teléfono. '
+                                              'Falta confirmar la entrega.',
+                                        _ =>
+                                          'Te avisamos aquí cuando alguien pueda '
+                                              'conversar con vos.',
+                                      },
+                              ),
                           ],
                         ),
                       ),
@@ -203,6 +207,42 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
               ],
             ),
           ),
+          if (!chatAvailable && !widget.flow.caseClosed) ...<Widget>[
+            const SizedBox(height: 16),
+            Container(
+              key: const Key('alert-waiting-help-card'),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF0F8),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFFFC2E2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const Text(
+                    '¿Sin internet o todavía sin respuesta?',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Si necesitás hablar con alguien ahora, en Ayuda tenés '
+                    'líneas de emergencia verificadas a las que podés llamar.',
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    style: flowPrimaryStyle(),
+                    onPressed: () => context.go(
+                      '/inicio',
+                      extra: HomeSectionRequest(HomeSection.ayuda),
+                    ),
+                    icon: const Icon(Icons.call_rounded),
+                    label: const Text('Ir a contactos de ayuda'),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           OutlinedButton(
             style: flowSecondaryStyle(),
@@ -211,12 +251,6 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
               extra: HomeSectionRequest(HomeSection.ayuda),
             ),
             child: const Text('Ver recursos de ayuda'),
-          ),
-          const SizedBox(height: 10),
-          TextButton.icon(
-            onPressed: () => context.push<void>('/prueba-mesh'),
-            icon: const Icon(Icons.bluetooth_searching_rounded),
-            label: const Text('Prueba de red Mesh (2+ celulares)'),
           ),
         ],
       ),
@@ -235,7 +269,8 @@ class AlertReceivedScreen extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: flow,
     builder: (BuildContext context, _) {
-      final bool received = flow.delivery == AlertDelivery.received;
+      final bool centrallyReceived = flow.delivery == AlertDelivery.received;
+      final bool received = centrallyReceived || flow.minimalAlertDelivered;
       return FlowScaffold(
         bottomNavigationBar: SetuBottomNav(
           selected: HomeSection.ayuda,
@@ -245,7 +280,12 @@ class AlertReceivedScreen extends StatelessWidget {
         header: FlowHeader(
           title: 'Pedir apoyo',
           showBrand: true,
-          trailing: const SizedBox(width: 132, child: CampaignCharacters()),
+          trailing: Image.asset(
+            'assets/brand/png/personaje-14.png',
+            width: 132,
+            height: 92,
+            excludeFromSemantics: true,
+          ),
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -283,7 +323,7 @@ class AlertReceivedScreen extends StatelessWidget {
                     header: true,
                     child: Text(
                       received
-                          ? 'Alerta recibida'
+                          ? 'Alerta entregada'
                           : 'Guardada en este teléfono',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
@@ -302,7 +342,22 @@ class AlertReceivedScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 18),
                   ),
-                  if (flow.deliveryFailed) ...<Widget>[
+                  if (flow.minimalAlertDelivered &&
+                      !centrallyReceived) ...<Widget>[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Un dispositivo autorizado recibió la alerta mínima. El relato sigue en este teléfono. Falta sincronizar con la plataforma; esto no confirma lectura ni atención.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else if (flow.meshPending) ...<Widget>[
+                    const SizedBox(height: 12),
+                    Text(
+                      flow.needsBluetoothForMesh
+                          ? 'Sin internet. Permití dispositivos cercanos y Bluetooth en Android para intentar el envío. Tu alerta sigue guardada.'
+                          : 'Sin internet: tu alerta se enviará por un dispositivo cercano cuando esté disponible. Falta confirmar la entrega.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else if (flow.deliveryFailed) ...<Widget>[
                     const SizedBox(height: 12),
                     const Text(
                       'No pudimos confirmar la entrega. Revisá tu conexión a '
@@ -319,49 +374,6 @@ class AlertReceivedScreen extends StatelessWidget {
                 ],
               ),
             ),
-            if (!received && flow.needsBluetoothForMesh) ...<Widget>[
-              const SizedBox(height: 20),
-              SetuCard(
-                color: const Color(0xFFEAF2FF),
-                borderColor: CureandoTheme.blue,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    const Row(
-                      children: <Widget>[
-                        Icon(
-                          Icons.bluetooth_rounded,
-                          color: CureandoTheme.blue,
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Sin internet: activá Bluetooth',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: CureandoTheme.blue,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Para intentar enviar tu alerta por dispositivos cercanos sin internet, necesitamos que activés Bluetooth.',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      style: flowPrimaryStyle(),
-                      onPressed: flow.ensureBluetoothForMesh,
-                      icon: const Icon(Icons.bluetooth_searching_rounded),
-                      label: const Text('Activar Bluetooth'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: 32),
             FilledButton(
               style: flowPrimaryStyle(),
@@ -502,10 +514,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                     child: CampaignBackground(
                       child: SafeArea(
                         bottom: false,
-                        child: FlowHeader(
-                          title: 'Equipo de escucha',
-                          subtitle: 'Chat privado',
-                        ),
+                        child: FlowHeader(title: 'Equipo de escucha'),
                       ),
                     ),
                   ),
@@ -571,8 +580,9 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                     ),
                   SafeArea(
                     top: false,
+                    maintainBottomViewPadding: true,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       child: Row(
                         children: <Widget>[
                           Expanded(
@@ -685,7 +695,11 @@ class _Icebreakers extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
           if (!largeText) ...<Widget>[
-            PieceFigure(piece: piece, height: 132, sparks: true),
+            Image.asset(
+              'assets/brand/png/personaje-08.png',
+              height: 132,
+              excludeFromSemantics: true,
+            ),
             const SizedBox(width: 6),
           ],
           Expanded(

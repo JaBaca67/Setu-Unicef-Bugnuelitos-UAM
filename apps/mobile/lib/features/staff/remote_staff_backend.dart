@@ -384,6 +384,28 @@ class RemoteStaffBackend implements StaffBackend {
   );
 
   @override
+  Future<CaseSheetDraftView?> sheetDraft(String caseId) =>
+      _gateway.getCaseSheetDraft(caseId);
+
+  @override
+  Future<CaseSheetDraftView> saveSheetDraft({
+    required String caseId,
+    required String guidanceDraft,
+  }) => _gateway.saveCaseSheetDraft(
+    caseId: caseId,
+    guidanceDraft: guidanceDraft,
+  );
+
+  @override
+  Future<void> endConversation({
+    required String operationId,
+    required String caseId,
+  }) => _gateway.endCaseConversation(
+    clientOperationId: operationId,
+    caseId: caseId,
+  );
+
+  @override
   Future<List<CaseActionSheetView>> sheets({String? caseId}) =>
       _gateway.listCaseActionSheets(caseId: caseId);
 

@@ -14,11 +14,11 @@ La guía no impone software a todas las propuestas ni limita el producto a 12–
 
 ## Estado real
 
-M0/M1: base Flutter, marca inicial, protección de pantalla, contratos y persistencia cifrada con alias/PIN, modelo anterior. Verificación M1 registrada el 5 nov: análisis limpio y 18 pruebas; prueba física pendiente. No hay envío remoto, paneles, acceso nuevo o mesh implementados.
+El corte Android incluye acceso escolar, Pedir apoyo, superficies móviles staff y cliente Supabase. Nearby/Kotlin, sobres E2EE y cola cifrada están implementados; el bloque local aprobado del 16 de noviembre añade directorio de claves, custodia opaca y reconciliación online/mesh ([ADR 0023](decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md)). La migración 0012 ya está aplicada según confirmación del usuario; este bloque no consultó ni modificó el remoto. El envío mesh y la escucha del personal son automáticos, con prueba de entrega mínima diferenciada del recibo central. Paneles web, prueba física integral y operación real siguen pendientes. M0/M1 con alias/PIN es el antecedente histórico, no el acceso actual.
 
 El 12 de noviembre se incorporaron la [bienvenida E01](diseno/plan-arranque-bienvenida-setu.md) y el [acceso escolar E02 de demostración](diseno/plan-acceso-escolar-e02.md). E02 usa cámara y ubicación para un código de prueba, con un punto público configurado localmente. El acceso institucional y su primer ingreso offline siguen en diseño. Los bloques conectados y de transporte requieren propuesta y aprobación propias.
 
-El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual y XP educativos con persistencia local cifrada. El contenido disponible sigue siendo de muestra y el video todavía se ofrece como resumen en texto. [ADR 0014](decisiones/0014-progreso-educativo-local.md).
+El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual y XP educativos con persistencia local cifrada. E10/E11 incorporan 21 adaptaciones con fuentes UNICEF/MINED verificadas, seis temas, cuatro rutas, lectores con fuentes y videos externos; revisión profesional, derechos y publicación operativa pendientes (ADR 0026). [ADR 0014](decisiones/0014-progreso-educativo-local.md).
 
 ## Decisiones que cambian la solución
 
@@ -28,11 +28,11 @@ El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual 
 | Confirmado | Código público del colegio, código privado dirección y sin cuentas visibles | ADR 0005; implementación pendiente. |
 | Confirmado | Tres superficies, mesa humana, tres niveles y seis nombres de prototipo | Producto del equipo; nombres finales, contratos y facultades por validar con MINED. |
 | Confirmado | 3.º–11.º, Fase 1 urbana pública Managua | Adaptación de comprensión para primaria pendiente. |
-| Confirmado | Espacio Información propio, complementario a alertas/escucha | ADR 0009: artículos, videos, testimonios editoriales y guías; acceso autónomo y durante la espera. Existencia confirmada, sin código implementado. |
+| Confirmado | Espacio Información propio, complementario a alertas/escucha | ADR 0009: artículos, videos, testimonios editoriales y guías; acceso autónomo y durante la espera. Demo E10/E11 implementada con aprobación el 16 nov; publicación editorial pendiente. |
 | Antes de código conectado | Continuidad privada por caso y recuperación sin cuenta | Comparar sesión técnica, capacidad por caso y combinación. |
-| Antes de mesh | Destinatario offline: alerta mínima local o custodia central | Drive describe entrega mínima local; aprobar claves, receptor y alcance. Entrega mínima local confirmada en los manuales y reunión; contrato técnico y claves por aprobar. |
-| Antes de mesh | Primer ingreso offline, configuración, firma y claves auténticas | No resuelto por código público simple. |
-| Antes de mesh | Transporte, biblioteca/canal Flutter, versiones y permisos | ADR 0008 propone Nearby Connections/Cluster vía canal Kotlin; sin instalación ni prueba física. Criptografía del sobre aún sin seleccionar. |
+| Antes de mesh | Destinatario offline: alerta mínima local o custodia central | Entrega mínima local en bandejas Android y custodia opaca implementadas localmente, ADR 0023. Migración 0012 aplicada según el usuario; prueba física integral pendiente. |
+| Antes de mesh | Primer ingreso offline, configuración, firma y claves auténticas | La demo requiere publicar claves staff y preparar caché estudiantil por HTTPS antes de desconectar. Primer uso totalmente offline, firma, caducidad y revocación siguen pendientes. |
+| Antes de mesh | Transporte, biblioteca/canal Flutter, versiones y permisos | Nearby Connections/Cluster vía Kotlin y X25519 + HKDF-SHA256 + AES-GCM-256 implementados. Validación física integral del corte actual pendiente. |
 | Antes de paneles | Aprobar tecnología del cliente web | ADR 0008 propone React + TypeScript + Vite, React Router y Supabase JS; una SPA con áreas de permisos separados. Alternativas Flutter Web/Next.js documentadas. |
 | Antes de recepción local | Disponibilidad y autenticación del receptor sin internet | Una web cloud no basta; decidir vista nativa o servicio LAN seguro, cliente disponible, claves y conciliación. |
 | Antes de backend | Alta de personal, asignaciones, código privado y revocación | Código compartido no da auditoría individual. |
@@ -40,7 +40,7 @@ El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual 
 | Antes de protocolo | Cierre MINED, derivación separada de Escalado, contacto familiar, conflicto y revelación excepcional | Manuales operativos en versión de trabajo y propuestas en docs/02; aprobación institucional pendiente. |
 | Antes de piloto | MINED, centros, atención MINSA/practicantes, horarios y suplencia | Alianzas por validar, no confirmadas. |
 | Antes de piloto | Revisión local de datos, región, retención y derechos | Pendiente. |
-| Antes de publicar | Primer catálogo de Información y Ayuda, revisión, derechos y accesibilidad | Fuente, territorio, fecha, vigencia, responsable, etapa escolar, subtítulos/transcripción y archivos realmente disponibles. Diseñar catálogo/lector, reproductor y distribución; no decidir de nuevo si el apartado forma parte del producto. |
+| Antes de publicar | Primer catálogo de Información y Ayuda, revisión, derechos y accesibilidad | Fuente, territorio, fecha, vigencia, responsable, etapa escolar, subtítulos/transcripción y archivos realmente disponibles. Validar el catálogo/lector inicial, enlaces externos y distribución futura; no decidir de nuevo si el apartado forma parte del producto. |
 | Antes de presupuesto operativo | Conciliar Canvas/costos e incluir personal | Estimaciones incompatibles; sin financiación confirmada. |
 
 ## Bloques propuestos de desarrollo
@@ -51,7 +51,7 @@ El inicio E03 integra tarjetas reutilizables, racha semanal, calendario mensual 
 4. **Offline:** cola protegida, custodia, puente, entrega local aprobada, sincronización y retorno de acuses.
 5. **Interfaz y demo:** marca final, primaria/secundaria, fallos y guion. Chat y contenidos según prioridad aprobada.
 
-El espacio Información es un frente de producto confirmado: especificar E10/E11, entrada sin reporte y retorno desde espera; aprobar por separado el bloque técnico de catálogo/lectura/video y su muestra editorial. Puede diseñarse con independencia de la viabilidad radio. El catálogo completo y la distribución offline se dimensionan según el corte, sin omitir este componente de la propuesta.
+El espacio Información es un frente de producto confirmado: E10/E11 ya tienen demo aprobada de Biblioteca/Rutas y lectores, entrada sin reporte y retorno desde espera; el catálogo inicial de 21 adaptaciones y los videos externos están integrados; siguen pendientes publicación operativa, derechos/revisión y validación en dispositivo (ADR 0026). Puede diseñarse con independencia de la viabilidad radio. El catálogo completo y la distribución offline se dimensionan según el corte, sin omitir este componente de la propuesta.
 
 Cada bloque necesita propuesta concreta, preguntas materiales y aprobación explícita antes de código, dependencias, migraciones o estructura. Cambiar el generador documental no aprueba ninguno de estos bloques.
 

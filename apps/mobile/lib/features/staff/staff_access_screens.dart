@@ -88,13 +88,6 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
     }
   }
 
-  Future<void> _leaveToWelcome() async {
-    if (widget.session.isAuthenticated && widget.session.memberships.isEmpty) {
-      await widget.session.signOut();
-    }
-    if (mounted) context.go('/');
-  }
-
   Future<void> _openRegistration() async {
     if (_needsRegistrationCompletion &&
         widget.session.isAuthenticated &&
@@ -112,7 +105,20 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
   Widget build(BuildContext context) => CampaignScreen(
     header: Column(
       children: <Widget>[
-        const SizedBox(height: 44),
+        Padding(
+          padding: const EdgeInsets.only(left: 8, top: 6),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              tooltip: 'Volver',
+              color: Colors.white,
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () =>
+                  context.canPop() ? context.pop() : context.go('/'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
         Semantics(
           label: 'SéTú',
           excludeSemantics: true,
@@ -132,7 +138,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 22),
         const SizedBox(
           height: 46,
           width: double.infinity,
@@ -159,7 +165,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
                 error: false,
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             StaffField(
               label: 'Correo institucional',
               controller: _email,
@@ -202,40 +208,25 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
                 label: const Text('Continuar mi registro con código'),
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
             StaffPrimaryButton(
               label: 'Iniciar sesión',
+              icon: Icons.login_rounded,
               busy: _busy,
               onPressed: _submit,
             ),
             const SizedBox(height: 12),
-            OutlinedButton(
+            OutlinedButton.icon(
               style: flowSecondaryStyle(),
               onPressed: _openRegistration,
-              child: const Text('Registrar cuenta'),
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 22),
+              label: const Text('Registrar cuenta'),
             ),
-            const SizedBox(height: 10),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 4,
-              children: <Widget>[
-                TextButton(
-                  onPressed: () => context.push('/personal/solicitar'),
-                  child: const Text('Solicitar acceso', style: _link),
-                ),
-                TextButton(
-                  onPressed: () => context.push('/personal/ayuda'),
-                  child: const Text(
-                    'Necesito ayuda con mi acceso',
-                    style: _link,
-                  ),
-                ),
-              ],
-            ),
-            TextButton(
-              onPressed: _leaveToWelcome,
-              child: const Text('Volver a la bienvenida', style: _link),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => context.push('/personal/ayuda'),
+              icon: const Icon(Icons.help_outline_rounded, size: 20),
+              label: const Text('Ayuda', style: _link),
             ),
           ],
         ),
@@ -948,68 +939,35 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final (String label, Future<String?> Function() action) = switch (_step) {
-      _ActivationStep.profileAndRole => ('Continuar', _completeProfileStep),
-      _ActivationStep.account => ('Crear mi cuenta', _createAccount),
-      _ActivationStep.email => ('Ya confirmé mi correo', _confirmEmail),
-      _ActivationStep.code => ('Activar cuenta', _activateWithCode),
-    };
+    final (String label, IconData stepIcon, Future<String?> Function() action) =
+        switch (_step) {
+          _ActivationStep.profileAndRole => (
+            'Continuar',
+            Icons.arrow_forward_rounded,
+            _completeProfileStep,
+          ),
+          _ActivationStep.account => (
+            'Crear mi cuenta',
+            Icons.person_add_alt_1_rounded,
+            _createAccount,
+          ),
+          _ActivationStep.email => (
+            'Ya confirmé mi correo',
+            Icons.mark_email_read_outlined,
+            _confirmEmail,
+          ),
+          _ActivationStep.code => (
+            'Activar cuenta',
+            Icons.verified_user_outlined,
+            _activateWithCode,
+          ),
+        };
     final bool canSelfRequestFromStep4 =
         _firstName.text.trim().length >= 2 &&
         _lastName.text.trim().length >= 2 &&
         (_backend.currentUserEmail ?? _email.text).trim().contains('@');
     return FlowScaffold(
       header: const FlowHeader(title: 'Registrar cuenta'),
-      bottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          StaffPrimaryButton(
-            label: label,
-            busy: _busy,
-            onPressed: () => _run(action),
-          ),
-          if (_step == _ActivationStep.profileAndRole)
-            TextButton(
-              onPressed: () => context.push('/personal/ayuda'),
-              child: const Text('Necesito ayuda con mi acceso', style: _link),
-            )
-          else if (_step == _ActivationStep.account) ...<Widget>[
-            const SizedBox(height: 10),
-            OutlinedButton(
-              style: flowSecondaryStyle(),
-              onPressed: _busy
-                  ? null
-                  : () => setState(() {
-                      _step = _ActivationStep.profileAndRole;
-                      _error = null;
-                    }),
-              child: const Text('Volver al paso anterior'),
-            ),
-          ] else if (_step == _ActivationStep.email) ...<Widget>[
-            const SizedBox(height: 10),
-            OutlinedButton(
-              style: flowSecondaryStyle(),
-              onPressed: _busy ? null : () => _run(_resendLink),
-              child: const Text('Reenviar enlace de confirmación'),
-            ),
-          ] else if (canSelfRequestFromStep4) ...<Widget>[
-            const SizedBox(height: 10),
-            OutlinedButton(
-              style: flowSecondaryStyle(),
-              onPressed: _busy ? null : () => _run(_requestAccessFromCodeStep),
-              child: const Text('No tengo código · Solicitar'),
-            ),
-          ] else
-            TextButton(
-              onPressed: _busy ? null : _restart,
-              child: const Text(
-                'Cerrar sesión y usar otra cuenta',
-                style: _link,
-              ),
-            ),
-        ],
-      ),
       body: AutofillGroup(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1027,6 +985,60 @@ class _StaffActivationScreenState extends State<StaffActivationScreen> {
             if (_error != null) ...<Widget>[
               const SizedBox(height: 14),
               StaffNotice(_error!),
+            ],
+            const SizedBox(height: 22),
+            StaffPrimaryButton(
+              label: label,
+              icon: stepIcon,
+              busy: _busy,
+              onPressed: () => _run(action),
+            ),
+            if (_step == _ActivationStep.profileAndRole) ...<Widget>[
+              const SizedBox(height: 6),
+              TextButton.icon(
+                onPressed: () => context.push('/personal/ayuda'),
+                icon: const Icon(Icons.help_outline_rounded, size: 20),
+                label: const Text('Ayuda', style: _link),
+              ),
+            ] else if (_step == _ActivationStep.account) ...<Widget>[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                style: flowSecondaryStyle(),
+                onPressed: _busy
+                    ? null
+                    : () => setState(() {
+                        _step = _ActivationStep.profileAndRole;
+                        _error = null;
+                      }),
+                icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                label: const Text('Volver al paso anterior'),
+              ),
+            ] else if (_step == _ActivationStep.email) ...<Widget>[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                style: flowSecondaryStyle(),
+                onPressed: _busy ? null : () => _run(_resendLink),
+                icon: const Icon(Icons.forward_to_inbox_rounded, size: 20),
+                label: const Text('Reenviar enlace de confirmación'),
+              ),
+            ] else if (canSelfRequestFromStep4) ...<Widget>[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                style: flowSecondaryStyle(),
+                onPressed: _busy ? null : () => _run(_requestAccessFromCodeStep),
+                icon: const Icon(Icons.send_rounded, size: 20),
+                label: const Text('No tengo código · Solicitar'),
+              ),
+            ] else ...<Widget>[
+              const SizedBox(height: 6),
+              TextButton.icon(
+                onPressed: _busy ? null : _restart,
+                icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+                label: const Text(
+                  'Cerrar sesión y usar otra cuenta',
+                  style: _link,
+                ),
+              ),
             ],
           ],
         ),
@@ -1627,28 +1639,6 @@ class _StaffAccessRequestScreenState extends State<StaffAccessRequestScreen> {
         _option.requiresSchool || _option.allowsOptionalSchool;
     return FlowScaffold(
       header: const FlowHeader(title: 'Solicitar acceso de personal'),
-      bottom: _submitted
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                StaffPrimaryButton(
-                  label: 'Volver al ingreso',
-                  onPressed: () => context.go('/personal'),
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton(
-                  style: flowSecondaryStyle(),
-                  onPressed: () => context.pushReplacement('/personal/activar'),
-                  child: const Text('Registrar cuenta'),
-                ),
-              ],
-            )
-          : StaffPrimaryButton(
-              label: 'Enviar solicitud al MINED',
-              busy: _busy,
-              onPressed: _loadingSchools ? null : _submit,
-            ),
       body: _submitted
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1675,6 +1665,19 @@ class _StaffAccessRequestScreenState extends State<StaffAccessRequestScreen> {
                   'emitirá tu código individual de activación vinculado a tu '
                   'colegio y rol.',
                   error: false,
+                ),
+                const SizedBox(height: 22),
+                StaffPrimaryButton(
+                  label: 'Volver al ingreso',
+                  icon: Icons.login_rounded,
+                  onPressed: () => context.go('/personal'),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  style: flowSecondaryStyle(),
+                  onPressed: () => context.pushReplacement('/personal/activar'),
+                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
+                  label: const Text('Registrar cuenta'),
                 ),
               ],
             )
@@ -1792,6 +1795,13 @@ class _StaffAccessRequestScreenState extends State<StaffAccessRequestScreen> {
                   const SizedBox(height: 16),
                   StaffNotice(_error!),
                 ],
+                const SizedBox(height: 22),
+                StaffPrimaryButton(
+                  label: 'Enviar solicitud al MINED',
+                  icon: Icons.send_rounded,
+                  busy: _busy,
+                  onPressed: _loadingSchools ? null : _submit,
+                ),
               ],
             ),
     );
