@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
-import '../../shared/widgets/setu_card.dart';
+import 'info_artwork.dart';
 import 'learning_progress.dart';
 import 'student_resources.dart';
 
@@ -59,10 +59,7 @@ class _InformationTabState extends State<InformationTab> {
             _categoryKeys[i].currentContext?.findRenderObject() as RenderBox?;
         if (chip == null || !chip.hasSize) continue;
         final Rect rect = chip.localToGlobal(Offset.zero) & chip.size;
-        // Un chip más ancho que el viewport sigue visible con texto ampliado.
-        if ((rect.left >= bounds.left - .5 &&
-                rect.right <= bounds.right + .5) ||
-            (rect.width > bounds.width && rect.overlaps(bounds))) {
+        if (rect.left >= bounds.left - .5 && rect.right <= bounds.right + .5) {
           visible |= 1 << i;
         }
       }
@@ -159,56 +156,48 @@ class _InformationTabState extends State<InformationTab> {
           _scheduleCategoryVisibility();
           return false;
         },
-        child: SizedBox(
-          key: _categoriesViewport,
-          child: SingleChildScrollView(
-            key: const ValueKey<String>('information-categories'),
-            controller: _categoriesScroll,
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              spacing: 6,
-              children: <Widget>[
-                _filter(0, null, 'Todos', CureandoTheme.blue),
-                _filter(
-                  1,
-                  InfoTopic.acoso,
-                  'Acoso escolar',
-                  CureandoTheme.yellow,
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints box) {
+            const List<InfoTopic?> topics = <InfoTopic?>[
+              null,
+              InfoTopic.acoso,
+              InfoTopic.emociones,
+              InfoTopic.ciberacoso,
+              InfoTopic.ansiedad,
+              InfoTopic.depresion,
+              InfoTopic.apoyo,
+            ];
+            // Cuatro etiquetas completas a tamaño normal; con texto ampliado
+            // se conserva el tamaño de letra y se desplaza el carrusel.
+            final double padding = box.maxWidth < 340 ? 3.5 : 8;
+            return SizedBox(
+              key: _categoriesViewport,
+              child: SingleChildScrollView(
+                key: const ValueKey<String>('information-categories'),
+                controller: _categoriesScroll,
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  spacing: 6,
+                  children: <Widget>[
+                    for (int i = 0; i < topics.length; i++)
+                      _filter(i, topics[i], padding, box.maxWidth),
+                  ],
                 ),
-                _filter(2, InfoTopic.ansiedad, 'Ansiedad', CureandoTheme.blue),
-                _filter(
-                  3,
-                  InfoTopic.depresion,
-                  'Depresión',
-                  CureandoTheme.yellow,
-                ),
-                _filter(
-                  4,
-                  InfoTopic.ciberacoso,
-                  'Ciberacoso',
-                  CureandoTheme.pink,
-                ),
-                _filter(
-                  5,
-                  InfoTopic.emociones,
-                  'Emociones',
-                  CureandoTheme.green,
-                ),
-                _filter(6, InfoTopic.apoyo, 'Apoyo', CureandoTheme.blue),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
       const SizedBox(height: 10),
       if (filtered) ...<Widget>[
-        Row(
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          spacing: 8,
+          runSpacing: 4,
           children: <Widget>[
-            const Expanded(
-              child: Text(
-                'Resultados de la biblioteca',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
+            Text(
+              _topic?.label ?? 'Resultados de la biblioteca',
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             Text(
               '${resources.length} disponibles',
@@ -223,23 +212,22 @@ class _InformationTabState extends State<InformationTab> {
             child: Text('No encontramos recursos. Probá con otro tema.'),
           ),
         for (final InfoResource resource in resources) ...<Widget>[
-          InfoResourceCard(resource: resource, onTap: () => _open(resource)),
+          ListenableBuilder(
+            listenable: widget.progress,
+            builder: (BuildContext context, _) => InfoResourceCard(
+              resource: resource,
+              read: widget.progress.completedResource(resource.id),
+              onTap: () => _open(resource),
+            ),
+          ),
           const SizedBox(height: 10),
         ],
       ] else ...<Widget>[
         _wideCard(infoCatalog.first, featured: true),
         for (final InfoTopic topic in InfoTopic.values) ...<Widget>[
           _topicHeading(topic),
-          for (final InfoResource resource in infoCatalog.where(
-            (InfoResource r) => r.topic == topic,
-          )) ...<Widget>[
-            if (resource != infoCatalog.first)
-              InfoResourceCard(
-                resource: resource,
-                onTap: () => _open(resource),
-              ),
-            const SizedBox(height: 10),
-          ],
+          _topicPreview(topic),
+          const SizedBox(height: 10),
         ],
       ],
     ];
@@ -250,19 +238,27 @@ class _InformationTabState extends State<InformationTab> {
     borderSide: const BorderSide(color: CureandoTheme.blue, width: 2),
   );
 
-  Widget _filter(int index, InfoTopic? topic, String title, Color color) =>
-      AnimatedOpacity(
-        key: _categoryKeys[index],
-        opacity: _visibleCategories & (1 << index) != 0 ? 1 : 0,
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 120),
-        // El lector puede enfocar y desplazar hasta un chip visualmente oculto.
-        alwaysIncludeSemantics: true,
+  Widget _filter(int index, InfoTopic? topic, double padding, double maxWidth) {
+    final Color color = topic?.color ?? CureandoTheme.blue;
+    final bool visible = _visibleCategories & (1 << index) != 0;
+    return AnimatedOpacity(
+      key: _categoryKeys[index],
+      opacity: visible ? 1 : 0,
+      duration: !visible || MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 120),
+      // El lector puede enfocar y desplazar hasta un chip visualmente oculto.
+      alwaysIncludeSemantics: true,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
         child: ChoiceChip(
-          label: Text(title),
+          label: Text(topic?.chip ?? 'Todos'),
+          padding: EdgeInsets.zero,
+          labelPadding: EdgeInsets.symmetric(horizontal: padding),
+          materialTapTargetSize: MaterialTapTargetSize.padded,
+          visualDensity: VisualDensity.compact,
           selected: _topic == topic,
-          showCheckmark: true,
+          showCheckmark: false,
           checkmarkColor: color == CureandoTheme.yellow
               ? CureandoTheme.ink
               : Colors.white,
@@ -275,94 +271,186 @@ class _InformationTabState extends State<InformationTab> {
           ),
           labelStyle: TextStyle(
             fontFamily: 'Poppins',
-            fontSize: 11,
+            fontSize: 12,
+            letterSpacing: 0,
             fontWeight: FontWeight.w700,
             color: color == CureandoTheme.yellow
                 ? CureandoTheme.ink
                 : Colors.white,
           ),
-          onSelected: (_) => setState(() => _topic = topic),
+          onSelected: (_) => setState(() {
+            _topic = topic;
+            if (topic == null) {
+              _query = '';
+              _search.clear();
+            }
+          }),
         ),
-      );
+      ),
+    );
+  }
+
+  Widget _topicPreview(InfoTopic topic) {
+    final List<InfoResource> preview = infoCatalog
+        .where(
+          (InfoResource r) =>
+              r.topic == topic && !r.isQuiz && r != infoCatalog.first,
+        )
+        .take(3)
+        .toList();
+    if (preview.length == 1) return _wideCard(preview.single);
+    final List<Widget> cards = <Widget>[
+      for (final InfoResource resource in preview.take(2))
+        InfoResourceCard(
+          key: ValueKey<String>('preview-${resource.id}'),
+          resource: resource,
+          cover: true,
+          onTap: () => _open(resource),
+        ),
+    ];
+    return Column(
+      key: ValueKey<String>('topic-preview-${topic.name}'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (MediaQuery.textScalerOf(context).scale(14) > 21)
+          ...cards.map(
+            (Widget card) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: card,
+            ),
+          )
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 10,
+            children: cards
+                .map((Widget card) => Expanded(child: card))
+                .toList(),
+          ),
+        if (preview.length == 3) ...<Widget>[
+          const SizedBox(height: 10),
+          _wideCard(preview.last),
+        ],
+      ],
+    );
+  }
 
   Widget _topicHeading(InfoTopic topic) => Padding(
     padding: const EdgeInsets.only(top: 6),
-    child: Row(
+    child: Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
       children: <Widget>[
-        Expanded(
-          child: Text(
-            topic.label,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
+        Text(
+          topic.label,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
         ),
         TextButton(
-          onPressed: () => setState(() => _topic = topic),
+          onPressed: () {
+            setState(() => _topic = topic);
+            Scrollable.maybeOf(context)?.position.jumpTo(0);
+          },
           child: Semantics(
-            label: 'Ver todo de ${topic.label}',
+            label: 'Ver catálogo de ${topic.label}',
             excludeSemantics: true,
-            child: const Text('Ver todo ›'),
+            child: const Text('Ver catálogo ›'),
           ),
         ),
       ],
     ),
   );
 
-  Widget _wideCard(InfoResource resource, {bool featured = false}) => SetuCard(
+  Widget _wideCard(
+    InfoResource resource, {
+    bool featured = false,
+  }) => _LibraryCard(
+    key: ValueKey<String>('banner-${resource.id}'),
     onTap: () => _open(resource),
     child: Container(
       constraints: BoxConstraints(minHeight: featured ? 120 : 90),
       decoration: BoxDecoration(
         color: CureandoTheme.blue,
         image: DecorationImage(
-          image: AssetImage(resource.cardAsset!),
+          image: AssetImage(
+            resource.cardAsset!.contains('/stickers/')
+                ? 'assets/welcome/campaign-pattern.png'
+                : resource.cardAsset!,
+          ),
           // El recorte centrado mantiene las figuras a la izquierda del
           // texto y evita costuras cuando el contenido aumenta el alto.
           fit: BoxFit.cover,
         ),
       ),
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            constraints.maxWidth * .42,
-            12,
-            featured ? 12 : 36,
-            12,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (featured)
-                const AvailabilityBadge(offline: true, onDark: true),
-              const SizedBox(height: 4),
-              Text(
-                resource.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+      child: Stack(
+        children: <Widget>[
+          if (resource.cardAsset!.contains('/stickers/'))
+            Positioned.fill(
+              child: FractionallySizedBox(
+                widthFactor: .38,
+                alignment: Alignment.centerLeft,
+                child: InfoArtwork(
+                  asset: resource.cardAsset!,
+                  topic: resource.topic,
                 ),
               ),
-              Text(
-                '${resource.meta}${featured ? '' : ' · Sin internet'}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+            ),
+          if (!featured)
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: <Color>[Color(0x000C62EB), Color(0xF00C62EB)],
+                    stops: <double>[0, .5],
+                  ),
                 ),
               ),
-              if (featured)
-                const Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'Leer ›',
-                    style: TextStyle(
+            ),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) => Padding(
+              padding: EdgeInsets.fromLTRB(
+                constraints.maxWidth * .42,
+                12,
+                12,
+                12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  if (featured)
+                    AvailabilityBadge(offline: resource.offline, onDark: true),
+                  const SizedBox(height: 4),
+                  Text(
+                    resource.title,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-            ],
+                  Text(
+                    '${_resourceMeta(resource)}${featured ? '' : ' · ${resource.availability}'}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (featured)
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Leer ›',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     ),
   );
@@ -384,71 +472,71 @@ class _InformationTabState extends State<InformationTab> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: CureandoTheme.background,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: <Widget>[
-                Text(
-                  route.topic.label,
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                TextButton.icon(
-                  onPressed: _changeTopic,
-                  iconAlignment: IconAlignment.end,
-                  icon: const Icon(Icons.expand_more_rounded, size: 18),
-                  label: const Text('Cambiar tema'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE1E6EF)),
-              borderRadius: BorderRadius.circular(14),
+              color: route.topic.color,
+              borderRadius: BorderRadius.circular(24),
+              image: const DecorationImage(
+                image: AssetImage('assets/welcome/campaign-pattern.png'),
+                fit: BoxFit.cover,
+                opacity: .08,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
+                Row(
                   children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        route.topic.label,
+                        style: TextStyle(
+                          color: route.topic.ink,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 68,
+                      height: 68,
+                      child: Image.asset(
+                        route.topic.sticker,
+                        excludeFromSemantics: true,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ],
+                ),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: <Widget>[
+                    _RoutePieces(done: done, ink: route.topic.ink),
                     Text(
                       '$count de 3 pasos',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    Text(
-                      '+$xp XP ganados',
-                      style: const TextStyle(
-                        color: Color(0xFF067D30),
+                      style: TextStyle(
+                        color: route.topic.ink,
                         fontWeight: FontWeight.w700,
-                        fontSize: 11,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                Row(
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
-                    for (int i = 0; i < 3; i++)
-                      Expanded(
-                        child: Container(
-                          height: 8,
-                          margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-                          decoration: BoxDecoration(
-                            color: done[i]
-                                ? CureandoTheme.blue
-                                : CureandoTheme.blueSoft,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
+                    _RouteReward(completed: done[2], label: '+$xp XP ganados'),
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: route.topic.ink,
                       ),
+                      onPressed: _changeTopic,
+                      icon: const Icon(Icons.expand_more_rounded),
+                      label: const Text('Cambiar tema'),
+                    ),
                   ],
                 ),
               ],
@@ -514,6 +602,10 @@ class _InformationTabState extends State<InformationTab> {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
+    backgroundColor: Colors.white,
+    constraints: BoxConstraints(
+      maxHeight: MediaQuery.sizeOf(context).height * .9,
+    ),
     builder: (BuildContext sheet) => SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
@@ -521,71 +613,46 @@ class _InformationTabState extends State<InformationTab> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             const Text(
-              'Elegí una ruta para aprender',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
-            ),
-            const Text(
-              'Cada tema avanza paso a paso. También podés abrir cualquier recurso suelto en Biblioteca.',
-              style: TextStyle(fontSize: 12),
-            ),
-            const SizedBox(height: 12),
-            for (final InfoRoute route in infoRoutes)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() => _selectedRoute = route);
-                    Navigator.pop(sheet);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.all(12),
-                    alignment: Alignment.centerLeft,
-                    backgroundColor: route.ready
-                        ? CureandoTheme.blueSoft
-                        : Colors.white,
-                    side: BorderSide(
-                      color: route.ready
-                          ? CureandoTheme.blue
-                          : const Color(0xFFE1E6EF),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        route.topic.label,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: CureandoTheme.ink,
-                        ),
-                      ),
-                      Text(
-                        '${_routeCompletedSteps(route)} de 3 pasos',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: route.ready
-                              ? CureandoTheme.blue
-                              : const Color(0xFF92400E),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        route.description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: CureandoTheme.secondaryInk,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const Text(
-              'Cada ruta tiene dos recursos y una pregunta de cierre. La revisión profesional del contenido está pendiente.',
-              style: TextStyle(fontSize: 12),
+              'Elegí tu ruta',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22),
             ),
             const SizedBox(height: 16),
-            FilledButton(
+            LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints box) {
+                final bool single =
+                    MediaQuery.textScalerOf(context).scale(16) > 24;
+                final double width = single
+                    ? box.maxWidth
+                    : (box.maxWidth - 12) / 2;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: <Widget>[
+                    for (final InfoRoute route in infoRoutes)
+                      SizedBox(
+                        width: width,
+                        child: _RouteChoice(
+                          key: ValueKey<String>('route-choice-${route.id}'),
+                          route: route,
+                          done: <bool>[
+                            widget.progress.completedResource(route.steps[0]),
+                            widget.progress.completedResource(route.steps[1]),
+                            widget.progress.completedRoute(route.id),
+                          ],
+                          count: _routeCompletedSteps(route),
+                          selected: _selectedRoute == route,
+                          onTap: () {
+                            setState(() => _selectedRoute = route);
+                            Navigator.pop(sheet);
+                          },
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            TextButton(
               onPressed: () => Navigator.pop(sheet),
               child: const Text('Cerrar'),
             ),
@@ -668,10 +735,12 @@ class InfoResourceCard extends StatelessWidget {
     required this.resource,
     required this.onTap,
     this.cover = false,
+    this.read = false,
   });
   final InfoResource resource;
   final VoidCallback onTap;
   final bool cover;
+  final bool read;
 
   @override
   Widget build(BuildContext context) {
@@ -680,50 +749,41 @@ class InfoResourceCard extends StatelessWidget {
         resource.cardAsset ??
         resource.bannerAsset ??
         resource.cover.assetPath;
+    final bool largeText = MediaQuery.textScalerOf(context).scale(14) > 21;
     final Widget details = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (!cover)
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: <Widget>[
-              AvailabilityBadge(offline: resource.offline),
-              const Text(
-                '+5 XP',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: CureandoTheme.blue,
-                ),
-              ),
-            ],
-          ),
-        const SizedBox(height: 4),
         Text(
           resource.title,
+          maxLines: largeText ? null : 2,
+          overflow: largeText ? null : TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
         ),
         const SizedBox(height: 4),
         Text(
-          '${resource.meta} · ${cover ? resource.availability : resource.topic.chip}',
-          style: const TextStyle(
-            color: CureandoTheme.blue,
+          cover
+              ? '${_resourceMeta(resource)} · ${resource.availability}'
+              : '${resource.topic.label} · ${_resourceMeta(resource)}',
+          style: TextStyle(
+            color: cover && resource.offline
+                ? const Color(0xFF008A35)
+                : CureandoTheme.blue,
             fontSize: 11,
             fontWeight: FontWeight.w700,
           ),
         ),
-        if (!cover)
+        if (!cover) ...<Widget>[
+          const SizedBox(height: 3),
           Text(
             resource.summary,
-            style: const TextStyle(
-              color: CureandoTheme.secondaryInk,
-              fontSize: 12,
-            ),
+            maxLines: largeText ? null : 1,
+            overflow: largeText ? null : TextOverflow.ellipsis,
+            style: const TextStyle(color: Color(0xFF475569), fontSize: 11),
           ),
+        ],
       ],
     );
-    return SetuCard(
+    return _LibraryCard(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -735,36 +795,286 @@ class InfoResourceCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: AspectRatio(
                       aspectRatio: 2,
-                      child: Image.asset(
-                        asset,
-                        fit: BoxFit.cover,
-                        excludeFromSemantics: true,
-                      ),
+                      child: InfoArtwork(asset: asset, topic: resource.topic),
                     ),
                   ),
+                  const SizedBox(height: 8),
                   details,
                 ],
               )
             : Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      asset,
+                    child: SizedBox(
                       width: 54,
-                      height: 60,
-                      fit: BoxFit.cover,
-                      excludeFromSemantics: true,
+                      height: 54,
+                      child: InfoArtwork(asset: asset, topic: resource.topic),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: details),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: <Widget>[
+                            _CatalogPill(
+                              label: resource.availability,
+                              color: const Color(0xFFE4F9EB),
+                              ink: const Color(0xFF008A35),
+                            ),
+                            if (!read)
+                              const _CatalogPill(
+                                label: '+5 XP',
+                                color: CureandoTheme.blue,
+                                ink: Colors.white,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        details,
+                      ],
+                    ),
+                  ),
                 ],
               ),
       ),
     );
   }
+}
+
+// No inventar duración para los videos cuyo tiempo aún no está verificado.
+String _resourceMeta(InfoResource resource) =>
+    '${resource.format.label}${resource.minutes == null ? '' : ' · ${resource.minutes} min'}';
+
+class _LibraryCard extends StatelessWidget {
+  const _LibraryCard({super.key, required this.child, required this.onTap});
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    clipBehavior: Clip.antiAlias,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+      side: const BorderSide(color: Color(0xFFE1E6EF)),
+    ),
+    child: InkWell(onTap: onTap, child: child),
+  );
+}
+
+class _CatalogPill extends StatelessWidget {
+  const _CatalogPill({
+    required this.label,
+    required this.color,
+    required this.ink,
+  });
+  final String label;
+  final Color color;
+  final Color ink;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: ink, fontSize: 10, fontWeight: FontWeight.w700),
+    ),
+  );
+}
+
+class _RouteChoice extends StatelessWidget {
+  const _RouteChoice({
+    super.key,
+    required this.route,
+    required this.done,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final InfoRoute route;
+  final List<bool> done;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool completed = done.last;
+    final String status = completed
+        ? '¡Completada!'
+        : count > 0
+        ? 'En curso'
+        : 'Nueva';
+    final Color ink = route.topic.ink;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label:
+          '${route.topic.label}, $status, $count de 3 pasos, '
+          '${completed ? 'medalla ganada' : '+10 XP al completar'}',
+      onTap: onTap,
+      excludeSemantics: true,
+      child: Material(
+        color: route.topic.color,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: selected ? CureandoTheme.ink : Colors.transparent,
+            width: 3,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Ink(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/welcome/campaign-pattern.png'),
+                fit: BoxFit.cover,
+                opacity: .08,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(child: _RouteReward(completed: completed)),
+                      if (selected) ...<Widget>[
+                        const SizedBox(width: 4),
+                        Icon(Icons.check_circle_rounded, color: ink, size: 22),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Image.asset(
+                      route.topic.sticker,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.contain,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    route.topic.label,
+                    style: TextStyle(
+                      color: ink,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        completed
+                            ? Icons.verified_rounded
+                            : count > 0
+                            ? Icons.play_circle_outline_rounded
+                            : Icons.auto_awesome_rounded,
+                        size: 16,
+                        color: ink,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          status,
+                          style: TextStyle(
+                            color: ink,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _RoutePieces(done: done, ink: ink),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RouteReward extends StatelessWidget {
+  const _RouteReward({required this.completed, this.label});
+  final bool completed;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(
+          completed ? Icons.workspace_premium_rounded : Icons.bolt_rounded,
+          color: CureandoTheme.blue,
+          size: 18,
+        ),
+        const SizedBox(width: 3),
+        Flexible(
+          child: Text(
+            label ?? (completed ? '¡Ganada!' : '+10 XP'),
+            style: const TextStyle(
+              color: CureandoTheme.ink,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _RoutePieces extends StatelessWidget {
+  const _RoutePieces({required this.done, required this.ink});
+  final List<bool> done;
+  final Color ink;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        for (int i = 0; i < done.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Icon(
+              done[i] ? Icons.extension_rounded : Icons.extension_outlined,
+              color: done[i] ? ink : ink.withValues(alpha: .5),
+              size: 24,
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 class _RouteNode extends StatelessWidget {
@@ -780,68 +1090,73 @@ class _RouteNode extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => InkWell(
+  Widget build(BuildContext context) => Semantics(
+    label:
+        'Paso ${index + 1}, ${resource.title}, '
+        '${done ? 'completado' : 'pendiente'}',
+    button: true,
     onTap: onTap,
-    borderRadius: BorderRadius.circular(16),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: index == 2
-                  ? CureandoTheme.pink
-                  : done
-                  ? CureandoTheme.green
-                  : CureandoTheme.blue,
-              border: Border.all(color: Colors.white, width: 3),
-            ),
-            child: Icon(
-              done
-                  ? Icons.check_rounded
-                  : <IconData>[
-                      Icons.menu_book_outlined,
-                      resource.isVideo
-                          ? Icons.play_arrow_rounded
-                          : Icons.menu_book_outlined,
-                      Icons.question_mark_rounded,
-                    ][index],
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  resource.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+    excludeSemantics: true,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 58,
+              height: 58,
+              child: Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Icon(
+                    Icons.extension_rounded,
+                    size: 58,
+                    color: done ? CureandoTheme.yellow : Colors.white,
                   ),
-                ),
-                Text(
-                  '${resource.format.label} · ${done
-                      ? 'Completada'
-                      : index == 2
-                      ? '+10 XP'
-                      : '+5 XP'}${index == 2 ? '' : ' · ${resource.availability}'}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                  Icon(
+                    done
+                        ? Icons.check_rounded
+                        : <IconData>[
+                            Icons.menu_book_outlined,
+                            resource.isVideo
+                                ? Icons.play_arrow_rounded
+                                : Icons.menu_book_outlined,
+                            Icons.question_mark_rounded,
+                          ][index],
+                    color: CureandoTheme.ink,
+                    size: 24,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    resource.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    '${done ? '✓ ' : ''}${index == 2 ? '+10 XP' : '+5 XP'}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );

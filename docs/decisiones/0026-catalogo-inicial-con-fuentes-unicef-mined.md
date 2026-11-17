@@ -10,19 +10,21 @@ La Biblioteca E10/E11 usaba siete recursos ficticios y una sola ruta activa con 
 
 ## Decisión
 
-- Copiar los 21 recursos verificados como constantes Dart: conservar exactamente título, resumen y puntos clave, con organización y URL. Excluir los cuatro no verificados. No leer ni empaquetar el JSON en ejecución. Reutilizar las ilustraciones existentes por tema.
+- Integrar los 21 recursos verificados como constantes Dart, conservando ids, organización, URL y verificación. Excluir los cuatro no verificados. El JSON `docs/contenido/catalogo_informacion.json` conserva la versión verificada completa y no se empaqueta ni lee en ejecución.
+- Simplificación aprobada el 17 nov 2026: los textos de la app son versiones de lectura fácil, con títulos de hasta seis palabras, resúmenes de hasta 70 caracteres y un máximo de tres ideas de hasta 90 caracteres; se seleccionan y acortan las ideas originales sin agregar consejos clínicos. Cada recurso tiene una ilustración distinta dentro de su tema; los stickers transparentes se presentan con fondo de marca y padding.
 - Seis temas: Acoso escolar, Ansiedad, Depresión, Ciberacoso, Emociones y Apoyo. Inicio abre una guía sobre acoso y otra sobre emociones conservando sus dos imágenes.
 - Los textos son **resúmenes adaptados por el equipo SéTú a partir de la fuente; no reemplazan la fuente original**. Responsable editorial: Equipo SéTú (Bugñuelitos, UAM). Territorio mostrado: «Contenido de UNICEF/MINED; adaptado para estudiantes de Nicaragua». Revisión: «Verificado el 16 de noviembre de 2026 · Pendiente revisión profesional (Psicología)».
-- El lector muestra resumen, tarjetas de puntos clave y fuente. En ansiedad/depresión añade el aviso aprobado de peligro/autolesión y acceso a la pestaña Ayuda, sin añadir ni modificar contactos.
+- El lector muestra las tres ideas y la organización fuente en una línea compacta, con enlace a la fuente original o video. El modal «Fuente y revisión» conserva los detalles editoriales y la aclaración de adaptación. Se retiran resúmenes y metadatos repetidos de tarjetas y lector. En ansiedad/depresión mantiene una frase de seguridad ante peligro/autolesión y el botón a Ayuda, sin añadir ni modificar contactos.
 - Los videos se abren **fuera de la app**, con conexión, mediante `Intent.ACTION_VIEW`. El texto adaptado sigue disponible sin internet. Se retira el reproductor simulado; no se descargan ni empaquetan videos ni se añade una dependencia.
 - El canal Android `dev.cureando.app/links` acepta `open(url)`: exige HTTPS y hosts permitidos (UNICEF y sus subdominios; MINED, incluido `www.mined.gob.ni` presente en la fuente; youtube.com, youtu.be, facebook.com, www.facebook.com). Rechaza credenciales, puertos ajenos a HTTPS, espacios y barras inversas. Dart presenta un SnackBar si el canal o la app externa fallan.
 - Cuatro rutas activas (acoso escolar, ansiedad, depresión, ciberacoso): dos recursos verificados del tema más pregunta A/B/C, índice correcto y retroalimentación por opción del JSON. Todas sus referencias ya están verificadas; no se requirió sustitución.
+- «Elegí tu ruta» presenta cuatro tarjetas de marca en cuadrícula 2×2 (una columna con texto ampliado), con sticker, estado, tres piezas de progreso, selección activa y recompensa/medalla. El mapa muestra piezas por paso y XP ganados. Semantics comunica tema, estado y progreso; la gamificación es exclusivamente educativa y conserva las reglas de XP existentes.
 - +5 XP por primera lectura confirmada; +10 XP por cierre correcto confirmado, una vez por cada ruta. No depende de abrir o reproducir el enlace. El almacén cifrado `setu_learning_progress.enc`, su clave y versión 1 se conservan. El identificador histórico `acoso` permanece; recursos retirados y XP anteriores siguen contando. `routes` continúa siendo opcional al leer registros antiguos. No se guardan las respuestas elegidas.
 - La **Guía de acompañamiento socioemocional del MINED** solo se enlaza: no se copia, redistribuye ni empaqueta su PDF. El lector presenta exclusivamente el resumen adaptado aprobado de la entrada editorial, identificado como tal.
 
 ## Fuentes del catálogo inicial
 
-| Tema | Recurso adaptado | Fuente original |
+| Tema | Título en JSON (versión completa) | Fuente original |
 | --- | --- | --- |
 | acoso-escolar | Qué es el acoso escolar y cómo se ve | [UNICEF Comité Español (publicada por UNICEF Ecuador)](https://www.unicef.org/ecuador/media/14476/file) |
 | acoso-escolar | Tipos de acoso escolar y quiénes participan | [Ministerio de Educación de Panamá y UNICEF Panamá](https://www.unicef.org/panama/media/806/file) |
@@ -54,4 +56,4 @@ La fuente editorial marca tres videos como verificados, pero sus notas aclaran q
 
 ## Verificación
 
-Pruebas de integridad contra el JSON de desarrollo (21 entradas exactas y exclusión de las otras cuatro), temas/búsqueda, fuentes/puntos clave, aviso y navegación a Ayuda, cuatro rutas y retroalimentación, enlaces/fallback de Dart, XP únicos y reapertura de registros cifrados v1. Ejecutar `flutter analyze` y la suite completa `flutter test` desde `apps/mobile`. La apertura real del navegador Android requiere comprobación en un dispositivo; las pruebas Flutter simulan el canal nativo.
+Pruebas de integridad de ids, fuentes y verificación contra el JSON de desarrollo (21 entradas y exclusión de las otras cuatro), límites de lectura fácil, imágenes distintas por categoría, temas/búsqueda, fuentes/puntos clave, aviso y navegación a Ayuda, cuatro rutas con estado/progreso e insignia al completar, retroalimentación, enlaces/fallback de Dart, XP únicos y reapertura de registros cifrados v1. Ejecutar `flutter analyze` y la suite completa `flutter test` desde `apps/mobile`. La apertura real del navegador Android requiere comprobación en un dispositivo; las pruebas Flutter simulan el canal nativo.

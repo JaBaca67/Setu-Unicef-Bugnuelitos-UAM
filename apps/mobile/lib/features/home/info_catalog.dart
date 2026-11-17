@@ -98,9 +98,8 @@ const String _info = 'assets/home/info';
 const List<InfoResource> infoCatalog = <InfoResource>[
   InfoResource(
     id: "acoso-guia-prevenir",
-    title: "Qué es el acoso escolar y cómo se ve",
-    summary:
-        "Explica qué es el acoso escolar, sus formas (física, verbal, exclusión, en redes) y quiénes participan.",
+    title: "¿Es una broma o acoso?",
+    summary: "Aprendé a reconocer el acoso y a buscar apoyo.",
     organization: "UNICEF Comité Español (publicada por UNICEF Ecuador)",
     url: "https://www.unicef.org/ecuador/media/14476/file",
     topic: InfoTopic.acoso,
@@ -116,27 +115,22 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "El acoso escolar es cuando un estudiante molesta, humilla o lastima a otro una y otra vez a propósito, y quien lo sufre no logra defenderse.",
+        "El acoso es lastimar a alguien a propósito muchas veces, sin que pueda defenderse.",
       ),
       InfoPoint(
         'Idea 2',
-        "Puede ser con golpes o quitándote tus cosas, con insultos y rumores, dejándote fuera del grupo o por internet.",
+        "Puede pasar con golpes, insultos, rumores, exclusión o por internet.",
       ),
       InfoPoint(
         'Idea 3',
-        "No solo participan quien acosa y quien lo sufre: quien mira y se queda callado también influye en lo que pasa.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Si te está pasando, no es tu culpa. Contáselo a una persona adulta de confianza y al personal del colegio para que actúen.",
+        "Si te pasa, no es tu culpa: contáselo a una persona adulta de confianza.",
       ),
     ],
   ),
   InfoResource(
     id: "acoso-protocolo-panama",
-    title: "Tipos de acoso escolar y quiénes participan",
-    summary:
-        "Protocolo escolar que describe las condiciones del acoso, sus seis formas y el papel de quienes lo presencian.",
+    title: "Cómo ser un testigo solidario",
+    summary: "Descubrí cómo ayudar sin sumarte a las burlas.",
     organization: "Ministerio de Educación de Panamá y UNICEF Panamá",
     url: "https://www.unicef.org/panama/media/806/file",
     topic: InfoTopic.acoso,
@@ -146,33 +140,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Protocolo (2016) dirigido a docentes y directivos; se abrió y extrajo el texto. Puntos adaptados para estudiantes. Incluye directorio de contactos de Panamá que no se usa aquí.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_featured_broma.png',
-    thumbAsset: '$_info/e11a_banner_broma.png',
-    bannerAsset: '$_info/e11a_banner_broma.png',
+    cardAsset: '$_info/e10a_card_testigo.png',
+    thumbAsset: '$_info/e10a_card_testigo.png',
+    bannerAsset: '$_info/e10a_card_testigo.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Se habla de acoso cuando el maltrato se repite durante un tiempo, ocurre entre estudiantes y la persona afectada no logra detenerlo.",
+        "El acoso se repite y a quien lo sufre le cuesta detenerlo.",
       ),
       InfoPoint(
         'Idea 2',
-        "Hay acoso verbal, psicológico, físico, no verbal (gestos, exclusión), sexual y cibernético; también dar 'me gusta' o reenviar burlas cuenta.",
+        "No apoyés las burlas: avisale a una persona adulta de confianza.",
       ),
       InfoPoint(
         'Idea 3',
-        "Quienes miran pueden creer que burlarse es normal. Vos podés romper ese ciclo no apoyando las burlas y avisando a una persona adulta.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Una persona adulta que te escucha debería tomarte en serio y no decirte 'no es para tanto'. Tenés derecho a un ambiente escolar sano.",
+        "Tenés derecho a que te escuchen y tomen en serio lo que te pasa.",
       ),
     ],
   ),
   InfoResource(
     id: "acoso-protocolo-mined",
-    title: "Cómo actúa tu escuela ante el acoso en Nicaragua",
-    summary:
-        "Protocolo de las Consejerías de las Comunidades Educativas: qué es el acoso, sus tipos y los pasos que sigue la escuela.",
+    title: "¿Cómo debe escucharte tu escuela?",
+    summary: "Conocé cómo debe acompañarte tu colegio ante el acoso.",
     organization: "MINED Nicaragua",
     url:
         "https://www.mined.gob.ni/biblioteca/wp-content/uploads/2024/09/protocolo-3-acoso-escolar.pdf",
@@ -183,33 +172,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Protocolo dirigido a la comunidad educativa (docentes, dirección, consejerías); se abrió y extrajo el texto. La sección de señales de alerta tiene texto con codificación dañada y no se pudo leer completa. Puntos adaptados para estudiantes.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_featured_broma.png',
-    thumbAsset: '$_info/e11a_banner_broma.png',
-    bannerAsset: '$_info/e11a_banner_broma.png',
+    cardAsset: '$_info/stickers/sticker_rompecabezas.png',
+    thumbAsset: '$_info/stickers/sticker_rompecabezas.png',
+    bannerAsset: '$_info/stickers/sticker_rompecabezas.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "El acoso escolar es un maltrato constante entre estudiantes, con abuso de poder; puede pasar dentro o fuera de la escuela y por redes sociales.",
+        "El acoso es maltrato constante con abuso de poder, dentro o fuera del colegio.",
       ),
       InfoPoint(
         'Idea 2',
-        "Puede ser físico, contra tus cosas, verbal (apodos, burlas, chantajes), psicológico (aislarte, la ley del hielo) o por internet.",
+        "La dirección debe ser informada y se busca a la familia.",
       ),
       InfoPoint(
         'Idea 3',
-        "Cuando alguien de la comunidad educativa se entera, la dirección del centro debe ser informada y se busca a la familia.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "La escuela debe escucharte en un lugar privado, con respeto, sin culparte ni etiquetarte, y acompañarte o buscar apoyo especializado.",
+        "Deben escucharte en privado, sin culparte, y acompañarte o buscar apoyo.",
       ),
     ],
   ),
   InfoResource(
     id: "acoso-modulo-hat",
-    title: "Si te acosan, si acosás o si lo ves pasar",
-    summary:
-        "Módulo 19 de 'Ayudando a los adolescentes a prosperar': qué hacer según tu papel en una situación de acoso.",
+    title: "Si ves acoso, ¿qué hacés?",
+    summary: "Encontrá formas de actuar frente al acoso.",
     organization: "UNICEF (Adolescent Mental Health Hub)",
     url:
         "https://www.unicef.org/adolescentmentalhealthhub/media/1666/file/HAT-Facilitators-Guide-Spanish.pdf",
@@ -220,33 +204,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Guía de 116 páginas para facilitadores que trabajan con adolescentes de 15 a 19 años; se usó el Módulo 19 (acoso escolar). Traducción al español con errores tipográficos. Puntos adaptados a lo que el estudiante puede hacer; para 3.º a 6.º grado conviene simplificar.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_featured_broma.png',
-    thumbAsset: '$_info/e11a_banner_broma.png',
-    bannerAsset: '$_info/e11a_banner_broma.png',
+    cardAsset: '$_info/stickers/sticker_pieza_azul.png',
+    thumbAsset: '$_info/stickers/sticker_pieza_azul.png',
+    bannerAsset: '$_info/stickers/sticker_pieza_azul.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "El acoso es cuando alguien, una y otra vez, hace o dice cosas para que otra persona se sienta herida, avergonzada o con miedo, en persona o en línea.",
+        "Si te acosan, no es tu culpa y no tenés que enfrentarlo sin compañía.",
       ),
       InfoPoint(
         'Idea 2',
-        "Si te pasa a vos: no es tu culpa, nadie merece ese trato y no tenés que enfrentarlo solo o sola.",
+        "Si molestás a alguien, podés cambiar y pedir apoyo para hacerlo.",
       ),
       InfoPoint(
         'Idea 3',
-        "Si estás molestando a alguien: es un comportamiento que se puede cambiar, y pedir apoyo para hacerlo es una muestra de fuerza.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Si lo ves pasar: sos parte de la comunidad. Podés no sumarte, acompañar a quien lo sufre y buscar a una persona adulta de confianza.",
+        "Si lo ves, no te sumés: acompañá y buscá a una persona adulta de confianza.",
       ),
     ],
   ),
   InfoResource(
     id: "ansiedad-como-gestionar",
-    title: "Qué es la ansiedad y cómo calmarte",
-    summary:
-        "Explica la ansiedad, cómo se siente en el cuerpo y dos ejercicios sencillos para volver a la calma.",
+    title: "¿Sentís nervios? Probá una pausa",
+    summary: "Reconocé la ansiedad y una forma de volver a la calma.",
     organization: "UNICEF América Latina y el Caribe",
     url:
         "https://www.unicef.org/lac/crianza/seguridad-proteccion/como-gestionar-ansiedad",
@@ -257,37 +236,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo para madres, padres y personas cuidadoras; puntos adaptados para que el estudiante los aplique. No se incluye ningún diagnóstico.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_semaforo.png',
+    thumbAsset: '$_info/stickers/sticker_semaforo.png',
+    bannerAsset: '$_info/stickers/sticker_semaforo.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Todas las personas sentimos preocupación o miedo a veces. Se vuelve un problema cuando no se va y te complica la escuela, la casa o el juego.",
+        "La preocupación necesita apoyo si no se va y te complica la vida diaria.",
       ),
       InfoPoint(
         'Idea 2',
-        "Podés notarla en el cuerpo: corazón acelerado, dolor de estómago, sudor o problemas para dormir; también cuesta concentrarse.",
+        "Respirá con la panza: inflala al tomar aire y soltalo despacio.",
       ),
       InfoPoint(
         'Idea 3',
-        "Probá el juego de los sentidos: nombrá 4 cosas que ves, 3 que oís, 2 que olés y 1 que saboreás.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Respirá con la panza: poné una mano en el estómago, inflalo como un globo al tomar aire y soltalo despacio.",
-      ),
-      InfoPoint(
-        'Idea 5',
-        "Si la preocupación no se va, contáselo a una persona adulta de confianza; un profesional de salud puede ayudarte.",
+        "Si la preocupación sigue, contáselo a una persona adulta de confianza.",
       ),
     ],
   ),
   InfoResource(
     id: "ansiedad-el-salvador",
-    title: "La ansiedad: señales y qué podés hacer",
-    summary:
-        "Describe señales físicas, emocionales y de conducta de la ansiedad y hábitos que ayudan a sentirse mejor.",
+    title: "¿Qué te dice tu cuerpo?",
+    summary: "Conocé algunas señales de ansiedad y cuándo pedir apoyo.",
     organization: "UNICEF El Salvador",
     url: "https://www.unicef.org/elsalvador/historias/ansiedad",
     topic: InfoTopic.ansiedad,
@@ -297,33 +267,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (2023) dirigido a madres, padres y cuidadores; puntos adaptados para estudiantes. Contenido muy similar al de UNICEF LAC.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_cara_amarilla.png',
+    thumbAsset: '$_info/stickers/sticker_cara_amarilla.png',
+    bannerAsset: '$_info/stickers/sticker_cara_amarilla.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Un poco de ansiedad es normal y hasta te protege; preocupa cuando dura mucho o te impide hacer tus cosas.",
+        "La ansiedad preocupa cuando dura mucho o te impide hacer tus cosas.",
       ),
       InfoPoint(
         'Idea 2',
-        "Puede sentirse como falta de aire, dolor de cabeza, inquietud, irritabilidad o pensar todo el tiempo en lo que va a pasar.",
+        "Podés sentir falta de aire, dolor de cabeza o inquietud.",
       ),
       InfoPoint(
         'Idea 3',
-        "Recordá que esa sensación pasa. Dormir lo suficiente y dejar el celular fuera del cuarto en la noche puede ayudarte.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Hablá con una persona adulta de confianza sobre cuándo te pasa y cuánto dura. Solo un profesional de salud puede hacer un diagnóstico.",
+        "Contá cuándo te pasa y cuánto dura; solo un profesional puede diagnosticar.",
       ),
     ],
   ),
   InfoResource(
     id: "ansiedad-crisis-chile",
-    title: "Cuando las emociones te desbordan",
-    summary:
-        "Qué es una crisis de ansiedad o angustia y cómo una persona adulta puede acompañarte a calmarte.",
+    title: "Cuando todo te desborda",
+    summary: "Buscá calma y compañía cuando las emociones te superan.",
     organization: "UNICEF Chile",
     url:
         "https://www.unicef.org/chile/historias/%C2%BFc%C3%B3mo-ayudar-los-adolescentes-manejar-una-crisis-de-ansiedad-o-angustia",
@@ -334,33 +299,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo breve dirigido a madres, padres y personas adultas; puntos adaptados al estudiante. No indica cuándo buscar ayuda profesional.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_pieza_amarilla.png',
+    thumbAsset: '$_info/stickers/sticker_pieza_amarilla.png',
+    bannerAsset: '$_info/stickers/sticker_pieza_amarilla.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Una crisis de ansiedad o angustia es cuando sentís que el miedo, la rabia o la frustración te desbordan.",
+        "En una crisis podés sentir que el miedo, la rabia o la frustración te superan.",
       ),
       InfoPoint(
         'Idea 2',
-        "Ayuda ir a un lugar tranquilo con alguien de confianza y respirar despacio con la panza junto a esa persona.",
+        "Buscá un lugar tranquilo y respirá despacio con alguien de confianza.",
       ),
       InfoPoint(
         'Idea 3',
-        "Tenés derecho a que te escuchen sin interrumpirte ni juzgarte. Buscá a una persona adulta que te dé esa calma.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "En los días tranquilos también vale la pena hablar de tu día, tus amistades, la escuela y lo que te pasa en internet.",
+        "Tenés derecho a que te escuchen sin interrumpirte ni juzgarte.",
       ),
     ],
   ),
   InfoResource(
     id: "ansiedad-video-emociones-nicaragua",
-    title: "La ansiedad y el estrés también les pasan a niñas y niños",
-    summary:
-        "Video de UNICEF Nicaragua sobre cuidar las emociones de niñas y niños ante situaciones nuevas.",
+    title: "¿Los cambios te dan nervios?",
+    summary: "Descubrí por qué los cambios pueden mover tus emociones.",
     organization: "UNICEF Nicaragua",
     url:
         "https://www.facebook.com/UNICEFNicaragua/videos/covid-19-cuido-de-emociones-de-ni%C3%B1os-y-ni%C3%B1as/896121294196673/",
@@ -371,29 +331,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Video de Facebook que no se pudo ver; puntos basados solo en la descripción visible de la publicación. Contexto COVID-19 (fecha antigua) y dirigido a madres, padres y cuidadores. Revisar el video antes de publicarlo.",
     offline: false, // Video externo; su resumen sigue disponible sin internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_dado.png',
+    thumbAsset: '$_info/stickers/sticker_dado.png',
+    bannerAsset: '$_info/stickers/sticker_dado.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "La ansiedad y el estrés no son solo cosa de personas adultas: a niñas, niños y adolescentes también les pasa.",
+        "La ansiedad y el estrés también les pasan a niñas, niños y adolescentes.",
       ),
       InfoPoint(
         'Idea 2',
-        "Sentirte distinto o distinta cuando cambia todo a tu alrededor es normal.",
+        "Es normal sentirte diferente cuando cambia todo a tu alrededor.",
       ),
       InfoPoint(
         'Idea 3',
-        "Las personas adultas que te cuidan pueden ayudarte; contales cómo te sentís.",
+        "Contales cómo te sentís a las personas adultas que te cuidan.",
       ),
     ],
   ),
   InfoResource(
     id: "depresion-uruguay",
-    title: "Tristeza que no se va: qué es la depresión",
-    summary:
-        "Explica la depresión, sus señales en niñas, niños y adolescentes y qué ayuda, sin reemplazar a un profesional.",
+    title: "Cuando la tristeza no se va",
+    summary: "Conocé señales de depresión y cómo buscar apoyo.",
     organization: "UNICEF Uruguay",
     url:
         "https://www.unicef.org/uruguay/crianza/adolescencia/qu%C3%A9-es-la-depresi%C3%B3n-y-como-reconocerla-en-ni%C3%B1os-ni%C3%B1as-y-adolescentes",
@@ -404,37 +363,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (2024) dirigido a madres, padres, cuidadores y docentes; puntos adaptados al estudiante. La página incluye una línea telefónica de Uruguay que se omite a propósito.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_cara_roja.png',
+    thumbAsset: '$_info/stickers/sticker_cara_roja.png',
+    bannerAsset: '$_info/stickers/sticker_cara_roja.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Estar triste a veces es normal. La depresión es distinta: la tristeza o el enojo duran mucho y afectan tu día a día.",
+        "La depresión puede ser tristeza o enojo que duran mucho y afectan tu día a día.",
       ),
       InfoPoint(
         'Idea 2',
-        "Puede notarse en cansancio, cambios en el sueño o el apetito, perder interés en lo que te gustaba o alejarte de tus amistades.",
+        "Solo un profesional puede saber si es depresión; una señal no la confirma.",
       ),
       InfoPoint(
         'Idea 3',
-        "Solo un médico o un profesional de salud mental puede saber si es depresión. Tener una señal no significa que la tengas.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Mantener rutinas de sueño y comida, moverte, dibujar o escribir lo que sentís puede ayudarte.",
-      ),
-      InfoPoint(
-        'Idea 5',
-        "Si pensás en hacerte daño, contáselo ya a una persona adulta de confianza o pedí ayuda en un centro de salud.",
+        "Si pensás en hacerte daño, contáselo ya a una persona adulta de confianza.",
       ),
     ],
   ),
   InfoResource(
     id: "depresion-el-salvador",
-    title: "La depresión: señales y cómo pedir apoyo",
-    summary:
-        "Describe cómo puede verse la depresión en la niñez y adolescencia y por qué buscar ayuda temprano sirve.",
+    title: "¿Llevás días sin ganas?",
+    summary: "Expresá lo que sentís y buscá compañía para pedir apoyo.",
     organization: "UNICEF El Salvador",
     url: "https://www.unicef.org/elsalvador/historias/depresi%C3%B3n",
     topic: InfoTopic.depresion,
@@ -444,33 +394,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (2023) dirigido a madres, padres y cuidadores; puntos adaptados. Menciona ideas de suicidio y autolesiones: si se muestra a estudiantes, acompañarlo de la ruta de ayuda de la app.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_dibujo.png',
+    thumbAsset: '$_info/stickers/sticker_dibujo.png',
+    bannerAsset: '$_info/stickers/sticker_dibujo.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "La depresión no es solo estar triste un día: es un malestar que dura, quita las ganas y cambia cómo dormís, comés o pensás.",
+        "La depresión es un malestar que dura y cambia tus ganas, sueño o apetito.",
       ),
       InfoPoint(
         'Idea 2',
-        "A veces no se dice con palabras: se nota en dibujos, en la música que escuchás o en dejar de hacer lo que te gustaba.",
+        "Si no querés hablar, podés dibujar o escribir lo que sentís.",
       ),
       InfoPoint(
         'Idea 3',
-        "No tenés que hablar si no querés: dibujar, escribir o hacer algo creativo también te ayuda a sacar lo que sentís.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "La depresión se puede tratar y pedir ayuda temprano sirve. Contale a una persona adulta de confianza cómo te sentís.",
+        "Pedir ayuda temprano sirve: contale cómo te sentís a un adulto de confianza.",
       ),
     ],
   ),
   InfoResource(
     id: "ciberacoso-que-es",
-    title: "Ciberacoso: qué es y cómo detenerlo",
-    summary:
-        "Preguntas y respuestas para adolescentes: cómo reconocer el ciberacoso, bloquear, reportar y pedir ayuda.",
+    title: "Si te molestan en línea",
+    summary: "Reconocé el ciberacoso y conocé cómo buscar ayuda.",
     organization: "UNICEF",
     url:
         "https://www.unicef.org/es/end-violence/ciberacoso-que-es-y-como-detenerlo",
@@ -481,37 +426,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo de preguntas y respuestas dirigido a adolescentes y jóvenes. Menciona líneas de ayuda nacionales de forma genérica; no se incluyen números.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_banner_chat.png',
+    cardAsset: '$_info/e10b_thumb_chat.png',
     thumbAsset: '$_info/e10b_thumb_chat.png',
     bannerAsset: '$_info/e10b_thumb_chat.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "El ciberacoso es molestar, asustar o humillar a alguien una y otra vez por redes, chats, juegos o el celular.",
+        "El ciberacoso es asustar o humillar muchas veces por redes, chats o juegos.",
       ),
       InfoPoint(
         'Idea 2',
-        "Ya no es broma si te duele, si se ríen de vos y no con vos, o si siguen después de pedirles que paren.",
+        "Guardá capturas, bloqueá y reportá la cuenta o publicación en esa plataforma.",
       ),
       InfoPoint(
         'Idea 3',
-        "Guardá capturas de los mensajes, bloqueá a la persona y reportá la cuenta o publicación en la app.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Contáselo a una persona adulta de confianza: tu familia, un docente o la consejería de tu escuela.",
-      ),
-      InfoPoint(
-        'Idea 5',
-        "Si le pasa a un amigo o amiga, escuchalo sin juzgar y animalo a contárselo a una persona adulta.",
+        "Contáselo a una persona adulta de confianza, de tu familia o colegio.",
       ),
     ],
   ),
   InfoResource(
     id: "ciberacoso-convivencia-digital",
-    title: "Convivencia digital: cuidarte y cuidar en internet",
-    summary:
-        "Guía para adolescentes sobre tipos de violencia digital y acciones para protegerte y cortar la cadena.",
+    title: "Pasó en el chat del grupo",
+    summary: "Cuidate en internet y ayudá a cortar las burlas.",
     organization:
         "UNICEF Argentina y Ministerio Público Tutelar de Buenos Aires",
     url:
@@ -523,37 +459,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Guía (octubre 2025) escrita para adolescentes y ya en voseo rioplatense. Menciona leyes argentinas (grooming como delito) que no aplican tal cual a Nicaragua; no se usaron en los puntos.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_banner_chat.png',
-    thumbAsset: '$_info/e10b_thumb_chat.png',
-    bannerAsset: '$_info/e10b_thumb_chat.png',
+    cardAsset: '$_info/stickers/sticker_pregunta.png',
+    thumbAsset: '$_info/stickers/sticker_pregunta.png',
+    bannerAsset: '$_info/stickers/sticker_pregunta.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Pensá antes de publicar: lo que subís deja huella y es muy difícil de borrar del todo.",
+        "Pensá antes de publicar: lo que subís deja huella y cuesta borrarlo.",
       ),
       InfoPoint(
         'Idea 2',
-        "Poné tus cuentas en privado, usá contraseñas seguras y no compartas tu dirección, teléfono ni el nombre de tu escuela con desconocidos.",
+        "Poné tus cuentas en privado y no compartás datos personales con desconocidos.",
       ),
       InfoPoint(
         'Idea 3',
-        "No respondas a la agresión con más agresión: bloqueá, reportá y guardá capturas como prueba.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Cortá la cadena: no compartas, comentes ni des 'me gusta' a publicaciones que se burlan de alguien.",
-      ),
-      InfoPoint(
-        'Idea 5',
-        "Si algo en internet te asusta o te hace sentir mal, no te lo guardés: contáselo a una persona adulta de confianza.",
+        "No compartás ni apoyés publicaciones que se burlan de alguien.",
       ),
     ],
   ),
   InfoResource(
     id: "ciberacoso-video-costa-rica",
-    title: "Las palabras importan, también en línea",
-    summary:
-        "Video del Día Internacional contra la Violencia y el Acoso Escolar, incluido el ciberacoso.",
+    title: "Tus palabras también cuentan",
+    summary: "Pensá cómo puede sentirse quien lee lo que escribís.",
     organization: "UNICEF Costa Rica",
     url:
         "https://www.facebook.com/UNICEFCostaRica/videos/en-el-marco-del-d%C3%ADa-internacional-contra-la-violencia-y-el-acoso-escolar-incluid/1425434129259457/",
@@ -564,29 +491,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Video de Facebook que no se pudo ver; puntos basados solo en la descripción visible de la publicación. Revisar el video antes de publicarlo.",
     offline: false, // Video externo; su resumen sigue disponible sin internet.
-    cardAsset: '$_info/e10a_banner_chat.png',
-    thumbAsset: '$_info/e10b_thumb_chat.png',
-    bannerAsset: '$_info/e10b_thumb_chat.png',
+    cardAsset: '$_info/e10b_thumb_linea.png',
+    thumbAsset: '$_info/e10b_thumb_linea.png',
+    bannerAsset: '$_info/e10b_thumb_linea.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Antes de publicar, comentar o compartir, pensá cómo se puede sentir la otra persona.",
+        "Antes de publicar o compartir, pensá cómo puede sentirse la otra persona.",
       ),
       InfoPoint(
         'Idea 2',
-        "Lo que escribís en línea también puede lastimar: las palabras importan en internet igual que en persona.",
+        "Lo que escribís en línea también puede lastimar, igual que en persona.",
       ),
       InfoPoint(
         'Idea 3',
-        "Podés ayudar a que internet sea un lugar más seguro eligiendo no sumarte al ciberacoso.",
+        "Ayudá a que internet sea más seguro: no te sumés al ciberacoso.",
       ),
     ],
   ),
   InfoResource(
     id: "ciberacoso-video-huella-nicaragua",
-    title: "El ciberacoso deja huella",
-    summary:
-        "Video de UNICEF Nicaragua sobre la huella emocional y digital del ciberacoso.",
+    title: "Lo que pasa en línea importa",
+    summary: "Conocé la huella que puede dejar el ciberacoso.",
     organization: "UNICEF Nicaragua",
     url:
         "https://www.facebook.com/UNICEFNicaragua/videos/el-ciberacoso-ocurre-a-menudo-y-deja-una-huella-emocional-en-la-salud-mental-y-d/866821897723238/",
@@ -597,29 +523,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Video de Facebook que no se pudo ver; puntos basados solo en la descripción visible (campaña #EnMiMente, Día del Internet Seguro). Revisar el video antes de publicarlo.",
     offline: false, // Video externo; su resumen sigue disponible sin internet.
-    cardAsset: '$_info/e10a_banner_chat.png',
-    thumbAsset: '$_info/e10b_thumb_chat.png',
-    bannerAsset: '$_info/e10b_thumb_chat.png',
+    cardAsset: '$_info/stickers/sticker_pieza_verde_misma.png',
+    thumbAsset: '$_info/stickers/sticker_pieza_verde_misma.png',
+    bannerAsset: '$_info/stickers/sticker_pieza_verde_misma.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "El ciberacoso pasa seguido y puede afectar cómo te sentís y tu salud mental.",
+        "El ciberacoso puede afectar cómo te sentís y tu salud mental.",
       ),
       InfoPoint(
         'Idea 2',
-        "Lo que pasa en línea deja huella digital: esos registros pueden servirte como prueba para reportar.",
+        "Lo que pasa en línea deja registros que pueden servir como prueba.",
       ),
       InfoPoint(
         'Idea 3',
-        "Guardar esa prueba y contárselo a alguien de confianza es una forma de pedir ayuda.",
+        "Guardá esas pruebas y contáselo a alguien de confianza para pedir ayuda.",
       ),
     ],
   ),
   InfoResource(
     id: "emociones-cuidar-tu-salud-mental",
-    title: "Cómo cuidar tu salud mental",
-    summary:
-        "Consejos para adolescentes: aceptar lo que sentís, cuidar tu cuerpo, darte tiempo y pedir ayuda.",
+    title: "Cuidá lo que sentís",
+    summary: "Dale espacio a tus emociones y cuidate cada día.",
     organization: "UNICEF México",
     url: "https://www.unicef.org/mexico/como-cuidar-tu-salud-mental",
     topic: InfoTopic.emociones,
@@ -634,28 +559,19 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Ninguna emoción es 'buena' o 'mala': el miedo, la tristeza, la frustración y la alegría te dicen algo sobre lo que te pasa.",
+        "Cada emoción te dice algo sobre lo que te pasa; ninguna es buena o mala.",
       ),
-      InfoPoint(
-        'Idea 2',
-        "Dormí bien, comé variado y movete al menos 15 minutos al día; tu cuerpo y tus emociones están conectados.",
-      ),
+      InfoPoint('Idea 2', "Hablate con cariño y tené paciencia con vos."),
       InfoPoint(
         'Idea 3',
-        "Hacé cosas que disfrutás, pasá tiempo con amistades y familia, y tomá pausas de las redes. Escribir un diario también ayuda.",
-      ),
-      InfoPoint('Idea 4', "Hablate con cariño y tené paciencia con vos."),
-      InfoPoint(
-        'Idea 5',
-        "Si una emoción pesa mucho o dura demasiado, no tenés que cargarla solo o sola: buscá a una persona adulta de confianza.",
+        "Si una emoción pesa mucho o dura demasiado, buscá a un adulto de confianza.",
       ),
     ],
   ),
   InfoResource(
     id: "emociones-ponerles-nombre",
-    title: "Ponerle nombre a lo que sentís",
-    summary:
-        "Tres ideas para expresar emociones: buscar empatía, nombrarlas con precisión y usar formas sin palabras.",
+    title: "Ponele nombre a lo que sentís",
+    summary: "Descubrí distintas formas de expresar tus emociones.",
     organization: "UNICEF Perú",
     url:
         "https://www.unicef.org/peru/tres-maneras-de-ayudar-tu-hijo-adolescente-expresar-sus-emociones",
@@ -666,29 +582,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo dirigido a madres, padres y cuidadores de adolescentes; puntos adaptados a lo que el estudiante puede hacer.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_cara_verde.png',
+    thumbAsset: '$_info/stickers/sticker_cara_verde.png',
+    bannerAsset: '$_info/stickers/sticker_cara_verde.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Expresar lo que sentís es sano. Muchas veces primero necesitás que te comprendan y después los consejos.",
+        "Buscá que te comprendan: a veces necesitás eso antes que consejos.",
       ),
       InfoPoint(
         'Idea 2',
-        "Intentá ser específico o específica: no es lo mismo estar frustrado, nervioso o preocupado. Ponerle nombre exacto puede aliviarte.",
+        "Nombrá lo que sentís: ¿frustración, nervios o preocupación?",
       ),
       InfoPoint(
         'Idea 3',
-        "Si no querés hablar, también está bien: moverte, llorar, escuchar música o dibujar son formas sanas de sacar lo que sentís.",
+        "Si no querés hablar, podés moverte, llorar, escuchar música o dibujar.",
       ),
     ],
   ),
   InfoResource(
     id: "emociones-acompanar-sin-juicios",
-    title: "Técnicas para calmarte y cuidarte",
-    summary:
-        "Reconocer y expresar emociones como parte de la salud mental, con ejercicios de respiración y de los cinco sentidos.",
+    title: "Date un momento para cuidarte",
+    summary: "Reconocé tus emociones y probá una pausa.",
     organization: "UNICEF México",
     url:
         "https://www.unicef.org/mexico/historias/salud-mental-adolescente-c%C3%B3mo-acompa%C3%B1ar-con-empat%C3%ADa-y-sin-juicios",
@@ -699,37 +614,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo (octubre 2025) dirigido a madres, padres, cuidadores y amistades de adolescentes; puntos adaptados al estudiante.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10b_thumb_emociones.png',
-    thumbAsset: '$_info/e10b_thumb_emociones.png',
-    bannerAsset: '$_info/e10b_thumb_emociones.png',
+    cardAsset: '$_info/stickers/sticker_dibujo.png',
+    thumbAsset: '$_info/stickers/sticker_dibujo.png',
+    bannerAsset: '$_info/stickers/sticker_dibujo.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Reconocer y expresar lo que sentís es una señal de buena salud mental, no de debilidad.",
+        "Expresar lo que sentís es parte de cuidar tu salud mental.",
       ),
       InfoPoint(
         'Idea 2',
-        "Respiración para calmarte: tomá aire contando hasta 4, sostené 2 y soltalo despacio contando hasta 6.",
+        "Tomá aire contando hasta 4, sostené 2 y soltalo despacio contando hasta 6.",
       ),
       InfoPoint(
         'Idea 3',
-        "Ejercicio 5-4-3-2-1: buscá 5 cosas que ves, 4 que oís, 3 que tocás, 2 que olés y 1 que saboreás.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Rutinas, buen sueño, menos redes y actividades como el arte, la escritura o el deporte te ayudan a prevenir el malestar.",
-      ),
-      InfoPoint(
-        'Idea 5',
-        "Si el malestar dura más de dos semanas o te cuesta hacer tus cosas, contáselo a una persona adulta de confianza.",
+        "Si el malestar dura o te cuesta hacer tus cosas, contáselo a un adulto de confianza.",
       ),
     ],
   ),
   InfoResource(
     id: "apoyo-yo-apoyo-a-mis-amigos",
-    title: "Yo apoyo a mis amigos: observar, escuchar y conectar",
-    summary:
-        "Cómo acompañar a un amigo o amiga que la está pasando mal, sin cargar con todo y sabiendo cuándo buscar a una persona adulta.",
+    title: "¿Cómo acompañás a una amistad?",
+    summary: "Escuchá y conectá con ayuda sin cargar con todo.",
     organization: "UNICEF Uruguay",
     url: "https://www.unicef.org/uruguay/media/13716/file",
     topic: InfoTopic.apoyo,
@@ -740,32 +646,24 @@ const List<InfoResource> infoCatalog = <InfoResource>[
         "Guía conceptual (2025) del programa 'Yo apoyo a mis amigos' (UNICEF, Save the Children, OMS), dirigida a personas adultas que forman a adolescentes; puntos adaptados para estudiantes. URL limpia sin parámetros de rastreo.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
     cardAsset: '$_info/e10a_card_apoyo.png',
-    thumbAsset: '$_info/e10b_thumb_alerta.png',
-    bannerAsset: '$_info/e10b_thumb_alerta.png',
+    thumbAsset: '$_info/e10a_card_apoyo.png',
+    bannerAsset: '$_info/e10a_card_apoyo.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Podés apoyar a un amigo o amiga con tres pasos: observar cómo está, escucharlo con atención y conectarlo con ayuda.",
+        "Observá cómo está tu amistad, escuchala y ayudala a conectar con apoyo.",
       ),
-      InfoPoint(
-        'Idea 2',
-        "Escuchar sin juzgar y mostrar que entendés ya es un gran apoyo; no tenés que resolverlo todo.",
-      ),
+      InfoPoint('Idea 2', "Escuchá sin juzgar: no tenés que resolverlo todo."),
       InfoPoint(
         'Idea 3',
-        "Buscá a una persona adulta si tu amigo o amiga está en peligro, sufre abuso, piensa en hacerse daño o en dañar a otros.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Cuidarte también importa: si te sentís sin fuerzas o no estás preparado o preparada, está bien pedir ayuda y poner límites.",
+        "Buscá a un adulto si hay peligro, abuso o ideas de hacerse daño o dañar a otros.",
       ),
     ],
   ),
   InfoResource(
     id: "apoyo-se-juega-en-equipo",
-    title: "La salud mental también se juega en equipo",
-    summary:
-        "Campaña que recuerda que el bienestar se construye con familia, escuela y comunidad, y que pedir ayuda es cuidarte.",
+    title: "Armá tu equipo de apoyo",
+    summary: "Recordá que podés cuidar tu bienestar en compañía.",
     organization: "UNICEF Uruguay",
     url: "https://www.unicef.org/uruguay/la-salud-mental-se-juega-en-equipo",
     topic: InfoTopic.apoyo,
@@ -775,29 +673,28 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Campaña dirigida principalmente a personas adultas; puntos adaptados para estudiantes.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_card_apoyo.png',
-    thumbAsset: '$_info/e10b_thumb_alerta.png',
-    bannerAsset: '$_info/e10b_thumb_alerta.png',
+    cardAsset: '$_info/stickers/sticker_rompecabezas.png',
+    thumbAsset: '$_info/stickers/sticker_rompecabezas.png',
+    bannerAsset: '$_info/stickers/sticker_rompecabezas.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Pedir ayuda es parte de cuidar tu salud mental, no una señal de debilidad.",
+        "Pedir ayuda es una forma de cuidarte, no una señal de debilidad.",
       ),
       InfoPoint(
         'Idea 2',
-        "Una persona adulta de confianza no necesita tener todas las respuestas: basta con que te escuche sin juzgar.",
+        "Buscá a una persona adulta que te escuche sin juzgar.",
       ),
       InfoPoint(
         'Idea 3',
-        "Tu bienestar se cuida en equipo: familia, escuela, club y barrio pueden acompañarte.",
+        "Tu familia, escuela, club y barrio pueden acompañarte.",
       ),
     ],
   ),
   InfoResource(
     id: "apoyo-hablar-con-confianza",
-    title: "Hablar con alguien de confianza alivia",
-    summary:
-        "Cómo cuidarte cuando las noticias o las redes te agobian y por qué compartir lo que sentís ayuda.",
+    title: "Hablá con alguien de confianza",
+    summary: "Compartí lo que sentís cuando las redes te agobian.",
     organization: "UNICEF México",
     url:
         "https://www.unicef.org/mexico/historias/informar-y-cuidar-la-salud-mental-de-las-juventudes",
@@ -808,33 +705,25 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Artículo dirigido a periodistas, familias y jóvenes; incluye una estadística de una encuesta que no se usa aquí. Puntos centrados en lo que el estudiante puede hacer.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_card_apoyo.png',
-    thumbAsset: '$_info/e10b_thumb_alerta.png',
-    bannerAsset: '$_info/e10b_thumb_alerta.png',
+    cardAsset: '$_info/stickers/sticker_pregunta.png',
+    thumbAsset: '$_info/stickers/sticker_pregunta.png',
+    bannerAsset: '$_info/stickers/sticker_pregunta.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "Sentir enojo, ansiedad o agobio por lo que ves en noticias o redes es una reacción válida.",
+        "Es válido sentir enojo, ansiedad o agobio por las noticias o redes.",
       ),
-      InfoPoint(
-        'Idea 2',
-        "Tomá pausas, desactivá notificaciones que no necesitás y desconectate antes de dormir.",
-      ),
+      InfoPoint('Idea 2', "Tomá pausas y desconectate antes de dormir."),
       InfoPoint(
         'Idea 3',
-        "Contarle a una amistad, a tu familia o a otra persona de confianza cómo te sentís aligera la carga.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Si la preocupación te supera, pedir ayuda es un acto de valentía. Una persona adulta puede ayudarte a buscar apoyo profesional.",
+        "Si la preocupación te supera, un adulto puede ayudarte a buscar apoyo profesional.",
       ),
     ],
   ),
   InfoResource(
     id: "apoyo-consejeria-mined",
-    title: "La consejería de tu escuela te acompaña",
-    summary:
-        "Guía de acompañamiento socioemocional de las Consejerías de las Comunidades Educativas del MINED.",
+    title: "Tu escuela puede acompañarte",
+    summary: "Conocé el apoyo de la consejería de tu colegio.",
     organization: "MINED Nicaragua y World Vision Nicaragua",
     url:
         "https://www.mined.gob.ni/biblioteca/wp-content/uploads/2024/07/Guia-Acompanamiento-Socioemocional-final-para-reproduccion-020221.pdf",
@@ -845,25 +734,21 @@ const List<InfoResource> infoCatalog = <InfoResource>[
     notes:
         "Guía (diciembre 2020) dirigida a docentes, dirección y enlaces de consejería, no a estudiantes; puntos adaptados. Aclara que el acompañamiento no es atención psicológica ni terapia. Prohíbe reproducir el documento sin autorización del MINED: enlazar, no copiar.",
     offline: true, // Resumen local; la fuente y el video requieren internet.
-    cardAsset: '$_info/e10a_card_apoyo.png',
-    thumbAsset: '$_info/e10b_thumb_alerta.png',
-    bannerAsset: '$_info/e10b_thumb_alerta.png',
+    cardAsset: '$_info/stickers/sticker_pieza_azul.png',
+    thumbAsset: '$_info/stickers/sticker_pieza_azul.png',
+    bannerAsset: '$_info/stickers/sticker_pieza_azul.png',
     points: <InfoPoint>[
       InfoPoint(
         'Idea 1',
-        "En tu escuela, las Consejerías de las Comunidades Educativas pueden acompañarte cuando algo afecta cómo te sentís.",
+        "La consejería de tu escuela puede acompañarte cuando algo afecta cómo te sentís.",
       ),
       InfoPoint(
         'Idea 2',
-        "Quien te acompaña debe escucharte con respeto, sin juzgarte y sin decirte 'no es para tanto'.",
+        "Tenés derecho a que te escuchen con respeto, sin juzgarte.",
       ),
       InfoPoint(
         'Idea 3',
-        "Te pueden ayudar a ponerle nombre a lo que sentís y a hablar o escribir sobre eso.",
-      ),
-      InfoPoint(
-        'Idea 4',
-        "Si hace falta, la escuela coordina con instituciones especializadas para que recibás más apoyo.",
+        "Si hace falta, la escuela coordina con instituciones para darte más apoyo.",
       ),
     ],
   ),

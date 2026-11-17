@@ -5,6 +5,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import 'external_links.dart';
+import 'info_artwork.dart';
 import 'info_catalog.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
@@ -219,11 +220,7 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
         borderRadius: BorderRadius.circular(16),
         child: AspectRatio(
           aspectRatio: 358 / 128,
-          child: Image.asset(
-            r.bannerAsset!,
-            fit: BoxFit.cover,
-            excludeFromSemantics: true,
-          ),
+          child: InfoArtwork(asset: r.bannerAsset!, topic: r.topic),
         ),
       ),
       const SizedBox(height: 12),
@@ -236,17 +233,21 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
       ),
     ),
     const SizedBox(height: 4),
-    Text(r.organization, style: const TextStyle(fontWeight: FontWeight.w700)),
-    Text(
-      '${r.topic.label} · ${r.meta}',
-      style: const TextStyle(color: CureandoTheme.blue),
-    ),
-    const SizedBox(height: 12),
-    Text(r.summary),
-    const SizedBox(height: 12),
-    const Text(
-      'Resumen adaptado por el equipo SéTú a partir de la fuente; no reemplaza la fuente original',
-      style: TextStyle(fontSize: 12, color: CureandoTheme.secondaryInk),
+    Semantics(
+      label: 'Resumen de ${r.organization}',
+      excludeSemantics: true,
+      child: Tooltip(
+        message: r.organization,
+        child: Text(
+          'Resumen de ${r.organization}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 12,
+            color: CureandoTheme.secondaryInk,
+          ),
+        ),
+      ),
     ),
     const SizedBox(height: 12),
     if (r.isVideo) ...<Widget>[
@@ -255,9 +256,7 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
         icon: const Icon(Icons.open_in_new_rounded),
         label: const Text('Ver video'),
       ),
-      const Text(
-        'Se abre fuera de SéTú y requiere internet. El resumen está disponible sin conexión.',
-      ),
+      const Text('Video externo · Necesitás internet'),
       const SizedBox(height: 12),
     ],
     if (r.topic == InfoTopic.ansiedad ||
@@ -273,7 +272,7 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             const Text(
-              'Si te sentís en peligro o pensás en hacerte daño, hablá ya con una persona adulta de confianza o entrá a Ayuda',
+              'Si estás en peligro o pensás en hacerte daño, hablá ya con un adulto de confianza.',
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
             TextButton(onPressed: _goToHelp, child: const Text('Ir a Ayuda')),
@@ -286,10 +285,6 @@ class _ResourcePreviewScreenState extends State<ResourcePreviewScreen> {
       _PointCard(point: r.points[i], story: false, panel: i),
       const SizedBox(height: 10),
     ],
-    _PointCard(
-      point: InfoPoint('Fuente', '${r.organization}\n${r.url}'),
-      story: false,
-    ),
     if (!r.isVideo)
       OutlinedButton.icon(
         onPressed: () => openExternalLink(context, r.url),
@@ -434,11 +429,13 @@ class _PointCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                point.title,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 2),
+              if (!point.title.startsWith('Idea ')) ...<Widget>[
+                Text(
+                  point.title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+              ],
               Text(
                 point.body,
                 style: const TextStyle(
@@ -564,6 +561,11 @@ Future<void> showSourceSheet(
                         .join('\n\n')
                   : '${resource.organization}\n${resource.url}',
               Icons.menu_book_outlined,
+            ),
+            const InfoPoint(
+              'Adaptación',
+              'Resumen simplificado por el equipo SéTú; no reemplaza la fuente original.',
+              Icons.short_text_rounded,
             ),
             const InfoPoint(
               'Territorio y público',

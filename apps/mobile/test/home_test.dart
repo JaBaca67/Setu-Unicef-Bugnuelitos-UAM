@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:cureando_mobile/app.dart';
+import 'package:cureando_mobile/features/home/information_tab.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/info_catalog.dart';
 import 'package:cureando_mobile/features/home/student_preview_cards.dart';
@@ -68,8 +69,8 @@ void main() {
     expect(find.text('0 XP'), findsOneWidget);
     expect(find.text('Explorá a tu ritmo'), findsOneWidget);
     expect(find.text('Ver todo'), findsNWidgets(2));
-    expect(find.text('Qué es el acoso escolar y cómo se ve'), findsOneWidget);
-    expect(find.text('Cómo cuidar tu salud mental'), findsOneWidget);
+    expect(find.text('¿Es una broma o acoso?'), findsOneWidget);
+    expect(find.text('Cuidá lo que sentís'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('^Pregunta del día')), findsOneWidget);
     expect(find.bySemanticsLabel('Dado de emociones'), findsOneWidget);
     expect(find.text('Pregunta del día'), findsNothing);
@@ -81,6 +82,7 @@ void main() {
     await _tapNav(tester, 'Información');
     expect(find.text('Biblioteca'), findsOneWidget);
     expect(find.text('Acoso escolar'), findsWidgets);
+    expect(find.text('Ver catálogo ›'), findsNWidgets(6));
     await _tapNav(tester, 'Actividades');
     expect(find.text('Actividades de muestra'), findsOneWidget);
     expect(find.text('Pregunta del día'), findsOneWidget);
@@ -127,7 +129,7 @@ void main() {
     expect(find.text('Racha de 1 día'), findsOneWidget);
     expect(find.text('10 XP'), findsOneWidget);
 
-    await _tapLabel(tester, 'Qué es el acoso escolar y cómo se ve');
+    await _tapLabel(tester, '¿Es una broma o acoso?');
     expect(find.text('Marcar como leída (+5 XP)'), findsOneWidget);
     await _tapLabel(tester, 'Marcar como leída (+5 XP)');
     expect(find.text('Lectura registrada'), findsOneWidget);
@@ -142,7 +144,7 @@ void main() {
     await _goHome(tester);
     expect(find.text('Racha de 1 día'), findsOneWidget);
     expect(find.text('15 XP'), findsOneWidget);
-    await _tapLabel(tester, 'Qué es el acoso escolar y cómo se ve');
+    await _tapLabel(tester, '¿Es una broma o acoso?');
     await _tapLabel(tester, 'Marcar día de aprendizaje');
     expect(find.text('Marcaste un día de aprendizaje.'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver'));
@@ -309,8 +311,8 @@ void main() {
             : StudentCover.video,
       );
       await _tapLabel(tester, resource.title);
-      expect(find.text(resource.summary), findsOneWidget);
-      expect(find.text(resource.organization), findsOneWidget);
+      expect(find.text(resource.summary), findsNothing);
+      expect(find.text('Resumen de ${resource.organization}'), findsOneWidget);
       expect(find.text('Ver fuente original'), findsOneWidget);
       for (final InfoPoint point in resource.points) {
         expect(find.text(point.body), findsOneWidget);
@@ -346,7 +348,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'video');
       await tester.pumpAndSettle();
       await _tapLabel(tester, video.title);
-      expect(find.text(video.summary), findsOneWidget);
+      expect(find.text(video.summary), findsNothing);
       for (final InfoPoint point in video.points) {
         expect(find.text(point.body), findsOneWidget);
       }
@@ -378,6 +380,8 @@ void main() {
           .where((InfoResource r) => r.topic == topic)
           .toList();
       expect(find.text('${matches.length} disponibles'), findsOneWidget);
+      expect(find.byType(InfoResourceCard), findsNWidgets(matches.length));
+      expect(find.text('+5 XP'), findsNWidgets(matches.length));
       for (final InfoResource resource in infoCatalog) {
         expect(
           find.text(resource.title),
@@ -391,6 +395,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'DEPRESION');
     await tester.pumpAndSettle();
     expect(find.text('2 disponibles'), findsOneWidget);
+    expect(find.byType(InfoResourceCard), findsNWidgets(2));
     await tester.enterText(find.byType(TextField), 'inexistente');
     await tester.pumpAndSettle();
     expect(
@@ -414,15 +419,25 @@ void main() {
         await _tapLabel(tester, 'Cambiar tema');
         expect(find.text('En preparación'), findsNothing);
         for (final InfoRoute choice in infoRoutes) {
-          expect(find.text(choice.description), findsOneWidget);
+          expect(
+            find.byKey(ValueKey<String>('route-choice-${choice.id}')),
+            findsOneWidget,
+          );
         }
-        await _tapLabel(tester, route.description);
+        await tester.ensureVisible(
+          find.byKey(ValueKey<String>('route-choice-${route.id}')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(ValueKey<String>('route-choice-${route.id}')),
+        );
+        await tester.pumpAndSettle();
         expect(find.text('0 de 3 pasos'), findsOneWidget);
         for (final String id in route.steps.take(2)) {
           final InfoResource resource = infoResourceById(id)!;
           await _tapLabel(tester, 'Continuar ruta');
           expect(find.text(resource.title), findsOneWidget);
-          expect(find.text(resource.summary), findsOneWidget);
+          expect(find.text(resource.summary), findsNothing);
           await _tapLabel(
             tester,
             resource.isVideo
@@ -475,20 +490,12 @@ void main() {
       await _tapLabel(tester, 'Explorar Información');
       final InfoResource resource = infoCatalog.first;
       await _tapLabel(tester, resource.title);
-      expect(
-        find.text(
-          'Resumen adaptado por el equipo SéTú a partir de la fuente; no reemplaza la fuente original',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text('${resource.organization}\n${resource.url}'),
-        findsOneWidget,
-      );
+      expect(find.text('Resumen de ${resource.organization}'), findsOneWidget);
+      expect(find.text('Ver fuente original'), findsOneWidget);
       await _tapLabel(tester, 'Fuente y revisión');
       expect(
         find.text('${resource.organization}\n${resource.url}'),
-        findsNWidgets(2),
+        findsOneWidget,
       );
       expect(
         find.text(
@@ -548,7 +555,7 @@ void main() {
       );
       await _tapLabel(tester, resource.title);
       final Finder safety = find.text(
-        'Si te sentís en peligro o pensás en hacerte daño, hablá ya con una persona adulta de confianza o entrá a Ayuda',
+        'Si estás en peligro o pensás en hacerte daño, hablá ya con un adulto de confianza.',
       );
       expect(safety, findsOneWidget);
       expect(
@@ -576,7 +583,8 @@ void main() {
     await _tapLabel(tester, 'Explorar Información');
     await _tapLabel(tester, 'Rutas');
     await _tapLabel(tester, 'Cambiar tema');
-    await _tapLabel(tester, infoRoutes.first.description);
+    await tester.tap(find.byKey(const ValueKey<String>('route-choice-acoso')));
+    await tester.pumpAndSettle();
     for (int i = 0; i < 2; i++) {
       await _tapLabel(tester, 'Continuar ruta');
       await _tapLabel(tester, 'Fuente y revisión');

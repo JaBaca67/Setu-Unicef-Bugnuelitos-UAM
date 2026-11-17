@@ -1,4 +1,6 @@
 import 'package:cureando_mobile/features/home/information_tab.dart';
+import 'package:cureando_mobile/features/home/info_artwork.dart';
+import 'package:cureando_mobile/features/home/info_catalog.dart';
 import 'package:cureando_mobile/features/home/learning_progress.dart';
 import 'package:cureando_mobile/features/home/streak_screen.dart';
 import 'package:cureando_mobile/features/home/student_home_screen.dart';
@@ -105,13 +107,12 @@ void main() {
           .map((ChoiceChip chip) => tester.getTopLeft(find.byWidget(chip)).dy)
           .toList();
       expect(tops.every((double top) => top == tops.first), isTrue);
-      final Finder clipped = find.widgetWithText(ChoiceChip, 'Depresión');
+      final Finder clipped = find.widgetWithText(ChoiceChip, 'Ansiedad');
       AnimatedOpacity chipOpacity(Finder chip) =>
           tester.widget<AnimatedOpacity>(
             find.ancestor(of: chip, matching: find.byType(AnimatedOpacity)),
           );
       final Rect viewport = tester.getRect(carousel);
-      expect(tester.getRect(clipped).left, lessThan(viewport.right));
       expect(tester.getRect(clipped).right, greaterThan(viewport.right));
       expect(chipOpacity(clipped).opacity, 0);
       expect(chipOpacity(clipped).alwaysIncludeSemantics, isTrue);
@@ -132,7 +133,8 @@ void main() {
         expect(
           tester.getSemantics(clipped),
           matchesSemantics(
-            label: 'Depresión',
+            label: 'Ansiedad',
+            isHidden: true,
             isButton: true,
             hasEnabledState: true,
             isEnabled: true,
@@ -191,6 +193,312 @@ void main() {
       tester.getSize(find.byType(InformationHeader)).height,
       greaterThanOrEqualTo(360 * 308 / 780),
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final double width in <double>[360, 412]) {
+    for (final double scale in <double>[1, 2]) {
+      testWidgets('chips completos a $width px y texto $scale', (
+        WidgetTester tester,
+      ) async {
+        _view(tester, scale: scale);
+        tester.view.physicalSize = Size(width, 850);
+        final LearningProgress progress = _progress();
+        addTearDown(progress.dispose);
+        await tester.pumpWidget(
+          _app(
+            CampaignScreen(
+              header: const InformationHeader(),
+              body: Padding(
+                padding: const EdgeInsets.all(20),
+                child: InformationTab(progress: progress),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final Finder carousel = find.byKey(
+          const ValueKey<String>('information-categories'),
+        );
+        int checkChips() {
+          final Rect viewport = tester.getRect(carousel);
+          int visible = 0;
+          for (final Element element in find.byType(ChoiceChip).evaluate()) {
+            final Finder chip = find.byWidget(element.widget);
+            final Rect rect = tester.getRect(chip);
+            final Finder opacity = find.ancestor(
+              of: chip,
+              matching: find.byType(AnimatedOpacity),
+            );
+            final bool full =
+                rect.left >= viewport.left - .5 &&
+                rect.right <= viewport.right + .5;
+            expect(
+              tester.widget<AnimatedOpacity>(opacity).opacity,
+              full ? 1 : 0,
+            );
+            if (full) visible++;
+          }
+          return visible;
+        }
+
+        expect(
+          checkChips(),
+          scale == 1 ? greaterThanOrEqualTo(4) : isPositive,
+          reason: find
+              .byType(ChoiceChip)
+              .evaluate()
+              .map(
+                (Element e) =>
+                    '${(e.widget as ChoiceChip).label}: ${tester.getRect(find.byWidget(e.widget))}',
+              )
+              .join(', '),
+        );
+        if (scale == 1) {
+          for (final String label in <String>[
+            'Todos',
+            'Acoso escolar',
+            'Emociones',
+            'Ciberacoso',
+          ]) {
+            final Rect chip = tester.getRect(
+              find.widgetWithText(ChoiceChip, label),
+            );
+            expect(
+              chip.left,
+              greaterThanOrEqualTo(tester.getRect(carousel).left - .5),
+            );
+            expect(
+              chip.right,
+              lessThanOrEqualTo(tester.getRect(carousel).right + .5),
+            );
+          }
+        }
+        // Desplazamiento pequeño: el primer chip queda parcialmente fuera y se oculta.
+        await tester.drag(carousel, const Offset(-15, 0), touchSlopX: 0);
+        await tester.pumpAndSettle();
+        checkChips();
+        await tester.drag(carousel, const Offset(-240, 0));
+        await tester.pumpAndSettle();
+        checkChips();
+        await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Todos'));
+        await tester.pumpAndSettle();
+        expect(
+          find.widgetWithText(ChoiceChip, 'Todos').hitTestable(),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  testWidgets('portada E10-A abre catálogo E10-B y actualiza XP leídos', (
+    WidgetTester tester,
+  ) async {
+    _view(tester);
+    tester.view.physicalSize = const Size(360, 850);
+    final LearningProgress progress = _progress();
+    addTearDown(progress.dispose);
+    await progress.open();
+    await tester.pumpWidget(
+      _app(
+        CampaignScreen(
+          header: const InformationHeader(),
+          body: Padding(
+            padding: const EdgeInsets.all(18),
+            child: InformationTab(progress: progress),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Ver todo ›'), findsNothing);
+    expect(find.text('Ver catálogo ›'), findsNWidgets(6));
+    final Finder block = find.byKey(
+      const ValueKey<String>('topic-preview-acoso'),
+    );
+    final Finder cards = find.descendant(
+      of: block,
+      matching: find.byType(InfoResourceCard),
+    );
+    expect(cards, findsNWidgets(2));
+    expect(
+      tester
+          .widgetList<InfoResourceCard>(cards)
+          .every((InfoResourceCard c) => c.cover),
+      isTrue,
+    );
+    expect(tester.getRect(cards.first).top, tester.getRect(cards.last).top);
+    expect(
+      tester.getRect(cards.first).right,
+      lessThan(tester.getRect(cards.last).left),
+    );
+    for (final InfoTopic topic in InfoTopic.values) {
+      final List<InfoResource> preview = infoCatalog
+          .where(
+            (InfoResource r) =>
+                r.topic == topic && !r.isQuiz && r != infoCatalog.first,
+          )
+          .take(3)
+          .toList();
+      final Finder category = find.byKey(
+        ValueKey<String>('topic-preview-${topic.name}'),
+      );
+      expect(
+        find.descendant(of: category, matching: find.byType(InfoResourceCard)),
+        findsNWidgets(2),
+      );
+      if (preview.length == 3) {
+        expect(
+          find.descendant(
+            of: category,
+            matching: find.byKey(ValueKey<String>('banner-${preview.last.id}')),
+          ),
+          findsOneWidget,
+        );
+      }
+    }
+    await tester.ensureVisible(find.text('Ver catálogo ›').first);
+    await tester.tap(find.text('Ver catálogo ›').first);
+    await tester.pumpAndSettle();
+    final List<InfoResource> resources = infoCatalog
+        .where((InfoResource r) => r.topic == InfoTopic.acoso && !r.isQuiz)
+        .toList();
+    expect(find.text('${resources.length} disponibles'), findsOneWidget);
+    expect(find.byType(InfoResourceCard), findsNWidgets(resources.length));
+    for (final InfoResourceCard card in tester.widgetList<InfoResourceCard>(
+      find.byType(InfoResourceCard),
+    )) {
+      expect(card.cover, isFalse);
+      final Finder target = find.byWidget(card);
+      expect(
+        find.descendant(
+          of: target,
+          matching: find.text(card.resource.availability),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: target, matching: find.text('+5 XP')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: target, matching: find.text(card.resource.summary)),
+        findsOneWidget,
+      );
+    }
+    await progress.completeResource(resources.first.id);
+    await tester.pumpAndSettle();
+    expect(find.text('+5 XP'), findsNWidgets(resources.length - 1));
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Todos'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Todos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Leer ›'), findsOneWidget);
+    expect(find.text('Ver catálogo ›'), findsNWidgets(6));
+    await tester.enterText(find.byType(TextField), 'video');
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widgetList<InfoResourceCard>(find.byType(InfoResourceCard))
+          .every((InfoResourceCard card) => !card.cover),
+      isTrue,
+    );
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Todos'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      isEmpty,
+    );
+    expect(find.text('Ver catálogo ›'), findsNWidgets(6));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Elegí tu ruta: cuatro temas, estados, piezas y medalla', (
+    WidgetTester tester,
+  ) async {
+    _view(tester);
+    final LearningProgress progress = _progress();
+    addTearDown(progress.dispose);
+    await progress.open();
+    for (final String id in infoRoutes.first.steps.take(2)) {
+      await progress.completeResource(id);
+    }
+    await progress.completeRoute(infoRoutes.first.id);
+    await progress.completeResource(infoRoutes[1].steps.first);
+    await tester.pumpWidget(
+      _app(
+        Scaffold(
+          body: SingleChildScrollView(
+            child: InformationTab(progress: progress),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rutas'));
+    await tester.pumpAndSettle();
+    expect(find.text('+20 XP ganados'), findsOneWidget);
+    expect(find.byIcon(Icons.extension_rounded), findsAtLeastNWidgets(3));
+    await tester.tap(find.text('Cambiar tema'));
+    await tester.pumpAndSettle();
+    expect(find.text('Elegí tu ruta'), findsOneWidget);
+    expect(find.text('¡Completada!'), findsOneWidget);
+    expect(find.text('En curso'), findsOneWidget);
+    expect(find.text('Nueva'), findsNWidgets(2));
+    Finder choice(String id) =>
+        find.byKey(ValueKey<String>('route-choice-$id'));
+    expect(
+      tester.getTopLeft(choice('acoso')).dy,
+      tester.getTopLeft(choice('ansiedad')).dy,
+    );
+    expect(
+      tester.getTopLeft(choice('depresion')).dy,
+      tester.getTopLeft(choice('ciberacoso')).dy,
+    );
+    for (int i = 0; i < infoRoutes.length; i++) {
+      final InfoRoute route = infoRoutes[i];
+      final Finder card = choice(route.id);
+      await tester.ensureVisible(card);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: card, matching: find.text(route.topic.label)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: _asset(route.topic.sticker)),
+        findsOneWidget,
+      );
+      final Semantics semantics = tester.widget<Semantics>(
+        find
+            .descendant(
+              of: card,
+              matching: find.byWidgetPredicate(
+                (Widget w) => w is Semantics && w.properties.label != null,
+              ),
+            )
+            .first,
+      );
+      expect(
+        semantics.properties.label,
+        contains('${<int>[3, 1, 0, 0][i]} de 3 pasos'),
+      );
+      expect(semantics.properties.selected, i == 0);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byIcon(Icons.workspace_premium_rounded),
+        ),
+        i == 0 ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.byIcon(Icons.extension_rounded),
+        ),
+        findsNWidgets(<int>[3, 1, 0, 0][i]),
+      );
+    }
     expect(tester.takeException(), isNull);
   });
 
