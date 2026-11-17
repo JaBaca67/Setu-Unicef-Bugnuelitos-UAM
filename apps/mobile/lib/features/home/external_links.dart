@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../shared/widgets/setu_bottom_alert.dart';
+
 const MethodChannel _links = MethodChannel('dev.cureando.app/links');
 
 /// Android valida HTTPS/destino y abre la fuente en una app externa.
@@ -16,9 +18,8 @@ Future<void> openExternalLink(BuildContext context, String url) async {
 
 void _showFailure(BuildContext context) =>
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'No se pudo abrir el enlace. Probá de nuevo con internet.',
-        ),
+      buildSetuBottomAlertSnackBar(
+        message: 'No se pudo abrir el enlace. Probá de nuevo con internet.',
+        kind: SetuAlertKind.error,
       ),
     );

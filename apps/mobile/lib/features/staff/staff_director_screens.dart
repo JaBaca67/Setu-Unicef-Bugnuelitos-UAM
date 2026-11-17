@@ -11,6 +11,7 @@ import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_alert.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import 'staff_backend.dart';
 import 'staff_inbox_screens.dart';
 import 'staff_widgets.dart';
@@ -250,7 +251,7 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
     final String? institution = session.active?.institutionId;
     if (institution == null) return;
     final bool saved =
-        await showModalBottomSheet<bool>(
+        await showSetuBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,
@@ -267,7 +268,7 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
     final SchoolCoverageStatusView? coverage = _coverage;
     if (coverage == null) return;
     final bool saved =
-        await showModalBottomSheet<bool>(
+        await showSetuBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,
@@ -284,7 +285,7 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
     final String? institution = session.active?.institutionId;
     if (institution == null) return;
     final bool saved =
-        await showModalBottomSheet<bool>(
+        await showSetuBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,
@@ -659,7 +660,7 @@ class _DirectorCaseScreenState extends State<DirectorCaseScreen> {
 
   Future<void> _record(StaffCaseSummary item, SetuSchoolActionStep step) async {
     final bool saved =
-        await showModalBottomSheet<bool>(
+        await showSetuBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,

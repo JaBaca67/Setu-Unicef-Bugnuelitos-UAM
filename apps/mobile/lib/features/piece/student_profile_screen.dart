@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import '../home/learning_progress.dart';
 import '../school_access/school_access_screen.dart' show SchoolCrest;
 import '../school_access/student_session.dart';
@@ -66,9 +67,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   Future<void> _leaveSchool() async {
     final bool confirm =
-        await showDialog<bool>(
+        await showSetuDialog<bool>(
           context: context,
-          builder: (BuildContext dialog) => AlertDialog(
+          builder: (BuildContext dialog) => SetuDialog(
+            icon: Icons.logout_rounded,
+            destructive: true,
             title: const Text('¿Salir de este colegio?'),
             content: const Text(
               'Vas a volver a la bienvenida y, para entrar de nuevo, vas a '

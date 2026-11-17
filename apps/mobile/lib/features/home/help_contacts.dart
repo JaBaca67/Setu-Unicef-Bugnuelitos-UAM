@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/setu_bottom_alert.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import 'trusted_contacts.dart';
 
 /// Contacto de ayuda publicado solo si tiene fuente, territorio, fecha de
@@ -125,7 +127,10 @@ Future<void> _dial(BuildContext context, String number) async {
   } on Object {
     if (!context.mounted) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text('Marcá $number desde tu teléfono.')),
+      buildSetuBottomAlertSnackBar(
+        message: 'Marcá $number desde tu teléfono.',
+        kind: SetuAlertKind.warning,
+      ),
     );
   }
 }
@@ -237,10 +242,9 @@ class _TrustedContactsSectionState extends State<TrustedContactsSection> {
     super.dispose();
   }
 
-  Future<void> _showAddSheet() => showModalBottomSheet<void>(
+  Future<void> _showAddSheet() => showSetuBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    showDragHandle: true,
     builder: (BuildContext sheetContext) =>
         _AddTrustedContactSheet(contacts: _contacts),
   );
