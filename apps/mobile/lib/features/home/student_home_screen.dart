@@ -152,11 +152,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       HomeSection.informacion => const InformationHeader(),
       HomeSection.actividades => const InformationHeader(
         title: 'Actividades',
-        art: 'assets/home/activities/encabezado_ninos.png',
+        art: 'assets/home/activities/encabezado_actividades.png',
       ),
       HomeSection.ayuda => const InformationHeader(
         title: 'Ayuda',
-        art: 'assets/home/activities/encabezado_ninos.png',
+        art: 'assets/home/activities/encabezado_ayuda.png',
       ),
     },
     body: Padding(
