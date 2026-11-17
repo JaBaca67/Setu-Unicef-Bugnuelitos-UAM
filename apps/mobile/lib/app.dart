@@ -30,6 +30,7 @@ import 'features/support/alert_screens.dart';
 import 'features/support/support_flow.dart';
 import 'features/support/support_screens.dart';
 import 'features/welcome/welcome_screen.dart';
+import 'shared/widgets/tablet_canvas.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
 import 'shared/mesh/mesh_recipient_directory.dart';
@@ -283,6 +284,7 @@ class _CureandoAppState extends State<CureandoApp> {
           StudentHomeScreen(
             progress: _learning,
             piece: _piece,
+            supportFlow: _support,
             sectionRequest: state.extra is HomeSectionRequest
                 ? state.extra! as HomeSectionRequest
                 : null,
@@ -952,7 +954,9 @@ class _CureandoAppState extends State<CureandoApp> {
                 large: _large,
               ),
             ),
-            child: child ?? const SizedBox.shrink(),
+            // En tabletas, la interfaz del teléfono se escala a pantalla
+            // completa en lugar de quedar en una columna con bordes.
+            child: TabletCanvas(child: child ?? const SizedBox.shrink()),
           ),
         ),
   );
