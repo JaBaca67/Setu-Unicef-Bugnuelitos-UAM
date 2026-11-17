@@ -585,7 +585,7 @@ Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como c
 | --- | --- |
 | Flutter Android, `go_router` y pantalla de verificación | Nuevo recorrido completo pendiente. |
 | Tema, Poppins empaquetada y motivos | Algunos colores del código siguen siendo del manual inicial. |
-| `FLAG_SECURE` y control nativo | Reactivación al arrancar; prueba física M1 pendiente según bitácora. |
+| `FLAG_SECURE` y control nativo | Solo en los chats (`SecureScreenGuard`); el resto permite capturas ([ADR 0024](docs/decisiones/0024-capturas-permitidas-salvo-chat.md)). |
 | `CureandoGateway` / `StaffCureandoGateway` | Contratos previos de alias y atención local. |
 | `LocalCureandoGateway`, archivo AES-GCM-256 y almacenamiento seguro de clave | Datos ficticios de un teléfono; sin red ni backend. |
 | Credenciales derivadas, permisos locales e idempotencia | No acreditan RLS ni deduplicación entre dispositivos. |
@@ -691,7 +691,7 @@ Los archivos `setu_local_store.enc`, `setu_support_alert.enc` y `setu_mesh_queue
 | Flutter no se reconoce | Usar la ruta local documentada o configurar el entorno propio; comprobar `flutter --version`. |
 | Dependencias/SDK incompatibles | Revisar `flutter doctor -v`, restricción Dart y `pubspec.lock`; no actualizar paquetes a ciegas. |
 | No aparece teléfono | Revisar cable, depuración USB y autorización personal; `flutter devices` o `adb devices -l`. |
-| No permite captura | M1 activa `FLAG_SECURE`; su control de prueba pide confirmación y se reactiva al arrancar. |
+| No permite captura en el chat | `FLAG_SECURE` solo mientras el chat está abierto; el resto de la app permite capturas ([ADR 0024](docs/decisiones/0024-capturas-permitidas-salvo-chat.md)). |
 | Error de clave/integridad local | Conservar el archivo, no borrar ni reinicializar automáticamente. La pérdida de clave puede impedir recuperar la demo. |
 | El aviso no llega a otro dispositivo | Revisar permisos/radios, claves públicas preparadas, sesión destinataria y migración 0012; ver ADR 0023. Custodia no equivale a caso recibido. |
 | Falta de acceso tras borrar datos | Recuperación remota no implementada; el respaldo M1 no restaura una clave o archivo eliminados. |

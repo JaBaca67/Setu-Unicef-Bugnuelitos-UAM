@@ -21,6 +21,6 @@ El lector ML Kit va incluido en el APK, de modo que el reconocimiento del QR pue
 
 - **Transiciones.** Fundido y desplazamiento corto de 260 ms al avanzar y 220 ms al volver. Con movimiento reducido, los cambios son inmediatos. [Preferencia de movimiento en Flutter](https://api.flutter.dev/flutter/widgets/MediaQuery/disableAnimationsOf.html).
 - **Barra de estado.** El patrón azul se prolonga debajo de la hora y las notificaciones en E01 y E02. El margen del sistema protege los controles táctiles. [Dibujo bajo las barras del sistema en Android](https://developer.android.com/develop/ui/views/layout/edge-to-edge).
-- **Capturas temporales.** El APK de presentación en depuración permite captura y grabación durante este bloque. Se restaura la protección en depuración con `--dart-define=SETU_DESIGN_CAPTURE=false`. Las compilaciones sin marca de depuración mantienen `FLAG_SECURE`. [Notas del APK](../../apps/mobile/README.md#capturas-temporales-para-la-presentación).
+- **Capturas temporales.** El APK de presentación en depuración permite captura y grabación durante este bloque. Se restaura la protección en depuración con `--dart-define=SETU_DESIGN_CAPTURE=false`. Desde [ADR 0024](../decisiones/0024-capturas-permitidas-salvo-chat.md) todas las compilaciones permiten capturas salvo en el chat. [Notas del APK](../../apps/mobile/README.md#capturas-temporales-para-la-presentación).
 
 [Maqueta anterior con sensores simulados](wireframe-e02-acceso-escolar.png) · [Decisión de implementación](../decisiones/0012-camara-ubicacion-y-presentacion.md).

@@ -10,7 +10,7 @@ La ruta inicial abría la pantalla técnica de M1. Mantener ese arranque y habil
 
 - `/` abre E01 estática. Colegio, Información y Ayuda abren vistas identificadas como demostración. Privacidad se presenta en un panel dentro de E01.
 - El ícono y el arranque nativo usan el isotipo oficial blanco sobre azul. Los recursos del lanzador son adaptativos en Android 8 o superior y tienen variantes para versiones anteriores. Android 12 o superior usa los atributos nativos de arranque.
-- `--dart-define=SETU_M1_QA=true` abre la verificación de M1. El arranque estudiantil funciona con los recursos empaquetados. El código nativo activa `FLAG_SECURE` en cada arranque.
+- `--dart-define=SETU_M1_QA=true` abre la verificación de M1. El arranque estudiantil funciona con los recursos empaquetados. El código nativo ya no activa `FLAG_SECURE` al arrancar; solo los chats lo activan ([ADR 0024](0024-capturas-permitidas-salvo-chat.md)).
 - La aprobación se limita a navegación de muestra e identidad. El escaneo, catálogo editorial, envío de alertas y comunicación entre dispositivos conservan sus bloques de desarrollo.
 
 [Plan y arte de bienvenida](../diseno/plan-arranque-bienvenida-setu.md) · [Ejecución Android](../../apps/mobile/README.md).

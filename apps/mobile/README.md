@@ -47,7 +47,7 @@ El APK de presentación que se genera con `flutter build apk --debug` desactiva 
 - Poppins Regular/Medium/SemiBold/Bold empaquetada con licencia OFL (fuente: repositorio oficial google/fonts, ofl/poppins). No hay descargas de fuentes en ejecución. Fallback del sistema y síntesis tipográfica si falta un peso solicitado.
 - `CureandoTheme`, isotipo de tres piezas con las proporciones de docs/06, rompecabezas, flor de 12 pétalos y espiral; nombre e icono Android SéTú.
 - Lectura Normal/Grande (+20 %) combinada con el escalado de Android sin limitarlo.
-- Canal `dev.cureando.app/screen_security`, `setSecureScreen(bool)` e `isSecureScreenEnabled()`. Protección activa en cada arranque de la actividad, confirmación para desactivarla y estado visible. La preferencia desactivada no se persiste.
+- Canal `dev.cureando.app/screen_security`, `setSecureScreen(bool)` e `isSecureScreenEnabled()`. Desde ADR 0024 la protección ya no se activa al arrancar: `SecureScreenGuard` la activa solo en los chats (estudiante y Mesa de Escucha) y la retira al salir.
 - `CureandoGateway`, modelos estudiantiles inmutables sin notas internas ni credenciales, y contrato separado `StaffCureandoGateway`.
 - `LocalCureandoGateway`: alias de 3–24 letras/números/guion bajo, PIN numérico de 4–6 dígitos, respaldo `SETU-XXXX-XXXX`, centros ficticios Norte/Sur, interlocutor CCE/Psicología, chips, ruta alternativa, mensajes, solicitudes y estados.
 - Código de caso opaco + PIN de 4 dígitos: acceso limitado a ese caso con mensajes y solicitudes, sin acceso al listado de la cuenta. La cuenta propietaria puede emitir/rotar ese PIN mediante `createCaseAccess`; se devuelve una sola vez en memoria y solo se guarda su derivación. No recupera datos desde otro teléfono.
