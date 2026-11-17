@@ -35,12 +35,76 @@ void _finish(BuildContext context) {
 
 /// El patrón lo aporta CampaignScreen; el sticker es una capa transparente.
 class ActivityHeader extends StatelessWidget {
-  const ActivityHeader({super.key, required this.title, required this.sticker});
+  const ActivityHeader({
+    super.key,
+    required this.title,
+    required this.sticker,
+    this.headerArt,
+  });
   final String title;
   final String sticker;
 
+  /// Ilustración transparente (784 × 396) que cubre el encabezado sobre el
+  /// fondo de campaña, como en Información. Reemplaza al sticker.
+  final String? headerArt;
+
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final String? art = headerArt;
+    if (art == null) return _withSticker(context);
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) =>
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxWidth * 396 / 784,
+            ),
+            child: Stack(
+              children: <Widget>[
+                Positioned.fill(
+                  child: Image.asset(
+                    art,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.bottomRight,
+                    excludeFromSemantics: true,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 12, 16),
+                  child: FractionallySizedBox(
+                    widthFactor: 0.56,
+                    alignment: Alignment.topLeft,
+                    child: _titleColumn(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _titleColumn(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: <Widget>[
+      TextButton.icon(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.zero,
+        ),
+        onPressed: () => _finish(context),
+        icon: const Icon(Icons.arrow_back_rounded, size: 22),
+        label: const Text(
+          'Actividades',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+      Semantics(
+        header: true,
+        child: Text(title, style: _heading.copyWith(color: Colors.white)),
+      ),
+    ],
+  );
+
+  Widget _withSticker(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 8, 12, 16),
     child: Row(
       children: <Widget>[
@@ -88,14 +152,20 @@ class _ActivityPage extends StatelessWidget {
     required this.title,
     required this.sticker,
     required this.children,
+    this.headerArt,
   });
   final String title;
   final String sticker;
+  final String? headerArt;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) => CampaignScreen(
-    header: ActivityHeader(title: title, sticker: sticker),
+    header: ActivityHeader(
+      title: title,
+      sticker: sticker,
+      headerArt: headerArt,
+    ),
     body: Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Column(
@@ -173,6 +243,7 @@ class _TrafficLightScreenState extends State<TrafficLightScreen> {
   Widget build(BuildContext context) => _ActivityPage(
     title: 'Semáforo de emociones',
     sticker: 'semaforo',
+    headerArt: 'assets/home/activities/semaforo_header.png',
     children: <Widget>[
       const Text('¿Cómo te sentís hoy?', style: _heading),
       const SizedBox(height: 16),
@@ -202,7 +273,7 @@ class _TrafficLightScreenState extends State<TrafficLightScreen> {
                 child: Row(
                   children: <Widget>[
                     Image.asset(
-                      '${_stickers}sticker_cara_${choices[i].$3}.png',
+                      'assets/home/activities/flor_${choices[i].$3}.png',
                       width: 58,
                       height: 58,
                       excludeFromSemantics: true,
