@@ -254,7 +254,7 @@ class ActivitiesTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        const _ActivityCard(
+        const ActivityCard(
           title: 'Rompecabezas del buen trato',
           sticker: 'assets/home/activities/rompecabezas_pareja.png',
           route: 'rompecabezas',
@@ -264,7 +264,7 @@ class ActivitiesTab extends StatelessWidget {
         for (int row = 0; row < 2; row++) ...<Widget>[
           if (stacked)
             for (final item in items.skip(row * 2).take(2)) ...<Widget>[
-              _ActivityCard(title: item.$1, sticker: item.$2, route: item.$3),
+              ActivityCard(title: item.$1, sticker: item.$2, route: item.$3),
               const SizedBox(height: 14),
             ]
           else
@@ -275,7 +275,7 @@ class ActivitiesTab extends StatelessWidget {
                   for (int col = 0; col < 2; col++) ...<Widget>[
                     if (col > 0) const SizedBox(width: 10),
                     Expanded(
-                      child: _ActivityCard(
+                      child: ActivityCard(
                         title: items[row * 2 + col].$1,
                         sticker: items[row * 2 + col].$2,
                         route: items[row * 2 + col].$3,
@@ -292,22 +292,33 @@ class ActivitiesTab extends StatelessWidget {
   }
 }
 
-class _ActivityCard extends StatelessWidget {
-  const _ActivityCard({
+/// Tarjeta azul de actividad (patrón de campaña + sticker). La usa también
+/// el Inicio para «Pregunta del día» y «Dado de emociones».
+class ActivityCard extends StatelessWidget {
+  const ActivityCard({
+    super.key,
     required this.title,
     required this.sticker,
     required this.route,
     this.featured = false,
+    this.detail,
+    this.onTap,
   });
   final String title;
   final String sticker;
   final String route;
   final bool featured;
 
+  /// Texto breve bajo el título (por ejemplo «+10 XP» o «Completada»).
+  final String? detail;
+
+  /// Acción propia; por defecto abre `/inicio/actividades/[route]`.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
-    label: title,
+    label: detail == null ? title : '$title, $detail',
     excludeSemantics: true,
     child: Material(
       color: CureandoTheme.blue,
@@ -317,7 +328,8 @@ class _ActivityCard extends StatelessWidget {
         image: const AssetImage('assets/welcome/campaign-pattern.png'),
         fit: BoxFit.cover,
         child: InkWell(
-          onTap: () => context.push<void>('/inicio/actividades/$route'),
+          onTap:
+              onTap ?? () => context.push<void>('/inicio/actividades/$route'),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: featured ? 146 : 122),
             child: Padding(
@@ -347,6 +359,27 @@ class _ActivityCard extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        if (detail != null && !featured) ...<Widget>[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              detail!,
+                              style: const TextStyle(
+                                color: CureandoTheme.blue,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                         if (featured) ...<Widget>[
                           const SizedBox(height: 6),
                           const Text(

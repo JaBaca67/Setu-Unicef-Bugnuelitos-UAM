@@ -73,8 +73,8 @@ void main() {
     expect(find.text('Cuidá lo que sentís'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('^Pregunta del día')), findsOneWidget);
     expect(find.bySemanticsLabel('Dado de emociones'), findsOneWidget);
-    expect(find.text('Pregunta del día'), findsNothing);
-    expect(find.text('Dado de emociones'), findsNothing);
+    expect(find.text('Pregunta del día'), findsOneWidget);
+    expect(find.text('Dado de emociones'), findsOneWidget);
     expect(find.text('Mi seguimiento'), findsNothing);
     expect(find.text('Seguimiento'), findsNothing);
     await _capture(tester, captureKey, 'e03-home');
