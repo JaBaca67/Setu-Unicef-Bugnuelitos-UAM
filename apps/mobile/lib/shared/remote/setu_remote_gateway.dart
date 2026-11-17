@@ -44,6 +44,20 @@ abstract interface class SetuRemoteGateway {
     StudentAlertSubmission submission,
   );
 
+  Future<void> registerMeshRecipient({
+    String? publicSchoolCode,
+    required String publicKeyBase64,
+  });
+
+  Future<List<String>> listMeshRecipientPublicKeys({
+    required String publicSchoolCode,
+    required bool involvesStaff,
+  });
+
+  Future<void> relayMeshEnvelope(Map<String, Object?> envelope);
+  Future<List<Map<String, Object?>>> listMyMeshEnvelopes();
+  Future<void> completeMeshEnvelope(String packetId, String clientOperationId);
+
   Future<StudentChatSessionView> getStudentChatSession({
     required String caseId,
     required String capabilityToken,
@@ -435,6 +449,66 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
     } catch (error) {
       throw _mapError(error);
     }
+  }
+
+  @override
+  Future<void> registerMeshRecipient({
+    String? publicSchoolCode,
+    required String publicKeyBase64,
+  }) async {
+    await _client.rpc<Object?>(
+      'register_mesh_recipient',
+      params: <String, Object?>{
+        'p_public_school_code': publicSchoolCode,
+        'p_public_key_base64': publicKeyBase64,
+      },
+    );
+  }
+
+  @override
+  Future<void> relayMeshEnvelope(Map<String, Object?> envelope) async {
+    await _client.rpc<Object?>(
+      'relay_mesh_envelope',
+      params: <String, Object?>{'p_envelope': envelope},
+    );
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> listMyMeshEnvelopes() async {
+    if (currentStaffUserId == null) return const <Map<String, Object?>>[];
+    final Object? response = await _client.rpc<Object?>(
+      'list_my_mesh_envelopes',
+    );
+    return _requireList(response).map(_requireMap).toList();
+  }
+
+  @override
+  Future<void> completeMeshEnvelope(
+    String packetId,
+    String clientOperationId,
+  ) async {
+    await _client.rpc<Object?>(
+      'complete_mesh_envelope',
+      params: <String, Object?>{
+        'p_packet_id': packetId,
+        'p_client_operation_id': clientOperationId,
+      },
+    );
+  }
+
+  @override
+  Future<List<String>> listMeshRecipientPublicKeys({
+    required String publicSchoolCode,
+    required bool involvesStaff,
+  }) async {
+    final Object? response = await _client.rpc<Object?>(
+      'list_mesh_recipient_public_keys',
+      params: <String, Object?>{
+        'p_public_school_code': publicSchoolCode,
+        'p_involves_staff': involvesStaff,
+      },
+    );
+    return _requireList(response).cast<String>();
   }
 
   @override
@@ -886,7 +960,8 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
           'p_role': role.wireValue,
           'p_institution_id': institutionId,
           'p_staff_tier': staffTier,
-          'p_requester_program_label': requesterProgramLabel?.trim().isEmpty == true
+          'p_requester_program_label':
+              requesterProgramLabel?.trim().isEmpty == true
               ? null
               : requesterProgramLabel?.trim(),
         },
@@ -1127,7 +1202,7 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
             'status,human_level,involves_staff,assigned_counselor_id,'
             'chat_available_notice,urgent_referral_triggered,concurrency_version,'
             'declared_at,received_centrally_at,closed_at,closed_reason,'
-            'conversation_ended_at,student_piece',
+            'conversation_ended_at,student_piece,client_operation_id',
           );
       if (institutionId != null) {
         query = query.eq('institution_id', institutionId);

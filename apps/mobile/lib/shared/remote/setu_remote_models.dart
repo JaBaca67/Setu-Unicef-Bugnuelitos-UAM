@@ -554,6 +554,7 @@ class StaffMembershipScope {
     required this.membershipId,
     required this.role,
     required this.scopeLabel,
+    this.staffTier,
     this.institutionId,
     this.institutionPublicCode,
     this.institutionName,
@@ -561,6 +562,7 @@ class StaffMembershipScope {
 
   final String membershipId;
   final SetuStaffRole role;
+  final String? staffTier;
   final String? institutionId;
   final String? institutionPublicCode;
   final String? institutionName;
@@ -570,6 +572,7 @@ class StaffMembershipScope {
     return StaffMembershipScope(
       membershipId: _readString(json, 'membership_id'),
       role: SetuStaffRole.fromWire(_readString(json, 'role')),
+      staffTier: _readNullableString(json, 'staff_tier'),
       institutionId: _readNullableString(json, 'institution_id'),
       institutionPublicCode: _readNullableString(
         json,
@@ -583,6 +586,7 @@ class StaffMembershipScope {
   Map<String, Object?> toJson() => <String, Object?>{
     'membership_id': membershipId,
     'role': role.wireValue,
+    if (staffTier != null) 'staff_tier': staffTier,
     'institution_id': institutionId,
     'institution_public_code': institutionPublicCode,
     'institution_name': institutionName,
@@ -595,6 +599,7 @@ class StaffMembershipScope {
       other is StaffMembershipScope &&
           other.membershipId == membershipId &&
           other.role == role &&
+          other.staffTier == staffTier &&
           other.institutionId == institutionId &&
           other.institutionPublicCode == institutionPublicCode &&
           other.institutionName == institutionName &&
@@ -604,6 +609,7 @@ class StaffMembershipScope {
   int get hashCode => Object.hash(
     membershipId,
     role,
+    staffTier,
     institutionId,
     institutionPublicCode,
     institutionName,
@@ -654,9 +660,11 @@ class StaffCaseSummary {
     this.closedReason,
     this.conversationEndedAt,
     this.studentPiece,
+    this.clientOperationId,
   });
 
   final String id;
+  final String? clientOperationId;
   final String institutionId;
   final String referenceCode;
   final SetuSituationType situationType;
@@ -698,6 +706,7 @@ class StaffCaseSummary {
     final String? roleStr = _readNullableString(json, 'student_role');
     return StaffCaseSummary(
       id: _readString(json, 'id'),
+      clientOperationId: _readNullableString(json, 'client_operation_id'),
       institutionId: _readString(json, 'institution_id'),
       referenceCode: _readString(json, 'reference_code'),
       situationType: SetuSituationType.fromWire(

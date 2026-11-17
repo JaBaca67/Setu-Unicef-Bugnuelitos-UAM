@@ -30,7 +30,7 @@ import 'features/support/support_screens.dart';
 import 'features/welcome/welcome_screen.dart';
 import 'shared/contracts/cureando_gateway.dart';
 import 'shared/local/local_cureando_gateway.dart';
-import 'shared/mesh/mesh_bridge_keys.dart';
+import 'shared/mesh/mesh_recipient_directory.dart';
 import 'shared/mesh/mesh_relay_service.dart';
 import 'shared/mesh/mesh_transport.dart';
 import 'shared/platform/screen_security_controller.dart';
@@ -93,18 +93,25 @@ class _CureandoAppState extends State<CureandoApp> {
       widget.learningProgress ?? LearningProgress();
   late final AppLifecycleListener _learningLifecycle;
   StreamSubscription<void>? _staffAuthSubscription;
+  String? _meshStaffScope;
+  late final MeshRecipientDirectory? _meshKeys =
+      widget.meshRelay?.recipientDirectory ??
+      (widget.remoteGateway == null
+          ? null
+          : MeshRecipientDirectory(widget.remoteGateway!));
   late final MeshRelayService _meshRelay =
       widget.meshRelay ??
       MeshRelayService(
         transport: NearbyMeshTransport(),
         remoteGateway: widget.remoteGateway,
+        recipientDirectory: _meshKeys,
       );
   late final SupportFlow _support =
       widget.supportFlow ??
       SupportFlow(
         mesh: _meshRelay,
         meshRecipientPublicKey: widget.meshRecipientPublicKey,
-        resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+        resolveMeshRecipients: _meshKeys?.recipients,
       );
   late final StaffSession _staff =
       widget.staffSession ??
@@ -362,7 +369,7 @@ class _CureandoAppState extends State<CureandoApp> {
       GoRoute(
         path: '/personal/mesa',
         builder: (BuildContext context, GoRouterState state) =>
-            DeskInboxScreen(session: _staff),
+            DeskInboxScreen(session: _staff, meshRelay: _meshRelay),
         routes: <RouteBase>[
           GoRoute(
             path: 'declinadas',
@@ -502,6 +509,7 @@ class _CureandoAppState extends State<CureandoApp> {
         _learning.refreshDay();
         _support.refreshChat();
         _syncPush();
+        unawaited(_bootstrapMesh());
       },
     );
     _session.addListener(_syncSchool);
@@ -532,19 +540,16 @@ class _CureandoAppState extends State<CureandoApp> {
       if (widget.allowDesignCapture) {
         _security.setSecureScreen(false);
       }
-      if (widget.supportFlow == null) {
-        unawaited(_bootstrapMesh());
-      }
+      unawaited(_bootstrapMesh());
     }
   }
 
   Future<void> _bootstrapMesh() async {
     try {
       await _meshRelay.open();
-      final bool hasPending = _meshRelay.items.any(
-        (MeshQueueItem item) => item.state != MeshPacketState.centrallySynced,
-      );
-      if (!hasPending) return;
+      if (widget.remoteGateway != null) {
+        unawaited(_meshRelay.syncPendingAsBridge());
+      }
       final bool perms = await _meshRelay.transport.hasRequiredPermissions();
       final bool btOn = await _meshRelay.transport.isBluetoothEnabled();
       if (perms && btOn && !_meshRelay.isRunning) {
@@ -558,7 +563,10 @@ class _CureandoAppState extends State<CureandoApp> {
   /// Las alertas se registran en el colegio activo del estudiante.
   void _syncSchool() {
     final String? code = _session.school?.publicCode;
-    if (code != null) _support.schoolCode = code;
+    if (code != null) {
+      _support.schoolCode = code;
+      unawaited(_meshKeys?.warmSchool(code).catchError((Object _) {}));
+    }
   }
 
   void _handleForegroundPush(String? title, String? body) {
@@ -573,11 +581,30 @@ class _CureandoAppState extends State<CureandoApp> {
     _scaffoldMessengerKey.currentState
       ?..hideCurrentSnackBar()
       ..showSnackBar(
-        buildSetuBottomAlertSnackBar(message: message, kind: SetuAlertKind.info),
+        buildSetuBottomAlertSnackBar(
+          message: message,
+          kind: SetuAlertKind.info,
+        ),
       );
   }
 
   void _syncPush() {
+    final StaffMembershipScope? scope = _staff.active;
+    final String? meshScope = scope == null
+        ? null
+        : '${_staff.backend.currentUserId}:${scope.role}:${scope.institutionId}';
+    if (_meshStaffScope != meshScope) {
+      _meshStaffScope = meshScope;
+      _meshRelay.clearSchoolContext();
+      if (scope != null && _meshRelay.recipientDirectory != null) {
+        unawaited(
+          _meshRelay
+              .prepareSchoolReceiver(scope.institutionPublicCode)
+              .then((_) => _bootstrapMesh())
+              .catchError((Object _) {}),
+        );
+      }
+    }
     PushNotificationService.instance.syncStaff(
       hasActiveSession: _staff.memberships.isNotEmpty,
     );
@@ -606,7 +633,8 @@ class _CureandoAppState extends State<CureandoApp> {
     } on Object {
       if (mounted) {
         _update(
-          () => _storageError = 'No se pudo abrir el almacenamiento protegido. No se borraron los datos.',
+          () => _storageError =
+              'No se pudo abrir el almacenamiento protegido. No se borraron los datos.',
         );
       }
     }
@@ -743,30 +771,28 @@ class _CureandoAppState extends State<CureandoApp> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _section(
-                    context,
-                    'Guardado protegido en este teléfono',
-                    <Widget>[
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          _storageError ??
-                              (_storageReady
-                                  ? 'Almacenamiento local cifrado listo.'
-                                  : 'Abriendo almacenamiento protegido…'),
-                        ),
+                  _section(context, 'Guardado protegido en este teléfono', <
+                    Widget
+                  >[
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        _storageError ??
+                            (_storageReady
+                                ? 'Almacenamiento local cifrado listo.'
+                                : 'Abriendo almacenamiento protegido…'),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Los datos guardados permanecerán al cerrar la app. Todavía no se envían a un centro ni se sincronizan con otros dispositivos.',
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Los datos guardados permanecerán al cerrar la app. Todavía no se envían a un centro ni se sincronizan con otros dispositivos.',
+                    ),
+                    if (_storageError != null)
+                      TextButton(
+                        onPressed: _open,
+                        child: const Text('Reintentar apertura'),
                       ),
-                      if (_storageError != null)
-                        TextButton(
-                          onPressed: _open,
-                          child: const Text('Reintentar apertura'),
-                        ),
-                    ],
-                  ),
+                  ]),
                   _section(context, 'Privacidad de pantalla', <Widget>[
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,

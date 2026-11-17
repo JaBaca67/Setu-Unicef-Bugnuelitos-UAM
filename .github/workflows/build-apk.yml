@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches:
+      - develop
       - development/pruebamesh/james
       - development-james
       - main

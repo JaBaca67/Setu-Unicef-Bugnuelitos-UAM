@@ -99,6 +99,7 @@ class SupportFlow extends ChangeNotifier {
     this.mesh,
     this.meshRecipientPublicKey,
     this.resolveMeshRecipientPublicKey,
+    this.resolveMeshRecipients,
   }) : _openStore = openStore ?? _onDevice,
        _ownsBackend = backend == null,
        backend =
@@ -124,6 +125,8 @@ class SupportFlow extends ChangeNotifier {
   final MeshRelayService? mesh;
   final List<int>? meshRecipientPublicKey;
   final Future<List<int>?> Function()? resolveMeshRecipientPublicKey;
+  final Future<List<List<int>>> Function(String schoolCode, bool involvesStaff)?
+  resolveMeshRecipients;
   bool _needsBluetoothForMesh = false;
   bool get needsBluetoothForMesh => _needsBluetoothForMesh;
 
@@ -375,21 +378,33 @@ class SupportFlow extends ChangeNotifier {
   Future<bool> ensureBluetoothForMesh() async {
     final MeshRelayService? relay = mesh;
     if (relay == null) return false;
-    final bool enabled = await relay.transport.requestEnableBluetooth();
-    _needsBluetoothForMesh = !enabled;
-    if (enabled && !relay.isRunning) {
-      await relay.start();
+    try {
+      final bool started = await relay.ensureReadyAndStart();
+      _needsBluetoothForMesh = !started;
+      _notify();
+      return started;
+    } on Object {
+      _needsBluetoothForMesh = true;
+      _notify();
+      return false;
     }
-    _notify();
-    return enabled;
   }
 
   Future<void> _enqueueMeshFallback(AlertOutbox outbox) async {
     final MeshRelayService? relay = mesh;
-    final List<int>? recipientKey =
-        meshRecipientPublicKey ?? await resolveMeshRecipientPublicKey?.call();
-    if (relay == null || recipientKey == null) return;
+    if (relay == null) return;
     try {
+      final List<List<int>> keys;
+      final resolver = resolveMeshRecipients;
+      if (resolver != null) {
+        keys = await resolver(outbox.schoolCode, outbox.involvesStaff);
+      } else {
+        final List<int>? recipientKey =
+            meshRecipientPublicKey ??
+            await resolveMeshRecipientPublicKey?.call();
+        keys = <List<int>>[?recipientKey];
+      }
+      if (keys.isEmpty) return;
       final MeshMinimalAlertPayload payload = MeshMinimalAlertPayload(
         clientOperationId: outbox.operationId,
         publicSchoolCode: outbox.schoolCode,
@@ -399,11 +414,13 @@ class SupportFlow extends ChangeNotifier {
         capabilityVerifierHash: outbox.verifierHash,
         declaredAt: outbox.declaredAt,
       );
-      await relay.enqueueMinimalAlert(
-        payload,
-        recipientPublicKeyBytes: recipientKey,
-      );
-      if (!outbox.involvesStaff && outbox.schoolCode.trim().isNotEmpty) {
+      for (final List<int> key in keys) {
+        await relay.enqueueMinimalAlert(payload, recipientPublicKeyBytes: key);
+      }
+      // Proyección local solo para simulaciones en memoria, sin directorio remoto.
+      if (resolver == null &&
+          !outbox.involvesStaff &&
+          outbox.schoolCode.trim().isNotEmpty) {
         final List<int> schoolKey =
             await MeshSchoolKeys.resolveSchoolPublicKeyBytes(outbox.schoolCode);
         await relay.enqueueMinimalAlert(
@@ -411,11 +428,15 @@ class SupportFlow extends ChangeNotifier {
           recipientPublicKeyBytes: schoolKey,
         );
       }
-      final bool btOn = await relay.transport.isBluetoothEnabled();
-      _needsBluetoothForMesh = !btOn;
-      if (btOn && !relay.isRunning) {
-        await relay.start();
+      final bool hasPermissions = await relay.transport
+          .hasRequiredPermissions();
+      final bool btOn =
+          hasPermissions && await relay.transport.isBluetoothEnabled();
+      bool started = false;
+      if (btOn) {
+        started = relay.isRunning || await relay.start();
       }
+      _needsBluetoothForMesh = !btOn || !started;
     } on Object {
       // Permanece en la cola local cifrada.
     }

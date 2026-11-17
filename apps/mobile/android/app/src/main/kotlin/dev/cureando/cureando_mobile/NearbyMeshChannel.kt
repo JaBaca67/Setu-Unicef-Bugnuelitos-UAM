@@ -98,7 +98,8 @@ class NearbyMeshChannel(
             list.add(Manifest.permission.BLUETOOTH_SCAN)
             list.add(Manifest.permission.BLUETOOTH_ADVERTISE)
             list.add(Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             list.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
         return list.toTypedArray()
@@ -131,12 +132,13 @@ class NearbyMeshChannel(
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "isBluetoothEnabled" -> result.success(isBluetoothOn())
+            "isBluetoothEnabled" -> result.success(
+                (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                    ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT) ==
+                        PackageManager.PERMISSION_GRANTED)
+                && isBluetoothOn(),
+            )
             "requestEnableBluetooth" -> {
-                if (isBluetoothOn()) {
-                    result.success(true)
-                    return
-                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                     ContextCompat.checkSelfPermission(
                         activity,
@@ -148,6 +150,10 @@ class NearbyMeshChannel(
                         "Se requiere permiso BLUETOOTH_CONNECT antes de activar Bluetooth",
                         null,
                     )
+                    return
+                }
+                if (isBluetoothOn()) {
+                    result.success(true)
                     return
                 }
                 if (pendingBluetoothResult != null) {
@@ -197,7 +203,8 @@ class NearbyMeshChannel(
                     return
                 }
                 connectionsClient.sendPayload(endpointId, Payload.fromBytes(bytes))
-                result.success(null)
+                    .addOnSuccessListener { result.success(null) }
+                    .addOnFailureListener { result.error("send_failed", "No se pudo enviar el sobre", null) }
             }
             "broadcastPayload" -> {
                 val bytes = call.argument<ByteArray>("bytes")
@@ -208,14 +215,19 @@ class NearbyMeshChannel(
                 val targets = connectedEndpoints.toList()
                 if (targets.isNotEmpty()) {
                     connectionsClient.sendPayload(targets, Payload.fromBytes(bytes))
+                        .addOnSuccessListener { result.success(targets.size) }
+                        .addOnFailureListener { result.error("send_failed", "No se pudo difundir el sobre", null) }
+                } else {
+                    result.success(0)
                 }
-                result.success(targets.size)
             }
             else -> result.notImplemented()
         }
     }
 
     private fun startCluster(result: MethodChannel.Result) {
+        connectionsClient.stopAdvertising()
+        connectionsClient.stopDiscovery()
         val advertisingOptions = AdvertisingOptions.Builder()
             .setStrategy(Strategy.P2P_CLUSTER)
             .build()
@@ -237,6 +249,7 @@ class NearbyMeshChannel(
                 emitEvent(mapOf("type" to "status", "state" to "started"))
                 result.success(null)
             }.addOnFailureListener { e ->
+                connectionsClient.stopAdvertising()
                 emitEvent(
                     mapOf(
                         "type" to "status",

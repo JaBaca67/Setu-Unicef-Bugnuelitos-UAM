@@ -20,11 +20,7 @@ enum MeshTestRole { emitter, relayer, bridge }
 /// Pantalla de prueba física de red mesh entre 2 o más celulares Android
 /// usando Nearby Connections (`Strategy.P2P_CLUSTER`) y sobres E2EE.
 class MeshTestScreen extends StatefulWidget {
-  const MeshTestScreen({
-    super.key,
-    this.remoteGateway,
-    this.transport,
-  });
+  const MeshTestScreen({super.key, this.remoteGateway, this.transport});
 
   final SetuRemoteGateway? remoteGateway;
   final MeshTransport? transport;
@@ -55,7 +51,7 @@ class _MeshTestScreenState extends State<MeshTestScreen> {
   }
 
   Future<void> _initStateAsync() async {
-    // Par X25519 determinístico SOLO para prueba física rápida entre 2+ teléfonos.
+    // Par aleatorio local: copiar SOLO su clave pública al emisor de la prueba.
     final SimpleKeyPair pair = await MeshBridgeKeys.demoBridgeKeyPair();
     final SimplePublicKey pub = await pair.extractPublicKey();
     _demoBridgeKeyPair = pair;
@@ -77,8 +73,7 @@ class _MeshTestScreenState extends State<MeshTestScreen> {
 
     final MeshRelayService service = MeshRelayService(
       transport: _transport,
-      remoteGateway:
-          _role == MeshTestRole.bridge ? widget.remoteGateway : null,
+      remoteGateway: _role == MeshTestRole.bridge ? widget.remoteGateway : null,
       bridgeKeyPair: _role == MeshTestRole.bridge ? _demoBridgeKeyPair : null,
     );
     service.addListener(_onRelayChanged);
@@ -225,7 +220,9 @@ class _MeshTestScreenState extends State<MeshTestScreen> {
       ),
       recipientPublicKeyBytes: recipientKey,
     );
-    _addLog('Alerta cifrada encolada (packet=${env.packetId.substring(0, 8)}...)');
+    _addLog(
+      'Alerta cifrada encolada (packet=${env.packetId.substring(0, 8)}...)',
+    );
   }
 
   Future<void> _syncAsBridge() async {
@@ -304,7 +301,9 @@ class _MeshTestScreenState extends State<MeshTestScreen> {
                             ? Icons.stop_circle_outlined
                             : Icons.wifi_tethering_rounded,
                       ),
-                      label: Text(_nodeRunning ? 'Detener nodo' : 'Iniciar nodo'),
+                      label: Text(
+                        _nodeRunning ? 'Detener nodo' : 'Iniciar nodo',
+                      ),
                     ),
                   ],
                 ),

@@ -1,8 +1,13 @@
 import 'dart:async';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../shared/mesh/mesh_bridge_keys.dart';
+import '../../shared/mesh/mesh_envelope.dart';
+import '../../shared/mesh/mesh_relay_service.dart';
 import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
@@ -94,6 +99,132 @@ class StaffTag extends StatelessWidget {
   );
 }
 
+/// Aviso de estado Bluetooth/permisos para red mesh en bandejas de centro.
+class StaffMeshStatusBanner extends StatelessWidget {
+  const StaffMeshStatusBanner({
+    super.key,
+    required this.bluetoothRequired,
+    required this.meshActive,
+    required this.onEnableBluetooth,
+    required this.description,
+  });
+
+  final bool bluetoothRequired;
+  final bool meshActive;
+  final VoidCallback onEnableBluetooth;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    if (bluetoothRequired) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 10),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF4E5),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFF5B800), width: 1.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              const Text(
+                'Bluetooth requerido',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: const TextStyle(fontSize: 14, height: 1.35),
+              ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                onPressed: onEnableBluetooth,
+                icon: const Icon(Icons.bluetooth_rounded),
+                label: const Text('Activar Bluetooth'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (meshActive) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 10, bottom: 10),
+        child: StaffTag(
+          'Red mesh activa · escuchando alertas sin internet',
+          highlight: true,
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+}
+
+/// Código corto de referencia para alertas recibidas localmente por mesh.
+String meshReferenceCode(String clientOperationId) {
+  final String suffix = clientOperationId.length >= 6
+      ? clientOperationId.substring(clientOperationId.length - 6).toUpperCase()
+      : clientOperationId.toUpperCase();
+  return 'MESH-$suffix';
+}
+
+/// Filtra alertas mínimas locales del colegio aún no sincronizadas en servidor.
+List<MeshMinimalAlertPayload> filterUnsyncedSchoolMeshAlerts({
+  required MeshRelayService? relay,
+  required String? schoolCode,
+  required List<StaffCaseSummary> remoteCases,
+}) {
+  final String? normalized = schoolCode?.trim().toUpperCase();
+  if (relay == null || normalized == null || normalized.isEmpty) {
+    return const <MeshMinimalAlertPayload>[];
+  }
+  final List<MeshMinimalAlertPayload> result = <MeshMinimalAlertPayload>[];
+  for (final MeshMinimalAlertPayload alert in relay.schoolAlerts) {
+    if (alert.involvesStaff) continue;
+    if (alert.publicSchoolCode.trim().toUpperCase() != normalized) continue;
+    if (relay.isOperationSynced(alert.clientOperationId)) continue;
+    final bool alreadyInRemote = remoteCases.any(
+      (StaffCaseSummary existing) =>
+          existing.clientOperationId == alert.clientOperationId,
+    );
+    if (!alreadyInRemote) {
+      result.add(alert);
+    }
+  }
+  return result;
+}
+
+/// Diálogo informativo para una alerta mínima recibida por Bluetooth/mesh sin internet.
+Future<void> showLocalMeshAlertDialog(
+  BuildContext context, {
+  required String referenceCode,
+  required String kindLabel,
+  required String detailMessage,
+  Future<void> Function()? onSyncNow,
+}) => showDialog<void>(
+  context: context,
+  builder: (BuildContext dialogContext) => AlertDialog(
+    title: Text('$referenceCode · Recibido por mesh'),
+    content: Text('$kindLabel\n\n$detailMessage'),
+    actions: <Widget>[
+      if (onSyncNow != null)
+        TextButton(
+          onPressed: () async {
+            Navigator.of(dialogContext).pop();
+            await onSyncNow();
+          },
+          child: const Text('Sincronizar ahora'),
+        ),
+      TextButton(
+        onPressed: () => Navigator.of(dialogContext).pop(),
+        child: const Text('Entendido'),
+      ),
+    ],
+  ),
+);
+
 /// Carga una lista del servidor con espera, error y reintento visibles.
 abstract class StaffInboxState<T extends StatefulWidget> extends State<T> {
   StaffSession get session;
@@ -118,6 +249,7 @@ abstract class StaffInboxState<T extends StatefulWidget> extends State<T> {
     try {
       final StaffBackend backend = session.backend;
       final String? institution = session.active?.institutionId;
+      await beforeLoad();
       final List<StaffCaseSummary> found = await backend.cases(
         institutionId: institution,
       );
@@ -137,6 +269,8 @@ abstract class StaffInboxState<T extends StatefulWidget> extends State<T> {
 
   /// Datos adicionales de la bandeja; un fallo se informa como el resto.
   Future<void> loadExtra() async {}
+
+  Future<void> beforeLoad() async {}
 
   String school(StaffCaseSummary item) =>
       schools[item.institutionId] ??
@@ -684,9 +818,9 @@ class _DeclineSheetState extends State<_DeclineSheet> {
             header: true,
             child: Text(
               '¿Declinar esta alerta?',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 10),
@@ -831,9 +965,10 @@ enum _DeskFilter {
 
 /// Bandeja de Mesa de Escucha (`/personal/mesa`): «Mis casos».
 class DeskInboxScreen extends StatefulWidget {
-  const DeskInboxScreen({super.key, required this.session});
+  const DeskInboxScreen({super.key, required this.session, this.meshRelay});
 
   final StaffSession session;
+  final MeshRelayService? meshRelay;
 
   @override
   State<DeskInboxScreen> createState() => _DeskInboxScreenState();
@@ -855,6 +990,9 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
       const <PracticanteSupervisorNoticeView>[];
   StreamSubscription<CaseDispatchRecord>? _live;
   String? _busyCase;
+  bool _bluetoothRequired = false;
+  bool _meshActive = false;
+  int _lastSyncedCount = 0;
 
   @override
   StaffSession get session => widget.session;
@@ -862,6 +1000,9 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
   @override
   void initState() {
     super.initState();
+    _lastSyncedCount = widget.meshRelay?.syncedCount ?? 0;
+    widget.meshRelay?.addListener(_onMeshChanged);
+    unawaited(_ensureDeskMesh());
     // La bandeja se actualiza sola cuando llega, se toma o se retira una
     // alerta despachada a esta persona.
     _live = session.backend.incomingDispatches().listen((_) {
@@ -871,9 +1012,78 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
 
   @override
   void dispose() {
+    widget.meshRelay?.removeListener(_onMeshChanged);
+    widget.meshRelay?.clearSchoolContext();
     _searchController.dispose();
     _live?.cancel();
     super.dispose();
+  }
+
+  void _onMeshChanged() {
+    final MeshRelayService? relay = widget.meshRelay;
+    if (relay != null && relay.syncedCount > _lastSyncedCount) {
+      _lastSyncedCount = relay.syncedCount;
+      unawaited(load());
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _ensureDeskMesh() async {
+    final MeshRelayService? relay = widget.meshRelay;
+    if (relay == null) return;
+    final String? schoolCode = session.active?.institutionPublicCode?.trim();
+    final bool hasSchool = schoolCode != null && schoolCode.isNotEmpty;
+    try {
+      final String endpoint = hasSchool ? 'setu-node' : 'mesa-red';
+      if (relay.recipientDirectory != null) {
+        await relay.prepareSchoolReceiver(hasSchool ? schoolCode : null);
+      }
+      final bool started = await relay.ensureReadyAndStart(
+        endpointName: endpoint,
+      );
+      if (!mounted) return;
+      if (!started) {
+        setState(() {
+          _bluetoothRequired = true;
+          _meshActive = false;
+        });
+        return;
+      }
+      if (hasSchool && relay.recipientDirectory == null) {
+        final SimpleKeyPair schoolKey = await MeshSchoolKeys.demoSchoolKeyPair(
+          schoolCode,
+        );
+        await relay.setSchoolContext(
+          schoolCode: schoolCode,
+          schoolKeyPair: schoolKey,
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _bluetoothRequired = false;
+        _meshActive = true;
+      });
+    } on MissingPluginException {
+      // Entorno sin canal nativo Android (ej. pruebas de widgets en escritorio).
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _bluetoothRequired = true;
+        _meshActive = false;
+      });
+    }
+  }
+
+  List<MeshMinimalAlertPayload> _localMeshAlerts() =>
+      filterUnsyncedSchoolMeshAlerts(
+        relay: widget.meshRelay,
+        schoolCode: session.active?.institutionPublicCode,
+        remoteCases: cases ?? const <StaffCaseSummary>[],
+      );
+
+  @override
+  Future<void> beforeLoad() async {
+    await widget.meshRelay?.syncPendingAsBridge();
   }
 
   @override
@@ -892,7 +1102,9 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     _supervisorNotices = await backend.supervisorNotices();
     if (!_tabChosenByUser) {
       _tabChosenByUser = true;
-      _tab = _pending.isNotEmpty ? _DeskTab.toClaim : _DeskTab.myCases;
+      _tab = (_pending.isNotEmpty || _localMeshAlerts().isNotEmpty)
+          ? _DeskTab.toClaim
+          : _DeskTab.myCases;
     }
     if (_selectedInstitutionId != null &&
         !_pending.any(
@@ -975,10 +1187,8 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (BuildContext sheet) => _DeclineSheet(
-        reference: reference,
-        school: schoolLabel,
-      ),
+      builder: (BuildContext sheet) =>
+          _DeclineSheet(reference: reference, school: schoolLabel),
     );
     if (reason == null || !mounted) return;
     setState(() => _busyCase = record.caseId);
@@ -1047,13 +1257,115 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
     borderRadius: BorderRadius.all(Radius.circular(18)),
     border: Border.fromBorderSide(BorderSide(color: Color(0xFFDBE6F5))),
     boxShadow: <BoxShadow>[
-      BoxShadow(
-        color: Color(0x0D0A2E5C),
-        blurRadius: 10,
-        offset: Offset(0, 4),
-      ),
+      BoxShadow(color: Color(0x0D0A2E5C), blurRadius: 10, offset: Offset(0, 4)),
     ],
   );
+
+  Widget _meshDispatchTile(MeshMinimalAlertPayload alert) {
+    final String schoolName =
+        session.active?.institutionName ?? 'Centro escolar';
+    final String ref = meshReferenceCode(alert.clientOperationId);
+    final String kind = staffCaseKind(
+      SetuSituationType.fromWire(alert.situationType),
+      SetuStudentCaseRole.fromWire(alert.studentRole),
+      origin: SetuAlertOrigin.mesh,
+    );
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: _alertCardDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              StaffSchoolLogo(schoolName: schoolName, size: 44),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            schoolName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: CureandoTheme.ink,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.schedule_rounded,
+                          size: 15,
+                          color: CureandoTheme.secondaryInk,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _hhmm(alert.declaredAt),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: CureandoTheme.secondaryInk,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$kind · $ref',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: CureandoTheme.secondaryInk,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const StaffTag('Red mesh · Sin internet', highlight: true),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            style: flowSecondaryStyle(),
+            onPressed: () => showLocalMeshAlertDialog(
+              context,
+              referenceCode: ref,
+              kindLabel: kind,
+              detailMessage:
+                  'Esta alerta mínima llegó por Bluetooth/mesh sin internet. '
+                  'Cuando este teléfono o un puente recupere conexión, se '
+                  'subirá automáticamente para habilitar la toma del caso y el chat.',
+              onSyncNow: widget.meshRelay?.remoteGateway == null
+                  ? null
+                  : () async {
+                      final int synced =
+                          await widget.meshRelay?.syncPendingAsBridge() ?? 0;
+                      if (!mounted) return;
+                      if (synced > 0) {
+                        _say(
+                          'Alerta sincronizada con la plataforma.',
+                          kind: SetuAlertKind.success,
+                        );
+                        await load();
+                      } else {
+                        _say(
+                          'Todavía no pudimos sincronizar. Revisá tu conexión e intentá de nuevo.',
+                          kind: SetuAlertKind.warning,
+                        );
+                      }
+                    },
+            ),
+            icon: const Icon(Icons.bluetooth_connected_rounded, size: 18),
+            label: const Text('Ver aviso local'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _dispatchTile(CaseDispatchRecord record) {
     final bool busy = _busyCase == record.caseId;
@@ -1420,6 +1732,8 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
   @override
   Widget build(BuildContext context) {
     final List<CaseDispatchRecord> filteredPending = _filteredPending();
+    final List<MeshMinimalAlertPayload> localMeshAlerts = _localMeshAlerts();
+    final int totalToClaim = _pending.length + localMeshAlerts.length;
     final Map<String, String> pendingSchools = <String, String>{
       for (final CaseDispatchRecord r in _pending)
         r.institutionId:
@@ -1441,13 +1755,21 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
                 child: const Text('Mesa de escucha', style: _heading),
               ),
               Text(
-                '${_pending.length} ${_pending.length == 1 ? 'alerta' : 'alertas'} por tomar',
+                '$totalToClaim ${totalToClaim == 1 ? 'alerta' : 'alertas'} por tomar',
                 style: const TextStyle(
                   fontSize: 15,
                   color: CureandoTheme.secondaryInk,
                 ),
               ),
             ],
+          ),
+          StaffMeshStatusBanner(
+            bluetoothRequired: _bluetoothRequired,
+            meshActive: _meshActive,
+            onEnableBluetooth: _ensureDeskMesh,
+            description:
+                'Activá el Bluetooth y permisos cercanos para recibir alertas '
+                'de estudiantes sin internet.',
           ),
           if (_supervisorNotices.isNotEmpty) ...<Widget>[
             const SizedBox(height: 10),
@@ -1503,7 +1825,10 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: <Widget>[
                 ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 160, maxWidth: 240),
+                  constraints: const BoxConstraints(
+                    minWidth: 160,
+                    maxWidth: 240,
+                  ),
                   child: DropdownButtonFormField<String?>(
                     initialValue: _selectedInstitutionId,
                     isExpanded: true,
@@ -1539,8 +1864,7 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: () =>
-                      setState(() => _oldestFirst = !_oldestFirst),
+                  onPressed: () => setState(() => _oldestFirst = !_oldestFirst),
                   icon: const Icon(Icons.swap_vert_rounded, size: 18),
                   label: Text(
                     _oldestFirst
@@ -1552,18 +1876,24 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            if (filteredPending.isEmpty)
+            if (filteredPending.isEmpty && localMeshAlerts.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 18),
                 child: Text(
                   'No tenés alertas pendientes por tomar.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, color: CureandoTheme.secondaryInk),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: CureandoTheme.secondaryInk,
+                  ),
                 ),
               )
-            else
+            else ...<Widget>[
+              for (final MeshMinimalAlertPayload alert in localMeshAlerts)
+                _meshDispatchTile(alert),
               for (final CaseDispatchRecord record in filteredPending)
                 _dispatchTile(record),
+            ],
             Center(
               child: TextButton(
                 onPressed: _openDeclined,
@@ -1586,8 +1916,9 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
                     labelStyle: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color:
-                          _filter == filter ? Colors.white : CureandoTheme.ink,
+                      color: _filter == filter
+                          ? Colors.white
+                          : CureandoTheme.ink,
                     ),
                     checkmarkColor: Colors.white,
                     selectedColor: CureandoTheme.blue,
