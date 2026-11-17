@@ -9,15 +9,30 @@ desde `main` por el workflow `.github/workflows/deploy-landing.yml`. Todo lo que
 - Poppins (licencia OFL) se sirve desde `landing/assets/fonts/`.
 - Clayful tiene licencia de uso personal, así que **no se sube el archivo de la fuente**: los titulares en Clayful están incrustados en `landing/index.html` como trazos SVG.
 
-## Diseño
+## Diseño vigente · 17 de noviembre de 2026
 
-- Fuente visual: archivo de Figma del prototipo, frame «SéTú · Landing conectada con la app» (nodo `196:1797`, importado de la versión publicada con html.to.design).
-- Los recursos exportados de Figma viven en `landing/assets/landing/` (WebP y SVG). Las pantallas de «Así funciona» son exportaciones 2x de los mockups de la app con datos ficticios.
-- Los textos no se copian literalmente de Figma: donde el diseño prometía supervisión del MINED en cada caso, entrega garantizada sin internet, respuesta asegurada o mostraba logos institucionales, se conservan los textos alineados con los ADR vigentes.
+- La landing sigue el frame de Figma «SéTú · Landing conectada con la app» (archivo `8TbZNgIetXg3O5f7Cba2vh`, nodo `196:1797`): portada «Todos podemos encajar», Explorá con Mi pieza y racha, problema vs. solución, Así funciona con pantallas de la app, pilares de privacidad, campaña, instituciones con el banner del kit, FAQ, SOS y pie. Se conservan la sección de descargas, los videos y el QR del stand.
+- Los recursos exportados de Figma viven en `landing/assets/landing/` (WebP y SVG, ~0,5 MB). Las pantallas de «Así funciona» son exportaciones 2x de los mockups con datos ficticios.
+- Los textos no se copian literalmente de Figma: donde el diseño prometía supervisión del MINED en cada caso, entrega garantizada sin internet, respuesta asegurada o mostraba logos institucionales, se conservan los textos alineados con los ADR vigentes. El botón del encabezado sigue siendo «Probar SéTú» (no hay ingreso web con código).
 - Contraste: el texto pequeño sobre magenta va en negro (AA); el blanco solo se usa en texto grande y en negrita.
-- Pendiente: los números 118 y 133 necesitan fuente, territorio, fecha de verificación y responsable editorial antes de publicarse como información de ayuda.
 
 ## Probar en local
     cd landing
     python3 -m http.server 8000
 Abre http://localhost:8000 (con file:// el navegador bloquea las fuentes).
+
+## Pulido para el stand · 16 de noviembre de 2026
+
+- Fuente visual: archivo Figma `8TbZNgIetXg3O5f7Cba2vh`, landing `114:26`; Manual de Marca final de Drive y copia PDF aportada por el usuario. Poppins y trazos Clayful existentes; no se usa Nunito.
+- Hero con CTA al APK de Drive del 16-nov (`1WmzyJUg0ABflmlN6s4Q4G6YVK37buif4`), recursos, QR a la URL pública de GitHub Pages y video de Inicio. Se conserva el APK fuera de Git (194 MB, compilación de prueba).
+- Información, Cuidarme/Actividades, las tres superficies y campaña/kit presencial se explican por separado. Se explicitan condiciones de mesh, chat por internet, datos de prueba y límites de privacidad.
+- Recursos reales: Manual de Marca (`11vE2_hviWBnT79giw6Y8mgofxUckyae6`) y carpeta de manuales (`1i3h6JxUnx_VdSernXpXU_yz06C6tu-jQ`). Los tres destinos tienen permiso `anyone/reader`, comprobado mediante metadatos de Drive.
+- Los cuatro MP4 fueron aportados por el usuario; las copias para web conservan proporción y contenido, sin audio, a 1280 px. Pesan aproximadamente 4 MB en conjunto. `preload="none"`, controles nativos, sin reproducción automática, portadas WebP y descripciones en texto evitan descargar todos los videos al entrar. Las imágenes del teléfono son demostraciones de interfaz, no botones interactivos.
+- El QR usa `https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/#descargar`; debe comprobarse sobre el despliegue final después de integrar la rama. No es el QR de acceso a un colegio.
+- Metadatos Open Graph/Twitter con URLs absolutas y favicon SVG oficial. No se incorporan paquetes al sitio estático.
+- Verificación local: Chromium/Playwright a 360, 390, 768, 1024, 1440 y 1920 px; carga de imágenes, destinos de anclas, ausencia de desbordamientos de textos y botones, menú con Escape y FAQ. La prueba local no verifica instalación del APK ni transporte mesh físico.
+- Las líneas de ayuda siguen la actualización más reciente de ADR 0025: Policía 118 y orientación del Ministerio de la Familia 133, con fuente MINED. Territorio Nicaragua; verificados el 16-nov-2026; responsable editorial Bugñuelitos. El catálogo se describe según ADR 0026 (adaptaciones UNICEF/MINED pendientes de revisión profesional); la versión del APK puede anteceder a esos cambios.
+
+La landing se publica al integrar cambios en `main`; una rama o un PR no actualiza GitHub Pages. El Figma se edita directamente y conserva el resto de pantallas de la app.
+
+Verificación adicional: los cuatro videos se reproducen en Chromium a 1280 × 720 sin errores. Axe no detecta violaciones automáticas WCAG A/AA/2.1 AA en 390 y 1440 px. Esto no sustituye pruebas manuales con tecnologías de apoyo.
