@@ -9,6 +9,7 @@ import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_alert.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import '../piece/student_piece.dart';
 import 'staff_backend.dart';
 import 'staff_inbox_screens.dart';
@@ -957,7 +958,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
     );
 
     final bool confirmed =
-        await showModalBottomSheet<bool>(
+        await showSetuBottomSheet<bool>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,

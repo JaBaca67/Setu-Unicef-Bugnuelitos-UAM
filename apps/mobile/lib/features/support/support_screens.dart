@@ -29,7 +29,23 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
   @override
   void initState() {
     super.initState();
-    widget.flow.open();
+    widget.flow.addListener(_markSeen);
+    widget.flow.open().then((_) => _markSeen());
+  }
+
+  @override
+  void dispose() {
+    widget.flow.removeListener(_markSeen);
+    super.dispose();
+  }
+
+  /// Entrar a «Pedir apoyo» revisa los avisos: el contador del inicio vuelve
+  /// a 0. Se agenda fuera del build para no notificar mientras se dibuja.
+  void _markSeen() {
+    if (widget.flow.unreadSupport == 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.flow.markSupportSeen();
+    });
   }
 
   void _alert() => context.push<void>('/inicio/apoyo/alerta');
@@ -81,13 +97,10 @@ class _SupportHomeScreenState extends State<SupportHomeScreen> {
                       ),
                     ),
                   ),
+                  // La misma pieza que el estudiante armó en «Mi perfil».
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
-                    child: Image.asset(
-                      'assets/brand/png/personaje-01.png',
-                      height: 186,
-                      excludeFromSemantics: true,
-                    ),
+                    child: PieceFigure(piece: widget.piece.value, height: 186),
                   ),
                   Align(
                     alignment: const Alignment(.78, -.55),
@@ -431,6 +444,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom(jump: true);
       widget.flow.refreshChat();
+      widget.flow.markSupportSeen();
     });
   }
 
@@ -444,6 +458,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   }
 
   void _onFlowChanged() {
+    // Con el chat abierto, los mensajes nuevos ya se están viendo.
+    if (widget.flow.unreadSupport > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.flow.markSupportSeen();
+      });
+    }
     final int count = widget.flow.messages.length;
     final bool grew = count > _lastMessageCount;
     _lastMessageCount = count;

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import 'external_links.dart';
 import 'info_artwork.dart';
 import 'info_catalog.dart';
@@ -15,10 +16,9 @@ export 'info_catalog.dart';
 const Color _border = Color(0xFFE1E6EF);
 const Color _okInk = Color(0xFF067D30);
 
-Future<void> _requestSchool(BuildContext context) => showModalBottomSheet<void>(
+Future<void> _requestSchool(BuildContext context) => showSetuBottomSheet<void>(
   context: context,
   isScrollControlled: true,
-  showDragHandle: true,
   builder: (BuildContext sheet) => SafeArea(
     child: SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -523,11 +523,9 @@ Future<void> showSourceSheet(
   BuildContext context, {
   required InfoResource resource,
   bool publicEntry = false,
-}) => showModalBottomSheet<void>(
+}) => showSetuBottomSheet<void>(
   context: context,
   isScrollControlled: true,
-  showDragHandle: true,
-  backgroundColor: Colors.white,
   builder: (BuildContext sheet) => SafeArea(
     child: SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),

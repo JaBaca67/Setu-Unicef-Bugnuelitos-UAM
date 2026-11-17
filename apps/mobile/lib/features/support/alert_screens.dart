@@ -209,11 +209,7 @@ class _SituationTile extends StatelessWidget {
 FlowHeader _stepHeader(String step, StudentPiece piece) => FlowHeader(
   title: 'Enviar una alerta',
   subtitle: step,
-  trailing: Image.asset(
-    'assets/brand/png/personaje-01.png',
-    height: 86,
-    excludeFromSemantics: true,
-  ),
+  trailing: PieceFigure(piece: piece, height: 86),
 );
 
 /// Pantalla 3 · Paso 2 de 3: cómo se relaciona con lo que pasó.
@@ -244,11 +240,9 @@ class AlertRoleScreen extends StatelessWidget {
             role: Participation.own,
             selected: flow.participation == Participation.own,
             onTap: () => flow.selectParticipation(Participation.own),
-            art: Image.asset(
-              'assets/brand/png/personaje-08.png',
-              width: 90,
-              height: 104,
-              semanticLabel: 'Personaje de SéTú',
+            art: Semantics(
+              label: 'Tu pieza',
+              child: PieceFigure(piece: piece.value, height: 104),
             ),
           ),
           const SizedBox(height: 14),
@@ -525,12 +519,7 @@ class _AlertReviewScreenState extends State<AlertReviewScreen> {
       header: FlowHeader(
         title: 'Revisá tu alerta',
         showBrand: true,
-        trailing: Image.asset(
-          'assets/brand/png/personaje-14.png',
-          width: 132,
-          height: 92,
-          excludeFromSemantics: true,
-        ),
+        trailing: PieceFigure(piece: widget.piece.value, height: 92),
       ),
       bottom: FilledButton(
         style: flowPrimaryStyle(),

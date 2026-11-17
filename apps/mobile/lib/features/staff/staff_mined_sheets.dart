@@ -5,6 +5,7 @@ import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_alert.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import 'staff_backend.dart';
 import 'staff_inbox_screens.dart';
 import 'staff_widgets.dart';
@@ -96,127 +97,83 @@ class _MinedInvitesScreenState extends State<_MinedInvitesScreen> {
     StaffInviteIssueResult issued, {
     InviteEmailDispatchResult? emailResult,
   }) async {
-    await showDialog<void>(
+    await showSetuDialog<void>(
       context: context,
-      builder: (BuildContext dialog) => Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              const Text(
-                'Código de activación emitido',
-                style: TextStyle(
-                  fontSize: 20,
+      builder: (BuildContext dialog) => SetuDialog(
+        icon: Icons.vpn_key_rounded,
+        title: const Text('Código de activación emitido'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              issued.institutionalEmail,
+              style: const TextStyle(
+                fontSize: 15,
+                color: CureandoTheme.secondaryInk,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              decoration: BoxDecoration(
+                color: CureandoTheme.blueSoft,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: CureandoTheme.blue, width: 1.5),
+              ),
+              child: SelectableText(
+                issued.activationCode,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  letterSpacing: 2,
                   fontWeight: FontWeight.w700,
                   color: CureandoTheme.ink,
                 ),
               ),
-              const SizedBox(height: 8),
+            ),
+            if (issued.expiresAt != null) ...<Widget>[
+              const SizedBox(height: 10),
               Text(
-                issued.institutionalEmail,
+                'Vence: ${staffShortDate(issued.expiresAt!)}',
+                textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   color: CureandoTheme.secondaryInk,
                 ),
               ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  color: CureandoTheme.blueSoft,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: CureandoTheme.blue, width: 1.5),
-                ),
-                child: SelectableText(
-                  issued.activationCode,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w700,
-                    color: CureandoTheme.ink,
-                  ),
-                ),
-              ),
-              if (issued.expiresAt != null) ...<Widget>[
-                const SizedBox(height: 10),
-                Text(
-                  'Vence: ${staffShortDate(issued.expiresAt!)}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: CureandoTheme.secondaryInk,
-                  ),
-                ),
-              ],
-              if (emailResult != null) ...<Widget>[
-                const SizedBox(height: 12),
-                StaffNotice(
-                  emailResult.ok && emailResult.sentCount > 0
-                      ? 'Código enviado por correo a ${issued.institutionalEmail}.'
-                      : !emailResult.configured
-                      ? 'Envío por correo pendiente de configurar; copiá y compartí el código en privado.'
-                      : 'No pudimos enviar el correo (${emailResult.reason ?? 'error SMTP'}). Copiá el código manualmente.',
-                  error: !(emailResult.ok && emailResult.sentCount > 0),
-                ),
-              ],
-              const SizedBox(height: 18),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: CureandoTheme.blue,
-                        side: const BorderSide(
-                          color: CureandoTheme.blue,
-                          width: 1.5,
-                        ),
-                        minimumSize: const Size(0, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: () {
-                        Clipboard.setData(
-                          ClipboardData(text: issued.activationCode),
-                        );
-                        showSetuBottomAlert(
-                          context,
-                          'Código copiado al portapapeles.',
-                          kind: SetuAlertKind.success,
-                        );
-                      },
-                      icon: const Icon(Icons.copy_rounded, size: 18),
-                      label: const Text('Copiar'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: CureandoTheme.blue,
-                        minimumSize: const Size(0, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: () => Navigator.of(dialog).pop(),
-                      child: const Text('Listo'),
-                    ),
-                  ),
-                ],
+            ],
+            if (emailResult != null) ...<Widget>[
+              const SizedBox(height: 12),
+              StaffNotice(
+                emailResult.ok && emailResult.sentCount > 0
+                    ? 'Código enviado por correo a ${issued.institutionalEmail}.'
+                    : !emailResult.configured
+                    ? 'Envío por correo pendiente de configurar; copiá y compartí el código en privado.'
+                    : 'No pudimos enviar el correo (${emailResult.reason ?? 'error SMTP'}). Copiá el código manualmente.',
+                error: !(emailResult.ok && emailResult.sentCount > 0),
               ),
             ],
-          ),
+          ],
         ),
+        actions: <Widget>[
+          OutlinedButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: issued.activationCode));
+              showSetuBottomAlert(
+                context,
+                'Código copiado al portapapeles.',
+                kind: SetuAlertKind.success,
+              );
+            },
+            icon: const Icon(Icons.copy_rounded, size: 18),
+            label: const Text('Copiar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialog).pop(),
+            child: const Text('Listo'),
+          ),
+        ],
       ),
     );
   }
@@ -319,116 +276,71 @@ class _MinedInvitesScreenState extends State<_MinedInvitesScreen> {
         if (r.ok && r.activationCode != null)
           '${r.fullName ?? ''};${r.institutionalEmail};${r.activationCode};${r.scopeLabel ?? ''}',
     ].join('\n');
-    await showDialog<void>(
+    await showSetuDialog<void>(
       context: context,
-      builder: (BuildContext dialog) => Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const Text(
-                  'Resultado de importación CSV',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: CureandoTheme.ink,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Emitidas: ${bulk.issuedCount} · Con error: ${bulk.errorCount}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (emailResult != null) ...<Widget>[
-                  const SizedBox(height: 10),
-                  StaffNotice(
-                    emailResult.configured
-                        ? 'Correos enviados: ${emailResult.sentCount} · Fallidos: ${emailResult.failedCount}'
-                        : 'Gmail SMTP pendiente de configurar; podés copiar la lista de códigos.',
-                    error: !emailResult.ok,
-                  ),
-                ],
-                const SizedBox(height: 12),
-                for (final BulkInviteRowResult r in bulk.results.take(15))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(
-                      r.ok
-                          ? '✓ ${r.institutionalEmail} → ${r.activationCode}'
-                          : '✕ ${r.institutionalEmail}: ${r.error ?? 'error'}',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        color: r.ok ? CureandoTheme.ink : CureandoTheme.pink,
-                      ),
-                    ),
-                  ),
-                if (bulk.results.length > 15)
-                  Text(
-                    '... y ${bulk.results.length - 15} filas más.',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: CureandoTheme.secondaryInk,
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                Row(
-                  children: <Widget>[
-                    if (exportLines.isNotEmpty) ...<Widget>[
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: CureandoTheme.blue,
-                            side: const BorderSide(
-                              color: CureandoTheme.blue,
-                              width: 1.5,
-                            ),
-                            minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: exportLines));
-                            showSetuBottomAlert(
-                              context,
-                              'Lista de códigos copiada al portapapeles.',
-                              kind: SetuAlertKind.success,
-                            );
-                          },
-                          icon: const Icon(Icons.copy_rounded, size: 18),
-                          label: const Text('Copiar'),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-                    Expanded(
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: CureandoTheme.blue,
-                          minimumSize: const Size(0, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        onPressed: () => Navigator.of(dialog).pop(),
-                        child: const Text('Listo'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+      builder: (BuildContext dialog) => SetuDialog(
+        icon: Icons.playlist_add_check_rounded,
+        title: const Text('Resultado de importación CSV'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              'Emitidas: ${bulk.issuedCount} · Con error: ${bulk.errorCount}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
-          ),
+            if (emailResult != null) ...<Widget>[
+              const SizedBox(height: 10),
+              StaffNotice(
+                emailResult.configured
+                    ? 'Correos enviados: ${emailResult.sentCount} · Fallidos: ${emailResult.failedCount}'
+                    : 'Gmail SMTP pendiente de configurar; podés copiar la lista de códigos.',
+                error: !emailResult.ok,
+              ),
+            ],
+            const SizedBox(height: 12),
+            for (final BulkInviteRowResult r in bulk.results.take(15))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  r.ok
+                      ? '✓ ${r.institutionalEmail} → ${r.activationCode}'
+                      : '✕ ${r.institutionalEmail}: ${r.error ?? 'error'}',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: r.ok ? CureandoTheme.ink : CureandoTheme.pink,
+                  ),
+                ),
+              ),
+            if (bulk.results.length > 15)
+              Text(
+                '... y ${bulk.results.length - 15} filas más.',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: CureandoTheme.secondaryInk,
+                ),
+              ),
+          ],
         ),
+        actions: <Widget>[
+          if (exportLines.isNotEmpty)
+            OutlinedButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: exportLines));
+                showSetuBottomAlert(
+                  context,
+                  'Lista de códigos copiada al portapapeles.',
+                  kind: SetuAlertKind.success,
+                );
+              },
+              icon: const Icon(Icons.copy_rounded, size: 18),
+              label: const Text('Copiar'),
+            ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialog).pop(),
+            child: const Text('Listo'),
+          ),
+        ],
       ),
     );
   }
@@ -487,39 +399,26 @@ class _MinedInvitesScreenState extends State<_MinedInvitesScreen> {
       );
       return null;
     }
-    return showDialog<String>(
+    return showSetuDialog<String>(
       context: context,
-      builder: (BuildContext dialog) => Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              const Text(
-                'Elegí psicólogo tutor',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: CureandoTheme.ink,
+      builder: (BuildContext dialog) => SetuDialog(
+        icon: Icons.supervisor_account_rounded,
+        title: const Text('Elegí psicólogo tutor'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            for (final AssignableCounselor counselor in _counselors)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(counselor.email),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: CureandoTheme.blue,
                 ),
+                onTap: () => Navigator.of(dialog).pop(counselor.userId),
               ),
-              const SizedBox(height: 12),
-              for (final AssignableCounselor counselor in _counselors)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(counselor.email),
-                  trailing: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: CureandoTheme.blue,
-                  ),
-                  onTap: () => Navigator.of(dialog).pop(counselor.userId),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -529,78 +428,38 @@ class _MinedInvitesScreenState extends State<_MinedInvitesScreen> {
     final TextEditingController emailController = TextEditingController(
       text: invite.institutionalEmail,
     );
-    final String? targetEmail = await showDialog<String>(
+    final String? targetEmail = await showSetuDialog<String>(
       context: context,
-      builder: (BuildContext dialog) => Dialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              const Text(
-                'Reponer código',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: CureandoTheme.ink,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Anula el código anterior y emite uno nuevo.',
-                style: TextStyle(color: CureandoTheme.secondaryInk),
-              ),
-              const SizedBox(height: 14),
-              StaffField(
-                label: 'Correo vinculado',
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: CureandoTheme.blue,
-                        side: const BorderSide(
-                          color: CureandoTheme.blue,
-                          width: 1.5,
-                        ),
-                        minimumSize: const Size(0, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: () => Navigator.of(dialog).pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: CureandoTheme.blue,
-                        minimumSize: const Size(0, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: () => Navigator.of(
-                        dialog,
-                      ).pop(emailController.text.trim()),
-                      child: const Text('Reponer'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+      builder: (BuildContext dialog) => SetuDialog(
+        icon: Icons.refresh_rounded,
+        title: const Text('Reponer código'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            const Text(
+              'Anula el código anterior y emite uno nuevo.',
+              style: TextStyle(color: CureandoTheme.secondaryInk),
+            ),
+            const SizedBox(height: 14),
+            StaffField(
+              label: 'Correo vinculado',
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
         ),
+        actions: <Widget>[
+          OutlinedButton(
+            onPressed: () => Navigator.of(dialog).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialog).pop(emailController.text.trim()),
+            child: const Text('Reponer'),
+          ),
+        ],
       ),
     );
     emailController.dispose();
@@ -633,75 +492,36 @@ class _MinedInvitesScreenState extends State<_MinedInvitesScreen> {
     bool rejectRequest = false,
   }) async {
     final bool confirm =
-        await showDialog<bool>(
+        await showSetuDialog<bool>(
           context: context,
-          builder: (BuildContext dialog) => Dialog(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
+          builder: (BuildContext dialog) => SetuDialog(
+            icon: Icons.block_rounded,
+            destructive: true,
+            title: Text(
+              rejectRequest ? 'Rechazar solicitud' : 'Revocar acceso',
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Text(
-                    rejectRequest ? 'Rechazar solicitud' : 'Revocar acceso',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: CureandoTheme.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    rejectRequest
-                        ? 'La solicitud de ${invite.fullName ?? invite.institutionalEmail} quedará rechazada.'
-                        : 'El código de ${invite.institutionalEmail} dejará de funcionar.',
-                    style: const TextStyle(color: CureandoTheme.secondaryInk),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: CureandoTheme.blue,
-                            side: const BorderSide(
-                              color: CureandoTheme.blue,
-                              width: 1.5,
-                            ),
-                            minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: () => Navigator.of(dialog).pop(false),
-                          child: const Text('Volver'),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: CureandoTheme.pink,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: () => Navigator.of(dialog).pop(true),
-                          child: Text(rejectRequest ? 'Rechazar' : 'Revocar'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  rejectRequest
+                      ? 'La solicitud de ${invite.fullName ?? invite.institutionalEmail} quedará rechazada.'
+                      : 'El código de ${invite.institutionalEmail} dejará de funcionar.',
+                  style: const TextStyle(color: CureandoTheme.secondaryInk),
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              OutlinedButton(
+                onPressed: () => Navigator.of(dialog).pop(false),
+                child: const Text('Volver'),
               ),
-            ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialog).pop(true),
+                child: Text(rejectRequest ? 'Rechazar' : 'Revocar'),
+              ),
+            ],
           ),
         ) ??
         false;

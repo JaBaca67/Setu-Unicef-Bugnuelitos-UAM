@@ -6,14 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/campaign_screen.dart';
 import 'puzzle_board.dart';
 
 export 'puzzle_board.dart'
     show PuzzleBoard, PuzzleBoardState, PuzzleOptionPiece;
 
-import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import 'learning_progress.dart';
 import 'streak_screen.dart';
 import 'student_activities.dart';
@@ -615,16 +616,18 @@ class _FreeDrawingScreenState extends State<FreeDrawingScreen> {
   });
 
   Future<void> _clear() async {
-    final bool? confirmed = await showDialog<bool>(
+    final bool? confirmed = await showSetuDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => SetuDialog(
+        icon: Icons.delete_outline_rounded,
+        destructive: true,
         title: const Text('¿Borrar todo el dibujo?'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancelar'),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Borrar todo'),
           ),

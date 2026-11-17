@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import 'info_artwork.dart';
 import 'learning_progress.dart';
 import 'student_resources.dart';
@@ -587,11 +588,9 @@ class _InformationTabState extends State<InformationTab> {
       (widget.progress.completedResource(route.steps[1]) ? 1 : 0) +
       (widget.progress.completedRoute(route.id) ? 1 : 0);
 
-  Future<void> _changeTopic() => showModalBottomSheet<void>(
+  Future<void> _changeTopic() => showSetuBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    showDragHandle: true,
-    backgroundColor: Colors.white,
     constraints: BoxConstraints(
       maxHeight: MediaQuery.sizeOf(context).height * .9,
     ),
@@ -667,7 +666,12 @@ class InformationHeader extends StatelessWidget {
     super.key,
     this.title = 'Información',
     this.art = 'assets/home/info/e10a_header_figures.png',
+    this.titleIndent = 0,
   });
+
+  /// Sangría extra del título para que no choque con los elementos del arte
+  /// (en Ayuda, las líneas punteadas y la pieza verde de la izquierda).
+  final double titleIndent;
 
   /// Ilustración transparente 784 × 396 sobre el fondo de campaña.
   final String art;
@@ -699,19 +703,22 @@ class InformationHeader extends StatelessWidget {
                 const SizedBox(height: 30),
                 Semantics(
                   header: true,
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 28,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      shadows: <Shadow>[
-                        Shadow(
-                          color: Color(0x40002B7A),
-                          blurRadius: 8,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
+                  child: Padding(
+                    padding: EdgeInsets.only(left: titleIndent),
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        shadows: <Shadow>[
+                          Shadow(
+                            color: Color(0x40002B7A),
+                            blurRadius: 8,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

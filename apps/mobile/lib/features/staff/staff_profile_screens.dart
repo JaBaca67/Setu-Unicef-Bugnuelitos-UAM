@@ -7,6 +7,7 @@ import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/flow_scaffold.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import '../school_access/school_location.dart';
 import 'staff_backend.dart';
 import 'staff_widgets.dart';
@@ -99,7 +100,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     bool sending = false;
     String? notice;
     bool ok = false;
-    await showModalBottomSheet<void>(
+    await showSetuBottomSheet<void>(
       context: context,
       useSafeArea: true,
       isScrollControlled: true,

@@ -275,7 +275,9 @@ void main() {
     addTearDown(flow.dispose);
     addTearDown(piece.dispose);
     await _screen(tester, AlertRoleScreen(flow: flow, piece: piece));
-    for (final asset in <String>['personaje-08', 'personaje-14']) {
+    // «Me pasa a mí» muestra la pieza del estudiante (PieceFigure).
+    expect(find.byType(PieceFigure), findsWidgets);
+    for (final asset in <String>['personaje-14']) {
       expect(
         find.byWidgetPredicate(
           (w) =>

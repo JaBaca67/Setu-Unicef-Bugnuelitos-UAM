@@ -12,6 +12,7 @@ import '../../shared/remote/setu_remote_models.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/flow_scaffold.dart';
 import '../../shared/widgets/setu_bottom_alert.dart';
+import '../../shared/widgets/setu_dialog.dart';
 import 'staff_backend.dart';
 import 'staff_mined_sheets.dart';
 import 'staff_widgets.dart';
@@ -203,9 +204,10 @@ Future<void> showLocalMeshAlertDialog(
   required String kindLabel,
   required String detailMessage,
   Future<void> Function()? onSyncNow,
-}) => showDialog<void>(
+}) => showSetuDialog<void>(
   context: context,
-  builder: (BuildContext dialogContext) => AlertDialog(
+  builder: (BuildContext dialogContext) => SetuDialog(
+    icon: Icons.bluetooth_connected_rounded,
     title: Text('$referenceCode · Recibido por mesh'),
     content: Text('$kindLabel\n\n$detailMessage'),
     actions: <Widget>[
@@ -217,7 +219,7 @@ Future<void> showLocalMeshAlertDialog(
           },
           child: const Text('Sincronizar ahora'),
         ),
-      TextButton(
+      FilledButton(
         onPressed: () => Navigator.of(dialogContext).pop(),
         child: const Text('Entendido'),
       ),
@@ -323,7 +325,7 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
 
   Future<void> _assign(StaffCaseSummary item) async {
     final AssignableCounselor? chosen =
-        await showModalBottomSheet<AssignableCounselor>(
+        await showSetuBottomSheet<AssignableCounselor>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,
@@ -354,7 +356,7 @@ class _MinedInboxScreenState extends StaffInboxState<MinedInboxScreen> {
   }
 
   void _history(StaffCaseSummary item) {
-    showModalBottomSheet<void>(
+    showSetuBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -803,17 +805,6 @@ class _DeclineSheetState extends State<_DeclineSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           Semantics(
             header: true,
             child: Text(
@@ -1182,7 +1173,7 @@ class _DeskInboxScreenState extends StaffInboxState<DeskInboxScreen> {
         record.institutionName ??
         schools[record.institutionId] ??
         'Centro escolar';
-    final String? reason = await showModalBottomSheet<String>(
+    final String? reason = await showSetuBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

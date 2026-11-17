@@ -185,6 +185,32 @@ class SupportFlow extends ChangeNotifier {
   bool get caseClosed => _caseClosed;
 
   List<ChatMessage> get messages => _messages;
+
+  // Avisos para el estudiante: el chat se activó o llegaron mensajes del
+  // equipo de escucha desde la última vez que abrió «Pedir apoyo».
+  bool _chatSeen = false;
+  int _staffSeen = 0;
+
+  int get _staffCount =>
+      _messages.where((ChatMessage message) => !message.fromStudent).length;
+
+  /// Cantidad de avisos sin revisar que muestra el botón «Pedir apoyo».
+  int get unreadSupport {
+    if (_delivery != AlertDelivery.received || _caseClosed) return 0;
+    final int newMessages = _staffCount - _staffSeen;
+    return (_chatAvailable && !_chatSeen ? 1 : 0) +
+        (newMessages > 0 ? newMessages : 0);
+  }
+
+  /// El estudiante entró a «Pedir apoyo» o al chat: el contador vuelve a 0.
+  void markSupportSeen() {
+    if (unreadSupport == 0) return;
+    _chatSeen = _chatAvailable;
+    _staffSeen = _staffCount;
+    _persist();
+    _notify();
+  }
+
   bool get studentWrote =>
       _messages.any((ChatMessage message) => message.fromStudent);
 
@@ -214,6 +240,8 @@ class SupportFlow extends ChangeNotifier {
             data['delivery'] as Map<Object?, Object?>?;
         _case = saved == null ? null : Map<String, Object?>.from(saved);
         _chatAvailable = data['chatAvailable'] == true;
+        _chatSeen = data['chatSeen'] == true;
+        _staffSeen = (data['staffSeen'] as num?)?.toInt() ?? 0;
         _caseClosed = data['caseClosed'] == true;
         if (_alert != null) {
           _case ??= await _newCase(null);
@@ -280,6 +308,9 @@ class SupportFlow extends ChangeNotifier {
       'involvesStaff': involvesStaff,
     };
     final Map<String, Object?> delivery;
+    // Un caso nuevo empieza sin avisos revisados.
+    _chatSeen = false;
+    _staffSeen = 0;
     try {
       delivery = await _newCase(piece);
       await store.save(
@@ -295,6 +326,8 @@ class SupportFlow extends ChangeNotifier {
     _meshPending = false;
     _meshPermissionAttempted = false;
     _chatAvailable = false;
+    _chatSeen = false;
+    _staffSeen = 0;
     _caseClosed = false;
     _messages = const <ChatMessage>[];
     situation = null;
@@ -318,6 +351,8 @@ class SupportFlow extends ChangeNotifier {
     'received': received,
     'chatAvailable': chatAvailable,
     'caseClosed': caseClosed,
+    'chatSeen': _chatSeen,
+    'staffSeen': _staffSeen,
   };
 
   void _resume() {

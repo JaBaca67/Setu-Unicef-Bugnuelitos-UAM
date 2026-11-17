@@ -7,6 +7,7 @@ import '../../shared/widgets/campaign_screen.dart';
 import '../../shared/widgets/setu_bottom_nav.dart';
 import '../piece/student_piece.dart';
 import '../support/alert_screens.dart';
+import '../support/support_flow.dart';
 import 'help_contacts.dart';
 import 'information_tab.dart';
 import 'learning_progress.dart';
@@ -29,12 +30,16 @@ class StudentHomeScreen extends StatefulWidget {
     required this.piece,
     this.sectionRequest,
     this.publicEntry = false,
+    this.supportFlow,
   });
 
   final LearningProgress progress;
   final ValueNotifier<StudentPiece> piece;
   final HomeSectionRequest? sectionRequest;
   final bool publicEntry;
+
+  /// Flujo de apoyo: alimenta el contador de avisos del botón «Pedir apoyo».
+  final SupportFlow? supportFlow;
 
   @override
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
@@ -52,6 +57,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Carga el caso guardado para que el contador de avisos esté al día.
+    widget.supportFlow?.open();
     _section =
         widget.sectionRequest?.section ??
         (widget.publicEntry ? HomeSection.informacion : HomeSection.inicio);
@@ -157,6 +164,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       HomeSection.ayuda => const InformationHeader(
         title: 'Ayuda',
         art: 'assets/home/activities/encabezado_ayuda.png',
+        titleIndent: 46,
       ),
     },
     body: Padding(
@@ -171,6 +179,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           progress: widget.progress,
           onOpenStreak: _showStreak,
           onOpenDice: () => context.push<void>('/inicio/actividades/dados'),
+          supportFlow: widget.supportFlow,
         ),
         HomeSection.informacion => InformationTab(
           progress: widget.progress,
@@ -288,8 +297,10 @@ class _InicioTab extends StatelessWidget {
     required this.progress,
     required this.onOpenStreak,
     required this.onOpenDice,
+    this.supportFlow,
   });
 
+  final SupportFlow? supportFlow;
   final ValueChanged<HomeSection> onOpenSection;
   final LearningProgress progress;
   final VoidCallback onOpenStreak;
@@ -301,28 +312,7 @@ class _InicioTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: CureandoTheme.blue,
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(60),
-            textStyle: textTheme.labelLarge?.copyWith(
-              fontSize: 19,
-              fontWeight: FontWeight.w700,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-          ),
-          onPressed: () => context.push<void>('/inicio/apoyo'),
-          icon: const Icon(Icons.chat_outlined),
-          label: const Row(
-            children: <Widget>[
-              Expanded(child: Text('Pedir apoyo')),
-              Icon(Icons.chevron_right_rounded),
-            ],
-          ),
-        ),
+        _SupportButton(flow: supportFlow, textTheme: textTheme),
         const SizedBox(height: 14),
         ListenableBuilder(
           listenable: progress,
@@ -461,5 +451,91 @@ class _AyudaTab extends StatelessWidget {
       SizedBox(height: 24),
       HelpFaqSection(),
     ],
+  );
+}
+
+/// Botón principal «Pedir apoyo» con campana de avisos: se enciende cuando el
+/// equipo de escucha activa el chat o escribe, y vuelve a 0 al entrar.
+class _SupportButton extends StatelessWidget {
+  const _SupportButton({required this.flow, required this.textTheme});
+
+  final SupportFlow? flow;
+  final TextTheme textTheme;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: flow ?? const AlwaysStoppedAnimation<int>(0),
+    builder: (BuildContext context, _) {
+      final int unread = flow?.unreadSupport ?? 0;
+      return Semantics(
+        button: true,
+        label: unread == 0
+            ? 'Pedir apoyo'
+            : 'Pedir apoyo, $unread ${unread == 1 ? 'aviso nuevo' : 'avisos nuevos'}',
+        excludeSemantics: true,
+        child: FilledButton.icon(
+          key: const ValueKey<String>('home-support-button'),
+          style: FilledButton.styleFrom(
+            backgroundColor: CureandoTheme.blue,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(60),
+            textStyle: textTheme.labelLarge?.copyWith(
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          onPressed: () => context.push<void>('/inicio/apoyo'),
+          icon: const Icon(Icons.chat_outlined),
+          label: Row(
+            children: <Widget>[
+              const Expanded(child: Text('Pedir apoyo')),
+              _NotificationBell(unread: unread),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell({required this.unread});
+
+  final int unread;
+
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+    key: const ValueKey<String>('home-support-bell'),
+    duration: const Duration(milliseconds: 200),
+    width: 34,
+    height: 34,
+    decoration: BoxDecoration(
+      color: unread > 0 ? CureandoTheme.yellow : Colors.white24,
+      shape: BoxShape.circle,
+    ),
+    child: Badge(
+      isLabelVisible: unread > 0,
+      backgroundColor: CureandoTheme.pink,
+      textColor: Colors.white,
+      offset: const Offset(8, -8),
+      label: Text(
+        unread > 9 ? '9+' : '$unread',
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+      ),
+      child: Center(
+        child: Icon(
+          unread > 0
+              ? Icons.notifications_active_rounded
+              : Icons.notifications_none_rounded,
+          size: 20,
+          color: unread > 0 ? CureandoTheme.blue : Colors.white,
+        ),
+      ),
+    ),
   );
 }
