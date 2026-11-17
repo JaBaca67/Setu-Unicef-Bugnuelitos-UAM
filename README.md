@@ -18,9 +18,11 @@
 
 **Revisión:** 17 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación por colegio, inicio estudiantil E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza*, recorrido *Pedir apoyo* conectado al cliente remoto (con `involvesStaff` y respaldo en red mesh `Nearby Connections` + E2EE), superficies móviles de personal autorizado (`/personal/*`) y notificaciones push FCM.
 
-**Actividades E06 (bloque local aprobado, 17 nov):** cinco actividades voluntarias bajo `/inicio/actividades/`, respuestas y dibujos temporales, sin XP adicionales. La pregunta diaria conserva sus reglas desde Inicio. Personajes originales PNG incorporados al flujo de apoyo; tablero del rompecabezas pendiente de segunda pasada gráfica. [Detalle de diseño](docs/06-guia-diseno.md#actividades-e06-y-personajes-de-apoyo-17-nov-2026).
+**Actividades (bloque local aprobado, 17 nov):** cinco actividades voluntarias bajo `/inicio/actividades/` (semáforo, dados, pregunta, dibujo y rompecabezas), respuestas y dibujos temporales, sin XP adicionales. La pregunta diaria conserva sus reglas desde Inicio. Personajes originales PNG incorporados al flujo de apoyo; el rompecabezas ya usa la flor y la pieza oficiales (`5237a3b`). En la especificación funcional, «E06» designa el estado de entrega; las actividades no tienen código de pantalla propio. [Detalle de diseño](docs/06-guia-diseno.md#actividades-e06-y-personajes-de-apoyo-17-nov-2026).
 
 **Estado:** app Android conectada a Supabase (`supabase_flutter`), notificaciones push FCM y red mesh automática integrada; esquema Supabase/RLS/RPCs (`0001`–`0012`; 0012 aplicada según confirmación del usuario) y Edge Functions (`invite-email`, `push-dispatch`) implementados; pendientes los paneles web y la prueba física integral de extremo a extremo. El bloque de automatización no consultó ni modificó el remoto.
+
+**17 de noviembre (día del evento):** colegio de prueba renombrado a **Colegio SéTú** (ficticio), banners de Información, QR estudiantil en el perfil del personal y segunda ronda de ajustes de interfaz ([ADR 0027](docs/decisiones/0027-colegio-setu-ficticio-banners-y-qr-del-personal.md)); landing pública rediseñada y publicada en GitHub Pages ([detalle](docs/landing.md)).
 
 [Índice](#indice) · [Diagramas de datos](#dfd) · [Desarrollo técnico](#stack) · [Ejecutar la app](#instalacion)
 
@@ -91,7 +93,7 @@ La demostración incluye el recorrido de Información desde el inicio y durante 
 
 No hay reportes públicos, rankings, mensajería entre estudiantes, sanciones automáticas, diagnóstico, chatbot ni terapia automatizada. El nivel de alerta lo asigna una persona profesional. Las actividades no generan perfiles clínicos ni puntuaciones emocionales.
 
-Adjuntos y evidencias aparecen en investigación y costos, pero no tienen contrato aprobado para el MVP. La propuesta inicial de mesh transporta alertas pequeñas, sin fotos, audio o video. Los contactos de ayuda necesitan verificación editorial antes de publicarse; esta especificación no certifica números ni horarios.
+Adjuntos y evidencias aparecen en investigación y costos, pero no tienen contrato aprobado para el MVP. La propuesta inicial de mesh transporta alertas pequeñas, sin fotos, audio o video. La pestaña Ayuda de la app muestra solo líneas verificadas con fuente, territorio, fecha y responsable editorial: Policía Nacional **118** y Ministerio de la Familia **133** (MINED Nicaragua, cartilla «Mujer, Dignidad y Derechos», p. 29, verificado el 16-nov-2026), más hasta cinco números de confianza que el estudiante guarda cifrados en su teléfono ([ADR 0025](docs/decisiones/0025-contactos-de-ayuda-y-numeros-de-confianza.md)). MINSA y UNICEF no se publican hasta confirmar una línea oficial con fuente. La landing pública no muestra números por decisión del equipo (17 nov). Esta especificación no certifica horarios de atención.
 
 [↑ Volver al índice](#indice)
 
@@ -498,11 +500,12 @@ Las flechas representan destinos lógicos, no acceso a tablas completas. La rama
 | API de aplicación | Validación, recepción idempotente y permisos | RPCs implementados para estudiante, activación individual de personal, asignación MINED, chat previo a valoración, notas internas, valoración/ficha y actuaciones ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); falta conectar las vistas de UI. |
 | PostgreSQL y RLS | Aislamiento por institución y recurso | Esquema (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, Realtime autorizado y semillas demo (`AULA24`, `AULA25` y `AULA26` Colegio SéTú, ficticio desde el 17 nov, [ADR 0027](docs/decisiones/0027-colegio-setu-ficticio-banners-y-qr-del-personal.md)) implementados en `supabase/` ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)). |
 | Paneles y mesa | React/TypeScript/Vite propuestos; vistas por función | Diseñados; no implementados. |
-| Transporte de proximidad | Canal Dart–Kotlin → Nearby Connections/Cluster propuesto | Candidato, sin instalación o prueba. |
-| Protocolo de reenvío | Colas, caducidad, deduplicación y acuses | Propuesta técnica. |
+| Transporte de proximidad | Canal Dart–Kotlin → Nearby Connections (`P2P_CLUSTER`) | Implementado (`play-services-nearby` 19.5.1, `NearbyMeshChannel.kt`) y probado entre teléfonos Android sin internet; falta la prueba física integral de las tres superficies. |
+| Notificaciones push | Firebase Cloud Messaging + Edge Function `push-dispatch` | Implementado (`firebase_messaging`, migración `0010`, canal Android `setu_avisos`); solo avisos neutros, sin contenido del caso. |
+| Protocolo de reenvío | Colas, caducidad, deduplicación y acuses | Implementado para la demo: cola cifrada, custodia opaca y recibos (migración `0012`, [ADR 0023](docs/decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md)); rotación de claves y poda de recibos pendientes. |
 | Enlace local puente–dirección | Recepción escolar sin internet | Pendiente; una web alojada en internet no basta. |
 
-Esta es una vista de componentes, distinta de los DFD. Cloudflare Pages se propone para alojar la web estática; Supabase para API/datos. FCM sigue fuera del MVP aprobado. No se crean microservicios, cuentas, despliegues o dependencias por describirlos.
+Esta es una vista de componentes, distinta de los DFD. Cloudflare Pages se propone para alojar los paneles web; Supabase para API/datos. La landing pública ya se publica en GitHub Pages. FCM se integró el 16 nov para avisos push neutros. No se crean microservicios, cuentas, despliegues o dependencias por describirlos.
 
 [↑ Volver al índice](#indice)
 
@@ -514,7 +517,7 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 
 | Capa o superficie | Lenguajes | Recursos a integrar o conservar | Estado |
 | --- | --- | --- | --- |
-| App Android | **Dart**, Kotlin nativo | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `cryptography`, `flutter_secure_storage`, `path_provider`, `supabase_flutter`, `NavBar-01`, Poppins local | E01, demo E02, inicio E03, *Mi pieza*, *Pedir apoyo*, respaldo mesh automático y diagnóstico `/prueba-mesh` solo en depuración. |
+| App Android | **Dart**, Kotlin nativo | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `qr_flutter`, `cryptography`, `flutter_secure_storage`, `path_provider`, `supabase_flutter`, `firebase_core`, `firebase_messaging`, `NavBar-01`, Poppins local | E01, demo E02, inicio E03, *Mi pieza*, *Pedir apoyo*, respaldo mesh automático y diagnóstico `/prueba-mesh` solo en depuración. |
 | Información E10/E11 | **Dart**; catálogo tipado, texto e ilustraciones locales | Biblioteca de 21 recursos en seis temas, filtros/búsqueda, cuatro rutas, lectores con fuentes y videos externos; sin nuevas dependencias | Integrado; +5 XP por primera lectura y +10 XP una vez por cierre de cada ruta, separado de la pregunta diaria. Adaptaciones pendientes de revisión profesional y derechos; guía socioemocional MINED solo enlazada (ADR 0026). |
 | QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | Demo local E02 implementada; validación institucional y primer ingreso offline pendientes. |
 | Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Stack en evaluación; avisos, fichas y supervisión sin chat. |
@@ -522,7 +525,7 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 | Panel de instituciones | TypeScript/TSX + HTML + CSS | Mismo cliente web, proyecciones del centro y tokens de marca | Propuesto; actuaciones y propuesta de cierre sin relato/chat. |
 | Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema completo (`0001`–`0012`; 0012 aplicada según confirmación del usuario), activación por invitación/solicitud pública, RLS estricta, cupos y RPCs de estudiante/MINED/Mesa/Dirección implementados en `supabase/migrations/`. |
 | SDK móvil de backend | Dart | `supabase_flutter` (`^2.18.3`) | Integrado en `apps/mobile/lib/shared/remote/` (`SetuRemoteGateway`, `PushNotificationService`) y conectado a las pantallas estudiantiles y de personal ([ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)). |
-| Operaciones confiables | **TypeScript / Deno** | Supabase Edge Functions solo cuando sean necesarias | Propuesto; no servidor Node adicional. |
+| Operaciones confiables | **TypeScript / Deno** | Supabase Edge Functions solo cuando sean necesarias | Implementadas `invite-email` (invitaciones por SMTP) y `push-dispatch` (envío FCM); no hay servidor Node adicional. |
 | Actualizaciones y chat | Dart/TypeScript + SQL | Realtime autorizado y mensajes persistidos, reintentos idempotentes | Parcial en móvil (`getStudentChatSession`, `sendStudentChatMessage`); falta UI de escucha y auto-reintento al volver red. |
 | Transporte entre vecinos | **Dart + Kotlin** | Canal nativo `NearbyMeshChannel.kt` → `play-services-nearby` (`P2P_CLUSTER`) | Implementado y probado físicamente entre teléfonos Android reales sin internet. |
 | Cola y sobre mesh | Dart | `MeshEnvelope` (X25519 + HKDF-SHA256 + AES-GCM-256), `MeshRelayService` y `EncryptedLocalStore` (`setu_mesh_queue.enc`) | Implementado y persistido localmente; faltan rotación de claves institucionales y entrega LAN directa sin internet. |
@@ -535,7 +538,7 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 
 Se contrastaron las capacidades con [React/TypeScript](https://react.dev/learn/typescript), [Vite](https://vite.dev/guide/), [Supabase](https://supabase.com/docs/reference/javascript/introduction), [canales Flutter](https://docs.flutter.dev/platform-integration/platform-channels), [Nearby](https://developers.google.com/nearby/connections/strategies) y [Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/). Ver [catálogo técnico completo](docs/13-recursos-tecnicos.md) para fuentes de cada recurso, requisitos, contratos, configuración y límites.
 
-El corte técnico actual no contempla Firebase, mapas, analítica, IA, adjuntos multimedia de casos, un framework CSS o notificaciones push. Una web pública de campaña y un CMS no están implementados ni son prerrequisitos de los paneles.
+El corte técnico usa Firebase solo para notificaciones push (FCM). No contempla mapas, analítica, IA, adjuntos multimedia de casos ni un framework CSS. La landing pública es estática, sin CMS ni dependencias, y no es prerrequisito de los paneles.
 
 [↑ Volver al índice](#indice)
 
@@ -574,16 +577,20 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Capa | Tecnología/version registrada | Uso actual |
 | --- | --- | --- |
 | Aplicación | Flutter 3.44.5 stable / Dart 3.12.2 | Base Android 0.2.0+2. |
-| Navegación | `go_router` 18.1.3 | E01 abre la demostración escolar E02, el inicio E03, la vista de muestra de Ayuda y el ingreso de personal autorizado, que lleva a la superficie de cada rol. |
+| Navegación | `go_router` 18.1.3 | 46 rutas en `lib/app.dart` (ver [Rutas de la app](#rutas)); redirección de sesión y enlaces `setu://colegio` y `setu://login-callback`. |
+| Backend y push | `supabase_flutter` 2.18.3, `firebase_core` 5.1.0, `firebase_messaging` 17.0.1 | Cliente remoto, sesión de personal y avisos push. |
+| Acceso escolar | `mobile_scanner` 7.5.0, `geolocator` 14.1.2, `qr_flutter` 4.1.0 | Escaneo del QR del colegio, cercanía local y QR del cartel / perfil del personal. |
 | Criptografía local | `cryptography` 2.9.0 | AES-GCM-256 y derivaciones de credenciales M1. |
 | Custodia de clave | `flutter_secure_storage` 11.2.0 | Almacenamiento seguro del secreto local. |
 | Archivo privado | `path_provider` 2.1.6 | Ruta del almacén cifrado. |
-| Análisis y pruebas | `flutter_lints` 6.0.0 / `flutter_test` del SDK | Casts, inferencia y tipos genéricos estrictos; pruebas de lógica/widgets. |
+| Análisis y pruebas | `flutter_lints` 6.0.0 / `flutter_test` del SDK | `strict-casts`, `strict-inference` y `strict-raw-types`; excluye `.dart_tool`, `.pub-cache` y `build`. 22 archivos de prueba con unos 165 casos (conteo estático del 17 nov). |
+| Compilación Android | Android Gradle Plugin 9.0.1, Kotlin 2.3.20, Gradle 9.1.0, plugin `google-services` 4.4.2 | Restricciones del lock: Dart >=3.12.2 <4.0.0 y Flutter >=3.44.0. |
 | Android registrado | SDK 36.1.0; APK M1 mínimo API 24, target 36 | La configuración Gradle obtiene niveles del SDK Flutter; comprobar manifiesto del APK al recompilar. |
-| Java de construcción | JDK 21 de Android Studio; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
+| Java de construcción | JDK 21 de Android Studio en local; Temurin 17 en CI; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
 | Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs (`0001`–`0012`; 0012 aplicada según confirmación del usuario) y Edge Functions (`invite-email`, `push-dispatch`) en `supabase/`; cliente `supabase_flutter` y push FCM conectados en `apps/mobile/lib/shared/remote/`. |
 | Red mesh offline | `play-services-nearby` 19.5.1 + X25519 / AES-GCM-256 | Canal nativo Android (`NearbyMeshChannel.kt`, `Strategy.P2P_CLUSTER`), sobres E2EE, cola cifrada persistida (`MeshRelayService`), respaldo en `SupportFlow` y diagnóstico `/prueba-mesh` solo en depuración. |
-| CI / APK | GitHub Actions (`.github/workflows/build-apk.yml`) | Ejecuta `flutter analyze`, `flutter test` y `flutter build apk --debug` generando el artefacto `setu-debug-apk`. |
+| CI / APK | GitHub Actions (`.github/workflows/build-apk.yml`) | Push a `main`, `develop`, `development-james` y `development/pruebamesh/james`, o manual. Temurin 17 + Flutter 3.44.5; ejecuta `flutter analyze`, `flutter test` y `flutter build apk --debug`, y conserva el artefacto `setu-debug-apk` 14 días. |
+| Landing | GitHub Actions (`.github/workflows/deploy-landing.yml`) | Push a `main` que cambie `landing/**` (o manual): sube `landing/` a GitHub Pages. Sin secretos; requiere Pages con fuente «GitHub Actions». |
 
 Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. Para los paneles se evalúa React/TypeScript/Vite, pendiente de validación técnica e implementación.
 
@@ -595,7 +602,7 @@ Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como c
 | `CureandoGateway` / `StaffCureandoGateway` | Contratos previos de alias y atención local. |
 | `LocalCureandoGateway`, archivo AES-GCM-256 y almacenamiento seguro de clave | Datos ficticios de un teléfono; sin red ni backend. |
 | Credenciales derivadas, permisos locales e idempotencia | No acreditan RLS ni deduplicación entre dispositivos. |
-| Pruebas y APK registrados | 18 pruebas y análisis limpio documentados el 5 nov; no verifican el sistema ampliado. |
+| Pruebas y APK registrados | 18 pruebas el 5 nov (M1); hoy 22 archivos y unos 165 casos que no verifican el sistema ampliado de extremo a extremo. |
 
 **Bienvenida E01 (12 nov).** La ruta inicial muestra la composición estática de campaña y el panel de privacidad. Los accesos de muestra funcionan localmente. El ícono y la pantalla de arranque usan el isotipo blanco sobre azul. La verificación técnica de M1 se abre con `--dart-define=SETU_M1_QA=true`. [Ejecución y verificación](apps/mobile/README.md) · [Diseño aprobado](docs/diseno/plan-arranque-bienvenida-setu.md).
 
@@ -605,15 +612,39 @@ Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como c
 
 **Red mesh Android (13–15 nov).** Implementado el canal nativo Kotlin `NearbyMeshChannel.kt` (`P2P_CLUSTER`), sobres E2EE X25519 + HKDF-SHA256 + AES-GCM-256 (`MeshEnvelope`), persistencia cifrada en `EncryptedLocalStore` (`setu_mesh_queue.enc`), conectividad con el flujo principal en `app.dart`/`SupportFlow`, entrega mínima local offline hacia `/personal/direccion` mediante `MeshSchoolKeys` (con requisito de Bluetooth al entrar al panel de Dirección y sin enviar nunca relato ni casos con `involves_staff = true`) y pantalla de prueba física `/prueba-mesh` (`MeshTestScreen`).
 
-**Pendiente:** validación institucional del acceso escolar, RPCs de MINED/Mesa y acceso sin cuentas para Dirección por código privado, paneles web conectados, auto-sincronización al recuperar red en móvil, revisión profesional/derechos del catálogo E10/E11 y compilación del APK con credenciales reales de Supabase (`SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`).
+**Sesiones y personal (13–16 nov).** La sesión escolar persiste y el perfil del estudiante es local ([ADR 0018](docs/decisiones/0018-sesion-escolar-y-perfil-estudiantil.md)). La sesión se bloquea con el QR oficial del colegio y el despacho de casos ocurre en la app ([ADR 0019](docs/decisiones/0019-sesion-bloqueada-qr-oficial-y-despacho-en-la-app.md)). El alta del personal es posterior a la verificación, con invitaciones gobernadas y cobertura de una Red externa ([ADR 0020](docs/decisiones/0020-alta-post-verificacion-y-cobertura-red-externa.md)). La Mesa de Escucha sigue el flujo Alerta–Chat–Ficha tras la auditoría visual de textos ([ADR 0022](docs/decisiones/0022-auditoria-visual-y-chat-ficha-mesa.md)).
+
+**Ayuda (16 nov).** La pestaña Ayuda muestra 118 y 133 con un desplegable «¿Cuándo llamar?» y la fuente; el botón abre el marcador del teléfono sin permiso de llamada (`ACTION_DIAL`). El estudiante puede guardar hasta cinco números de confianza, cifrados en `setu_trusted_contacts.enc` (`help_contacts.dart`, `trusted_contacts.dart`, [ADR 0025](docs/decisiones/0025-contactos-de-ayuda-y-numeros-de-confianza.md)).
+
+**Colegio SéTú y segunda ronda (17 nov).** `AULA26` pasa a **Colegio SéTú**, ficticio, con escudo de prueba (`assets/schools/`). Información incorpora banners 3:1 generados (no son fotos reales) y el perfil del personal tiene un interruptor «QR estudiantil» con el QR del colegio. La segunda ronda agrega la pieza en «Pedir apoyo», una campana con contador de no leídos, `TabletCanvas` (la interfaz del teléfono escalada en tabletas), diálogos y avisos propios (`setu_dialog.dart`, `setu_bottom_alert.dart`) y un titular alterno en la bienvenida ([ADR 0027](docs/decisiones/0027-colegio-setu-ficticio-banners-y-qr-del-personal.md)). `AULA24` conserva el nombre «Colegio Público Demo Centro América — CCE» y su pin solo sirve como referencia de cercanía.
+
+**Pendiente:** validación institucional del acceso escolar, RPCs de MINED/Mesa y acceso sin cuentas para Dirección por código privado, paneles web conectados, auto-sincronización al recuperar red en móvil, revisión profesional/derechos del catálogo E10/E11, revisión de las imágenes generadas (ADR 0027) y corrección de los nombres de variables del workflow de CI (ver [Configuración](#configuracion)).
 
 Los estados del código (`received`, `inReview`, `accompanied`, `closed`) no equivalen a los seis nuevos. Adaptarlos requiere aprobación y pruebas; si cambia el formato local, también una estrategia explícita de migración. No subir automáticamente los datos M1 al futuro backend.
+
+<a id="rutas"></a>
+
+### Rutas de la app
+
+`lib/app.dart` define 46 rutas (`GoRoute`), 18 de ellas generadas por bucles. `_sessionRedirect` traduce los enlaces `setu://colegio` y `setu://login-callback` e impide volver a la bienvenida con una sesión abierta.
+
+| Grupo | Rutas |
+| --- | --- |
+| Entrada y colegio | `/`, `/colegio`, `/colegio/qr`, `/colegio/codigo`, `/colegio/cercania`, `/colegio/resultado`, `/colegio/enlace/:code`, `/colegio/cartel` |
+| Inicio y públicas | `/inicio`, `/inicio/racha`, `/inicio/pieza`, `/inicio/pieza/editar`, `/inicio/recurso/:id`, `/informacion`, `/informacion/recurso/:id`, `/ayuda` |
+| Actividades | `/inicio/actividades/` + `semaforo`, `dados`, `pregunta`, `dibujo`, `rompecabezas` y `diaria` |
+| Pedir apoyo | `/inicio/apoyo/` + `alerta`, `rol`, `detalles`, `revisar`, `recibida` y `chat` |
+| Personal | `/personal`, `/personal/activar`, `/personal/ambito`, `/personal/mined`, `/personal/ayuda`, `/personal/solicitar`, `/personal/perfil`, `/personal/perfil/disponibilidad` |
+| Mesa de Escucha | `/personal/mesa`, `/personal/mesa/declinadas`, `/personal/mesa/caso/:id`, `/personal/mesa/caso/:id/chat?apartado=` |
+| Dirección | `/personal/direccion`, `/personal/direccion/cartel`, `/personal/direccion/caso/:id` |
+| Solo depuración | `/prueba-mesh` (con `kDebugMode`) y `/verificacion-m1` (con `SETU_M1_QA=true`) |
 
 ### Organización existente
 
 ```text
 apps/mobile/                 Aplicación Flutter Android
-  android/                   Canal nativo Kotlin (`NearbyMeshChannel.kt`, Nearby Connections)
+  android/                   Kotlin: `MainActivity.kt` (canales screen_security, dialer y links), `NearbyMeshChannel.kt` (Nearby), `SetuNotifications.kt` (avisos)
+  assets/                    `fonts/`, `welcome/`, `brand/` (png, characters, elements, nav), `home/` (activities, info/banners, info/stickers), `schools/`
   lib/features/welcome/      Bienvenida E01 y vistas locales de muestra
   lib/features/school_access/ Acceso escolar E02 simulado
   lib/features/home/         Inicio estudiantil E03 y progreso educativo local
@@ -622,20 +653,38 @@ apps/mobile/                 Aplicación Flutter Android
   lib/features/staff/        Acceso de personal, MINED, Mesa de Escucha y Dirección
   lib/features/mesh_test/    Diagnóstico mesh solo en depuración (`/prueba-mesh`)
   lib/shared/                Contratos, modelos, `local/`, `mesh/`, `remote/`, `platform/`, `theme/`, `widgets/`
-  test/                      Pruebas locales, inicio, progreso, `setu_remote_gateway_test.dart`, `mesh_relay_test.dart` y `staff_*_test.dart`
+  test/                      22 archivos: local, app, inicio, progreso, actividades, ayuda, sesión, mesh, remoto, push, tableta, diálogos y personal
 supabase/                    Backend Supabase / PostgreSQL
-  migrations/                Esquema D1–D4/D8, activación, RLS, push FCM y RPCs transaccionales (`0001`–`0012`; 0012 aplicada según confirmación del usuario)
-  functions/                 Edge Functions (`invite-email`, `push-dispatch`)
-  seed.sql                   Semillas ficticias (AULA24, AULA25, AULA26 y personal demo)
-.github/workflows/           Workflow CI `build-apk.yml` (análisis, pruebas y APK debug)
-docs/                        Producto, arquitectura, operación y diseño
-  decisiones/                ADR y propuestas identificadas
-  diseno/flujos/             Diagramas
+  migrations/                `0001`–`0012` (0012 aplicada según confirmación del usuario; detalle abajo)
+  functions/                 Edge Functions `invite-email` y `push-dispatch`
+  tests/                     `mesh_delivery_test.sql` (solo en base local desechable)
+  seed.sql                   Colegios ficticios AULA24–26, verificadores de prueba y recursos; sin cuentas ni casos
+.github/workflows/           `build-apk.yml` (CI y APK debug) y `deploy-landing.yml` (GitHub Pages)
+landing/                     Landing pública estática (HTML, CSS y JS sin dependencias)
+docs/                        Producto, arquitectura, operación, diseño y landing
+  decisiones/                ADR 0001–0027
+  contenido/                 `catalogo_informacion.json` (catálogo de Información, ADR 0026)
+  diseno/                    Flujos, fichas de pantalla, planes, wireframes y respaldo visual de la landing
 ```
 
 Los paneles operativos web quedan para su bloque aprobado.
 
-`lib/main.dart` inicia la app (Supabase, `PushNotificationService`, sesiones locales) y `lib/app.dart` define el router, `MeshRelayService` y `SupportFlow`. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `mesh/`, `remote/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Poppins y su licencia se incluyen en `assets/fonts/` y el arte de E01 y E03 en `assets/welcome/` y `assets/home/`.
+| Migración | Contenido |
+| --- | --- |
+| `0001` | Tipos enumerados y 14 tablas de los dominios D1–D4 y D8. |
+| `0002` | Esquema `private` y políticas RLS. |
+| `0003` | RPC base: colegio público, alerta del estudiante, chat, aviso docente y actuación escolar. |
+| `0004` | Activación de personal y flujo MINED / Mesa / valoración / ficha. |
+| `0005` | Despacho a la escucha, reclamar y declinar casos. |
+| `0006` | Bloqueo del chat en casos cerrados. |
+| `0007` | Perfil del personal e invitaciones con auditoría. |
+| `0008` | Cobertura externa, recuperación de declinadas y avisos a supervisores. |
+| `0009` | Fin de conversación, borrador de ficha y cupo de 3 alertas por instalación. |
+| `0010` | `push_device_tokens`, registro de tokens y disparadores con `pg_net` y Vault. |
+| `0011` | Solicitud pública de acceso del personal e importación CSV para MINED. |
+| `0012` | Claves de destinatarios mesh, custodia opaca y RPC `relay_mesh_envelope` / `complete_mesh_envelope`. |
+
+`lib/main.dart` inicia la app (Supabase, `PushNotificationService`, sesiones locales) y `lib/app.dart` define el router, `MeshRelayService` y `SupportFlow`. En `lib/shared/` se encuentran `contracts/`, `models/`, `local/`, `mesh/`, `remote/`, `platform/`, `theme/` y `widgets/`. `shared/mock/` se utiliza para pruebas. Poppins y su licencia se incluyen en `assets/fonts/`; el arte de la marca, personajes y elementos en `assets/brand/`, el de E01 en `assets/welcome/`, el de Inicio, Actividades e Información en `assets/home/` y el escudo de prueba en `assets/schools/`.
 
 [↑ Volver al índice](#indice)
 
@@ -678,17 +727,34 @@ APK en `build/app/outputs/flutter-apk/app-debug.apk`, excluido de Git. También 
 | `flutter test test/local_gateway_test.dart` | Persistencia, permisos locales, integridad e idempotencia M1. |
 | `flutter test test/app_test.dart` | Widgets y comportamiento del canal simulado. |
 | `flutter test test/mesh_relay_test.dart` | Sobres E2EE, reenvío multisalto, Bluetooth sin internet y persistencia. |
-| `flutter test test/remote_gateway_test.dart` | Capacidad privada de caso y contrato remoto. |
+| `flutter test test/setu_remote_gateway_test.dart` | Capacidad privada de caso y contrato remoto. |
+| `flutter test test/help_contacts_test.dart` | Contactos de ayuda y números de confianza. |
+| `psql -v ON_ERROR_STOP=1 -f supabase/tests/mesh_delivery_test.sql` | Prueba SQL de la entrega mesh, solo contra una base local desechable. |
+| `cd landing && python3 -m http.server 8000` | Probar la landing en local (con `file://` el navegador bloquea las fuentes). |
 | `dart format --output=none --set-exit-if-changed lib test` | Comprobar formato sin escribir. |
-| `flutter build apk --debug --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_PUBLISHABLE_KEY=...` | Compilar APK conectado a Supabase (opcional `--dart-define=SETU_MESH_BRIDGE_PUBKEY=...`). |
+| `flutter build apk --debug --dart-define=SETU_SUPABASE_URL=... --dart-define=SETU_SUPABASE_ANON_KEY=...` | Compilar el APK contra otro proyecto Supabase (opcional `--dart-define=SETU_MESH_BRIDGE_PUBKEY=...`). |
+
+<a id="configuracion"></a>
 
 ### Configuración, secretos y archivos locales
 
-Sin `--dart-define=SUPABASE_URL` ni `--dart-define=SUPABASE_PUBLISHABLE_KEY`, la app funciona en modo local + mesh demo sin enviar casos a la nube. Los secretos reales nunca se guardan en el código ni en Git.
+`lib/main.dart` llama a `SupabaseSetuRemoteGateway.initialize()`, que lee `SETU_SUPABASE_URL` y `SETU_SUPABASE_ANON_KEY` (`lib/shared/remote/setu_remote_gateway.dart`). Si no se pasan, usa los valores por defecto del proyecto de demostración (URL y clave publicable, que no son secretas): **la app se conecta a ese proyecto aunque no se definan**. `SupabaseConfig`, que lee `SUPABASE_URL` / `SUPABASE_ANON_KEY`, existe pero no se usa. El workflow `build-apk.yml` todavía pasa `SUPABASE_URL` y `SUPABASE_ANON_KEY`, que la app no lee; conviene renombrarlos. Los secretos reales nunca se guardan en el código ni en Git.
 
-Los archivos `setu_local_store.enc`, `setu_support_alert.enc` y `setu_mesh_queue.enc` son datos privados cifrados de ejecución y no se distribuyen con el repositorio. `android/local.properties`, cachés, APK y credenciales de firma son locales; `.gitignore` los protege según su finalidad. La compilación `release` conserva firma debug provisional en Gradle: no es una configuración de publicación lista para tiendas.
+| Variable `--dart-define` | Valor por defecto | Uso |
+| --- | --- | --- |
+| `SETU_SUPABASE_URL`, `SETU_SUPABASE_ANON_KEY` | Proyecto de demostración | Cliente remoto. |
+| `SETU_MESH_BRIDGE_PUBKEY` | Vacío (usa un par de demostración) | Clave pública del teléfono puente. |
+| `SETU_SCHOOL_CODE` | `AULA24` | Colegio de la demostración. |
+| `SETU_DESIGN_CAPTURE`, `SETU_DEMO_SIMULATION` | `true` | Capturas de presentación y simulación local. |
+| `SETU_PROXIMITY_ALWAYS_PASS` | `true` | Aprueba la cercanía en la demo. |
+| `SETU_DEMO_LATITUDE`, `SETU_DEMO_LONGITUDE` | `12.098062`, `-86.2641465` (pin público de referencia) | Punto de cercanía de prueba. |
+| `SETU_M1_QA` | `false` | Abre la verificación técnica M1 (solo en compilación de depuración). |
 
-`AndroidManifest.xml` declara permisos de cámara (solo para QR), ubicación aproximada/precisa (requerida por Nearby Connections y cercanía escolar), Bluetooth (`BLUETOOTH_SCAN`, `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`) y Wi-Fi cercano (`NEARBY_WIFI_DEVICES`).
+Las Edge Functions se configuran con variables del proyecto Supabase, nunca en la app: `invite-email` usa `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_SMTP_USER`, `GMAIL_SMTP_APP_PASSWORD` y `GMAIL_SMTP_FROM_NAME`; `push-dispatch` usa `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `FIREBASE_SERVICE_ACCOUNT_JSON` y `PUSH_DISPATCH_SECRET` (cabecera `x-push-dispatch-secret`). La migración `0010` espera en Vault los secretos `push_dispatch_secret` y `supabase_url`. No hay `supabase/config.toml` en el repositorio.
+
+Los archivos cifrados de ejecución (`setu_local_store.enc`, `setu_support_alert.enc`, `setu_mesh_queue.enc`, `setu_mesh_recipients.enc`, `setu_staff_session.enc`, `setu_student_session.enc`, `setu_trusted_contacts.enc`, `setu_learning_progress.enc`, entre otros) son datos privados del teléfono y no se distribuyen con el repositorio. `android/app/google-services.json` está versionado para FCM. `android/local.properties`, cachés, APK y credenciales de firma son locales; `.gitignore` los protege según su finalidad. La compilación `release` conserva firma debug provisional en Gradle: no es una configuración de publicación lista para tiendas.
+
+`AndroidManifest.xml` declara `INTERNET`, `POST_NOTIFICATIONS`, cámara (solo para el QR), ubicación aproximada/precisa (Nearby Connections y cercanía escolar), Bluetooth (`BLUETOOTH` y `BLUETOOTH_ADMIN` hasta API 30; `BLUETOOTH_SCAN` con `neverForLocation`, `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`), Wi-Fi (`ACCESS_WIFI_STATE`, `CHANGE_WIFI_STATE`, `NEARBY_WIFI_DEVICES` con `neverForLocation`), el canal FCM por defecto `setu_avisos`, orientación vertical y los enlaces `setu://colegio` y `setu://login-callback`. Los canales nativos son `dev.cureando.app/screen_security`, `dev.cureando.app/dialer` (marcador con número validado), `dev.cureando.app/links` (lista blanca de sitios externos), `dev.cureando.app/notifications`, `setu/mesh_nearby` y `setu/mesh_nearby/events`.
 
 ### Solución de problemas
 
@@ -758,8 +824,8 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | Área | Estado actual |
 | --- | --- |
 | Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
-| Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS por colegio, inicio E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza* ([ADR 0021](docs/decisiones/0021-perfil-y-nombre-de-juego.md)) y *Pedir apoyo* (pantallas 1–8) conectados a `RemoteSupportBackend` (`SetuRemoteGateway`), con `involvesStaff`, respaldo offline/mesh y simulación local. E09 sigue como vista de muestra. E10/E11 incluyen Biblioteca pública de 21 adaptaciones verificadas, seis temas, cuatro rutas y videos externos; revisión profesional, publicación operativa y validación institucional del código escolar pendientes (ADR 0026). |
-| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo (`AULA24`–`AULA26`), migraciones `0001`–`0011` (activación, solicitud pública, cupos, push FCM, cobertura externa), Edge Functions (`invite-email`, `push-dispatch`) y capa cliente remota en `lib/shared/remote/` implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); la interfaz móvil de personal (`/personal/*`) ya los consume; faltan los paneles web y la prueba integral de extremo a extremo. |
+| Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS por colegio, inicio E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza* ([ADR 0021](docs/decisiones/0021-perfil-y-nombre-de-juego.md)) y *Pedir apoyo* (pantallas 1–8) conectados a `RemoteSupportBackend` (`SetuRemoteGateway`), con `involvesStaff`, respaldo offline/mesh y simulación local. Ayuda muestra líneas verificadas y números de confianza (ADR 0025); actividades voluntarias, colegio ficticio SéTú, banners y segunda ronda de interfaz (ADR 0027). E10/E11 incluyen Biblioteca pública de 21 adaptaciones verificadas, seis temas, cuatro rutas y videos externos; revisión profesional, publicación operativa y validación institucional del código escolar pendientes (ADR 0026). |
+| Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo (`AULA24`–`AULA26`), migraciones `0001`–`0012` (activación, solicitud pública, cupos, push FCM, cobertura externa y custodia mesh), Edge Functions (`invite-email`, `push-dispatch`) y capa cliente remota en `lib/shared/remote/` implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); la interfaz móvil de personal (`/personal/*`) ya los consume; faltan los paneles web y la prueba integral de extremo a extremo. |
 | Red mesh y entrega local | Canal nativo Android Nearby Connections (`P2P_CLUSTER`), sobres E2EE X25519 + AES-GCM-256, cola cifrada persistida (`MeshRelayService`), respaldo en `SupportFlow`, entrega mínima local offline al panel de Dirección (`/personal/direccion` con Bluetooth obligatorio), activación automática tras fallo de red y diagnóstico `/prueba-mesh` solo en depuración. |
 | Landing pública | Sitio estático publicado en GitHub Pages: portada, «Así funciona» con celular animado, privacidad, Explorá con mockups, videos, campaña y valores, instituciones, preguntas y descarga del APK. Textos en voseo sin promesas absolutas, marca del Manual (cinta-pieza, flores, piezas) y animaciones que respetan «reducir movimiento». Respaldo visual previo en `docs/diseno/landing-respaldo-2026-11-17/`. Para probar: `cd landing && python3 -m http.server 8000`. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
@@ -772,15 +838,17 @@ El [producto](docs/01-producto.md) define el alcance, la [especificación funcio
 
 ## 19. Próximos bloques y pendientes
 
-Secuencia vigente hacia la demostración del **17 de noviembre de 2026**, con aprobación previa de cada bloque:
+El **17 de noviembre de 2026** es el evento central (pitch y demo del APK). Después del evento, con aprobación previa de cada bloque:
 
-1. Agregar las RPCs faltantes en Supabase para la mesa de escucha del **MINED** (nivel 1–3, 6 estados, chat humano, ficha de acción) y acceso sin cuentas de **Dirección** por código privado del colegio.
-2. Implementar los **paneles web** (MINED/Mesa y Dirección) en React/TypeScript/Vite y compilar el APK con credenciales reales de Supabase (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`).
-3. Validar físicamente la entrega directa y la custodia opaca del ADR 0023, incluida la sincronización activa cada 15 segundos. La migración 0012 ya está aplicada según el usuario; rotación de claves y ejecución permanente en segundo plano siguen pendientes.
-4. Validar en dispositivo los enlaces del catálogo inicial y completar revisión profesional/derechos del espacio **Información** (E10/E11); el diagnóstico mesh ya está fuera de la navegación normal.
-5. Grabar el **video de respaldo** (lunes 16 nov), finalizar el guion del pitch cronometrado y preparar la demo en vivo de las tres superficies + modo sin conexión (martes 17 nov).
+1. Agregar las RPCs faltantes de la mesa de escucha del **MINED** (nivel 1–3, 6 estados, chat humano, ficha de acción) y el acceso sin cuentas de **Dirección** por código privado del colegio.
+2. Implementar los **paneles web** (MINED/Mesa y Dirección) en React/TypeScript/Vite, tras aprobar su contrato y estructura.
+3. Corregir el workflow `build-apk.yml` para pasar `SETU_SUPABASE_URL` / `SETU_SUPABASE_ANON_KEY` y decidir si el APK debe traer valores por defecto del proyecto de demostración.
+4. Aplicar los hallazgos de la revisión de la red mesh: recibo solo con la clave del colegio, recibos no sobrescribibles en relés, reenvío solo a vecinos nuevos y poda de entradas viejas, reintento de `prepareSchoolReceiver` y deduplicación por `client_operation_id`.
+5. Validar físicamente la entrega directa y la custodia opaca del ADR 0023, el marcador de Ayuda (ADR 0025) y la prueba integral de las tres superficies sin internet.
+6. Completar la revisión profesional y de derechos del catálogo de Información (ADR 0026), revisar las imágenes generadas y renombrar `AULA24` si corresponde (ADR 0027).
+7. Revisar con el equipo de Diseño la grafía «Sètù» del logotipo y los videos, «sì importa» del arte de campaña, el arte «No te quedes callado» y el logo horizontal de la landing.
 
-Antes de desarrollar los paneles web, aprobar su contrato y estructura de proyecto. El [plan vigente](docs/04-plan.md) conserva todas las decisiones que condicionan la implementación.
+El [plan](docs/04-plan.md) conserva las decisiones abiertas; su cabecera es del 9 nov y conviene actualizarla tras el evento.
 
 [↑ Volver al índice](#indice)
 
@@ -804,10 +872,61 @@ Antes de desarrollar los paneles web, aprobar su contrato y estructura de proyec
 | [Recursos técnicos](docs/13-recursos-tecnicos.md) | Lenguajes, SDK, web, backend, proximidad y fuentes oficiales. |
 | [Espacio informativo](docs/14-espacio-informativo-y-referente-netflix.md) | Diseño del apartado Información y referente editorial. |
 | [Landing pública](docs/landing.md) | Estructura, marca, mockups, textos verificados, accesibilidad y despliegue en GitHub Pages. |
+| [Respaldo visual de la landing](docs/diseno/landing-respaldo-2026-11-17/README.md) | Capturas previas a la ronda de mejoras del 17 nov y cómo restaurarla. |
+| [Investigación y skills](docs/05-investigacion-y-skills.md) | Investigación de apoyo y criterios de herramientas. |
+| [Referencia Andrea App](docs/referencia-investigacion-gemini.md) | Texto de investigación aportado; referencia, no evidencia independiente. |
+| [Catálogo de Información](docs/contenido/catalogo_informacion.json) | Fuente de datos del catálogo E10/E11 (ADR 0026). |
+| [Plan de bienvenida](docs/diseno/plan-arranque-bienvenida-setu.md) · [Plan de acceso escolar](docs/diseno/plan-acceso-escolar-e02.md) | Diseño aprobado de E01 y E02. |
+| [Flujo de pantallas](docs/diseno/flujo-pantallas.svg) | Mapa de pantallas (también en `.mmd` y `.html`); wireframes E01/E02 y QR de `AULA24` en `docs/diseno/`. |
 | [Esquema Supabase (ADR 0016)](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md) | Esquema `D1`–`D4`/`D8`, RLS estricta y RPCs iniciales. |
 | [Activación, Mesa y cliente remoto (ADR 0017)](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md) | Invitaciones individuales, escucha previa a valoración y `shared/remote/`. |
-| [Diagramas vigentes](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. |
-| [Fichas de pantalla](docs/diseno/pantallas-explicadas.md) | Acciones, entradas, salidas y variantes. |
+| [Diagramas](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. Las imágenes 01–04 son históricas; ver la nota de vigencia en esa carpeta. |
+| [Fichas de pantalla](docs/diseno/pantallas-explicadas.md) | Acciones, entradas, salidas y variantes (también en `.html`). |
+
+### Decisiones registradas (ADR)
+
+Carpeta: [`docs/decisiones/`](docs/decisiones/). Las decisiones vigentes de producto parten de la [ADR 0005](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md).
+
+| ADR | Decisión | Estado |
+| --- | --- | --- |
+| [0001](docs/decisiones/0001-base-propuesta.md) | Base móvil en Flutter y backend en Supabase | Aceptada |
+| [0002](docs/decisiones/0002-inicializacion-android.md) | Inicialización Android de M0 | Aceptada (regla de `FLAG_SECURE` superada por 0024) |
+| [0003](docs/decisiones/0003-cuenta-alias-y-persistencia-local.md) | Cuenta por alias, seguimiento y persistencia local | Superada por 0005 |
+| [0004](docs/decisiones/0004-especificacion-m1-y-guia-codex.md) | Especificación técnica de M1 | Aceptada |
+| [0005](docs/decisiones/0005-alineacion-con-decisiones-del-equipo-drive.md) | Alineación con las decisiones del equipo (Drive, 9 nov) | Aceptada |
+| [0006](docs/decisiones/0006-especificacion-tecnica-y-mesh-propuesta.md) | Especificación técnica y transporte mesh | Propuesta |
+| [0007](docs/decisiones/0007-alineacion-con-manuales-operativos.md) | Alineación con manuales operativos | Registro documental |
+| [0008](docs/decisiones/0008-stack-web-y-modelado-logico-propuesto.md) | Stack web y modelado lógico ampliado | Propuesta |
+| [0009](docs/decisiones/0009-espacio-informativo-confirmado.md) | Espacio informativo como parte de SéTú | Aceptada; demo implementada |
+| [0010](docs/decisiones/0010-bienvenida-entrada-android.md) | Bienvenida E01 | Aceptada e implementada |
+| [0011](docs/decisiones/0011-acceso-escolar-demostracion.md) | Acceso escolar simulado y capturas de diseño | Aceptada e implementada |
+| [0012](docs/decisiones/0012-camara-ubicacion-y-presentacion.md) | Cámara, cercanía local y capturas | Aceptada e implementada |
+| [0013](docs/decisiones/0013-inicio-estudiantil-e03.md) | Inicio E03 sin seguimiento de casos | Aceptada e implementada |
+| [0014](docs/decisiones/0014-progreso-educativo-local.md) | Progreso educativo local | Aceptada e implementada |
+| [0015](docs/decisiones/0015-mi-pieza-y-pedir-apoyo.md) | «Mi pieza» y «Pedir apoyo» | Implementada |
+| [0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md) | Esquema Supabase, RLS y acceso privado por caso | Aprobada e implementada |
+| [0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md) | Activación de personal, escucha previa y cliente remoto | Aprobada e implementada |
+| [0018](docs/decisiones/0018-sesion-escolar-y-perfil-estudiantil.md) | Sesión escolar persistente y perfil local | Aceptada |
+| [0019](docs/decisiones/0019-sesion-bloqueada-qr-oficial-y-despacho-en-la-app.md) | Sesión bloqueada, QR oficial y despacho en la app | Aceptada |
+| [0020](docs/decisiones/0020-alta-post-verificacion-y-cobertura-red-externa.md) | Alta post-verificación e invitaciones; Red externa | Aprobada, en implementación |
+| [0021](docs/decisiones/0021-perfil-y-nombre-de-juego.md) | «Mi perfil», «Mi pieza» y nombre de juego | Aceptada |
+| [0022](docs/decisiones/0022-auditoria-visual-y-chat-ficha-mesa.md) | Auditoría visual y flujo Alerta–Chat–Ficha | Aceptada |
+| [0023](docs/decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md) | Entrega mesh y custodia opaca de demostración | Aprobada e implementada |
+| [0024](docs/decisiones/0024-capturas-permitidas-salvo-chat.md) | Capturas permitidas salvo en el chat | Aceptada |
+| [0025](docs/decisiones/0025-contactos-de-ayuda-y-numeros-de-confianza.md) | Contactos de ayuda verificados y números de confianza | Aceptada |
+| [0026](docs/decisiones/0026-catalogo-inicial-con-fuentes-unicef-mined.md) | Catálogo inicial con fuentes UNICEF/MINED | Implementada; revisión profesional pendiente |
+| [0027](docs/decisiones/0027-colegio-setu-ficticio-banners-y-qr-del-personal.md) | Colegio SéTú ficticio, banners y QR del personal | Aceptada |
+
+### Fuentes y archivos de la raíz
+
+| Archivo | Contenido |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | Reglas obligatorias para agentes y del producto. |
+| [CLAUDE.md](CLAUDE.md) | Notas de trabajo para Claude Code; su estado del 16 nov está desactualizado (la landing ya está publicada). |
+| `Guía Prototipado y Presentación UAM - UNICEF 2026.docx` | Guía oficial de la evaluación. |
+| `Formato - Rúbrica Jurado UAM - UNICEF 2026.xlsx` | Rúbrica del jurado (100 puntos). |
+| `ManualDeIdentidad gráfica_cureando.pdf` | Manual de marca inicial; el final está en Drive. |
+| `drive_bugnuelitos_lluvia de ideas.txt` | Enlace a la carpeta de Drive del equipo (minutas, reporte pautado, manual final, costos y encuestas). Ante conflicto, prevalece Drive. |
 
 [↑ Volver al índice](#indice)
 
