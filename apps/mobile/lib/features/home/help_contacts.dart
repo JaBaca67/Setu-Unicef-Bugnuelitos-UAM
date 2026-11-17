@@ -145,10 +145,6 @@ class EmergencyContactsCard extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        Text(
-          contact.detail,
-          style: const TextStyle(color: Color(0xFF475569), fontSize: 12.5),
-        ),
       ],
     );
     final Widget call = FilledButton(

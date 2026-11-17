@@ -674,7 +674,14 @@ String _normalize(String value) {
 }
 
 class InformationHeader extends StatelessWidget {
-  const InformationHeader({super.key, this.title = 'Información'});
+  const InformationHeader({
+    super.key,
+    this.title = 'Información',
+    this.art = 'assets/home/info/e10a_header_figures.png',
+  });
+
+  /// Ilustración transparente 784 × 396 sobre el fondo de campaña.
+  final String art;
 
   final String title;
 
@@ -688,7 +695,7 @@ class InformationHeader extends StatelessWidget {
         children: <Widget>[
           Positioned.fill(
             child: Image.asset(
-              'assets/home/info/e10a_header_figures.png',
+              art,
               fit: BoxFit.contain,
               alignment: Alignment.bottomRight,
               excludeFromSemantics: true,

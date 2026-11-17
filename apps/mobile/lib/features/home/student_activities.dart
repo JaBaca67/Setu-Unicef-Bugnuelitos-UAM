@@ -234,10 +234,22 @@ class ActivitiesTab extends StatelessWidget {
         MediaQuery.sizeOf(context).width < 340 ||
         MediaQuery.textScalerOf(context).scale(16) > 17.6;
     const items = <(String, String, String)>[
-      ('Semáforo de emociones', 'semaforo', 'semaforo'),
+      (
+        'Semáforo de emociones',
+        'assets/home/activities/sticker_semaforo_tarjeta.png',
+        'semaforo',
+      ),
       ('Dados emocionales', 'dado', 'dados'),
-      ('Pregunta libre', 'pregunta', 'pregunta'),
-      ('Dibujo libre', 'dibujo', 'dibujo'),
+      (
+        'Pregunta libre',
+        'assets/home/activities/sticker_pregunta_hd.png',
+        'pregunta',
+      ),
+      (
+        'Dibujo libre',
+        'assets/home/activities/sticker_dibujo_hoja.png',
+        'dibujo',
+      ),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

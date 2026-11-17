@@ -150,8 +150,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     header: switch (section) {
       HomeSection.inicio => _HomeHeader(piece: widget.piece),
       HomeSection.informacion => const InformationHeader(),
-      HomeSection.actividades => const InformationHeader(title: 'Actividades'),
-      HomeSection.ayuda => const InformationHeader(title: 'Ayuda'),
+      HomeSection.actividades => const InformationHeader(
+        title: 'Actividades',
+        art: 'assets/home/activities/encabezado_ninos.png',
+      ),
+      HomeSection.ayuda => const InformationHeader(
+        title: 'Ayuda',
+        art: 'assets/home/activities/encabezado_ninos.png',
+      ),
     },
     body: Padding(
       padding: section == HomeSection.inicio

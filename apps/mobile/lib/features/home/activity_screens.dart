@@ -515,7 +515,7 @@ class _FreeQuestionScreenState extends State<FreeQuestionScreen> {
   @override
   Widget build(BuildContext context) => _ActivityPage(
     title: 'Pregunta libre',
-    sticker: 'pregunta',
+    sticker: 'assets/home/activities/sticker_pregunta_hd.png',
     children: <Widget>[
       _message(
         Column(
@@ -637,7 +637,7 @@ class _FreeDrawingScreenState extends State<FreeDrawingScreen> {
   @override
   Widget build(BuildContext context) => _ActivityPage(
     title: 'Dibujo libre',
-    sticker: 'dibujo',
+    sticker: 'assets/home/activities/sticker_dibujo_hoja.png',
     children: <Widget>[
       const Text(
         'Dibujá lo que querás.',
@@ -969,7 +969,7 @@ class DailyQuestionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _ActivityPage(
     title: 'Pregunta del día',
-    sticker: 'pregunta',
+    sticker: 'assets/home/activities/sticker_pregunta_hd.png',
     children: <Widget>[
       ListenableBuilder(
         listenable: progress,
