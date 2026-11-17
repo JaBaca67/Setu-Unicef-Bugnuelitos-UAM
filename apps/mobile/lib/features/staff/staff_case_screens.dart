@@ -41,16 +41,27 @@ Future<StaffCaseSummary?> _findCase(StaffSession session, String id) async =>
         .where((StaffCaseSummary item) => item.id == id)
         .firstOrNull;
 
+/// Pieza neutra que ve el personal cuando la alerta llegó sin la pieza del
+/// estudiante (por ejemplo, una alerta mesh de una versión anterior).
+const StudentPiece staffBasePiece = StudentPiece(
+  shape: PieceShape.puzzle,
+  color: PieceColor.blue,
+  accessories: <PieceAccessory>{},
+);
+
+/// La pieza que el estudiante guardó en su perfil o, si no llegó, la base.
 StudentPiece? _pieceOf(StaffCaseSummary? item) {
-  final StudentPieceSnapshot? snapshot = item?.studentPiece;
-  return snapshot == null
-      ? null
-      : StudentPiece.tryParse(
-          shape: snapshot.shape,
-          color: snapshot.color,
-          accessories: snapshot.accessories,
-          displayName: snapshot.displayName,
-        );
+  if (item == null) return null;
+  final StudentPieceSnapshot? snapshot = item.studentPiece;
+  return (snapshot == null
+          ? null
+          : StudentPiece.tryParse(
+              shape: snapshot.shape,
+              color: snapshot.color,
+              accessories: snapshot.accessories,
+              displayName: snapshot.displayName,
+            )) ??
+      staffBasePiece;
 }
 
 String _hhmm(DateTime value) {
@@ -288,7 +299,9 @@ class _DeskCaseScreenState extends State<DeskCaseScreen> {
       AssignmentBanner(session: widget.session),
       _PieceStoryCard(
         piece: piece,
-        displayName: item.studentPiece?.displayName,
+        displayName: identical(piece, staffBasePiece)
+            ? 'Pieza base'
+            : item.studentPiece?.displayName,
         narrative: narrative,
       ),
       const SizedBox(height: 18),
@@ -405,7 +418,8 @@ class _PieceStoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool largeText = MediaQuery.textScalerOf(context).scale(16) > 22;
-    final String storyText = narrative == null || narrative!.narrativeText.isEmpty
+    final String storyText =
+        narrative == null || narrative!.narrativeText.isEmpty
         ? 'El estudiante no escribió detalles. La alerta es válida igual.'
         : narrative!.narrativeText;
 
@@ -466,7 +480,8 @@ class _PieceStoryCard extends StatelessWidget {
               color: CureandoTheme.ink,
             ),
           ),
-          if (narrative != null && narrative!.locationText.isNotEmpty) ...<Widget>[
+          if (narrative != null &&
+              narrative!.locationText.isNotEmpty) ...<Widget>[
             const SizedBox(height: 6),
             Text(
               'Lugar: ${narrative!.locationText}',
@@ -910,10 +925,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
       _sheetSuccess = null;
     });
     try {
-      await _backend.saveSheetDraft(
-        caseId: widget.caseId,
-        guidanceDraft: text,
-      );
+      await _backend.saveSheetDraft(caseId: widget.caseId, guidanceDraft: text);
       if (!mounted) return;
       setState(() => _sheetSuccess = 'Borrador guardado.');
     } on Object catch (failure) {
@@ -1350,10 +1362,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
                 ),
                 const SizedBox(height: 10),
                 if (_notes.isEmpty)
-                  const Text(
-                    'Todavía no hay notas en este caso.',
-                    style: _text,
-                  )
+                  const Text('Todavía no hay notas en este caso.', style: _text)
                 else
                   for (final CaseInternalNoteView note in _notes)
                     Container(
@@ -1503,7 +1512,9 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
                           value: _omitSchool,
                           onChanged: (bool? value) =>
                               setState(() => _omitSchool = value ?? false),
-                          title: const Text('No enviar a la dirección del centro'),
+                          title: const Text(
+                            'No enviar a la dirección del centro',
+                          ),
                           subtitle: const Text('Solo quedará en el MINED.'),
                         ),
                     ],
@@ -1571,10 +1582,7 @@ class _DeskChatScreenState extends State<DeskChatScreen> {
               children: <Widget>[
                 ClipRect(
                   child: CampaignBackground(
-                    child: SafeArea(
-                      bottom: false,
-                      child: _header(item, piece),
-                    ),
+                    child: SafeArea(bottom: false, child: _header(item, piece)),
                   ),
                 ),
                 Expanded(
