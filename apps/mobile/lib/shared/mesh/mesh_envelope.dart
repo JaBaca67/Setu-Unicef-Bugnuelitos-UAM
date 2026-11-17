@@ -17,6 +17,7 @@ class MeshMinimalAlertPayload {
     required this.capabilityVerifierHash,
     required this.declaredAt,
     this.involvesStaff = false,
+    this.receiptToken,
   });
 
   factory MeshMinimalAlertPayload.fromJson(Map<String, Object?> json) =>
@@ -28,6 +29,7 @@ class MeshMinimalAlertPayload {
         capabilityVerifierHash: json['capability_verifier_hash']! as String,
         declaredAt: DateTime.parse(json['declared_at']! as String),
         involvesStaff: json['involves_staff'] == true,
+        receiptToken: json['receipt_token'] as String?,
       );
 
   final String clientOperationId;
@@ -38,6 +40,9 @@ class MeshMinimalAlertPayload {
   final DateTime declaredAt;
   final bool involvesStaff;
 
+  /// Desafío aleatorio de entrega, visible únicamente dentro del E2EE.
+  final String? receiptToken;
+
   Map<String, Object?> toJson() => <String, Object?>{
     'client_operation_id': clientOperationId,
     'public_school_code': publicSchoolCode,
@@ -46,6 +51,7 @@ class MeshMinimalAlertPayload {
     'capability_verifier_hash': capabilityVerifierHash,
     'declared_at': declaredAt.toUtc().toIso8601String(),
     'involves_staff': involvesStaff,
+    if (receiptToken != null) 'receipt_token': receiptToken,
   };
 }
 
@@ -116,6 +122,7 @@ class MeshEnvelope {
     MeshMinimalAlertPayload payload, {
     required List<int> recipientPublicKeyBytes,
     int ttl = defaultTtl,
+    String? receiptToken,
   }) async {
     if (recipientPublicKeyBytes.length != 32) {
       throw ArgumentError('La clave pública X25519 debe tener 32 bytes.');
@@ -138,7 +145,12 @@ class MeshEnvelope {
       info: _aad,
     );
 
-    final List<int> clearBytes = utf8.encode(jsonEncode(payload.toJson()));
+    final List<int> clearBytes = utf8.encode(
+      jsonEncode(<String, Object?>{
+        ...payload.toJson(),
+        'receipt_token': ?receiptToken,
+      }),
+    );
     final SecretBox box = await _aesGcm.encrypt(
       clearBytes,
       secretKey: aesKey,
@@ -232,6 +244,17 @@ class MeshEnvelope {
     }
     return buffer.toString();
   }
+
+  static String newReceiptToken() => _randomHex(32);
+
+  /// Solo quien abrió el sobre conoce el desafío. No acredita recepción
+  /// central ni lectura humana; está ligado a un único paquete.
+  static Future<String> deliveryProof(String packetId, String token) async =>
+      base64Encode(
+        (await Sha256().hash(
+          utf8.encode('setu-mesh-delivery:v1:$packetId:$token'),
+        )).bytes,
+      );
 }
 
 /// Acuse de custodia o sincronización devuelto al vecino emisor.

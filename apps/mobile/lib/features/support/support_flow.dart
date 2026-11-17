@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../shared/local/encrypted_local_store.dart';
+import '../../shared/models/cureando_models.dart';
 import '../../shared/mesh/mesh_bridge_keys.dart';
 import '../../shared/mesh/mesh_envelope.dart';
 import '../../shared/mesh/mesh_relay_service.dart';
@@ -107,6 +108,7 @@ class SupportFlow extends ChangeNotifier {
            SimulatedSupportBackend(ackDelay: ackDelay, teamDelay: teamDelay),
        _crypto = crypto ?? CaseCapabilityCrypto() {
     this.backend.changes?.addListener(_refreshChat);
+    mesh?.addListener(_meshChanged);
   }
 
   static const String teamGreeting = SimulatedSupportBackend.teamGreeting;
@@ -129,6 +131,16 @@ class SupportFlow extends ChangeNotifier {
   resolveMeshRecipients;
   bool _needsBluetoothForMesh = false;
   bool get needsBluetoothForMesh => _needsBluetoothForMesh;
+  bool _meshPending = false;
+  bool get meshPending => _meshPending && _delivery == AlertDelivery.pending;
+  bool get minimalAlertDelivered {
+    final String? operation = _case?['operationId'] as String?;
+    return operation != null &&
+        (mesh?.isOperationDelivered(operation) ?? false);
+  }
+
+  void _meshChanged() => _notify();
+  bool _meshPermissionAttempted = false;
 
   /// Código público del colegio confirmado en el acceso escolar. La app lo
   /// actualiza cuando el estudiante confirma o cambia de colegio; cada
@@ -280,6 +292,8 @@ class SupportFlow extends ChangeNotifier {
     _case = delivery;
     _delivery = AlertDelivery.pending;
     _deliveryFailed = false;
+    _meshPending = false;
+    _meshPermissionAttempted = false;
     _chatAvailable = false;
     _caseClosed = false;
     _messages = const <ChatMessage>[];
@@ -350,7 +364,9 @@ class SupportFlow extends ChangeNotifier {
             ? piece.cast<String, Object?>()
             : null,
       );
-      final String caseId = await backend.submitAlert(outbox);
+      final String caseId = await backend
+          .submitAlert(outbox)
+          .timeout(const Duration(seconds: 8));
       // Si mientras tanto se envió otra alerta, este acuse ya no aplica.
       if (identical(_case, delivery)) {
         delivery['caseId'] = caseId;
@@ -359,9 +375,17 @@ class SupportFlow extends ChangeNotifier {
         _needsBluetoothForMesh = false;
         _persist();
       }
-    } on Object {
+    } on Object catch (error) {
       if (identical(_case, delivery)) _deliveryFailed = true;
-      if (outbox != null) await _enqueueMeshFallback(outbox);
+      // Un rechazo de autorización/validación no habilita otra vía de alta.
+      if (!_disposed &&
+          identical(_case, delivery) &&
+          outbox != null &&
+          (error is TimeoutException ||
+              error is GatewayException &&
+                  error.code == 'network_unavailable')) {
+        await _enqueueMeshFallback(outbox);
+      }
     } finally {
       _delivering = false;
     }
@@ -428,15 +452,15 @@ class SupportFlow extends ChangeNotifier {
           recipientPublicKeyBytes: schoolKey,
         );
       }
-      final bool hasPermissions = await relay.transport
-          .hasRequiredPermissions();
-      final bool btOn =
-          hasPermissions && await relay.transport.isBluetoothEnabled();
-      bool started = false;
-      if (btOn) {
-        started = relay.isRunning || await relay.start();
-      }
-      _needsBluetoothForMesh = !btOn || !started;
+      _meshPending = true;
+      _notify();
+      // Una única solicitud del sistema por envío. Reintentar no insiste si
+      // se denegó; al reanudar se vuelve a comprobar sin abrir diálogos.
+      final bool requestAccess = !_meshPermissionAttempted;
+      _meshPermissionAttempted = true;
+      _needsBluetoothForMesh = !await relay.ensureReadyAndStart(
+        requestAccess: requestAccess,
+      );
     } on Object {
       // Permanece en la cola local cifrada.
     }
@@ -524,6 +548,7 @@ class SupportFlow extends ChangeNotifier {
     _retry?.cancel();
     _poll?.cancel();
     backend.changes?.removeListener(_refreshChat);
+    mesh?.removeListener(_meshChanged);
     if (_ownsBackend) backend.dispose();
     super.dispose();
   }

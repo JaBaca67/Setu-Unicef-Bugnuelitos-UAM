@@ -28,6 +28,7 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.util.UUID
 
 /**
  * Canal nativo Kotlin para transporte mesh oportunista mediante
@@ -59,7 +60,13 @@ class NearbyMeshChannel(
     private var eventSink: EventChannel.EventSink? = null
     private var pendingPermissionResult: MethodChannel.Result? = null
     private var pendingBluetoothResult: MethodChannel.Result? = null
-    private var localEndpointName: String = "setu-node"
+    // Identificador efímero sin rol, colegio ni identidad; ordena quién inicia
+    // el enlace cuando ambos teléfonos anuncian y descubren simultáneamente.
+    private val localEndpointName: String = "setu-${UUID.randomUUID()}"
+    private var running = false
+    private val discoveredEndpoints = mutableMapOf<String, String>()
+    private val connectionRetries = mutableMapOf<String, Int>()
+    private val scheduledRetries = mutableSetOf<String>()
     private val connectedEndpoints = mutableSetOf<String>()
     private val pendingEndpoints = mutableSetOf<String>()
 
@@ -100,6 +107,7 @@ class NearbyMeshChannel(
             list.add(Manifest.permission.BLUETOOTH_CONNECT)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            list.add(Manifest.permission.ACCESS_COARSE_LOCATION)
             list.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
         return list.toTypedArray()
@@ -187,8 +195,6 @@ class NearbyMeshChannel(
                     result.error("missing_permissions", "Faltan permisos Bluetooth/Wi-Fi cercano", null)
                     return
                 }
-                localEndpointName = (call.argument<String>("endpointName") ?: "setu-node")
-                    .take(32)
                 startCluster(result)
             }
             "stopNode" -> {
@@ -241,6 +247,7 @@ class NearbyMeshChannel(
             connectionLifecycleCallback,
             advertisingOptions,
         ).addOnSuccessListener {
+            running = true
             connectionsClient.startDiscovery(
                 SERVICE_ID,
                 endpointDiscoveryCallback,
@@ -249,6 +256,7 @@ class NearbyMeshChannel(
                 emitEvent(mapOf("type" to "status", "state" to "started"))
                 result.success(null)
             }.addOnFailureListener { e ->
+                running = false
                 connectionsClient.stopAdvertising()
                 emitEvent(
                     mapOf(
@@ -272,55 +280,88 @@ class NearbyMeshChannel(
     }
 
     private fun stopCluster() {
+        running = false
+        mainHandler.removeCallbacksAndMessages(null)
         connectionsClient.stopAdvertising()
         connectionsClient.stopDiscovery()
         connectionsClient.stopAllEndpoints()
         connectedEndpoints.clear()
         pendingEndpoints.clear()
+        discoveredEndpoints.clear()
+        connectionRetries.clear()
+        scheduledRetries.clear()
         emitEvent(mapOf("type" to "status", "state" to "stopped"))
     }
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
-            if (connectedEndpoints.contains(endpointId) || pendingEndpoints.contains(endpointId)) {
-                return
-            }
-            pendingEndpoints.add(endpointId)
-            connectionsClient.requestConnection(
-                localEndpointName,
-                endpointId,
-                connectionLifecycleCallback,
-            ).addOnFailureListener {
-                pendingEndpoints.remove(endpointId)
-            }
+            discoveredEndpoints[endpointId] = info.endpointName
+            connectEndpoint(endpointId)
         }
 
         override fun onEndpointLost(endpointId: String) {
-            pendingEndpoints.remove(endpointId)
+            discoveredEndpoints.remove(endpointId)
         }
+    }
+
+    private fun connectEndpoint(endpointId: String, allowPassiveInitiator: Boolean = false) {
+        val remoteName = discoveredEndpoints[endpointId] ?: return
+        if (!running || connectedEndpoints.contains(endpointId) ||
+            pendingEndpoints.contains(endpointId)) return
+        // Un único iniciador evita solicitudes cruzadas entre nodos nuevos.
+        if (remoteName.startsWith("setu-") && remoteName.length > 32 &&
+            localEndpointName >= remoteName && !allowPassiveInitiator) {
+            // Si solo un lado descubre al otro, no esperar indefinidamente.
+            retryConnection(endpointId, allowPassiveInitiator = true)
+            return
+        }
+        pendingEndpoints.add(endpointId)
+        connectionsClient.requestConnection(localEndpointName, endpointId, connectionLifecycleCallback)
+            .addOnFailureListener {
+                pendingEndpoints.remove(endpointId)
+                retryConnection(endpointId)
+            }
+    }
+
+    private fun retryConnection(endpointId: String, allowPassiveInitiator: Boolean = false) {
+        if (!running || !discoveredEndpoints.containsKey(endpointId) ||
+            !scheduledRetries.add(endpointId)) return
+        val attempt = (connectionRetries[endpointId] ?: 0).coerceAtMost(5)
+        connectionRetries[endpointId] = attempt + 1
+        mainHandler.postDelayed({
+            scheduledRetries.remove(endpointId)
+            connectEndpoint(endpointId, allowPassiveInitiator)
+        }, (1000L shl attempt).coerceAtMost(30000L))
     }
 
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, info: ConnectionInfo) {
+            pendingEndpoints.add(endpointId)
             connectionsClient.acceptConnection(endpointId, payloadCallback)
+                .addOnFailureListener {
+                    pendingEndpoints.remove(endpointId)
+                    retryConnection(endpointId)
+                }
         }
 
         override fun onConnectionResult(endpointId: String, resolution: ConnectionResolution) {
             pendingEndpoints.remove(endpointId)
             if (resolution.status.isSuccess) {
                 connectedEndpoints.add(endpointId)
+                connectionRetries.remove(endpointId)
                 emitEvent(
                     mapOf(
                         "type" to "peer_connected",
                         "endpointId" to endpointId,
                     ),
                 )
-            }
+            } else retryConnection(endpointId)
         }
 
         override fun onDisconnected(endpointId: String) {
             pendingEndpoints.remove(endpointId)
             connectedEndpoints.remove(endpointId)
+            retryConnection(endpointId)
             emitEvent(
                 mapOf(
                     "type" to "peer_disconnected",

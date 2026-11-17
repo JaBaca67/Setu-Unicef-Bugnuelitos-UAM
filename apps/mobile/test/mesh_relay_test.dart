@@ -15,6 +15,7 @@ import 'package:cureando_mobile/shared/mesh/mesh_relay_service.dart';
 import 'package:cureando_mobile/shared/mesh/mesh_recipient_directory.dart';
 import 'package:cureando_mobile/shared/mesh/mesh_transport.dart';
 import 'package:cureando_mobile/shared/remote/case_capability.dart';
+import 'package:cureando_mobile/shared/models/cureando_models.dart';
 import 'package:cureando_mobile/shared/remote/setu_remote_gateway.dart';
 import 'package:cureando_mobile/shared/remote/setu_remote_models.dart';
 import 'package:flutter/material.dart';
@@ -63,6 +64,7 @@ class _FakeMeshTransport implements MeshTransport {
   final Set<String> _peers = <String>{};
   bool bluetoothOn = true;
   bool permissionsGranted = true;
+  bool denyPermissions = false;
   final List<String> calls = <String>[];
 
   @override
@@ -87,12 +89,15 @@ class _FakeMeshTransport implements MeshTransport {
   @override
   Future<bool> requestPermissions() async {
     calls.add('requestPermissions');
+    if (denyPermissions) return false;
     permissionsGranted = true;
     return true;
   }
 
   @override
-  Future<void> startNode({String endpointName = 'setu-node'}) async {}
+  Future<void> startNode({String endpointName = 'setu-node'}) async {
+    calls.add('startNode:$endpointName');
+  }
 
   @override
   Future<void> stopNode() async {
@@ -161,6 +166,15 @@ class _CustodyGateway extends _FakeBridgeRemoteGateway {
   String? publicKey;
   String? recipientKeyId;
   bool online = true;
+  final List<String?> registrationSchools = <String?>[];
+  @override
+  Future<StudentAlertReceipt> submitStudentAlert(
+    StudentAlertSubmission submission,
+  ) async {
+    if (!online) throw const GatewayException('network_unavailable', 'offline');
+    return super.submitStudentAlert(submission);
+  }
+
   @override
   String? get currentStaffUserId => userId;
   @override
@@ -168,6 +182,7 @@ class _CustodyGateway extends _FakeBridgeRemoteGateway {
     String? publicSchoolCode,
     required String publicKeyBase64,
   }) async {
+    registrationSchools.add(publicSchoolCode);
     publicKey = publicKeyBase64;
     recipientKeyId = (await Sha256().hash(
       base64Decode(publicKeyBase64),
@@ -206,6 +221,239 @@ class _CustodyGateway extends _FakeBridgeRemoteGateway {
 }
 
 void main() {
+  test(
+    'Un arranque silencioso no consume el permiso solicitado al enviar',
+    () async {
+      final _FakeMeshTransport radio = _FakeMeshTransport(
+        'silent-race',
+        _InMemoryMeshBus(),
+      )..permissionsGranted = false;
+      final MeshRelayService relay = MeshRelayService(
+        transport: radio,
+        openStore: () async => _MemoryStore(),
+      );
+      final List<bool> results = await Future.wait(<Future<bool>>[
+        relay.ensureReadyAndStart(requestAccess: false),
+        relay.ensureReadyAndStart(),
+      ]);
+      expect(results, <bool>[false, true]);
+      expect(radio.calls, <String>[
+        'requestPermissions',
+        'startNode:setu-node',
+      ]);
+      radio.bluetoothOn = false;
+      await relay.retryPending();
+      expect(relay.isRunning, isFalse);
+      radio.bluetoothOn = true;
+      await relay.retryPending();
+      expect(relay.isRunning, isTrue);
+      expect(
+        radio.calls.where((String call) => call == 'startNode:setu-node'),
+        hasLength(2),
+      );
+      await relay.stop();
+      relay.dispose();
+      await radio.dispose();
+    },
+  );
+
+  test(
+    'Enviar alerta activa mesh; staff escucha sin botón y confirma entrega E2EE',
+    () async {
+      final _InMemoryMeshBus bus = _InMemoryMeshBus();
+      final _FakeMeshTransport studentRadio =
+          _FakeMeshTransport('student-auto', bus)
+            ..bluetoothOn = false
+            ..permissionsGranted = false;
+      final _FakeMeshTransport staffRadio = _FakeMeshTransport(
+        'staff-auto',
+        bus,
+      );
+      final _CustodyGateway staffGateway = _CustodyGateway(
+        <String, Map<String, Object?>>{},
+        userId: 'personal-ficticio-auto',
+      );
+      final MeshRecipientDirectory directory = MeshRecipientDirectory(
+        staffGateway,
+        vaultForUser: (_) => _MemoryVault(),
+        openCache: () async => _MemoryStore(),
+      );
+      final _MemoryStore studentQueue = _MemoryStore();
+      final MeshRelayService student = MeshRelayService(
+        transport: studentRadio,
+        openStore: () async => studentQueue,
+      );
+      final MeshRelayService staff = MeshRelayService(
+        transport: staffRadio,
+        openStore: () async => _MemoryStore(),
+        recipientDirectory: directory,
+        remoteGateway: staffGateway,
+      );
+      final Future<void> preparation = staff.prepareSchoolReceiver('AULA24');
+      await staff.syncPendingAsBridge();
+      await preparation;
+      expect(staffGateway.registrationSchools, isNotEmpty);
+      expect(
+        staffGateway.registrationSchools.every(
+          (String? code) => code == 'AULA24',
+        ),
+        isTrue,
+      );
+      expect(staff.isRunning, isTrue);
+      expect(staffRadio.calls, <String>['startNode:setu-node']);
+      await directory.warmSchool('AULA24');
+      staffGateway.online = false;
+      final SupportFlow flow = SupportFlow(
+        openStore: () async => _MemoryStore(),
+        backend: _FailingSupportBackend(),
+        mesh: student,
+        schoolCode: 'AULA24',
+        resolveMeshRecipients: directory.cachedRecipients,
+      );
+      addTearDown(() async {
+        flow.dispose();
+        await student.stop();
+        await staff.stop();
+        student.dispose();
+        staff.dispose();
+        await studentRadio.dispose();
+        await staffRadio.dispose();
+      });
+      flow.selectSituation(Situation.social);
+      flow.selectParticipation(Participation.own);
+      flow.details = 'Relato ficticio reservado que no viaja por mesh';
+      expect(await flow.send(), isTrue);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(student.isRunning, isTrue);
+      expect(flow.meshPending, isTrue);
+      expect(flow.minimalAlertDelivered, isFalse);
+      final MeshEnvelope envelope = student.items.single.envelope;
+      final Uint8List forged = Uint8List.fromList(
+        utf8.encode(
+          jsonEncode(<String, Object?>{
+            'kind': 'recipient_receipt',
+            'id': envelope.packetId,
+            'proof': 'x' * 44,
+          }),
+        ),
+      );
+      bus.deliver('vecino-ficticio', 'student-auto', forged);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(flow.minimalAlertDelivered, isFalse);
+      bus.connect('student-auto', 'staff-auto');
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(staff.schoolAlerts.single.situationType, 'social_bullying');
+      expect(flow.minimalAlertDelivered, isTrue);
+      // La prueba acredita entrega al receptor, conserva reintentos centrales y
+      // no abre chat ni afirma lectura humana.
+      expect(flow.delivery, AlertDelivery.pending);
+      expect(flow.chatAvailable, isFalse);
+      expect(
+        utf8.decode(envelope.toWireBytes()),
+        isNot(contains('Relato ficticio')),
+      );
+      final MeshMinimalAlertPayload received = await envelope.open(
+        recipientKeyPair: (await directory.localKeyPair())!,
+      );
+      expect(received.toJson().keys, isNot(contains('details')));
+      final MeshRelayService reopened = MeshRelayService(
+        transport: _FakeMeshTransport('reopened-auto', bus),
+        openStore: () async => studentQueue,
+      );
+      await reopened.open();
+      expect(reopened.isOperationDelivered(received.clientOperationId), isTrue);
+      reopened.dispose();
+      staff.clearSchoolContext();
+      expect(staff.schoolAlerts, isEmpty);
+    },
+  );
+
+  test(
+    'Permiso denegado conserva alerta y reintentos no repiten el diálogo',
+    () async {
+      final _FakeMeshTransport radio =
+          _FakeMeshTransport('denied', _InMemoryMeshBus())
+            ..permissionsGranted = false
+            ..denyPermissions = true;
+      final MeshRelayService relay = MeshRelayService(
+        transport: radio,
+        openStore: () async => _MemoryStore(),
+      );
+      final SupportFlow flow = SupportFlow(
+        openStore: () async => _MemoryStore(),
+        backend: _FailingSupportBackend(),
+        mesh: relay,
+        resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+      );
+      flow.selectSituation(Situation.talk);
+      flow.selectParticipation(Participation.own);
+      await flow.send();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      flow.retryDelivery();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(radio.calls, <String>['requestPermissions']);
+      expect(flow.needsBluetoothForMesh, isTrue);
+      expect(flow.minimalAlertDelivered, isFalse);
+      expect(relay.items, hasLength(2));
+      flow.dispose();
+      relay.dispose();
+      await radio.dispose();
+    },
+  );
+
+  test(
+    'Arranques concurrentes usan un solo diálogo y un anuncio sin datos personales',
+    () async {
+      final _FakeMeshTransport radio = _FakeMeshTransport(
+        'concurrent',
+        _InMemoryMeshBus(),
+      )..permissionsGranted = false;
+      final MeshRelayService relay = MeshRelayService(
+        transport: radio,
+        openStore: () async => _MemoryStore(),
+      );
+      await Future.wait(<Future<bool>>[
+        relay.ensureReadyAndStart(endpointName: 'colegio-ficticio'),
+        relay.ensureReadyAndStart(endpointName: 'psicologo-ficticio'),
+      ]);
+      expect(radio.calls, <String>[
+        'requestPermissions',
+        'startNode:setu-node',
+      ]);
+      await relay.stop();
+      relay.dispose();
+      await radio.dispose();
+    },
+  );
+
+  test('Rechazo del servidor no activa transporte mesh', () async {
+    final _FakeMeshTransport radio = _FakeMeshTransport(
+      'rejected',
+      _InMemoryMeshBus(),
+    );
+    final MeshRelayService relay = MeshRelayService(
+      transport: radio,
+      openStore: () async => _MemoryStore(),
+    );
+    final SupportFlow flow = SupportFlow(
+      openStore: () async => _MemoryStore(),
+      backend: _FailingSupportBackend(
+        error: const GatewayException('42501', 'rechazo ficticio'),
+      ),
+      mesh: relay,
+      resolveMeshRecipientPublicKey: MeshBridgeKeys.resolvePublicKeyBytes,
+    );
+    flow.selectSituation(Situation.talk);
+    flow.selectParticipation(Participation.own);
+    await flow.send();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(relay.items, isEmpty);
+    expect(radio.calls, isEmpty);
+    flow.dispose();
+    relay.dispose();
+    await radio.dispose();
+  });
+
   test(
     'Puente sin clave sube solo ciphertext; el destinatario staff recupera y registra el caso',
     () async {
@@ -495,7 +743,7 @@ void main() {
   );
 
   test(
-    'SupportFlow solicita activar Bluetooth si falla envío sin internet',
+    'SupportFlow solicita permisos y activa Nearby automáticamente tras fallo de red',
     () async {
       final X25519 x25519 = X25519();
       final SimpleKeyPair bridgePair = await x25519.newKeyPair();
@@ -503,7 +751,8 @@ void main() {
 
       final _InMemoryMeshBus bus = _InMemoryMeshBus();
       final _FakeMeshTransport transport = _FakeMeshTransport('E', bus)
-        ..bluetoothOn = false;
+        ..bluetoothOn = false
+        ..permissionsGranted = false;
       final MeshRelayService relay = MeshRelayService(
         transport: transport,
         openStore: () async => _MemoryStore(),
@@ -524,13 +773,19 @@ void main() {
 
       expect(saved, isTrue);
       expect(flow.delivery, AlertDelivery.pending);
-      expect(flow.needsBluetoothForMesh, isTrue);
+      expect(flow.needsBluetoothForMesh, isFalse);
+      expect(transport.calls, <String>[
+        'requestPermissions',
+        'requestEnableBluetooth',
+        'startNode:setu-node',
+      ]);
       expect(relay.items.length, 2);
 
-      final bool enabled = await flow.ensureBluetoothForMesh();
-      expect(enabled, isTrue);
+      // send() arranca el transporte sin tocar un botón de activación.
+      expect(transport.bluetoothOn, isTrue);
       expect(flow.needsBluetoothForMesh, isFalse);
       expect(relay.isRunning, isTrue);
+      flow.dispose();
 
       await relay.stop();
       await transport.dispose();
@@ -602,13 +857,13 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 60));
 
       expect(saved, isTrue);
-      expect(flow.needsBluetoothForMesh, isTrue);
+      expect(flow.needsBluetoothForMesh, isFalse);
       expect(relay.items.length, 2);
 
-      final bool btOk = await flow.ensureBluetoothForMesh();
-      expect(btOk, isTrue);
+      expect(transport.bluetoothOn, isTrue);
       expect(flow.needsBluetoothForMesh, isFalse);
       expect(relay.isRunning, isTrue);
+      flow.dispose();
 
       await relay.stop();
       await transport.dispose();
@@ -868,6 +1123,10 @@ void main() {
 }
 
 class _FailingSupportBackend implements SupportBackend {
+  _FailingSupportBackend({
+    this.error = const GatewayException('network_unavailable', 'offline'),
+  });
+  final Object error;
   @override
   Listenable? get changes => null;
 
@@ -875,7 +1134,7 @@ class _FailingSupportBackend implements SupportBackend {
   Duration? get pollInterval => null;
 
   @override
-  Future<String> submitAlert(AlertOutbox alert) => throw StateError('offline');
+  Future<String> submitAlert(AlertOutbox alert) => throw error;
 
   @override
   Future<ChatSnapshot> chatSession({

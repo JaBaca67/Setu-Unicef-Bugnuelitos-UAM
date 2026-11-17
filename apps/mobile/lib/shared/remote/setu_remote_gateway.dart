@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -1840,6 +1841,15 @@ class SupabaseSetuRemoteGateway implements SetuRemoteGateway {
 
   GatewayException _mapError(Object error) {
     if (error is GatewayException) return error;
+    if (error is SocketException ||
+        error is TimeoutException ||
+        error is TlsException ||
+        error is HttpException) {
+      return const GatewayException(
+        'network_unavailable',
+        'Sin conexión disponible.',
+      );
+    }
     if (error is PostgrestException) {
       return GatewayException(error.code ?? 'postgrest_error', error.message);
     }

@@ -17,7 +17,7 @@
 
 **Revisión:** 16 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación por colegio, inicio estudiantil E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza*, recorrido *Pedir apoyo* conectado al cliente remoto (con `involvesStaff` y respaldo en red mesh `Nearby Connections` + E2EE), superficies móviles de personal autorizado (`/personal/*`) y notificaciones push FCM.
 
-**Estado:** app Android conectada a Supabase (`supabase_flutter`), notificaciones push FCM y red mesh física integrada; esquema Supabase/RLS/RPCs (`0001`–`0012`; 0012 solo local, sin aplicar al remoto) y Edge Functions (`invite-email`, `push-dispatch`) implementados; pendientes los paneles web y la prueba física integral de extremo a extremo.
+**Estado:** app Android conectada a Supabase (`supabase_flutter`), notificaciones push FCM y red mesh automática integrada; esquema Supabase/RLS/RPCs (`0001`–`0012`; 0012 aplicada según confirmación del usuario) y Edge Functions (`invite-email`, `push-dispatch`) implementados; pendientes los paneles web y la prueba física integral de extremo a extremo. El bloque de automatización no consultó ni modificó el remoto.
 
 [Índice](#indice) · [Diagramas de datos](#dfd) · [Desarrollo técnico](#stack) · [Ejecutar la app](#instalacion)
 
@@ -421,14 +421,14 @@ Sin internet se necesitan app compatible, permisos, radios Bluetooth/Wi-Fi/Ubica
 ### Ruta implementada y prevista
 
 1. El receptor staff publica su clave pública por HTTPS; el estudiante prepara una caché por colegio y ruta de conflicto antes de desconectarse. Las claves privadas se generan y guardan únicamente en el receptor.
-2. Al fallar el envío online, `SupportFlow` sella la alerta mínima por destinatario en sobres X25519 + HKDF-SHA256 + AES-GCM-256 y guarda la cola cifrada. Sin claves preparadas conserva la solicitud local.
+2. Al fallar el envío online por red o timeout (8 segundos), `SupportFlow` sella la alerta mínima por destinatario en sobres X25519 + HKDF-SHA256 + AES-GCM-256, guarda la cola cifrada e inicia Nearby, solicitando permisos/radio del sistema si faltan. El alumno solo toca «Enviar alerta». Sin claves preparadas conserva la solicitud local. Los rechazos de validación/autorización no activan mesh.
 3. Nearby Connections (`P2P_CLUSTER`) transmite sobres opacos; los retransmisores no descifran. El colegio y el verificador permanecen dentro del cifrado.
 4. Cada receptor valida formato, versión, tamaño, TTL y `packetId`, y persiste antes del ACK de custodia.
 5. Un puente genérico con internet usa `relay_mesh_envelope` para custodia opaca. El destinatario staff recupera esos sobres, descifra y llama a `submit_student_alert`. Si el psicólogo recibe directamente Nearby, puede registrar sin ese paso remoto previo.
 6. El servidor valida el colegio y la operación, despacha por las reglas vigentes y devuelve el mismo caso al alternar entre mesh y online. La bandeja sincroniza antes de consultar y reconcilia por operación exacta.
-7. El nodo reintenta cada 15 segundos mientras está activo y al volver a primer plano. Un ACK Nearby solo confirma custodia: la recepción central se confirma mediante HTTPS. El retorno mesh firmado del recibo sigue pendiente.
+7. El nodo escucha automáticamente con la app abierta y reintenta cada 15 segundos y al reanudar. Las sesiones staff preparan el receptor al ingresar; el estudiante refresca las claves al confirmar/restaurar colegio, al reanudar y cada minuto. Un ACK Nearby solo confirma custodia. Una prueba ligada a un desafío secreto del sobre confirma entrega mínima al receptor y permite mostrar «Alerta entregada», aclarando que no confirma lectura, atención ni sincronización central. HTTPS sigue confirmando recepción central; el retorno mesh firmado de ese recibo central sigue pendiente.
 
-La migración `20261116000012_setu_mesh_delivery.sql` solo se creó localmente; no se aplicó al proyecto remoto. Preparación de teléfonos, límites y pruebas: [ADR 0023](docs/decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md).
+La migración `20261116000012_setu_mesh_delivery.sql` ya está aplicada según confirmación del usuario; este bloque no operó contra Supabase remoto ni cambió SQL. Mesh no aparece como sección de prueba para el estudiante; `/prueba-mesh` solo está registrada en depuración. Preparación de teléfonos, límites y pruebas: [ADR 0023](docs/decisiones/0023-entrega-mesh-y-custodia-opaca-demo.md).
 
 ### Cifrado y destinatarios
 
@@ -509,13 +509,13 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 
 | Capa o superficie | Lenguajes | Recursos a integrar o conservar | Estado |
 | --- | --- | --- | --- |
-| App Android | **Dart**, Kotlin nativo | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `cryptography`, `flutter_secure_storage`, `path_provider`, `supabase_flutter`, `NavBar-01`, Poppins local | E01, demo E02, inicio E03, *Mi pieza*, *Pedir apoyo*, `/prueba-mesh` y respaldo offline/mesh implementados. |
+| App Android | **Dart**, Kotlin nativo | Flutter, `go_router`, `mobile_scanner`, `geolocator`, `cryptography`, `flutter_secure_storage`, `path_provider`, `supabase_flutter`, `NavBar-01`, Poppins local | E01, demo E02, inicio E03, *Mi pieza*, *Pedir apoyo*, respaldo mesh automático y diagnóstico `/prueba-mesh` solo en depuración. |
 | Información E10/E11 | **Dart**; catálogo tipado, texto e ilustraciones locales | Biblioteca, filtros/búsqueda, Rutas, lectores, video simulado con CC y alternativa sin conexión; sin nuevas dependencias | Demo implementada; +5 XP por primera lectura y +10 XP una vez por cierre de ruta, separado de la pregunta diaria. Revisión editorial, derechos y video real pendientes. |
 | QR y cercanía | Dart; APIs Android | Candidatos `mobile_scanner` y, condicionado al diseño de privacidad, `geolocator`; código manual alternativo | Demo local E02 implementada; validación institucional y primer ingreso offline pendientes. |
 | Panel MINED | **TypeScript/TSX + HTML + CSS** | **React + Vite + React Router + `@supabase/supabase-js`** | Stack en evaluación; avisos, fichas y supervisión sin chat. |
 | Mesa de escucha | TypeScript/TSX + HTML + CSS | Mismo cliente web, vistas y contratos del rol de escucha | Propuesto; chat humano conectado y casos asignados. |
 | Panel de instituciones | TypeScript/TSX + HTML + CSS | Mismo cliente web, proyecciones del centro y tokens de marca | Propuesto; actuaciones y propuesta de cierre sin relato/chat. |
-| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema completo (`0001`–`0012`; 0012 solo local, sin aplicar al remoto), activación por invitación/solicitud pública, RLS estricta, cupos y RPCs de estudiante/MINED/Mesa/Dirección implementados en `supabase/migrations/`. |
+| Backend y autorización | **SQL / PLpgSQL** | **Supabase/PostgreSQL**, Auth de personal, RLS y RPC transaccionales | Esquema completo (`0001`–`0012`; 0012 aplicada según confirmación del usuario), activación por invitación/solicitud pública, RLS estricta, cupos y RPCs de estudiante/MINED/Mesa/Dirección implementados en `supabase/migrations/`. |
 | SDK móvil de backend | Dart | `supabase_flutter` (`^2.18.3`) | Integrado en `apps/mobile/lib/shared/remote/` (`SetuRemoteGateway`, `PushNotificationService`) y conectado a las pantallas estudiantiles y de personal ([ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)). |
 | Operaciones confiables | **TypeScript / Deno** | Supabase Edge Functions solo cuando sean necesarias | Propuesto; no servidor Node adicional. |
 | Actualizaciones y chat | Dart/TypeScript + SQL | Realtime autorizado y mensajes persistidos, reintentos idempotentes | Parcial en móvil (`getStudentChatSession`, `sendStudentChatMessage`); falta UI de escucha y auto-reintento al volver red. |
@@ -575,8 +575,8 @@ Las versiones siguientes provienen de `pubspec.yaml`, `pubspec.lock` y la bitác
 | Análisis y pruebas | `flutter_lints` 6.0.0 / `flutter_test` del SDK | Casts, inferencia y tipos genéricos estrictos; pruebas de lógica/widgets. |
 | Android registrado | SDK 36.1.0; APK M1 mínimo API 24, target 36 | La configuración Gradle obtiene niveles del SDK Flutter; comprobar manifiesto del APK al recompilar. |
 | Java de construcción | JDK 21 de Android Studio; compatibilidad Java/Kotlin 17 | Entorno usado en M1, sin cambiar la instalación del equipo. |
-| Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs (`0001`–`0012`; 0012 solo local, sin aplicar al remoto) y Edge Functions (`invite-email`, `push-dispatch`) en `supabase/`; cliente `supabase_flutter` y push FCM conectados en `apps/mobile/lib/shared/remote/`. |
-| Red mesh offline | `play-services-nearby` 19.5.1 + X25519 / AES-GCM-256 | Canal nativo Android (`NearbyMeshChannel.kt`, `Strategy.P2P_CLUSTER`), sobres E2EE, cola cifrada persistida (`MeshRelayService`), respaldo en `SupportFlow` y pantalla `/prueba-mesh`. |
+| Backend objetivo | Supabase / PostgreSQL | Esquema SQL, RLS y RPCs (`0001`–`0012`; 0012 aplicada según confirmación del usuario) y Edge Functions (`invite-email`, `push-dispatch`) en `supabase/`; cliente `supabase_flutter` y push FCM conectados en `apps/mobile/lib/shared/remote/`. |
+| Red mesh offline | `play-services-nearby` 19.5.1 + X25519 / AES-GCM-256 | Canal nativo Android (`NearbyMeshChannel.kt`, `Strategy.P2P_CLUSTER`), sobres E2EE, cola cifrada persistida (`MeshRelayService`), respaldo en `SupportFlow` y diagnóstico `/prueba-mesh` solo en depuración. |
 | CI / APK | GitHub Actions (`.github/workflows/build-apk.yml`) | Ejecuta `flutter analyze`, `flutter test` y `flutter build apk --debug` generando el artefacto `setu-debug-apk`. |
 
 Android es la plataforma móvil inicial. No se afirman iOS, web o Windows como clientes implementados por usar Flutter. Para los paneles se evalúa React/TypeScript/Vite, pendiente de validación técnica e implementación.
@@ -614,11 +614,11 @@ apps/mobile/                 Aplicación Flutter Android
   lib/features/piece/        Mi pieza (avatar modular local)
   lib/features/support/      Pedir apoyo, SupportBackend, adaptador remoto y respaldo mesh
   lib/features/staff/        Acceso de personal, MINED, Mesa de Escucha y Dirección
-  lib/features/mesh_test/    Pantalla de prueba física de red mesh (`/prueba-mesh`)
+  lib/features/mesh_test/    Diagnóstico mesh solo en depuración (`/prueba-mesh`)
   lib/shared/                Contratos, modelos, `local/`, `mesh/`, `remote/`, `platform/`, `theme/`, `widgets/`
   test/                      Pruebas locales, inicio, progreso, `setu_remote_gateway_test.dart`, `mesh_relay_test.dart` y `staff_*_test.dart`
 supabase/                    Backend Supabase / PostgreSQL
-  migrations/                Esquema D1–D4/D8, activación, RLS, push FCM y RPCs transaccionales (`0001`–`0012`; 0012 solo local, sin aplicar al remoto)
+  migrations/                Esquema D1–D4/D8, activación, RLS, push FCM y RPCs transaccionales (`0001`–`0012`; 0012 aplicada según confirmación del usuario)
   functions/                 Edge Functions (`invite-email`, `push-dispatch`)
   seed.sql                   Semillas ficticias (AULA24, AULA25, AULA26 y personal demo)
 .github/workflows/           Workflow CI `build-apk.yml` (análisis, pruebas y APK debug)
@@ -754,7 +754,7 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | Base Android M1 | Aplicación local, navegación base y almacenamiento cifrado implementados. |
 | Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS por colegio, inicio E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza* ([ADR 0021](docs/decisiones/0021-perfil-y-nombre-de-juego.md)) y *Pedir apoyo* (pantallas 1–8) conectados a `RemoteSupportBackend` (`SetuRemoteGateway`), con `involvesStaff`, respaldo offline/mesh y simulación local. E09 sigue como vista de muestra. E10/E11 incluyen Biblioteca pública sin código, Rutas, lectores y video simulado; publicación editorial, video real y validación institucional del código escolar pendientes. |
 | Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo (`AULA24`–`AULA26`), migraciones `0001`–`0011` (activación, solicitud pública, cupos, push FCM, cobertura externa), Edge Functions (`invite-email`, `push-dispatch`) y capa cliente remota en `lib/shared/remote/` implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); la interfaz móvil de personal (`/personal/*`) ya los consume; faltan los paneles web y la prueba integral de extremo a extremo. |
-| Red mesh y entrega local | Canal nativo Android Nearby Connections (`P2P_CLUSTER`), sobres E2EE X25519 + AES-GCM-256, cola cifrada persistida (`MeshRelayService`), respaldo en `SupportFlow`, entrega mínima local offline al panel de Dirección (`/personal/direccion` con Bluetooth obligatorio), solicitud de Bluetooth sin internet y pantalla `/prueba-mesh` implementados en `main`. |
+| Red mesh y entrega local | Canal nativo Android Nearby Connections (`P2P_CLUSTER`), sobres E2EE X25519 + AES-GCM-256, cola cifrada persistida (`MeshRelayService`), respaldo en `SupportFlow`, entrega mínima local offline al panel de Dirección (`/personal/direccion` con Bluetooth obligatorio), activación automática tras fallo de red y diagnóstico `/prueba-mesh` solo en depuración. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
 
 El [producto](docs/01-producto.md) define el alcance, la [especificación funcional](docs/08-especificacion-funcional-setu.md) describe las pantallas y la [arquitectura](docs/02-arquitectura.md) desarrolla datos, permisos y contratos. El [catálogo técnico](docs/13-recursos-tecnicos.md) distingue recursos existentes y candidatos a integrar. El historial de análisis y alternativas se conserva en la documentación de apoyo.
@@ -769,8 +769,8 @@ Secuencia vigente hacia la demostración del **17 de noviembre de 2026**, con ap
 
 1. Agregar las RPCs faltantes en Supabase para la mesa de escucha del **MINED** (nivel 1–3, 6 estados, chat humano, ficha de acción) y acceso sin cuentas de **Dirección** por código privado del colegio.
 2. Implementar los **paneles web** (MINED/Mesa y Dirección) en React/TypeScript/Vite y compilar el APK con credenciales reales de Supabase (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`).
-3. Validar físicamente la entrega directa y la custodia opaca del ADR 0023, incluida la sincronización activa cada 15 segundos. La migración 0012 sigue sin aplicar al remoto; rotación de claves y ejecución permanente en segundo plano siguen pendientes.
-4. Completar contenido y lector del espacio **Información** (E10/E11) y depurar accesos técnicos (como `/prueba-mesh`) para la vista del jurado.
+3. Validar físicamente la entrega directa y la custodia opaca del ADR 0023, incluida la sincronización activa cada 15 segundos. La migración 0012 ya está aplicada según el usuario; rotación de claves y ejecución permanente en segundo plano siguen pendientes.
+4. Completar contenido y lector del espacio **Información** (E10/E11) para la vista del jurado; el diagnóstico mesh ya está fuera de la navegación normal.
 5. Grabar el **video de respaldo** (lunes 16 nov), finalizar el guion del pitch cronometrado y preparar la demo en vivo de las tres superficies + modo sin conexión (martes 17 nov).
 
 Antes de desarrollar los paneles web, aprobar su contrato y estructura de proyecto. El [plan vigente](docs/04-plan.md) conserva todas las decisiones que condicionan la implementación.

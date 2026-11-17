@@ -90,7 +90,6 @@ class _DirectorInboxScreenState extends StaffInboxState<DirectorInboxScreen> {
   @override
   void dispose() {
     widget.meshRelay?.removeListener(_onMeshChanged);
-    widget.meshRelay?.clearSchoolContext();
     super.dispose();
   }
 
