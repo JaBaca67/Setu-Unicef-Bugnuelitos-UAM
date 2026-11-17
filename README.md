@@ -13,9 +13,10 @@
   <br />
   <img src="https://img.shields.io/badge/CONECTIVIDAD-RED_MESH_E2EE-5865F2?style=for-the-badge" alt="Conectividad: Red Mesh E2EE" />
   <img src="https://img.shields.io/badge/JORNADA-UAM_%C3%97_UNICEF_2026-F59E0B?style=for-the-badge" alt="Jornada UAM x UNICEF 2026" />
+  <a href="https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/"><img src="https://img.shields.io/badge/LANDING-GITHUB_PAGES-0C62EB?style=for-the-badge" alt="Landing pública en GitHub Pages" /></a>
 </p>
 
-**Revisión:** 16 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación por colegio, inicio estudiantil E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza*, recorrido *Pedir apoyo* conectado al cliente remoto (con `involvesStaff` y respaldo en red mesh `Nearby Connections` + E2EE), superficies móviles de personal autorizado (`/personal/*`) y notificaciones push FCM.
+**Revisión:** 17 de noviembre de 2026. **Corte Android:** 0.2.0+2, base M1, bienvenida E01, demostración E02 con cámara y ubicación por colegio, inicio estudiantil E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza*, recorrido *Pedir apoyo* conectado al cliente remoto (con `involvesStaff` y respaldo en red mesh `Nearby Connections` + E2EE), superficies móviles de personal autorizado (`/personal/*`) y notificaciones push FCM.
 
 **Actividades E06 (bloque local aprobado, 17 nov):** cinco actividades voluntarias bajo `/inicio/actividades/`, respuestas y dibujos temporales, sin XP adicionales. La pregunta diaria conserva sus reglas desde Inicio. Personajes originales PNG incorporados al flujo de apoyo; tablero del rompecabezas pendiente de segunda pasada gráfica. [Detalle de diseño](docs/06-guia-diseno.md#actividades-e06-y-personajes-de-apoyo-17-nov-2026).
 
@@ -30,6 +31,8 @@ El proyecto participa en la **Jornada Académica y Social UAM - UNICEF 2026**, b
 Este README es el documento principal de especificación técnica. Describe el producto, componentes, datos, funcionamiento sin internet, seguridad y condiciones de desarrollo. Los documentos enlazados amplían los contratos y diagramas.
 
 **Repositorio:** [GitHub · SéTú](https://github.com/JaBaca67/Setu-Unicef-Bugnuelitos-UAM).
+
+**Landing pública:** [jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM](https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/). Presenta el prototipo con mockups y videos de la app, la descarga del APK de prueba, los manuales y la ayuda urgente (118/133 con fuente). Es un sitio estático en `landing/` que se publica en GitHub Pages al integrar cambios en `main`; ver [detalle de la landing](docs/landing.md).
 
 <a id="indice"></a>
 
@@ -524,7 +527,8 @@ La matriz cubre app, información, panel MINED, mesa, panel institucional, backe
 | Transporte entre vecinos | **Dart + Kotlin** | Canal nativo `NearbyMeshChannel.kt` → `play-services-nearby` (`P2P_CLUSTER`) | Implementado y probado físicamente entre teléfonos Android reales sin internet. |
 | Cola y sobre mesh | Dart | `MeshEnvelope` (X25519 + HKDF-SHA256 + AES-GCM-256), `MeshRelayService` y `EncryptedLocalStore` (`setu_mesh_queue.enc`) | Implementado y persistido localmente; faltan rotación de claves institucionales y entrega LAN directa sin internet. |
 | Puente → dirección local | Por decidir según receptor | Vista nativa autorizada **o** servicio LAN seguro con cliente disponible offline | Decisión abierta; web cloud insuficiente para esa entrega. |
-| Web alojada | HTML/CSS/JS del build | Cloudflare Pages estático; backend en Supabase | Propuesto; sin publicación o dominio configurado. |
+| Landing pública | **HTML + CSS + JS** sin dependencias | Sitio estático en `landing/`, Poppins local, mockups WebP con `srcset`, GitHub Pages vía `.github/workflows/deploy-landing.yml` | Publicada en [GitHub Pages](https://jabaca67.github.io/Setu-Unicef-Bugnuelitos-UAM/) desde `main`; Lighthouse ≈ 99 móvil / 100 escritorio y axe sin infracciones (17 nov). Detalle en [docs/landing.md](docs/landing.md). |
+| Web alojada (paneles) | HTML/CSS/JS del build | Cloudflare Pages estático; backend en Supabase | Propuesto; sin publicación o dominio configurado. |
 | Construcción | CLI; configuración según herramienta | Flutter/Android/JDK actuales; Node.js compatible con Vite + npm/lockfile propuestos | Node es herramienta de build web. No hay proyecto npm creado. |
 | Calidad | Dart, TypeScript y SQL | Flutter analyze/test existentes; Vitest + React Testing Library, ESLint y Playwright propuestos; integración RLS/RPC | Falta implementación web/BD y pruebas físicas mesh. |
 | Diseño/documentación | SVG, fuentes, Markdown, Mermaid | Logo oficial, Poppins, tokens del manual; Clayful sujeto a licencia/disponibilidad | Recursos documentados; sin reconstruir la marca. |
@@ -757,6 +761,7 @@ Estado de las entregas, próximos bloques y documentación de apoyo.
 | Recorrido estudiantil e Información | E01, demo E02 con cámara y GPS por colegio, inicio E03 con barra `NavBar-01` y progreso educativo local, *Mi perfil* / *Mi pieza* ([ADR 0021](docs/decisiones/0021-perfil-y-nombre-de-juego.md)) y *Pedir apoyo* (pantallas 1–8) conectados a `RemoteSupportBackend` (`SetuRemoteGateway`), con `involvesStaff`, respaldo offline/mesh y simulación local. E09 sigue como vista de muestra. E10/E11 incluyen Biblioteca pública de 21 adaptaciones verificadas, seis temas, cuatro rutas y videos externos; revisión profesional, publicación operativa y validación institucional del código escolar pendientes (ADR 0026). |
 | Paneles y backend | Esquema Supabase (`D1`–`D4`, `D8`), `FORCE ROW LEVEL SECURITY`, semillas demo (`AULA24`–`AULA26`), migraciones `0001`–`0011` (activación, solicitud pública, cupos, push FCM, cobertura externa), Edge Functions (`invite-email`, `push-dispatch`) y capa cliente remota en `lib/shared/remote/` implementados ([ADR 0016](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md), [ADR 0017](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md)); la interfaz móvil de personal (`/personal/*`) ya los consume; faltan los paneles web y la prueba integral de extremo a extremo. |
 | Red mesh y entrega local | Canal nativo Android Nearby Connections (`P2P_CLUSTER`), sobres E2EE X25519 + AES-GCM-256, cola cifrada persistida (`MeshRelayService`), respaldo en `SupportFlow`, entrega mínima local offline al panel de Dirección (`/personal/direccion` con Bluetooth obligatorio), activación automática tras fallo de red y diagnóstico `/prueba-mesh` solo en depuración. |
+| Landing pública | Sitio estático publicado en GitHub Pages: portada, «Así funciona» con celular animado, privacidad, Explorá con mockups, videos, campaña y valores, instituciones, preguntas, descarga del APK y ayuda urgente. Textos en voseo sin promesas absolutas, marca del Manual (cinta-pieza, flores, piezas) y animaciones que respetan «reducir movimiento». Respaldo visual previo en `docs/diseno/landing-respaldo-2026-11-17/`. Para probar: `cd landing && python3 -m http.server 8000`. |
 | Operación con casos reales | Requiere responsables, atención humana, protocolos y validaciones descritos en protección y operación. |
 
 El [producto](docs/01-producto.md) define el alcance, la [especificación funcional](docs/08-especificacion-funcional-setu.md) describe las pantallas y la [arquitectura](docs/02-arquitectura.md) desarrolla datos, permisos y contratos. El [catálogo técnico](docs/13-recursos-tecnicos.md) distingue recursos existentes y candidatos a integrar. El historial de análisis y alternativas se conserva en la documentación de apoyo.
@@ -798,6 +803,7 @@ Antes de desarrollar los paneles web, aprobar su contrato y estructura de proyec
 | [DFD Kendall y Kendall](docs/12-modelado-dfd-kendall.md) | Método, diccionario, contexto/diagrama 0 y balance de atención/transporte. |
 | [Recursos técnicos](docs/13-recursos-tecnicos.md) | Lenguajes, SDK, web, backend, proximidad y fuentes oficiales. |
 | [Espacio informativo](docs/14-espacio-informativo-y-referente-netflix.md) | Diseño del apartado Información y referente editorial. |
+| [Landing pública](docs/landing.md) | Estructura, marca, mockups, textos verificados, accesibilidad y despliegue en GitHub Pages. |
 | [Esquema Supabase (ADR 0016)](docs/decisiones/0016-esquema-supabase-rls-y-acceso-privado-caso.md) | Esquema `D1`–`D4`/`D8`, RLS estricta y RPCs iniciales. |
 | [Activación, Mesa y cliente remoto (ADR 0017)](docs/decisiones/0017-activacion-personal-mesa-y-cliente-remoto.md) | Invitaciones individuales, escucha previa a valoración y `shared/remote/`. |
 | [Diagramas vigentes](docs/diseno/flujos/README.md) | Acceso, navegación, reporte, atención, datos, mesh y estados. |
